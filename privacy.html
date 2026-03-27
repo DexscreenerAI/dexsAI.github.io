@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy - DexScreener AI</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0a0a0f;
+  --bg2: #12121a;
+  --card: #1c1c28;
+  --border: #2a2a3a;
+  --cyan: #00d4aa;
+  --text: #f0f0f0;
+  --text2: #a0a0a0;
+}
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.8;
+}
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 60px 20px;
+}
+header {
+  text-align: center;
+  margin-bottom: 50px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--border);
+}
+.logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+h1 span { color: var(--cyan); }
+.updated {
+  color: var(--text2);
+  font-size: 14px;
+}
+h2 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  color: var(--cyan);
+  margin: 40px 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+h2::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: var(--cyan);
+  border-radius: 2px;
+}
+p {
+  color: var(--text2);
+  margin-bottom: 16px;
+}
+ul {
+  color: var(--text2);
+  margin-left: 24px;
+  margin-bottom: 16px;
+}
+li {
+  margin-bottom: 8px;
+}
+.highlight {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 24px 0;
+}
+.highlight p {
+  margin: 0;
+  color: var(--text);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(0, 212, 170, 0.15);
+  border: 1px solid var(--cyan);
+  border-radius: 20px;
+  color: var(--cyan);
+  font-size: 13px;
+  font-weight: 600;
+}
+a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+footer {
+  text-align: center;
+  margin-top: 60px;
+  padding-top: 30px;
+  border-top: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <img class="logo" src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="DexScreener AI">
+    <h1>DEXSCREENER <span>AI</span></h1>
+    <h2 style="justify-content:center;margin:20px 0 10px;">Privacy Policy</h2>
+    <p class="updated">Last updated: March 28, 2026</p>
+  </header>
+
+  <div class="highlight">
+    <p><span class="badge">✓ Privacy First</span></p>
+    <p style="margin-top:12px"><strong>TL;DR:</strong> DexScreener AI does NOT collect, store, or transmit any personal data. Everything runs locally in your browser.</p>
+  </div>
+
+  <h2>Overview</h2>
+  <p>DexScreener AI is a Chrome extension that provides AI-powered token analysis directly on DexScreener.com. We are committed to protecting your privacy and being transparent about our practices.</p>
+
+  <h2>Data Collection</h2>
+  <p><strong>We do NOT collect:</strong></p>
+  <ul>
+    <li>Personal information (name, email, etc.)</li>
+    <li>Wallet addresses</li>
+    <li>Browsing history</li>
+    <li>Trading activity</li>
+    <li>Any other user data</li>
+  </ul>
+
+  <h2>How the Extension Works</h2>
+  <p>DexScreener AI operates entirely within your browser:</p>
+  <ul>
+    <li><strong>Token data</strong> is fetched directly from the public DexScreener API</li>
+    <li><strong>Rugcheck data</strong> (for Solana tokens) is fetched from the public Rugcheck API</li>
+    <li><strong>Analysis</strong> is performed locally in your browser using JavaScript</li>
+    <li><strong>No data</strong> is sent to our servers (we don't have any servers)</li>
+  </ul>
+
+  <h2>Third-Party Services</h2>
+  <p>The extension makes API calls to:</p>
+  <ul>
+    <li><strong>DexScreener API</strong> (api.dexscreener.com) — to fetch token/pair data</li>
+    <li><strong>Rugcheck API</strong> (api.rugcheck.xyz) — to fetch Solana token risk data</li>
+  </ul>
+  <p>These are public APIs. We do not control their privacy policies. Please review their respective privacy policies for more information.</p>
+
+  <h2>Local Storage</h2>
+  <p>The extension may store minimal preferences locally in your browser (such as panel position or collapsed state). This data never leaves your device.</p>
+
+  <h2>Permissions</h2>
+  <p>The extension requests the following permissions:</p>
+  <ul>
+    <li><strong>Host permissions for dexscreener.com</strong> — to inject the analysis panel</li>
+    <li><strong>Host permissions for API endpoints</strong> — to fetch token data</li>
+  </ul>
+  <p>We request only the minimum permissions necessary for the extension to function.</p>
+
+  <h2>Children's Privacy</h2>
+  <p>DexScreener AI is not intended for use by children under the age of 18. We do not knowingly collect any information from children.</p>
+
+  <h2>Changes to This Policy</h2>
+  <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated revision date.</p>
+
+  <h2>Contact</h2>
+  <p>If you have any questions about this Privacy Policy, please contact us:</p>
+  <ul>
+    <li>Twitter/X: <a href="https://x.com/dexscreenerai" target="_blank">@dexscreenerai</a></li>
+  </ul>
+
+  <footer>
+    <p>© 2026 DexScreener AI. All rights reserved.</p>
+    <p style="margin-top:8px"><a href="./index.html">Back to App</a> · <a href="./extension.html">Get Extension</a></p>
+  </footer>
+</div>
+
+</body>
+</html>
