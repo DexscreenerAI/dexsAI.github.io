@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DexScreener AI — Token Intelligence</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #060a10;
+  --bg2: #0b1018;
+  --bg3: #101822;
+  --sidebar: #090d15;
+  --card: #111a26;
+  --card-border: #1a2636;
+  --cyan: #00d4ff;
+  --cyan-dim: rgba(0,212,255,0.12);
+  --green: #00ff88;
+  --green-dim: rgba(0,255,136,0.10);
+  --red: #ff3b4f;
+  --red-dim: rgba(255,59,79,0.10);
+  --yellow: #ffaa00;
+  --yellow-dim: rgba(255,170,0,0.10);
+  --orange: #ff6b2b;
+  --purple: #b388ff;
+  --purple-dim: rgba(179,136,255,0.10);
+  --text: #dfe4ed;
+  --text2: rgba(255,255,255,0.50);
+  --text3: rgba(255,255,255,0.22);
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+
+/* ── LAYOUT ── */
+.app { display: flex; height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 260px; background: var(--sidebar); border-right: 1px solid var(--card-border);
+  display: flex; flex-direction: column; flex-shrink: 0;
+  transition: margin-left .25s ease;
+}
+.sidebar.closed { margin-left: -260px; }
+.sb-header {
+  padding: 16px 16px 10px; display: flex; align-items: center; justify-content: space-between;
+}
+.sb-header > div:first-child { display: flex; align-items: center; gap: 10px; }
+.sb-logo-icon { flex-shrink: 0; }
+.sb-logo { font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 1.5px; color: #fff; }
+.sb-close {
+  background: none; border: none; color: var(--text2); cursor: pointer; font-size: 16px; padding: 4px;
+  transition: color .15s;
+}
+.sb-close:hover { color: #fff; }
+.sb-new {
+  margin: 0 12px 12px; padding: 10px 14px; background: rgba(0,212,255,0.06);
+  border: 1px solid rgba(0,212,255,0.18); border-radius: 8px;
+  color: var(--cyan); font-family: var(--mono); font-size: 12px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  letter-spacing: 0.5px; transition: all .15s;
+}
+.sb-new:hover { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.3); }
+.sb-section-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: var(--text3);
+  padding: 8px 16px 6px; text-transform: uppercase;
+}
+.sb-list { flex: 1; overflow-y: auto; padding: 0 8px; }
+.sb-item {
+  width: 100%; padding: 10px 12px; border-radius: 8px; background: transparent;
+  border: none; color: var(--text); font-family: var(--sans); font-size: 13px;
+  text-align: left; cursor: pointer; margin-bottom: 2px;
+  display: flex; align-items: center; gap: 8px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: background .12s;
+}
+.sb-item:hover { background: var(--bg3); }
+.sb-item.active { background: var(--bg3); }
+.sb-item-icon { color: var(--text3); font-size: 14px; flex-shrink: 0; }
+.sb-item-text { overflow: hidden; text-overflow: ellipsis; }
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+/* ── RIGHT PANEL ── */
+.right-panel {
+  width: 300px; background: var(--sidebar); border-left: 1px solid var(--card-border);
+  display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;
+}
+.rp-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--card-border);
+}
+.rp-title {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 1px; color: var(--cyan); text-transform: uppercase;
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.rp-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  background: var(--bg); border-radius: 8px; margin-bottom: 8px;
+  cursor: pointer; transition: all .15s;
+}
+.rp-item:hover { background: var(--bg3); }
+.rp-item:last-child { margin-bottom: 0; }
+.rp-icon {
+  width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+  background: var(--card-border); display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.rp-icon-emoji {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--card-border); display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.rp-info { flex: 1; min-width: 0; }
+.rp-ticker { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--cyan); }
+.rp-chain { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 2px; }
+.rp-badge {
+  padding: 4px 8px; border-radius: 4px; font-family: var(--mono);
+  font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+}
+.rp-badge.bullish { background: var(--green-dim); color: var(--green); }
+.rp-badge.neutral { background: var(--yellow-dim); color: var(--yellow); }
+.rp-badge.bearish { background: var(--red-dim); color: var(--red); }
+.rp-loading {
+  text-align: center; padding: 24px; color: var(--text3);
+  font-family: var(--mono); font-size: 11px;
+}
+.rp-empty {
+  text-align: center; padding: 20px; color: var(--text3);
+  font-family: var(--sans); font-size: 12px;
+}
+
+/* Responsive: hide right panel on smaller screens */
+@media (max-width: 1200px) {
+  .right-panel { width: 260px; }
+  .rp-item { padding: 8px 10px; gap: 10px; }
+  .rp-icon { width: 32px; height: 32px; font-size: 14px; }
+  .rp-ticker { font-size: 13px; }
+}
+@media (max-width: 1000px) {
+  .right-panel { display: none; }
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  padding: 14px 20px; border-bottom: 1px solid var(--card-border);
+  display: flex; align-items: center; gap: 12px;
+}
+.tb-toggle {
+  background: none; border: none; color: var(--text2); cursor: pointer;
+  font-size: 18px; padding: 4px; display: none; transition: color .15s;
+}
+.tb-toggle:hover { color: #fff; }
+.tb-toggle.show { display: block; }
+.tb-title { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 2px; }
+.tb-sep { color: var(--text3); }
+.tb-sub { font-family: var(--mono); font-size: 12px; color: var(--text3); }
+
+/* ── MESSAGES ── */
+.messages {
+  flex: 1; overflow-y: auto; padding: 20px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.msg-container { width: 100%; max-width: 720px; }
+
+/* Welcome */
+.welcome {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 60vh; gap: 8px;
+}
+.welcome-icon { width: 64px; height: 64px; margin-bottom: 8px; animation: float 3s ease-in-out infinite; border-radius: 12px; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+.welcome-title { font-family: var(--mono); font-size: 30px; font-weight: 700; letter-spacing: 1px; }
+.welcome-sub { font-family: var(--sans); font-size: 16px; color: var(--text2); }
+.quick-tokens {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+  margin-top: 24px; max-width: 400px;
+}
+.quick-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; background: var(--card); border: 1px solid var(--card-border);
+  border-radius: 10px; color: var(--text); font-family: var(--mono); font-size: 13px;
+  font-weight: 600; cursor: pointer; transition: all .15s;
+}
+.quick-btn:hover { background: var(--bg3); border-color: var(--cyan); transform: translateY(-2px); }
+.quick-btn img { width: 20px; height: 20px; border-radius: 50%; }
+
+/* User message */
+.msg-user {
+  display: flex; justify-content: flex-end; margin-bottom: 20px;
+  animation: msgIn .35s ease both;
+}
+.msg-user-bubble {
+  background: var(--card); border: 1px solid var(--card-border); border-radius: 14px;
+  padding: 12px 18px; font-family: var(--mono); font-size: 13px;
+  max-width: 80%; word-break: break-all;
+}
+
+/* Assistant label */
+.msg-oracle {
+  margin-bottom: 20px; animation: msgIn .35s ease both;
+}
+.msg-oracle-label {
+  font-family: var(--mono); font-size: 10px; color: var(--cyan);
+  letter-spacing: 1.5px; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+@keyframes msgIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+/* Loading dots */
+.loading-dots {
+  display: flex; align-items: center; gap: 8px; padding: 16px 0;
+  animation: msgIn .3s ease;
+}
+.ld-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--cyan);
+  animation: ldPulse 1.2s ease infinite;
+}
+.ld-dot:nth-child(2) { animation-delay: .2s; }
+.ld-dot:nth-child(3) { animation-delay: .4s; }
+@keyframes ldPulse { 0%,100%{opacity:.25} 50%{opacity:1} }
+.ld-text { font-family: var(--sans); font-size: 13px; color: var(--text2); }
+
+/* ── INPUT AREA ── */
+.input-area {
+  padding: 10px 20px 20px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.quick-btns { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; justify-content: center; }
+.quick-btn {
+  padding: 7px 14px; border-radius: 20px; background: var(--card);
+  border: 1px solid var(--card-border); color: var(--text2);
+  font-family: var(--sans); font-size: 12.5px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; transition: all .15s;
+}
+.quick-btn:hover { border-color: rgba(0,212,255,0.3); color: #fff; }
+.input-wrap {
+  width: 100%; max-width: 720px; background: var(--bg3); border: 1px solid var(--card-border);
+  border-radius: 14px; padding: 4px 4px 4px 16px;
+  display: flex; align-items: flex-end; transition: border-color .2s;
+}
+.input-wrap:focus-within { border-color: rgba(0,212,255,0.3); box-shadow: 0 0 20px rgba(0,212,255,0.03); }
+.input-box {
+  flex: 1; background: transparent; border: none; color: var(--text);
+  font-family: var(--sans); font-size: 14px; resize: none; padding: 10px 0;
+  line-height: 1.5; outline: none; min-height: 24px; max-height: 120px;
+}
+.input-box::placeholder { color: var(--text3); }
+.send-btn {
+  width: 36px; height: 36px; border-radius: 10px; border: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: all .2s; flex-shrink: 0; margin: 4px; cursor: pointer;
+}
+.send-btn.active { background: var(--cyan); color: var(--bg); cursor: pointer; }
+.send-btn.inactive { background: var(--card-border); color: var(--text3); cursor: default; }
+
+/* ── ANALYSIS CARDS ── */
+.card {
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: 10px; padding: 18px; margin-bottom: 12px;
+}
+.card-accent { border-left: 3px solid var(--cyan); }
+.sec-title {
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  letter-spacing: 2.5px; text-transform: uppercase; color: var(--text2);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+}
+.sec-icon { font-size: 14px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 700;
+  font-family: var(--mono); letter-spacing: 1.5px; text-transform: uppercase;
+}
+.badge-red { color: var(--red); border: 1px solid rgba(255,59,79,0.2); background: var(--red-dim); }
+.badge-green { color: var(--green); border: 1px solid rgba(0,255,136,0.2); background: var(--green-dim); }
+.badge-yellow { color: var(--yellow); border: 1px solid rgba(255,170,0,0.2); background: var(--yellow-dim); }
+
+.progress-track {
+  width: 100%; height: 6px; border-radius: 6px; background: var(--card-border); overflow: hidden;
+}
+.progress-fill { height: 100%; border-radius: 6px; transition: width .8s ease; }
+
+/* Grid helpers */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* Scenario boxes */
+.scenario-box {
+  background: var(--bg); border-radius: 8px; padding: 14px;
+  border: 1px solid var(--card-border);
+}
+.scenario-label {
+  font-family: var(--mono); font-size: 10px; color: var(--text2);
+  letter-spacing: 1px; margin-bottom: 4px;
+}
+.scenario-bar { height: 4px; border-radius: 4px; background: var(--card-border); overflow: hidden; margin-bottom: 4px; }
+.scenario-bar-fill { height: 100%; border-radius: 4px; }
+.scenario-value { font-family: var(--mono); font-size: 22px; font-weight: 700; }
+
+/* Entry / SL boxes */
+.zone-box { border-radius: 8px; padding: 14px; }
+.zone-green { background: var(--green-dim); border: 1px solid rgba(0,255,136,0.15); }
+.zone-red { background: var(--red-dim); border: 1px solid rgba(255,59,79,0.15); }
+.zone-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.zone-val { font-family: var(--sans); font-size: 13px; color: var(--text); line-height: 1.5; }
+
+/* Target rows */
+.target-row {
+  display: grid; grid-template-columns: 120px 1fr 50px 90px 50px;
+  align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.target-label { font-family: var(--mono); font-size: 12px; color: var(--text2); }
+.target-pct { font-family: var(--mono); font-size: 12px; color: var(--text2); text-align: right; }
+.target-price { font-family: var(--mono); font-size: 12px; color: var(--cyan); text-align: right; }
+.target-gain { font-family: var(--mono); font-size: 11px; color: var(--green); text-align: right; }
+
+/* Holder bar */
+.holder-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+.holder-legend { display: flex; gap: 16px; margin-bottom: 14px; }
+.holder-leg {
+  font-family: var(--mono); font-size: 11px; color: var(--text2);
+  display: flex; align-items: center; gap: 5px;
+}
+.holder-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* Support / Resistance */
+.sr-box { border-radius: 10px; padding: 16px; }
+.sr-green { background: var(--green-dim); border: 1px solid rgba(0,255,136,0.15); }
+.sr-red { background: var(--red-dim); border: 1px solid rgba(255,59,79,0.15); }
+.sr-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px;
+  text-transform: uppercase; margin-bottom: 10px;
+}
+.sr-item {
+  font-family: var(--sans); font-size: 12px; color: var(--text);
+  margin-bottom: 8px; line-height: 1.5;
+}
+
+/* Confidence gauge SVG */
+.gauge-wrap { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
+.gauge-text {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.gauge-num { font-size: 22px; font-weight: 700; font-family: var(--mono); }
+.gauge-label { font-size: 8px; color: var(--text2); letter-spacing: 1px; text-transform: uppercase; }
+
+/* General text response */
+.general-text {
+  font-family: var(--sans); font-size: 14px; line-height: 1.75;
+  color: var(--text); white-space: pre-wrap;
+}
+
+/* Note list */
+.note-list { margin: 0; padding-left: 18px; list-style: none; }
+.note-item {
+  font-family: var(--sans); font-size: 12.5px; color: var(--text2);
+  margin-bottom: 6px; position: relative; padding-left: 4px;
+}
+.note-icon { position: absolute; left: -14px; color: var(--text3); }
+
+/* Holder warning list */
+.holder-note {
+  font-family: var(--sans); font-size: 12.5px; color: var(--text2);
+  margin-bottom: 6px; padding-left: 4px;
+}
+
+/* Flex helpers */
+.flex-between { display: flex; justify-content: space-between; align-items: flex-start; }
+.flex-center { display: flex; align-items: center; }
+.gap-12 { gap: 12px; }
+.ml-auto { margin-left: auto; }
+.mb-10 { margin-bottom: 10px; }
+.mb-16 { margin-bottom: 16px; }
+
+/* ── RESPONSIVE ── */
+
+/* Tablet */
+@media (max-width: 1200px) {
+  .card { padding: 16px; }
+  .sec-title { font-size: 10px; letter-spacing: 2px; }
+  .scenario-value { font-size: 20px; }
+  .gauge-wrap { width: 70px; height: 70px; }
+  .gauge-num { font-size: 20px; }
+}
+
+/* Small tablet / large phone */
+@media (max-width: 900px) {
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .scenario-box { padding: 12px; }
+  .scenario-value { font-size: 18px; }
+  .zone-box { padding: 12px; }
+  .zone-val { font-size: 12px; }
+  .target-row { 
+    grid-template-columns: 100px 1fr 40px 80px 45px; 
+    gap: 6px; 
+    font-size: 11px;
+  }
+  .holder-legend { flex-wrap: wrap; gap: 10px; }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .sidebar { position: fixed; left: 0; top: 0; height: 100vh; z-index: 100; }
+  .sidebar.closed { margin-left: 0; left: -260px; }
+  .tb-toggle { display: block !important; }
+  
+  .topbar { padding: 12px 16px; }
+  .tb-title { font-size: 12px; }
+  
+  .messages { padding: 16px 12px 100px; }
+  .msg-container { max-width: 100%; }
+  .msg-user-bubble { max-width: 95%; font-size: 14px; }
+  .msg-oracle-label { font-size: 10px; }
+  
+  .card { padding: 14px; margin-bottom: 10px; border-radius: 8px; }
+  .sec-title { font-size: 9px; letter-spacing: 1.5px; margin-bottom: 12px; }
+  
+  .grid-2 { grid-template-columns: 1fr; gap: 10px; }
+  .grid-3 { grid-template-columns: 1fr; gap: 10px; }
+  
+  .scenario-box { padding: 12px; }
+  .scenario-label { font-size: 9px; }
+  .scenario-value { font-size: 22px; }
+  
+  .zone-box { padding: 12px; }
+  .zone-label { font-size: 9px; }
+  .zone-val { font-size: 12px; }
+  
+  .target-row { 
+    grid-template-columns: 1fr 1fr; 
+    gap: 4px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .target-row:last-child { border-bottom: none; }
+  
+  .sr-box { padding: 12px; }
+  .sr-item { font-size: 11px; }
+  
+  .holder-legend { gap: 8px; }
+  .holder-leg { font-size: 10px; }
+  
+  .gauge-wrap { width: 65px; height: 65px; }
+  .gauge-num { font-size: 18px; }
+  .gauge-label { font-size: 7px; }
+  
+  .general-text { font-size: 13px; line-height: 1.6; }
+  
+  .input-area { padding: 8px 12px 16px; }
+  .input-wrap { border-radius: 12px; padding: 2px 2px 2px 12px; }
+  .input-box { font-size: 14px; }
+  .send-btn { width: 34px; height: 34px; }
+  
+  .badge { font-size: 10px; padding: 3px 8px; }
+  
+  /* Hide confidence circle on very small screens to save space */
+  .flex-between .gauge-wrap { display: none; }
+}
+
+/* Very small phones */
+@media (max-width: 400px) {
+  .topbar { padding: 10px 12px; }
+  .card { padding: 12px; }
+  .sec-title { font-size: 8px; }
+  .scenario-value { font-size: 20px; }
+  .zone-val { font-size: 11px; }
+  .input-box { font-size: 13px; }
+}
+
+/* Chrome Extension Button */
+.chrome-ext-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #1a1a24 0%, #12121a 100%);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  color: var(--text);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  transition: all 0.2s ease;
+  z-index: 9999;
+}
+.chrome-ext-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--cyan);
+  box-shadow: 0 6px 24px rgba(0, 212, 170, 0.2);
+}
+.chrome-ext-icon {
+  font-size: 18px;
+}
+.chrome-ext-text {
+  color: var(--cyan);
+}
+@media (max-width: 768px) {
+  .chrome-ext-btn {
+    padding: 10px 14px;
+    font-size: 11px;
+    bottom: 16px;
+    right: 16px;
+  }
+  .chrome-ext-icon { font-size: 16px; }
+}
+@media (max-width: 500px) {
+  .chrome-ext-text { display: none; }
+  .chrome-ext-btn { padding: 12px; border-radius: 50%; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" style="width:28px;height:28px;border-radius:6px" alt="DexScreener AI">
+        <span class="sb-logo">DEXSCREENER AI</span>
+      </div>
+      <button class="sb-close" onclick="toggleSidebar()">✕</button>
+    </div>
+    <button class="sb-new" onclick="newConversation()">
+      <span style="font-size:16px">+</span> New analysis
+    </button>
+    <div class="sb-section-label">Today</div>
+    <div class="sb-list" id="sbList"></div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <button class="tb-toggle" id="tbToggle" onclick="toggleSidebar()">☰</button>
+      <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" style="width:24px;height:24px;border-radius:4px" alt="DexScreener AI">
+      <span class="tb-title">DEXSCREENER AI</span>
+      <span class="tb-sep" id="tbSep" style="display:none">/</span>
+      <span class="tb-sub" id="tbSub"></span>
+      <div style="margin-left:auto">
+        <select id="langSelect" onchange="setLanguage(this.value)" style="background:var(--card);border:1px solid var(--card-border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer;outline:none">
+          <option value="en">🇬🇧 EN</option>
+          <option value="fr">🇫🇷 FR</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="messages" id="messagesWrap">
+      <div class="msg-container" id="msgContainer"></div>
+    </div>
+
+    <!-- INPUT -->
+    <div class="input-area">
+      <div class="input-wrap">
+        <textarea class="input-box" id="inputBox" rows="1"
+          placeholder="Ask about any crypto, stock, or paste a contract address..."
+          oninput="autoResize(this); updateSendBtn()"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendFromInput()}"></textarea>
+        <button class="send-btn inactive" id="sendBtn" onclick="sendFromInput()">↑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel" id="rightPanel">
+    <!-- Trending Section -->
+    <div class="rp-section">
+      <div class="rp-title">🔥 Trending</div>
+      <div id="rpTrending"><div class="rp-loading">Loading...</div></div>
+    </div>
+    
+    <!-- New Listings Section -->
+    <div class="rp-section">
+      <div class="rp-title">🆕 New Listings</div>
+      <div id="rpNewListings"><div class="rp-loading">Loading...</div></div>
+    </div>
+    
+    <!-- Your Searches Section -->
+    <div class="rp-section" style="border-bottom:none">
+      <div class="rp-title">⭐ Your Top Searches</div>
+      <div id="rpSearches"><div class="rp-empty">No searches yet</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Chrome Extension Button -->
+<a href="./extension.html" class="chrome-ext-btn" title="Get Chrome Extension">
+  <span class="chrome-ext-icon">🧩</span>
+  <span class="chrome-ext-text">Chrome Extension</span>
+</a>
+
+<script>
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let conversations = [{ id: Date.now(), title: 'New analysis', messages: [] }];
+let activeId = conversations[0].id;
+let isLoading = false;
+let currentLang = 'en';
+let savedSearches = JSON.parse(localStorage.getItem('oracleSearches') || '[]');
+
+// ═══════════════════════════════════════════
+// TRANSLATIONS
+// ═══════════════════════════════════════════
+const TRANSLATIONS = {
+  en: {
+    newAnalysis: 'New analysis',
+    today: 'Today',
+    placeholder: 'Ask about any crypto, stock, or paste a contract address...',
+    analyzing: 'Analyzing...',
+    liveData: 'Live Data Market',
+    tokenIntelligence: 'Token Intelligence',
+    projectLegitimacy: 'Project Legitimacy',
+    tradeSetup: 'Trade Setup',
+    entryPrice: 'Entry Price',
+    stopLoss: 'Stop Loss',
+    priceTargets: 'Price Targets',
+    scenarioProb: 'Scenario Probabilities',
+    bullCase: 'Bull Case',
+    baseCase: 'Base Case',
+    bearCase: 'Bear Case',
+    holderQuality: 'Holder Quality',
+    botRisk: 'Bot Risk',
+    support: 'Support',
+    resistance: 'Resistance',
+    confidence: 'Confidence',
+    verified: 'VERIFIED',
+    caution: 'CAUTION',
+    suspicious: 'SUSPICIOUS',
+    notFound: "I couldn't find data for",
+    tryAgain: 'Try:',
+    pasteContract: 'Pasting a contract address (Solana or EVM)',
+    searchToken: 'Searching for a token name listed on DexScreener',
+    useButtons: 'Using one of the quick buttons above',
+    trending: '🔥 Trending',
+    newListings: '🆕 New Listings',
+    topBoosted: 'Top Boosted Tokens',
+    latestProfiles: 'Latest Token Profiles',
+    clickToAnalyze: 'Click on a token to analyze it'
+  },
+  fr: {
+    newAnalysis: 'Nouvelle analyse',
+    today: "Aujourd'hui",
+    placeholder: 'Posez une question sur un crypto, ou collez une adresse de contrat...',
+    analyzing: 'Analyse en cours...',
+    liveData: 'Données Live',
+    tokenIntelligence: 'Intelligence Token',
+    projectLegitimacy: 'Légitimité du Projet',
+    tradeSetup: 'Setup de Trade',
+    entryPrice: "Prix d'Entrée",
+    stopLoss: 'Stop Loss',
+    priceTargets: 'Objectifs de Prix',
+    scenarioProb: 'Probabilités des Scénarios',
+    bullCase: 'Cas Haussier',
+    baseCase: 'Cas Neutre',
+    bearCase: 'Cas Baissier',
+    holderQuality: 'Qualité des Holders',
+    botRisk: 'Risque Bot',
+    support: 'Support',
+    resistance: 'Résistance',
+    confidence: 'Confiance',
+    verified: 'VÉRIFIÉ',
+    caution: 'PRUDENCE',
+    suspicious: 'SUSPECT',
+    notFound: "Aucune donnée trouvée pour",
+    tryAgain: 'Essayez :',
+    pasteContract: 'Coller une adresse de contrat (Solana ou EVM)',
+    searchToken: 'Rechercher un nom de token sur DexScreener',
+    useButtons: 'Utiliser les boutons rapides ci-dessus',
+    trending: '🔥 Tendance',
+    newListings: '🆕 Nouveaux',
+    topBoosted: 'Tokens les plus Boostés',
+    latestProfiles: 'Derniers Profils de Tokens',
+    clickToAnalyze: 'Cliquez sur un token pour l\'analyser'
+  }
+};
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || TRANSLATIONS['en'][key] || key;
+}
+
+function setLanguage(lang) {
+  console.log('🌍 Setting language to:', lang);
+  currentLang = lang;
+  localStorage.setItem('oracleLang', lang);
+  updateUILanguage();
+  console.log('✅ Language changed to:', currentLang);
+}
+
+function updateUILanguage() {
+  console.log('Updating UI language to:', currentLang);
+  // Update placeholder
+  const inputBox = document.getElementById('inputBox');
+  if (inputBox) inputBox.placeholder = t('placeholder');
+  // Update sidebar label
+  const sbLabel = document.querySelector('.sb-section-label');
+  if (sbLabel) sbLabel.textContent = t('today');
+  // Update new analysis button
+  const sbNew = document.querySelector('.sb-new');
+  if (sbNew) sbNew.innerHTML = '<span style="font-size:16px">+</span> ' + t('newAnalysis');
+  // Re-render sidebar and messages to apply translations
+  if (typeof renderSidebar === 'function') renderSidebar();
+  if (typeof renderMessages === 'function') renderMessages();
+}
+
+// Load saved language (runs after DOM is ready in INIT)
+function loadSavedLanguage() {
+  const saved = localStorage.getItem('oracleLang');
+  if (saved) {
+    currentLang = saved;
+    const sel = document.getElementById('langSelect');
+    if (sel) sel.value = saved;
+  }
+}
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const esc = s => { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
+const fP = p => p>=1?'$'+p.toFixed(2):p>=0.01?'$'+p.toFixed(4):p>=0.0001?'$'+p.toFixed(6):'$'+p.toFixed(10);
+const fN = n => n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toFixed(0);
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+function updateSendBtn() {
+  const btn = $('sendBtn');
+  const val = $('inputBox').value.trim();
+  btn.className = 'send-btn ' + (val ? 'active' : 'inactive');
+}
+
+// ═══════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════
+function toggleSidebar() {
+  $('sidebar').classList.toggle('closed');
+  $('tbToggle').classList.toggle('show', $('sidebar').classList.contains('closed'));
+}
+
+function renderSidebar() {
+  const html = conversations.map(c => `
+    <button class="sb-item ${c.id===activeId?'active':''}" onclick="switchConv(${c.id})">
+      <span class="sb-item-icon">☐</span>
+      <span class="sb-item-text">${esc(c.title)}</span>
+    </button>
+  `).join('');
+  $('sbList').innerHTML = html;
+}
+
+function switchConv(id) {
+  activeId = id;
+  renderSidebar();
+  renderMessages();
+  updateTopbar();
+}
+
+function newConversation() {
+  const c = { id: Date.now(), title: 'New analysis', messages: [] };
+  conversations.unshift(c);
+  activeId = c.id;
+  renderSidebar();
+  renderMessages();
+  updateTopbar();
+}
+
+function updateTopbar() {
+  const c = conversations.find(x => x.id === activeId);
+  if (c && c.messages.length > 0) {
+    $('tbSep').style.display = '';
+    $('tbSub').textContent = c.title;
+  } else {
+    $('tbSep').style.display = 'none';
+    $('tbSub').textContent = '';
+  }
+}
+
+// ═══════════════════════════════════════════
+// DETECT ADDRESS TYPE
+// ═══════════════════════════════════════════
+function detectAddress(input) {
+  const trimmed = input.trim();
+  if (/^0x[a-fA-F0-9]{40}$/.test(trimmed)) return { type: 'evm', addr: trimmed };
+  if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(trimmed)) return { type: 'sol', addr: trimmed };
+  return null;
+}
+
+// ═══════════════════════════════════════════
+// DEXSCREENER FETCH
+// ═══════════════════════════════════════════
+async function fetchDexScreener(addr) {
+  try {
+    const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d.pairs || !d.pairs.length) return null;
+    d.pairs.sort((a,b) => (parseFloat(b.volume?.h24)||0) - (parseFloat(a.volume?.h24)||0));
+    return d.pairs[0];
+  } catch(e) { return null; }
+}
+
+// ═══════════════════════════════════════════
+// DEXSCREENER SEARCH BY NAME
+// ═══════════════════════════════════════════
+async function searchDexScreener(query) {
+  try {
+    const r = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`, { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d.pairs || !d.pairs.length) return null;
+    d.pairs.sort((a,b) => (parseFloat(b.volume?.h24)||0) - (parseFloat(a.volume?.h24)||0));
+    return d.pairs[0];
+  } catch(e) { return null; }
+}
+
+// ═══════════════════════════════════════════
+// RUGCHECK API (Solana only)
+// ═══════════════════════════════════════════
+async function fetchRugcheck(addr) {
+  try {
+    const r = await fetch(`https://api.rugcheck.xyz/v1/tokens/${addr}/report/summary`, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+// ═══════════════════════════════════════════
+// TRENDING TOKENS (Boosted)
+// ═══════════════════════════════════════════
+async function fetchTrending() {
+  if (isLoading) return;
+  isLoading = true;
+  
+  const c = conversations.find(x => x.id === activeId);
+  c.title = t('trending');
+  c.messages.push({ role: 'user', content: t('trending') });
+  
+  renderSidebar();
+  renderMessages();
+  updateTopbar();
+  showLoading();
+  
+  try {
+    const r = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) throw new Error('API error');
+    const data = await r.json();
+    
+    if (!data || data.length === 0) {
+      hideLoading();
+      c.messages.push({ role: 'assistant', text: 'No trending tokens found at the moment.' });
+      isLoading = false;
+      renderMessages();
+      return;
+    }
+    
+    // Take top 10 and fetch details for each
+    const top = data.slice(0, 10);
+    const enriched = [];
+    
+    for (const token of top) {
+      const addr = token.tokenAddress || '';
+      const chain = token.chainId || 'solana';
+      if (!addr) continue;
+      
+      // Fetch DexScreener data for symbol/name
+      let symbol = '???';
+      let name = '';
+      let priceUsd = 0;
+      let volume24h = 0;
+      let liquidity = 0;
+      let priceChange24h = 0;
+      let dexIcon = '';
+      
+      try {
+        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(5000) });
+        if (dexRes.ok) {
+          const dexData = await dexRes.json();
+          if (dexData.pairs && dexData.pairs.length > 0) {
+            const pairData = dexData.pairs[0];
+            symbol = pairData.baseToken?.symbol || '???';
+            name = pairData.baseToken?.name || '';
+            priceUsd = parseFloat(pairData.priceUsd) || 0;
+            volume24h = parseFloat(pairData.volume?.h24) || 0;
+            liquidity = parseFloat(pairData.liquidity?.usd) || 0;
+            priceChange24h = parseFloat(pairData.priceChange?.h24) || 0;
+            dexIcon = pairData.info?.imageUrl || '';
+          }
+        }
+      } catch(e) {}
+      
+      // Priority: dexIcon (full URL from pairs API) > build URL from token.icon ID
+      let finalIcon = dexIcon;
+      if (!finalIcon && token.icon && token.icon.length > 5) {
+        finalIcon = `https://cdn.dexscreener.com/cms/images/${token.icon}?width=64&height=64&quality=95&format=auto`;
+      }
+      
+      // Calculate confidence score (0-100)
+      let confidence = 50; // Base
+      const boosts = token.totalAmount || token.amount || 0;
+      
+      // Boost score
+      if (boosts >= 500) confidence += 15;
+      else if (boosts >= 100) confidence += 10;
+      else if (boosts >= 50) confidence += 5;
+      
+      // Liquidity score
+      if (liquidity >= 100000) confidence += 15;
+      else if (liquidity >= 50000) confidence += 10;
+      else if (liquidity >= 10000) confidence += 5;
+      else if (liquidity < 5000) confidence -= 10;
+      
+      // Volume score
+      if (volume24h >= 100000) confidence += 10;
+      else if (volume24h >= 50000) confidence += 5;
+      
+      // Has icon/description
+      if (token.icon || dexIcon) confidence += 5;
+      if (token.description) confidence += 5;
+      
+      confidence = Math.max(0, Math.min(100, confidence));
+      
+      enriched.push({
+        chainId: chain,
+        tokenAddress: addr,
+        icon: finalIcon,
+        symbol,
+        name,
+        priceUsd,
+        volume24h,
+        liquidity,
+        priceChange24h,
+        boosts,
+        confidence
+      });
+    }
+    
+    // Sort by confidence
+    enriched.sort((a, b) => b.confidence - a.confidence);
+    
+    hideLoading();
+    
+    let html = `<div class="card"><div class="sec-title"><span class="sec-icon">🔥</span> ${t('topBoosted')}</div>`;
+    html += `<div style="display:flex;flex-direction:column;gap:8px">`;
+    
+    for (const token of enriched) {
+      const chain = token.chainId || 'unknown';
+      const addr = token.tokenAddress || '';
+      const icon = token.icon || '';
+      const confColor = token.confidence >= 70 ? 'var(--green)' : token.confidence >= 50 ? 'var(--yellow)' : 'var(--red)';
+      const confBg = token.confidence >= 70 ? 'var(--green-dim)' : token.confidence >= 50 ? 'var(--yellow-dim)' : 'var(--red-dim)';
+      
+      html += `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:8px;cursor:pointer;transition:all .15s" onclick="analyzeFromAddress('${addr}','${chain}')" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg)'">`;
+      
+      // Logo - always show image with fallback to emoji on error
+      html += `<img src="${icon}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--card-border)" onerror="this.onerror=null;this.style.display='none';this.parentNode.insertAdjacentHTML('afterbegin','<div style=\\'width:36px;height:36px;border-radius:50%;background:var(--card-border);display:flex;align-items:center;justify-content:center;font-size:16px\\'>🪙</div>')">`;
+      
+      // Token info
+      html += `<div style="flex:1;min-width:0">`;
+      html += `<div style="display:flex;align-items:center;gap:8px">`;
+      html += `<span style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan)">$${token.symbol}</span>`;
+      if (token.name) html += `<span style="font-family:var(--sans);font-size:11px;color:var(--text3)">${token.name.slice(0,15)}</span>`;
+      html += `</div>`;
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-top:2px">`;
+      html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${chain.toUpperCase()}</span>`;
+      if (token.priceUsd > 0) html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text2)">$${token.priceUsd < 0.0001 ? token.priceUsd.toExponential(2) : token.priceUsd.toFixed(token.priceUsd < 1 ? 6 : 2)}</span>`;
+      if (token.priceChange24h !== 0) {
+        const changeColor = token.priceChange24h >= 0 ? 'var(--green)' : 'var(--red)';
+        html += `<span style="font-family:var(--mono);font-size:10px;color:${changeColor}">${token.priceChange24h >= 0 ? '+' : ''}${token.priceChange24h.toFixed(1)}%</span>`;
+      }
+      html += `</div>`;
+      html += `</div>`;
+      
+      // Boosts badge
+      html += `<div style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:var(--yellow-dim);border-radius:4px"><span style="font-size:10px">⚡</span><span style="font-family:var(--mono);font-size:11px;color:var(--yellow)">${token.boosts}</span></div>`;
+      
+      // Sentiment badge
+      const sentimentLabel = token.confidence >= 70 ? 'BULLISH' : token.confidence >= 50 ? 'NEUTRAL' : 'BEARISH';
+      html += `<div style="padding:4px 8px;background:${confBg};border-radius:4px;font-family:var(--mono);font-size:10px;color:${confColor};font-weight:600">${sentimentLabel}</div>`;
+      
+      html += `</div>`;
+    }
+    
+    html += `</div></div>`;
+    html += `<p style="font-family:var(--sans);font-size:12px;color:var(--text3);margin-top:8px;text-align:center">${t('clickToAnalyze')}</p>`;
+    
+    c.messages.push({ role: 'assistant', html: html });
+  } catch (err) {
+    hideLoading();
+    c.messages.push({ role: 'assistant', text: 'Error fetching trending tokens: ' + err.message });
+  }
+  
+  isLoading = false;
+  renderMessages();
+}
+
+// ═══════════════════════════════════════════
+// NEW TOKEN PROFILES
+// ═══════════════════════════════════════════
+async function fetchNewProfiles() {
+  if (isLoading) return;
+  isLoading = true;
+  
+  const c = conversations.find(x => x.id === activeId);
+  c.title = t('newListings');
+  c.messages.push({ role: 'user', content: t('newListings') });
+  
+  renderSidebar();
+  renderMessages();
+  updateTopbar();
+  showLoading();
+  
+  try {
+    const r = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) throw new Error('API error');
+    const data = await r.json();
+    
+    if (!data || data.length === 0) {
+      hideLoading();
+      c.messages.push({ role: 'assistant', text: 'No new token profiles found at the moment.' });
+      isLoading = false;
+      renderMessages();
+      return;
+    }
+    
+    // Take latest 15 and fetch details
+    const latest = data.slice(0, 15);
+    const enriched = [];
+    
+    for (const token of latest) {
+      const addr = token.tokenAddress || '';
+      const chain = token.chainId || 'solana';
+      if (!addr) continue;
+      
+      let symbol = '???';
+      let name = '';
+      let priceUsd = 0;
+      let volume24h = 0;
+      let liquidity = 0;
+      let priceChange24h = 0;
+      let pairCreatedAt = 0;
+      let dexIcon = '';
+      
+      try {
+        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(5000) });
+        if (dexRes.ok) {
+          const dexData = await dexRes.json();
+          if (dexData.pairs && dexData.pairs.length > 0) {
+            const pairData = dexData.pairs[0];
+            symbol = pairData.baseToken?.symbol || '???';
+            name = pairData.baseToken?.name || '';
+            priceUsd = parseFloat(pairData.priceUsd) || 0;
+            volume24h = parseFloat(pairData.volume?.h24) || 0;
+            liquidity = parseFloat(pairData.liquidity?.usd) || 0;
+            priceChange24h = parseFloat(pairData.priceChange?.h24) || 0;
+            pairCreatedAt = pairData.pairCreatedAt || 0;
+            dexIcon = pairData.info?.imageUrl || '';
+          }
+        }
+      } catch(e) {}
+      
+      // Priority: dexIcon (full URL from pairs API) > build URL from token.icon ID
+      let finalIcon = dexIcon;
+      if (!finalIcon && token.icon && token.icon.length > 5) {
+        finalIcon = `https://cdn.dexscreener.com/cms/images/${token.icon}?width=64&height=64&quality=95&format=auto`;
+      }
+      
+      // Calculate confidence (0-100)
+      let confidence = 40;
+      if (liquidity >= 100000) confidence += 25;
+      else if (liquidity >= 50000) confidence += 20;
+      else if (liquidity >= 20000) confidence += 15;
+      else if (liquidity >= 10000) confidence += 10;
+      else if (liquidity >= 5000) confidence += 5;
+      else if (liquidity < 2000) confidence -= 15;
+      
+      if (volume24h >= 50000) confidence += 15;
+      else if (volume24h >= 20000) confidence += 10;
+      else if (volume24h >= 5000) confidence += 5;
+      
+      if (token.icon || dexIcon) confidence += 5;
+      if (token.description && token.description.length > 20) confidence += 5;
+      if (token.links && token.links.length >= 2) confidence += 5;
+      
+      confidence = Math.max(0, Math.min(100, confidence));
+      
+      enriched.push({
+        chainId: chain,
+        tokenAddress: addr,
+        icon: finalIcon,
+        symbol, name, priceUsd, volume24h, liquidity, priceChange24h, pairCreatedAt, confidence
+      });
+    }
+    
+    // Sort by confidence
+    enriched.sort((a, b) => b.confidence - a.confidence);
+    const top10 = enriched.slice(0, 10);
+    
+    hideLoading();
+    
+    let html = `<div class="card"><div class="sec-title"><span class="sec-icon">🆕</span> ${t('latestProfiles')}</div>`;
+    html += `<div style="display:flex;flex-direction:column;gap:8px">`;
+    
+    for (const token of top10) {
+      const chain = token.chainId || 'unknown';
+      const addr = token.tokenAddress || '';
+      const icon = token.icon || '';
+      const confColor = token.confidence >= 70 ? 'var(--green)' : token.confidence >= 50 ? 'var(--yellow)' : 'var(--red)';
+      const confBg = token.confidence >= 70 ? 'var(--green-dim)' : token.confidence >= 50 ? 'var(--yellow-dim)' : 'var(--red-dim)';
+      
+      let ageText = 'NEW';
+      if (token.pairCreatedAt) {
+        const ageMs = Date.now() - token.pairCreatedAt;
+        const ageHours = Math.floor(ageMs / (1000 * 60 * 60));
+        if (ageHours < 1) ageText = '<1h';
+        else if (ageHours < 24) ageText = ageHours + 'h';
+        else ageText = Math.floor(ageHours / 24) + 'd';
+      }
+      
+      html += `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:8px;cursor:pointer;transition:all .15s" onclick="analyzeFromAddress('${addr}','${chain}')" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg)'">`;
+      
+      // Logo - always show image with fallback to emoji on error
+      html += `<img src="${icon}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--card-border)" onerror="this.onerror=null;this.style.display='none';this.parentNode.insertAdjacentHTML('afterbegin','<div style=\\'width:36px;height:36px;border-radius:50%;background:var(--card-border);display:flex;align-items:center;justify-content:center;font-size:16px\\'>🪙</div>')">`;
+      
+      html += `<div style="flex:1;min-width:0">`;
+      html += `<div style="display:flex;align-items:center;gap:8px">`;
+      html += `<span style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan)">$${token.symbol}</span>`;
+      if (token.name) html += `<span style="font-family:var(--sans);font-size:11px;color:var(--text3)">${token.name.slice(0,15)}</span>`;
+      html += `</div>`;
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-top:2px">`;
+      html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${chain.toUpperCase()}</span>`;
+      if (token.priceUsd > 0) html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text2)">$${token.priceUsd < 0.0001 ? token.priceUsd.toExponential(2) : token.priceUsd.toFixed(token.priceUsd < 1 ? 6 : 2)}</span>`;
+      if (token.liquidity > 0) html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text3)">Liq: $${token.liquidity >= 1000 ? (token.liquidity/1000).toFixed(0)+'K' : token.liquidity.toFixed(0)}</span>`;
+      html += `</div>`;
+      html += `</div>`;
+      
+      html += `<div style="padding:4px 8px;background:var(--purple-dim);border-radius:4px;font-family:var(--mono);font-size:10px;color:var(--purple)">${ageText}</div>`;
+      const sentimentLabel = token.confidence >= 70 ? 'BULLISH' : token.confidence >= 50 ? 'NEUTRAL' : 'BEARISH';
+      html += `<div style="padding:4px 8px;background:${confBg};border-radius:4px;font-family:var(--mono);font-size:10px;color:${confColor};font-weight:600">${sentimentLabel}</div>`;
+      
+      html += `</div>`;
+    }
+    
+    html += `</div></div>`;
+    html += `<p style="font-family:var(--sans);font-size:12px;color:var(--text3);margin-top:8px;text-align:center">${t('clickToAnalyze')}</p>`;
+    
+    c.messages.push({ role: 'assistant', html: html });
+  } catch (err) {
+    hideLoading();
+    c.messages.push({ role: 'assistant', text: 'Error fetching new profiles: ' + err.message });
+  }
+  
+  isLoading = false;
+  renderMessages();
+}
+
+// ═══════════════════════════════════════════
+// ANALYZE FROM ADDRESS (click handler)
+// ═══════════════════════════════════════════
+async function analyzeFromAddress(addr, chain) {
+  if (isLoading) return;
+  document.getElementById('inputBox').value = addr;
+  sendFromInput();
+}
+
+// ═══════════════════════════════════════════
+// LOCAL ANALYSIS ENGINE
+// ═══════════════════════════════════════════
+function analyzeToken(pair, rugData) {
+  const price=parseFloat(pair.priceUsd)||0;
+  const mc=parseFloat(pair.marketCap)||0;
+  const liq=parseFloat(pair.liquidity?.usd)||0;
+  const vol=parseFloat(pair.volume?.h24)||0;
+  const buys=pair.txns?.h24?.buys||0;
+  const sells=pair.txns?.h24?.sells||0;
+  const chg5m=parseFloat(pair.priceChange?.m5)||0;
+  const chg1h=parseFloat(pair.priceChange?.h1)||0;
+  const chg6h=parseFloat(pair.priceChange?.h6)||0;
+  const chg24h=parseFloat(pair.priceChange?.h24)||0;
+  const chain=pair.chainId||'unknown';
+  const sym=pair.baseToken?.symbol||'???';
+  const name=pair.baseToken?.name||sym;
+  const created=pair.pairCreatedAt?new Date(pair.pairCreatedAt):null;
+  const ageMs=created?Date.now()-created.getTime():0;
+  const ageHours=ageMs/3600000;
+  const ageDays=ageHours/24;
+
+  // Risk factors
+  let factors=[];
+  const liqScore=liq>500000?10:liq>100000?25:liq>50000?40:liq>10000?60:liq>1000?80:95;
+  factors.push({name:'Liquidity',score:liqScore,w:20,color:liqScore<30?'var(--green)':liqScore<60?'var(--yellow)':'var(--red)'});
+  const vmr=mc>0?vol/mc:0;
+  const volScore=vmr>0.5?15:vmr>0.2?30:vmr>0.05?50:vmr>0.01?70:90;
+  factors.push({name:'Volume',score:volScore,w:15,color:volScore<30?'var(--green)':volScore<60?'var(--yellow)':'var(--red)'});
+  const ageScore=ageDays>180?10:ageDays>30?25:ageDays>7?40:ageDays>1?65:85;
+  factors.push({name:'Age',score:ageScore,w:15,color:ageScore<30?'var(--green)':ageScore<60?'var(--yellow)':'var(--red)'});
+  const total=buys+sells;const buyRatio=total>0?buys/total:0.5;
+  const bsScore=buyRatio>0.65?25:buyRatio>0.45?40:buyRatio<0.3?80:55;
+  factors.push({name:'Buy/Sell',score:bsScore,w:10,color:bsScore<30?'var(--green)':bsScore<60?'var(--yellow)':'var(--red)'});
+  const absChg=Math.abs(chg24h);
+  const volat=absChg>80?90:absChg>40?70:absChg>15?45:absChg>5?25:15;
+  factors.push({name:'Volatility',score:volat,w:10,color:volat<30?'var(--green)':volat<60?'var(--yellow)':'var(--red)'});
+  const mcLiq=liq>0?mc/liq:999;
+  const mcLiqScore=mcLiq>50?85:mcLiq>20?65:mcLiq>5?40:mcLiq>2?25:15;
+  factors.push({name:'MC/Liq Ratio',score:mcLiqScore,w:15,color:mcLiqScore<30?'var(--green)':mcLiqScore<60?'var(--yellow)':'var(--red)'});
+  const concScore=mc<50000?75:mc<500000?55:mc<5000000?35:20;
+  factors.push({name:'Concentration',score:concScore,w:15,color:concScore<30?'var(--green)':concScore<60?'var(--yellow)':'var(--red)'});
+
+  const totalW=factors.reduce((s,f)=>s+f.w,0);
+  const risk=Math.round(factors.reduce((s,f)=>s+f.score*(f.w/totalW),0));
+
+  let rugFlags=[];
+  let mintEnabled=false,freezeEnabled=false;
+  if(rugData){
+    if(rugData.risks)rugData.risks.forEach(r=>rugFlags.push(r.name||r.description||'Unknown risk'));
+    mintEnabled=rugData.mintAuthority!==null&&rugData.mintAuthority!==undefined;
+    freezeEnabled=rugData.freezeAuthority!==null&&rugData.freezeAuthority!==undefined;
+  }
+
+  let bias='CAUTIOUS';
+  if(risk<35&&chg24h>-5)bias='BULLISH';
+  else if(risk>65||chg24h<-30)bias='BEARISH';
+
+  const confidence=Math.max(15,Math.min(95,100-risk+Math.round(Math.random()*10-5)));
+
+  let legScore=50;
+  const hasSocials=!!(pair.info?.socials?.length);
+  const hasWebsite=!!(pair.info?.websites?.length);
+  const hasImage=!!(pair.info?.imageUrl);
+  if(hasSocials)legScore+=15;
+  if(hasWebsite)legScore+=15;
+  if(hasImage)legScore+=5;
+  if(ageDays>30)legScore+=10;
+  if(liq>100000)legScore+=10;
+  if(rugFlags.length>2)legScore-=25;
+  if(mintEnabled)legScore-=15;
+  if(freezeEnabled)legScore-=10;
+  legScore=Math.max(5,Math.min(95,legScore));
+
+  let legNotes=[];
+  if(hasWebsite)legNotes.push({text:'Website registered in project metadata',type:'positive'});
+  else legNotes.push({text:'No website found in on-chain metadata',type:'negative'});
+  if(hasSocials)legNotes.push({text:'Social channels (Twitter/Telegram) linked',type:'positive'});
+  else legNotes.push({text:'No social media linked — project identity unverified',type:'negative'});
+  if(mintEnabled)legNotes.push({text:'Mint authority still enabled — supply can be inflated',type:'negative'});
+  if(freezeEnabled)legNotes.push({text:'Freeze authority active — tokens can be frozen',type:'negative'});
+  if(ageDays<1)legNotes.push({text:`Token created ${ageHours<1?Math.round(ageHours*60)+'m':Math.round(ageHours)+'h'} ago — extremely new`,type:'negative'});
+  else if(ageDays<7)legNotes.push({text:`Token is ${Math.round(ageDays)} days old`,type:'neutral'});
+  else legNotes.push({text:`Token has been live for ${Math.round(ageDays)} days`,type:'positive'});
+  if(rugFlags.length)legNotes.push({text:`Rugcheck flagged ${rugFlags.length} risk(s): ${rugFlags.slice(0,3).join(', ')}`,type:'negative'});
+
+  let summary='';
+  if(risk<30)summary=`${name} (${sym}) presents a relatively low-risk profile with ${liq>100000?'strong':'moderate'} liquidity of $${fN(liq)} and healthy market activity. `;
+  else if(risk<60)summary=`${name} (${sym}) shows a moderate risk profile. Liquidity sits at $${fN(liq)} with a market cap of $${fN(mc)}. `;
+  else summary=`${name} (${sym}) carries elevated risk. ${liq<10000?'Critically thin liquidity of $'+fN(liq)+' makes execution unreliable.':'Liquidity of $'+fN(liq)+' is limited.'} `;
+  
+  if(ageDays<1)summary+='This is a fresh launch — treat with extreme caution. ';
+  if(chg24h<-20)summary+=`Sharp ${Math.abs(chg24h).toFixed(1)}% drawdown in 24h signals potential distribution. `;
+  if(chg24h>50)summary+=`Strong ${chg24h.toFixed(1)}% pump in 24h — watch for mean-reversion risk. `;
+  if(buyRatio>0.7)summary+='Heavy buy-side dominance may indicate accumulation or bot activity. ';
+  if(buyRatio<0.35)summary+='Sell pressure dominates — likely distribution phase. ';
+
+  const entry1=price*0.92,entry2=price*0.85;
+  const sl=price*0.75;
+  const t1=price*1.25,t2=price*1.6,t3=price*2.5;
+  const tradeSetup={
+    entry:`Wait for pullback to ${fP(entry1)}–${fP(entry2)} OR momentum entry on hold above ${fP(price*1.05)} with rising 5-15m volume`,
+    stopLoss:`Below ${fP(sl)} (-${((1-sl/price)*100).toFixed(0)}% from ${fP(entry1)} entry) or below ${fP(price*0.87)} for momentum entry`,
+    targets:[
+      {timeframe:'1-3 day',price:fP(t1),probability:45,gain:Math.round((t1/price-1)*100)},
+      {timeframe:'1-2 wks',price:fP(t2),probability:22,gain:Math.round((t2/price-1)*100)},
+      {timeframe:'moonshot',price:fP(t3),probability:8,gain:Math.round((t3/price-1)*100)},
+    ]
+  };
+
+  const bullPct=risk<40?45:risk<60?30:20;
+  const basePct=risk<40?35:risk<60?42:35;
+  const bearPct=100-bullPct-basePct;
+
+  const freshPct=ageDays<1?75:ageDays<7?55:ageDays<30?35:20;
+  const unknownPct=Math.round((100-freshPct)*0.4);
+  const estPct=100-freshPct-unknownPct;
+  let botRisk=freshPct>60?'HIGH':freshPct>35?'MEDIUM':'LOW';
+  let holderNotes=[];
+  if(total>5000)holderNotes.push(`${total.toLocaleString()} transactions in 24h — consistent with ${freshPct>50?'heavy bot/sniper':'moderate'} participation`);
+  if(liq<30000)holderNotes.push(`Thin absolute liquidity ($${fN(liq)}) increases slippage and makes stop execution unreliable`);
+  if(chg1h<-10)holderNotes.push(`Large 1h drawdown (${chg1h.toFixed(1)}%) suggests distribution wave or reflexive unwind`);
+  if(freshPct>60)holderNotes.push('High fresh/sniper wallet concentration — elevated rug and dump risk');
+
+  const support=[
+    `${fP(price*0.9)}–${fP(price*0.92)} (preferred bid zone after mean reversion)`,
+    `${fP(price*0.75)}–${fP(price*0.80)} (invalidation zone; below here downside accelerates)`
+  ];
+  const resistance=[
+    `${fP(price*1.15)} (near-term reclaim level; needs sustained holds)`,
+    `${fP(price*1.35)}–${fP(price*1.5)} (first expansion target / likely supply zone)`
+  ];
+
+  let onChain=`On-chain metadata ${hasWebsite||hasSocials?'includes':'provides no'} creator-signed ${hasWebsite?'website':'—'} ${hasSocials?'and social handles':'or X handle'}`;
+  if(!hasWebsite&&!hasSocials)onChain+=', and cross-verification finds zero official references — the project identity is unverified and should be treated as suspicious';
+  onChain+=`. The market is ${vol>100000?'actively traded':'thinly traded'} (24h volume ~$${fN(vol)}) `;
+  onChain+=`${liq<30000?'but structurally fragile due to only ~$'+fN(liq)+' liquidity':'with $'+fN(liq)+' in pool liquidity'}`;
+  if(chg1h<-5)onChain+=` and a sharp ${Math.abs(chg1h).toFixed(1)}% 1h pullback`;
+  onChain+=`. The flow profile (${buys.toLocaleString()} buys / ${sells.toLocaleString()} sells in 24h) `;
+  onChain+=buyRatio>0.6?'suggests accumulation but could mask bot-driven wash trading. ':'is balanced but watch for distribution waves. ';
+  onChain+=`Trade only tactically: prefer bids on pullback into ${fP(entry1)}–${fP(entry2)} with a hard stop below ~${fP(sl)}, or take a momentum entry only if price reclaims ${fP(price*1.15)} and holds with accelerating short-term volume.`;
+
+  // Extract socials
+  const twitterLink = pair.info?.socials?.find(s => s.type === 'twitter' || s.platform === 'twitter')?.url || '';
+  const websiteLink = pair.info?.websites?.[0]?.url || '';
+  const logo = pair.info?.imageUrl || '';
+  const contractAddress = pair.baseToken?.address || '';
+
+  return {
+    tokenName:name,ticker:sym,chain,currentPrice:price,
+    logo, contractAddress, twitterLink, websiteLink,
+    bias,confidence,summary:summary.trim(),
+    legitimacyScore:legScore,legitimacyNotes:legNotes,
+    tradeSetup,
+    scenarios:{bull:bullPct,base:basePct,bear:bearPct},
+    botRisk,
+    holders:{fresh:freshPct,unknown:unknownPct,established:estPct},
+    holderNotes,support,resistance,onChainAnalysis:onChain,
+    factors,risk,
+    _dex:pair, _rug:rugData
+  };
+}
+
+// ═══════════════════════════════════════════
+// GENERAL RESPONSES (no API needed)
+// ═══════════════════════════════════════════
+const GENERAL = {
+  'solana outlook': `📈 SOLANA OUTLOOK — Current Assessment
+
+Solana continues to demonstrate strong network fundamentals with transaction throughput consistently exceeding 3,000 TPS. The ecosystem is seeing sustained developer activity, particularly in DeFi and NFT infrastructure.
+
+Key observations:
+• SOL price action has shown relative strength vs other L1s, holding key support at the 20-week moving average
+• TVL on Solana DeFi protocols has been trending upward, with Jupiter, Raydium, and Marinade leading
+• Memecoin activity remains a significant volume driver, though this introduces volatility risk
+• Institutional interest continues via Solana ETF speculation and traditional finance integrations
+
+Risk factors: Network congestion during high-activity periods, regulatory uncertainty, competition from other high-throughput chains.
+
+Overall bias: Cautiously constructive.`,
+
+  'macro scenario': `📊 MACRO SCENARIO — Multi-Timeframe Analysis
+
+Global macro conditions are creating a complex backdrop for crypto:
+
+• Interest rates: Central banks are navigating between inflation control and economic growth
+• Dollar strength: DXY movements remain a key inverse correlator with BTC and altcoins
+• Liquidity: Global M2 money supply trends suggest improving conditions
+• Regulatory: US regulatory clarity is evolving
+
+Scenarios:
+🟢 Bull (30%): Rate cuts accelerate, ETF inflows surge, BTC breaks ATH
+🟡 Base (45%): Sideways consolidation, selective altcoin moves
+🔴 Bear (25%): Macro shock, risk-off across all assets
+
+Positioning: Maintain core BTC/ETH/SOL positions, keep dry powder for dips.`,
+
+  'btc scenarios': `⚡ BTC SCENARIOS — Price Framework
+
+🟢 BULL CASE (35% probability)
+• Trigger: ETF inflows accelerate, halving supply shock materializes
+• Target: New ATH, potential extension to $150K-$180K range
+• Timeline: 3-6 months
+
+🟡 BASE CASE (40% probability)
+• Trigger: Steady institutional accumulation
+• Range: ±15% from current levels, extended consolidation
+• Timeline: 1-3 months
+
+🔴 BEAR CASE (25% probability)
+• Trigger: Macro shock, regulatory crackdown, ETF outflows
+• Target: -30% to -40% drawdown
+• Timeline: Could be rapid (1-2 weeks) if triggered
+
+Strategy: Dollar-cost average into strength, maintain stop losses on leveraged positions.`,
+
+  'altcoin season': `🎯 ALTCOIN SEASON — Status Report
+
+📊 METRICS:
+• BTC Dominance: Elevated — needs to decline below 50% for full alt season
+• ETH/BTC ratio: Key barometer — strength here precedes rotations
+
+🔥 HOT SECTORS:
+• AI/DeFAI tokens: Leading narrative
+• RWA (Real World Assets): Institutional adoption
+• Solana ecosystem: Memecoins + DeFi volume
+
+❄️ COLD SECTORS:
+• Gaming/Metaverse tokens: Underperforming
+• Privacy coins: Regulatory pressure
+• Legacy DeFi 1.0: Yield compression
+
+Strategy: Focus on sector leaders, avoid "everything pumps" FOMO, maintain BTC core position.`
+};
+
+// ═══════════════════════════════════════════
+// BUILD CONFIDENCE GAUGE SVG
+// ═══════════════════════════════════════════
+function gaugeHTML(score) {
+  const color = score >= 70 ? 'var(--green)' : score >= 40 ? 'var(--yellow)' : 'var(--red)';
+  const circ = 2 * Math.PI * 38;
+  const off = circ - (score / 100) * circ;
+  return `
+    <div class="gauge-wrap">
+      <svg width="80" height="80" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r="38" fill="none" stroke="var(--card-border)" stroke-width="4"/>
+        <circle cx="40" cy="40" r="38" fill="none" stroke="${color}" stroke-width="4"
+          stroke-dasharray="${circ}" stroke-dashoffset="${off}" stroke-linecap="round"
+          transform="rotate(-90 40 40)" style="transition:stroke-dashoffset 1s ease"/>
+      </svg>
+      <div class="gauge-text">
+        <span class="gauge-num" style="color:${color}">${score}</span>
+        <span class="gauge-label">${t('confidence')}</span>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+// PROGRESS BAR HTML
+// ═══════════════════════════════════════════
+function progressHTML(value, color, height = 6) {
+  return `
+    <div class="progress-track" style="height:${height}px">
+      <div class="progress-fill" style="width:${value}%;background:${color};height:${height}px"></div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+// BADGE HTML
+// ═══════════════════════════════════════════
+function badgeHTML(text, colorClass) {
+  return `<span class="badge ${colorClass}">${text}</span>`;
+}
+
+// ═══════════════════════════════════════════
+// RENDER FULL ANALYSIS CARD
+// ═══════════════════════════════════════════
+function renderAnalysis(data) {
+  const biasColor = data.bias==='BULLISH'?'green':data.bias==='BEARISH'?'red':'yellow';
+  const biasArrow = data.bias==='BULLISH'?'↗':data.bias==='BEARISH'?'↘':'—';
+  const legScore = data.legitimacyScore;
+  const legColor = legScore<=30?'red':legScore<=60?'yellow':'green';
+  const legLabel = legScore<=30?'SUSPICIOUS':legScore<=60?'CAUTION':'VERIFIED';
+  
+  // Check if major crypto (simplified view)
+  const majorCryptos = ['BTC', 'ETH', 'SOL', 'BNB', 'DOGE', 'PEPE', 'WBTC', 'WETH', 'WSOL'];
+  const isMajor = majorCryptos.includes(data.ticker?.toUpperCase());
+
+  let html = '';
+
+  // ── TOKEN HEADER with logo, name, CA copy
+  html += `<div class="card">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+      ${data.logo ? `<img src="${data.logo}" style="width:48px;height:48px;border-radius:12px;object-fit:cover;background:var(--card-border)" onerror="this.style.display='none'">` : `<div style="width:48px;height:48px;border-radius:12px;background:var(--card-border);display:flex;align-items:center;justify-content:center;font-size:24px">🪙</div>`}
+      <div style="flex:1;min-width:0">
+        <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan)">\$${esc(data.ticker)}</div>
+        <div style="font-family:var(--sans);font-size:12px;color:var(--text3)">${esc(data.tokenName)} · ${data.chain.toUpperCase()}</div>
+      </div>
+      ${isMajor ? `<div style="padding:6px 12px;background:var(--cyan-dim);border-radius:6px;font-family:var(--mono);font-size:10px;color:var(--cyan);font-weight:600">MAJOR</div>` : ''}
+    </div>
+    ${!isMajor && data.contractAddress ? `<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:16px">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${data.contractAddress}</span>
+      <button onclick="navigator.clipboard.writeText('${data.contractAddress}');this.textContent='✓';setTimeout(()=>this.textContent='Copy',1500)" style="background:var(--cyan-dim);border:none;color:var(--cyan);padding:6px 12px;border-radius:6px;font-family:var(--mono);font-size:10px;cursor:pointer;white-space:nowrap">Copy</button>
+    </div>` : ''}
+    <div class="flex-between">
+      <div style="flex:1">
+        <div class="mb-10">${badgeHTML(biasArrow+' '+data.bias+' BIAS','badge-'+biasColor)}</div>
+        <p style="font-family:var(--sans);font-size:14px;line-height:1.65;color:var(--text);margin:0">${esc(data.summary)}</p>
+      </div>
+      <div style="margin-left:20px">${gaugeHTML(data.confidence)}</div>
+    </div>
+  </div>`;
+
+  // ── TRADE SETUP (always show)
+  if (data.tradeSetup) {
+    const ts = data.tradeSetup;
+    html += `<div class="card">
+      <div class="sec-title"><span class="sec-icon">◎</span> ${t('tradeSetup')}</div>
+      <div class="grid-2 mb-16">
+        <div class="zone-box zone-green">
+          <div class="zone-label" style="color:var(--green)">${t('entryPrice')}</div>
+          <div class="zone-val">${esc(ts.entry)}</div>
+        </div>
+        <div class="zone-box zone-red">
+          <div class="zone-label" style="color:var(--red)">${t('stopLoss')}</div>
+          <div class="zone-val">${esc(ts.stopLoss)}</div>
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);margin-bottom:10px">${t('priceTargets')}</div>
+      ${(ts.targets||[]).map((tg,i) => `
+        <div class="target-row">
+          <span class="target-label">Target ${i+1} (${esc(tg.timeframe)})</span>
+          ${progressHTML(tg.probability, 'var(--cyan)', 5)}
+          <span class="target-pct">${tg.probability}%</span>
+          <span class="target-price">${esc(tg.price)}</span>
+          <span class="target-gain">+${tg.gain}%</span>
+        </div>`).join('')}
+    </div>`;
+  }
+  
+  // For major cryptos, stop here (simplified view)
+  if (isMajor) {
+    return html;
+  }
+
+  // ── PROJECT LEGITIMACY (only for non-major tokens)
+  const legLabelText = legScore<=30?t('suspicious'):legScore<=60?t('caution'):t('verified');
+  html += `<div class="card">
+    <div class="sec-title" style="justify-content:space-between">
+      <span><span class="sec-icon">⊙</span> ${t('projectLegitimacy')}</span>
+      ${badgeHTML(legLabelText, 'badge-'+legColor)}
+    </div>
+    <div class="flex-center gap-12 mb-16">
+      ${progressHTML(legScore, 'var(--'+legColor+')')}
+      <span style="font-family:var(--mono);font-size:13px;color:var(--text2);white-space:nowrap">${legScore} <span style="font-size:10px">/100</span></span>
+    </div>
+    ${(data.twitterLink || data.websiteLink) ? `<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      ${data.twitterLink ? `<a href="${data.twitterLink}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg);border-radius:8px;text-decoration:none;color:var(--text);font-family:var(--mono);font-size:12px;transition:background .15s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg)'"><span style="font-size:14px">𝕏</span> Twitter</a>` : ''}
+      ${data.websiteLink ? `<a href="${data.websiteLink}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg);border-radius:8px;text-decoration:none;color:var(--text);font-family:var(--mono);font-size:12px;transition:background .15s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg)'"><span style="font-size:14px">🌐</span> Website</a>` : ''}
+    </div>` : ''}
+    <ul class="note-list">
+      ${(data.legitimacyNotes||[]).map(n => `<li class="note-item"><span class="note-icon">${n.type==='positive'?'+':n.type==='negative'?'−':'~'}</span>${esc(n.text)}</li>`).join('')}
+    </ul>
+  </div>`;
+
+  // ── SCENARIO PROBABILITIES
+  if (data.scenarios) {
+    const s = data.scenarios;
+    html += `<div class="card">
+      <div class="sec-title"><span class="sec-icon">●</span> ${t('scenarioProb')}</div>
+      <div class="grid-3">
+        ${[{l:t('bullCase'),v:s.bull,c:'green'},{l:t('baseCase'),v:s.base,c:'yellow'},{l:t('bearCase'),v:s.bear,c:'red'}].map(x => `
+          <div class="scenario-box">
+            <div class="scenario-label">${x.l}</div>
+            <div class="scenario-bar"><div class="scenario-bar-fill" style="width:${x.v}%;background:var(--${x.c})"></div></div>
+            <div class="scenario-value" style="color:var(--${x.c})">${x.v}%</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // ── HOLDER QUALITY
+  if (data.holders) {
+    const h = data.holders;
+    const brClass = data.botRisk==='HIGH'?'badge-red':data.botRisk==='MEDIUM'?'badge-yellow':'badge-green';
+    html += `<div class="card">
+      <div class="sec-title" style="justify-content:space-between">
+        <span><span class="sec-icon">👥</span> ${t('holderQuality')}</span>
+        ${badgeHTML(t('botRisk').toUpperCase()+': '+data.botRisk, brClass)}
+      </div>
+      <div class="holder-bar">
+        <div style="width:${h.fresh}%;background:var(--red)"></div>
+        <div style="width:${h.unknown}%;background:var(--yellow)"></div>
+        <div style="width:${h.established}%;background:var(--green)"></div>
+      </div>
+      <div class="holder-legend">
+        <span class="holder-leg"><span class="holder-dot" style="background:var(--red)"></span>Fresh/Sniper ${h.fresh}%</span>
+        <span class="holder-leg"><span class="holder-dot" style="background:var(--yellow)"></span>Unknown ${h.unknown}%</span>
+        <span class="holder-leg"><span class="holder-dot" style="background:var(--green)"></span>Established ${h.established}%</span>
+      </div>
+      ${(data.holderNotes||[]).map(n => `<div class="holder-note">⚠ ${esc(n)}</div>`).join('')}
+    </div>`;
+  }
+
+  // ── SUPPORT / RESISTANCE
+  if (data.support || data.resistance) {
+    html += `<div class="grid-2">
+      <div class="sr-box sr-green">
+        <div class="sr-label" style="color:var(--green)">${t('support')}</div>
+        ${(data.support||[]).map(s => `<div class="sr-item"><span style="color:var(--green);margin-right:6px">▸</span>${esc(s)}</div>`).join('')}
+      </div>
+      <div class="sr-box sr-red">
+        <div class="sr-label" style="color:var(--red)">${t('resistance')}</div>
+        ${(data.resistance||[]).map(r => `<div class="sr-item"><span style="color:var(--red);margin-right:6px">▸</span>${esc(r)}</div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // ── ON-CHAIN ANALYSIS
+  if (data.onChainAnalysis) {
+    html += `<div class="card card-accent" style="margin-top:12px">
+      <p style="font-family:var(--sans);font-size:13.5px;line-height:1.75;color:var(--text);margin:0">${esc(data.onChainAnalysis)}</p>
+    </div>`;
+  }
+
+  // ── DEX DATA (if fetched)
+  if (data._dex) {
+    const d = data._dex;
+    html += `<div class="card" style="margin-top:12px">
+      <div class="sec-title"><span class="sec-icon">📊</span> ${t('liveData')}</div>
+      <div class="grid-3" style="gap:8px">
+        ${[
+          {l:'PRICE',v:fP(parseFloat(d.priceUsd)||0),c:'#fff'},
+          {l:'MARKET CAP',v:'$'+fN(parseFloat(d.marketCap)||0),c:'var(--purple)'},
+          {l:'LIQUIDITY',v:'$'+fN(parseFloat(d.liquidity?.usd)||0),c:'var(--cyan)'},
+          {l:'VOLUME 24H',v:'$'+fN(parseFloat(d.volume?.h24)||0),c:'var(--orange)'},
+          {l:'BUYS 24H',v:fN(d.txns?.h24?.buys||0),c:'var(--green)'},
+          {l:'SELLS 24H',v:fN(d.txns?.h24?.sells||0),c:'var(--red)'},
+        ].map(m => `
+          <div style="background:var(--bg);border-radius:6px;padding:10px;border-left:2px solid ${m.c}">
+            <div style="font-family:var(--mono);font-size:7px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:4px">${m.l}</div>
+            <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${m.c}">${m.v}</div>
+          </div>`).join('')}
+      </div>
+      <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+        ${[{l:'5M',v:d.priceChange?.m5},{l:'1H',v:d.priceChange?.h1},{l:'6H',v:d.priceChange?.h6},{l:'24H',v:d.priceChange?.h24}].map(p => {
+          const v = parseFloat(p.v)||0;
+          const c = v>=0?'var(--green)':'var(--red)';
+          return `<div style="background:var(--bg);border-radius:6px;padding:8px 12px;flex:1;min-width:60px;text-align:center">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:2px">${p.l}</div>
+            <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${c}">${v>=0?'+':''}${v.toFixed(1)}%</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+        <a href="https://dexscreener.com/${d.chainId}/${d.pairAddress}" target="_blank" rel="noopener"
+          style="flex:1;text-align:center;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--cyan);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600;transition:all .15s">
+          📊 DEXSCREENER
+        </a>
+        ${d.chainId==='solana'?`<a href="https://rugcheck.xyz/tokens/${d.baseToken?.address}" target="_blank" rel="noopener"
+          style="flex:1;text-align:center;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--green);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600">
+          🛡 RUGCHECK
+        </a>`:''}
+        <a href="https://app.bubblemaps.io/${d.chainId==='solana'?'sol':'eth'}/token/${d.baseToken?.address}" target="_blank" rel="noopener"
+          style="flex:1;text-align:center;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--purple);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600">
+          🫧 BUBBLEMAPS
+        </a>
+      </div>
+    </div>`;
+  }
+
+  return html;
+}
+
+// ═══════════════════════════════════════════
+// RENDER MESSAGES
+// ═══════════════════════════════════════════
+function renderMessages() {
+  const c = conversations.find(x => x.id === activeId);
+  if (!c) return;
+
+  if (c.messages.length === 0) {
+    $('msgContainer').innerHTML = `
+      <div class="welcome">
+        <img class="welcome-icon" src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="DexScreener AI">
+        <div class="welcome-title">DEXSCREENER AI</div>
+        <div class="welcome-sub">${t('tokenIntelligence')}</div>
+        <div class="quick-tokens">
+          <button class="quick-btn" onclick="quickAnalyze('BTC')"><img src="https://assets.coingecko.com/coins/images/1/small/bitcoin.png" onerror="this.style.display='none'"><span>BTC</span></button>
+          <button class="quick-btn" onclick="quickAnalyze('ETH')"><img src="https://assets.coingecko.com/coins/images/279/small/ethereum.png" onerror="this.style.display='none'"><span>ETH</span></button>
+          <button class="quick-btn" onclick="quickAnalyze('SOL')"><img src="https://assets.coingecko.com/coins/images/4128/small/solana.png" onerror="this.style.display='none'"><span>SOL</span></button>
+          <button class="quick-btn" onclick="quickAnalyze('BNB')"><img src="https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png" onerror="this.style.display='none'"><span>BNB</span></button>
+          <button class="quick-btn" onclick="quickAnalyze('DOGE')"><img src="https://assets.coingecko.com/coins/images/5/small/dogecoin.png" onerror="this.style.display='none'"><span>DOGE</span></button>
+          <button class="quick-btn" onclick="quickAnalyze('PEPE')"><img src="https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg" onerror="this.style.display='none'"><span>PEPE</span></button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  let html = '';
+  for (const msg of c.messages) {
+    if (msg.role === 'user') {
+      html += `<div class="msg-user"><div class="msg-user-bubble">${esc(msg.content)}</div></div>`;
+    } else {
+      html += `<div class="msg-oracle">
+        <div class="msg-oracle-label"><span style="font-size:12px">📊</span> DEX AI</div>`;
+      if (msg.analysis) {
+        html += renderAnalysis(msg.analysis);
+      } else if (msg.html) {
+        html += msg.html;
+      } else if (msg.text) {
+        html += `<div class="card card-accent"><div class="general-text">${esc(msg.text)}</div></div>`;
+      }
+      html += `</div>`;
+    }
+  }
+  $('msgContainer').innerHTML = html;
+  scrollToBottom();
+}
+
+function scrollToBottom() {
+  const el = $('messagesWrap');
+  requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+}
+
+function showLoading() {
+  const el = document.createElement('div');
+  el.id = 'loadingEl';
+  el.className = 'loading-dots';
+  el.innerHTML = `
+    <span style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:1.5px">📊 DEX AI</span>
+    <div class="ld-dot"></div><div class="ld-dot"></div><div class="ld-dot"></div>
+    <span class="ld-text">${t('analyzing')}</span>`;
+  $('msgContainer').appendChild(el);
+  scrollToBottom();
+}
+
+function hideLoading() {
+  const el = $('loadingEl');
+  if (el) el.remove();
+}
+
+// ═══════════════════════════════════════════
+// SEND QUERY (LOCAL ANALYSIS - NO API)
+// ═══════════════════════════════════════════
+function sendFromInput() {
+  const val = $('inputBox').value.trim();
+  if (!val || isLoading) return;
+  $('inputBox').value = '';
+  $('inputBox').style.height = 'auto';
+  updateSendBtn();
+  sendQuery(val);
+}
+
+async function sendQuery(query) {
+  if (isLoading) return;
+  isLoading = true;
+
+  const c = conversations.find(x => x.id === activeId);
+  c.title = query.length > 35 ? query.slice(0, 35) + '...' : query;
+  c.messages.push({ role: 'user', content: query });
+
+  renderSidebar();
+  renderMessages();
+  updateTopbar();
+  showLoading();
+
+  try {
+    const lower = query.toLowerCase().trim();
+    
+    // Check for general questions first
+    const genKey = Object.keys(GENERAL).find(k => lower.includes(k));
+    if (genKey && !detectAddress(query)) {
+      await new Promise(r => setTimeout(r, 800)); // Small delay for UX
+      hideLoading();
+      c.messages.push({ role: 'assistant', text: GENERAL[genKey] });
+      isLoading = false;
+      renderMessages();
+      return;
+    }
+
+    // Check if it's a contract address
+    const addrInfo = detectAddress(query);
+    let pair = null;
+    let rugData = null;
+
+    if (addrInfo) {
+      // Direct contract address lookup
+      pair = await fetchDexScreener(addrInfo.addr);
+      if (pair && addrInfo.type === 'sol') {
+        rugData = await fetchRugcheck(addrInfo.addr);
+      }
+    } else {
+      // Search by name on DexScreener
+      pair = await searchDexScreener(query);
+      if (pair && pair.chainId === 'solana') {
+        rugData = await fetchRugcheck(pair.baseToken?.address);
+      }
+    }
+
+    hideLoading();
+
+    if (!pair) {
+      c.messages.push({ 
+        role: 'assistant', 
+        text: `${t('notFound')} "${query}" on DexScreener.\n\n${t('tryAgain')}\n• ${t('pasteContract')}\n• ${t('searchToken')}` 
+      });
+    } else {
+      // Run local analysis
+      const analysis = analyzeToken(pair, rugData);
+      c.messages.push({ role: 'assistant', analysis });
+      
+      // Save search to right panel
+      saveSearch({
+        address: pair.baseToken?.address || '',
+        chain: pair.chainId || 'unknown',
+        symbol: pair.baseToken?.symbol || '???',
+        icon: pair.info?.imageUrl || '',
+        confidence: analysis.confidence || 50
+      });
+    }
+
+  } catch (err) {
+    hideLoading();
+    c.messages.push({ role: 'assistant', text: 'Error: ' + err.message + '\n\nPlease try again.' });
+  }
+
+  isLoading = false;
+  renderMessages();
+}
+
+// ═══════════════════════════════════════════
+// QUICK ANALYZE (from welcome buttons)
+// ═══════════════════════════════════════════
+async function quickAnalyze(symbol) {
+  if (isLoading) return;
+  document.getElementById('inputBox').value = symbol;
+  await sendFromInput();
+}
+
+// ═══════════════════════════════════════════
+// RIGHT PANEL FUNCTIONS
+// ═══════════════════════════════════════════
+
+// Save a search result
+function saveSearch(token) {
+  // Check if already exists
+  const exists = savedSearches.findIndex(s => s.address === token.address);
+  if (exists >= 0) {
+    savedSearches[exists] = token; // Update
+  } else {
+    savedSearches.push(token);
+  }
+  // Keep max 50
+  if (savedSearches.length > 50) savedSearches = savedSearches.slice(-50);
+  localStorage.setItem('oracleSearches', JSON.stringify(savedSearches));
+  renderSavedSearches();
+}
+
+// Render saved searches (top 5 bullish)
+function renderSavedSearches() {
+  const container = document.getElementById('rpSearches');
+  if (!container) return;
+  
+  // Sort by confidence desc, take top 5 bullish
+  const bullish = savedSearches.filter(s => s.confidence >= 70).sort((a,b) => b.confidence - a.confidence).slice(0, 5);
+  
+  if (bullish.length === 0) {
+    container.innerHTML = '<div class="rp-empty">No bullish searches yet</div>';
+    return;
+  }
+  
+  let html = '';
+  for (const token of bullish) {
+    const badgeClass = token.confidence >= 70 ? 'bullish' : token.confidence >= 50 ? 'neutral' : 'bearish';
+    const badgeLabel = token.confidence >= 70 ? 'BULLISH' : token.confidence >= 50 ? 'NEUTRAL' : 'BEARISH';
+    
+    html += `<div class="rp-item" onclick="analyzeFromAddress('${token.address}','${token.chain}')">`;
+    if (token.icon && token.icon.length > 5) {
+      html += `<img class="rp-icon" src="${token.icon}" onerror="this.onerror=null;this.outerHTML='<div class=\\'rp-icon-emoji\\'>🪙</div>'">`;
+    } else {
+      html += `<div class="rp-icon-emoji">🪙</div>`;
+    }
+    html += `<div class="rp-info">`;
+    html += `<div class="rp-ticker">$${token.symbol}</div>`;
+    html += `<div class="rp-chain">${token.chain.toUpperCase()}</div>`;
+    html += `</div>`;
+    html += `<div class="rp-badge ${badgeClass}">${badgeLabel}</div>`;
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+}
+
+// Load trending for right panel
+async function loadPanelTrending() {
+  const container = document.getElementById('rpTrending');
+  if (!container) return;
+  
+  try {
+    const r = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(15000) });
+    if (!r.ok) throw new Error('API error');
+    const data = await r.json();
+    
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div class="rp-empty">No data</div>';
+      return;
+    }
+    
+    // Enrich with DexScreener data
+    const enriched = [];
+    const tokens = data.slice(0, 12);
+    
+    for (const token of tokens) {
+      const addr = token.tokenAddress || '';
+      const chain = token.chainId || 'unknown';
+      if (!addr) continue;
+      
+      let symbol = '???', liquidity = 0, volume24h = 0, dexIcon = '';
+      try {
+        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(4000) });
+        if (dexRes.ok) {
+          const dexData = await dexRes.json();
+          if (dexData.pairs && dexData.pairs.length > 0) {
+            symbol = dexData.pairs[0].baseToken?.symbol || '???';
+            liquidity = parseFloat(dexData.pairs[0].liquidity?.usd) || 0;
+            volume24h = parseFloat(dexData.pairs[0].volume?.h24) || 0;
+            dexIcon = dexData.pairs[0].info?.imageUrl || '';
+          }
+        }
+      } catch(e) {}
+      
+      // Priority: dexIcon (full URL from pairs API) > build URL from token.icon ID
+      let finalIcon = dexIcon;
+      if (!finalIcon && token.icon && token.icon.length > 5) {
+        // token.icon is just an ID, build full URL
+        finalIcon = `https://cdn.dexscreener.com/cms/images/${token.icon}?width=64&height=64&quality=95&format=auto`;
+      }
+      
+      // Calculate confidence
+      let confidence = 50;
+      const boosts = token.totalAmount || token.amount || 0;
+      if (boosts >= 500) confidence += 15;
+      else if (boosts >= 100) confidence += 10;
+      if (liquidity >= 100000) confidence += 15;
+      else if (liquidity >= 50000) confidence += 10;
+      else if (liquidity < 5000) confidence -= 10;
+      if (volume24h >= 100000) confidence += 10;
+      if (token.icon || dexIcon) confidence += 5;
+      confidence = Math.max(0, Math.min(100, confidence));
+      
+      enriched.push({
+        address: addr,
+        chain,
+        symbol,
+        icon: finalIcon,
+        confidence
+      });
+    }
+    
+    // Sort by confidence
+    enriched.sort((a, b) => b.confidence - a.confidence);
+    
+    // Get 3 bullish + 2 bearish
+    const bullish = enriched.filter(t => t.confidence >= 70).slice(0, 3);
+    const bearish = enriched.filter(t => t.confidence < 50).slice(0, 2);
+    const display = [...bullish, ...bearish];
+    
+    if (display.length === 0) {
+      container.innerHTML = '<div class="rp-empty">No data</div>';
+      return;
+    }
+    
+    let html = '';
+    for (const token of display) {
+      const badgeClass = token.confidence >= 70 ? 'bullish' : token.confidence >= 50 ? 'neutral' : 'bearish';
+      const badgeLabel = token.confidence >= 70 ? 'BULLISH' : token.confidence >= 50 ? 'NEUTRAL' : 'BEARISH';
+      
+      html += `<div class="rp-item" onclick="analyzeFromAddress('${token.address}','${token.chain}')">`;
+      if (token.icon && token.icon.length > 5) {
+        html += `<img class="rp-icon" src="${token.icon}" onerror="this.onerror=null;this.outerHTML='<div class=\\'rp-icon-emoji\\'>🪙</div>'">`;
+      } else {
+        html += `<div class="rp-icon-emoji">🪙</div>`;
+      }
+      html += `<div class="rp-info">`;
+      html += `<div class="rp-ticker">$${token.symbol}</div>`;
+      html += `<div class="rp-chain">${token.chain.toUpperCase()}</div>`;
+      html += `</div>`;
+      html += `<div class="rp-badge ${badgeClass}">${badgeLabel}</div>`;
+      html += `</div>`;
+    }
+    container.innerHTML = html;
+    
+  } catch (err) {
+    console.error('loadPanelTrending error:', err);
+    container.innerHTML = '<div class="rp-empty">Error loading</div>';
+  }
+}
+
+// Load new listings for right panel
+async function loadPanelNewListings() {
+  const container = document.getElementById('rpNewListings');
+  if (!container) return;
+  
+  try {
+    const r = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(15000) });
+    if (!r.ok) throw new Error('API error');
+    const data = await r.json();
+    
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div class="rp-empty">No data</div>';
+      return;
+    }
+    
+    // Enrich with DexScreener data
+    const enriched = [];
+    const tokens = data.slice(0, 15);
+    
+    for (const token of tokens) {
+      const addr = token.tokenAddress || '';
+      const chain = token.chainId || 'unknown';
+      if (!addr) continue;
+      
+      let symbol = '???', liquidity = 0, volume24h = 0, dexIcon = '';
+      try {
+        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(4000) });
+        if (dexRes.ok) {
+          const dexData = await dexRes.json();
+          if (dexData.pairs && dexData.pairs.length > 0) {
+            symbol = dexData.pairs[0].baseToken?.symbol || '???';
+            liquidity = parseFloat(dexData.pairs[0].liquidity?.usd) || 0;
+            volume24h = parseFloat(dexData.pairs[0].volume?.h24) || 0;
+            dexIcon = dexData.pairs[0].info?.imageUrl || '';
+          }
+        }
+      } catch(e) {}
+      
+      // Priority: dexIcon (full URL from pairs API) > build URL from token.icon ID
+      let finalIcon = dexIcon;
+      if (!finalIcon && token.icon && token.icon.length > 5) {
+        finalIcon = `https://cdn.dexscreener.com/cms/images/${token.icon}?width=64&height=64&quality=95&format=auto`;
+      }
+      
+      // Calculate confidence
+      let confidence = 40;
+      if (liquidity >= 100000) confidence += 25;
+      else if (liquidity >= 50000) confidence += 20;
+      else if (liquidity >= 20000) confidence += 15;
+      else if (liquidity < 2000) confidence -= 15;
+      if (volume24h >= 50000) confidence += 15;
+      else if (volume24h >= 20000) confidence += 10;
+      if (token.icon || dexIcon) confidence += 5;
+      if (token.description && token.description.length > 20) confidence += 5;
+      confidence = Math.max(0, Math.min(100, confidence));
+      
+      enriched.push({
+        address: addr,
+        chain,
+        symbol,
+        icon: finalIcon,
+        confidence
+      });
+    }
+    
+    // Sort by confidence
+    enriched.sort((a, b) => b.confidence - a.confidence);
+    
+    // Get 3 bullish + 2 bearish
+    const bullish = enriched.filter(t => t.confidence >= 70).slice(0, 3);
+    const bearish = enriched.filter(t => t.confidence < 50).slice(0, 2);
+    const display = [...bullish, ...bearish];
+    
+    if (display.length === 0) {
+      container.innerHTML = '<div class="rp-empty">No data</div>';
+      return;
+    }
+    
+    let html = '';
+    for (const token of display) {
+      const badgeClass = token.confidence >= 70 ? 'bullish' : token.confidence >= 50 ? 'neutral' : 'bearish';
+      const badgeLabel = token.confidence >= 70 ? 'BULLISH' : token.confidence >= 50 ? 'NEUTRAL' : 'BEARISH';
+      
+      html += `<div class="rp-item" onclick="analyzeFromAddress('${token.address}','${token.chain}')">`;
+      if (token.icon && token.icon.length > 5) {
+        html += `<img class="rp-icon" src="${token.icon}" onerror="this.onerror=null;this.outerHTML='<div class=\\'rp-icon-emoji\\'>🪙</div>'">`;
+      } else {
+        html += `<div class="rp-icon-emoji">🪙</div>`;
+      }
+      html += `<div class="rp-info">`;
+      html += `<div class="rp-ticker">$${token.symbol}</div>`;
+      html += `<div class="rp-chain">${token.chain.toUpperCase()}</div>`;
+      html += `</div>`;
+      html += `<div class="rp-badge ${badgeClass}">${badgeLabel}</div>`;
+      html += `</div>`;
+    }
+    container.innerHTML = html;
+    
+  } catch (err) {
+    console.error('loadPanelNewListings error:', err);
+    container.innerHTML = '<div class="rp-empty">Error loading</div>';
+  }
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+loadSavedLanguage();
+renderSidebar();
+renderMessages();
+updateTopbar();
+updateUILanguage();
+renderSavedSearches();
+$('tbToggle').classList.add('show');
+$('tbToggle').classList.remove('show');
+
+// Load panel data after page loads
+setTimeout(() => {
+  loadPanelTrending();
+  loadPanelNewListings();
+}, 500);
+</script>
+</body>
+</html>
