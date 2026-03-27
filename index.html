@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1595,13 +1596,29 @@ function renderAnalysis(data) {
   // Check if major crypto (simplified view)
   const majorCryptos = ['BTC', 'ETH', 'SOL', 'BNB', 'DOGE', 'PEPE', 'WBTC', 'WETH', 'WSOL'];
   const isMajor = majorCryptos.includes(data.ticker?.toUpperCase());
+  
+  // Hardcoded logos for major cryptos
+  const majorLogos = {
+    'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+    'WBTC': 'https://assets.coingecko.com/coins/images/7598/small/wrapped_bitcoin_wbtc.png',
+    'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+    'WETH': 'https://assets.coingecko.com/coins/images/2518/small/weth.png',
+    'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+    'WSOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+    'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png',
+    'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+    'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg'
+  };
+  
+  // Use hardcoded logo for majors, or data.logo, or fallback
+  const tokenLogo = majorLogos[data.ticker?.toUpperCase()] || data.logo || '';
 
   let html = '';
 
   // ── TOKEN HEADER with logo, name, CA copy
   html += `<div class="card">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
-      ${data.logo ? `<img src="${data.logo}" style="width:48px;height:48px;border-radius:12px;object-fit:cover;background:var(--card-border)" onerror="this.style.display='none'">` : `<div style="width:48px;height:48px;border-radius:12px;background:var(--card-border);display:flex;align-items:center;justify-content:center;font-size:24px">🪙</div>`}
+      ${tokenLogo ? `<img src="${tokenLogo}" style="width:48px;height:48px;border-radius:12px;object-fit:cover;background:var(--card-border)" onerror="this.onerror=null;this.src='';this.style.display='none';this.parentNode.insertAdjacentHTML('afterbegin','<div style=\\'width:48px;height:48px;border-radius:12px;background:var(--card-border);display:flex;align-items:center;justify-content:center;font-size:24px\\'>🪙</div>')">` : `<div style="width:48px;height:48px;border-radius:12px;background:var(--card-border);display:flex;align-items:center;justify-content:center;font-size:24px">🪙</div>`}
       <div style="flex:1;min-width:0">
         <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan)">\$${esc(data.ticker)}</div>
         <div style="font-family:var(--sans);font-size:12px;color:var(--text3)">${esc(data.tokenName)} · ${data.chain.toUpperCase()}</div>
