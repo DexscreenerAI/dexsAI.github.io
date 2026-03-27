@@ -583,16 +583,6 @@ body {
   
   /* Hide confidence circle on mobile */
   .flex-between .gauge-wrap { display: none; }
-  
-  /* Chrome extension button repositioned */
-  .chrome-ext-btn {
-    bottom: 80px;
-    right: 12px;
-    padding: 10px;
-    border-radius: 50%;
-  }
-  .chrome-ext-text { display: none; }
-  .chrome-ext-icon { font-size: 18px; }
 }
 
 /* Very small phones */
@@ -615,50 +605,37 @@ body {
   .quick-btn { padding: 6px 10px; font-size: 11px; }
 }
 
-/* Chrome Extension Button */
-.chrome-ext-btn {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
+/* Topbar Social & Chrome buttons */
+.tb-social, .tb-chrome {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 18px;
-  background: linear-gradient(135deg, #1a1a24 0%, #12121a 100%);
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--card);
   border: 1px solid var(--card-border);
-  border-radius: 12px;
+  border-radius: 8px;
   color: var(--text);
   text-decoration: none;
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 600;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  transition: all 0.2s ease;
-  z-index: 9999;
+  font-size: 14px;
+  transition: all 0.15s;
 }
-.chrome-ext-btn:hover {
-  transform: translateY(-2px);
+.tb-social:hover, .tb-chrome:hover {
   border-color: var(--cyan);
-  box-shadow: 0 6px 24px rgba(0, 212, 170, 0.2);
-}
-.chrome-ext-icon {
-  font-size: 18px;
-}
-.chrome-ext-text {
   color: var(--cyan);
+  transform: translateY(-1px);
 }
-@media (max-width: 768px) {
-  .chrome-ext-btn {
-    padding: 10px 14px;
-    font-size: 11px;
-    bottom: 16px;
-    right: 16px;
-  }
-  .chrome-ext-icon { font-size: 16px; }
+.tb-chrome {
+  font-size: 16px;
 }
+
 @media (max-width: 500px) {
-  .chrome-ext-text { display: none; }
-  .chrome-ext-btn { padding: 12px; border-radius: 50%; }
+  .tb-social, .tb-chrome {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  .tb-chrome { font-size: 14px; }
 }
 </style>
 </head>
@@ -690,7 +667,9 @@ body {
       <span class="tb-title">DEXSCREENER AI</span>
       <span class="tb-sep" id="tbSep" style="display:none">/</span>
       <span class="tb-sub" id="tbSub"></span>
-      <div style="margin-left:auto">
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+        <a href="https://x.com/dexscreenerai?s=21" target="_blank" rel="noopener" class="tb-social" title="Twitter">𝕏</a>
+        <a href="./extension.html" class="tb-chrome" title="Chrome Extension">🧩</a>
         <select id="langSelect" onchange="setLanguage(this.value)" style="background:var(--card);border:1px solid var(--card-border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer;outline:none">
           <option value="en">🇬🇧 EN</option>
           <option value="fr">🇫🇷 FR</option>
@@ -754,12 +733,6 @@ body {
     </div>
   </div>
 </div>
-
-<!-- Chrome Extension Button -->
-<a href="./extension.html" class="chrome-ext-btn" title="Get Chrome Extension">
-  <span class="chrome-ext-icon">🧩</span>
-  <span class="chrome-ext-text">Chrome Extension</span>
-</a>
 
 <script>
 // ═══════════════════════════════════════════
