@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DexScreener AI - Chrome Extension</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0a0a0f;
+  --bg2: #12121a;
+  --bg3: #1a1a24;
+  --card: #1c1c28;
+  --border: #2a2a3a;
+  --cyan: #00d4aa;
+  --cyan-dim: rgba(0, 212, 170, 0.15);
+  --green: #00d4aa;
+  --red: #ff5252;
+  --yellow: #ffc107;
+  --text: #f0f0f0;
+  --text2: #a0a0a0;
+  --text3: #666;
+}
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+/* Hero */
+.hero {
+  text-align: center;
+  padding: 60px 20px;
+  background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+}
+.hero-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+.hero h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+.hero h1 span { color: var(--cyan); }
+.hero p {
+  font-size: 18px;
+  color: var(--text2);
+  max-width: 500px;
+  margin: 0 auto 30px;
+}
+.hero-badges {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--text2);
+}
+.badge.green { border-color: var(--green); color: var(--green); }
+.badge.yellow { border-color: var(--yellow); color: var(--yellow); }
+
+.download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 32px;
+  background: var(--cyan);
+  color: #000;
+  text-decoration: none;
+  border-radius: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 212, 170, 0.3);
+}
+
+/* Preview */
+.preview {
+  padding: 60px 20px;
+  text-align: center;
+}
+.preview-img {
+  max-width: 100%;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+/* Sections */
+.section {
+  padding: 60px 20px;
+  border-top: 1px solid var(--border);
+}
+.section h2 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 24px;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.section h2 .icon {
+  width: 40px;
+  height: 40px;
+  background: var(--cyan-dim);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+/* Steps */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.step {
+  display: flex;
+  gap: 20px;
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.step-num {
+  width: 40px;
+  height: 40px;
+  background: var(--cyan);
+  color: #000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.step-content h3 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+.step-content p {
+  color: var(--text2);
+  font-size: 14px;
+}
+.step-content code {
+  display: inline-block;
+  background: var(--bg);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--cyan);
+  margin: 4px 0;
+}
+
+/* Features */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+.feature {
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.feature-icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+.feature h3 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+.feature p {
+  color: var(--text2);
+  font-size: 14px;
+}
+
+/* Publish Section */
+.publish-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.publish-step {
+  padding: 20px;
+  background: var(--bg2);
+  border-left: 3px solid var(--cyan);
+  border-radius: 0 12px 12px 0;
+}
+.publish-step h4 {
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: var(--cyan);
+}
+.publish-step p {
+  color: var(--text2);
+  font-size: 13px;
+}
+.publish-step a {
+  color: var(--cyan);
+}
+
+/* Warning */
+.warning {
+  padding: 20px;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid var(--yellow);
+  border-radius: 12px;
+  margin-top: 20px;
+}
+.warning h4 {
+  color: var(--yellow);
+  font-size: 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.warning p {
+  color: var(--text2);
+  font-size: 13px;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 40px 20px;
+  border-top: 1px solid var(--border);
+  color: var(--text3);
+  font-size: 13px;
+}
+.footer a { color: var(--cyan); text-decoration: none; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .hero h1 { font-size: 28px; }
+  .hero p { font-size: 16px; }
+  .step { flex-direction: column; gap: 12px; }
+  .section h2 { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <img class="hero-logo" src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="DexScreener AI">
+  <h1>DEXSCREENER <span>AI</span></h1>
+  <p>AI-powered token analysis directly on DexScreener. Get instant BULLISH/BEARISH signals, entry points, and price targets.</p>
+  
+  <div class="hero-badges">
+    <span class="badge green">✓ Free</span>
+    <span class="badge green">✓ Open Source</span>
+    <span class="badge yellow">⚡ Real-time Analysis</span>
+  </div>
+  
+  <a href="https://chrome.google.com/webstore/detail/YOUR_EXTENSION_ID" target="_blank" class="download-btn">
+    <span>🧩</span> Add to Chrome — Free
+  </a>
+</div>
+
+<!-- FEATURES -->
+<div class="section">
+  <div class="container">
+    <h2><span class="icon">✨</span> Features</h2>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">📊</div>
+        <h3>Instant Analysis</h3>
+        <p>Get BULLISH, BEARISH or CAUTIOUS signals the moment you open a token page.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎯</div>
+        <h3>Entry & Targets</h3>
+        <p>Know exactly where to buy, where to set your stop loss, and max profit potential.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🚀</div>
+        <h3>Max Target</h3>
+        <p>See the best case scenario with potential +150% gains.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💀</div>
+        <h3>Worst Case</h3>
+        <p>Know your risk with clear worst case scenario and stop loss levels.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📈</div>
+        <h3>Support & Resistance</h3>
+        <p>Key price levels to watch for entries and exits.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🛡️</div>
+        <h3>Rugcheck Integration</h3>
+        <p>Automatic risk detection for Solana tokens.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INSTALLATION -->
+<div class="section">
+  <div class="container">
+    <h2><span class="icon">📥</span> Installation (Developer Mode)</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>Download the Extension</h3>
+          <p>Click the download button above to get the <code>dexscreener-extension.zip</code> file.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Extract the ZIP</h3>
+          <p>Right-click the downloaded file → <strong>Extract All</strong> → Choose a location (e.g., Desktop).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>Open Chrome Extensions</h3>
+          <p>Open Chrome and go to: <code>chrome://extensions/</code></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h3>Enable Developer Mode</h3>
+          <p>Toggle the <strong>Developer mode</strong> switch in the top-right corner.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <h3>Load the Extension</h3>
+          <p>Click <strong>"Load unpacked"</strong> and select the extracted folder (where you see <code>manifest.json</code>).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <h3>Done! 🎉</h3>
+          <p>Go to <a href="https://dexscreener.com" target="_blank" style="color:var(--cyan)">dexscreener.com</a> and click on any token. The AI panel will appear!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PUBLISH -->
+<div class="section">
+  <div class="container">
+    <h2><span class="icon">🚀</span> Publish on Chrome Web Store</h2>
+    <p style="color:var(--text2);margin-bottom:24px">Want to make your extension available to everyone? Here's how to publish it:</p>
+    
+    <div class="publish-steps">
+      <div class="publish-step">
+        <h4>1. Create a Developer Account</h4>
+        <p>Go to <a href="https://chrome.google.com/webstore/devconsole" target="_blank">Chrome Web Store Developer Dashboard</a> and sign in with your Google account. Pay the one-time $5 registration fee.</p>
+      </div>
+      <div class="publish-step">
+        <h4>2. Prepare Your Assets</h4>
+        <p>You'll need: Icon (128x128 PNG), Screenshots (1280x800 or 640x400), Description, and promotional images.</p>
+      </div>
+      <div class="publish-step">
+        <h4>3. Create a ZIP Package</h4>
+        <p>Make sure your extension folder contains: <code>manifest.json</code>, <code>content.js</code>, <code>content.css</code>, and <code>icons/</code> folder.</p>
+      </div>
+      <div class="publish-step">
+        <h4>4. Upload to Dashboard</h4>
+        <p>Click "New Item" in the Developer Dashboard, upload your ZIP, fill in all required fields (title, description, category).</p>
+      </div>
+      <div class="publish-step">
+        <h4>5. Submit for Review</h4>
+        <p>Click "Submit for Review". Google will review your extension (usually 1-3 business days). You'll get an email when it's approved.</p>
+      </div>
+      <div class="publish-step">
+        <h4>6. Share Your Link! 🎉</h4>
+        <p>Once approved, you'll get a Chrome Web Store link like:<br><code>https://chrome.google.com/webstore/detail/your-extension-id</code></p>
+      </div>
+    </div>
+    
+    <div class="warning">
+      <h4>⚠️ Important Requirements</h4>
+      <p>Google requires: Clear privacy policy, accurate description, no misleading claims, and your extension must provide real value. Make sure to test everything before submitting!</p>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p>Made with ❤️ for DexScreener traders</p>
+  <p style="margin-top:8px"><a href="https://dexscreener.com" target="_blank">DexScreener</a> · <a href="https://github.com" target="_blank">GitHub</a></p>
+</div>
+
+</body>
+</html>
