@@ -1853,12 +1853,26 @@ function renderMessages() {
     }
   }
   $('msgContainer').innerHTML = html;
-  scrollToBottom();
+  scrollToLastUserMessage();
 }
 
 function scrollToBottom() {
   const el = $('messagesWrap');
   requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+}
+
+function scrollToLastUserMessage() {
+  const el = $('messagesWrap');
+  const userMessages = el.querySelectorAll('.msg-user');
+  if (userMessages.length > 0) {
+    const lastUserMsg = userMessages[userMessages.length - 1];
+    requestAnimationFrame(() => {
+      lastUserMsg.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  } else {
+    // No user messages, scroll to top
+    requestAnimationFrame(() => { el.scrollTop = 0; });
+  }
 }
 
 function showLoading() {
