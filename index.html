@@ -1631,11 +1631,11 @@ function renderAnalysis(data) {
         <div class="sec-title"><span class="sec-icon">◎</span> ${t('tradeSetup')}</div>
         <div class="grid-2">
           <div class="zone-box zone-green">
-            <div class="zone-label" style="color:var(--green)">🚀 PLUS HAUT POSSIBLE</div>
+            <div class="zone-label" style="color:var(--green)">🚀 HIGHEST POSSIBLE</div>
             <div class="zone-val" style="font-size:18px;font-weight:700;color:var(--green)">${esc(ts.targets?.[2]?.price || ts.targets?.[1]?.price || 'N/A')}</div>
           </div>
           <div class="zone-box zone-red">
-            <div class="zone-label" style="color:var(--red)">💀 PLUS BAS POSSIBLE</div>
+            <div class="zone-label" style="color:var(--red)">💀 LOWEST POSSIBLE</div>
             <div class="zone-val" style="font-size:18px;font-weight:700;color:var(--red)">${esc(ts.stopLoss)}</div>
           </div>
         </div>
