@@ -1615,15 +1615,20 @@ function renderAnalysis(data) {
 
   let html = '';
 
-  // ── TOKEN HEADER with logo, name, CA copy
+  // ── TOKEN HEADER with logo, name, socials
   html += `<div class="card">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
       ${tokenLogo ? `<img src="${tokenLogo}" style="width:48px;height:48px;border-radius:12px;object-fit:cover;background:var(--card-border)" onerror="this.onerror=null;this.src='';this.style.display='none';this.parentNode.insertAdjacentHTML('afterbegin','<div style=\\'width:48px;height:48px;border-radius:12px;background:var(--card-border);display:flex;align-items:center;justify-content:center;font-size:24px\\'>🪙</div>')">` : `<div style="width:48px;height:48px;border-radius:12px;background:var(--card-border);display:flex;align-items:center;justify-content:center;font-size:24px">🪙</div>`}
       <div style="flex:1;min-width:0">
-        <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan)">\$${esc(data.ticker)}</div>
-        <div style="font-family:var(--sans);font-size:12px;color:var(--text3)">${esc(data.tokenName)} · ${data.chain.toUpperCase()}</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan)">\$${esc(data.ticker)}</span>
+          ${isMajor ? `<span style="padding:4px 8px;background:var(--cyan-dim);border-radius:4px;font-family:var(--mono);font-size:9px;color:var(--cyan);font-weight:600">MAJOR</span>` : ''}
+          ${data.twitterLink ? `<a href="${data.twitterLink}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--bg);border-radius:6px;text-decoration:none;color:var(--text);font-size:12px;transition:all .15s" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--cyan)'" onmouseout="this.style.background='var(--bg)';this.style.color='var(--text)'">𝕏</a>` : ''}
+          ${data.websiteLink ? `<a href="${data.websiteLink}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--bg);border-radius:6px;text-decoration:none;color:var(--text);font-size:12px;transition:all .15s" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--cyan)'" onmouseout="this.style.background='var(--bg)';this.style.color='var(--text)'">🌐</a>` : ''}
+          ${data._dex?.info?.socials?.find(s => s.type === 'telegram') ? `<a href="${data._dex.info.socials.find(s => s.type === 'telegram').url}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--bg);border-radius:6px;text-decoration:none;color:var(--text);font-size:12px;transition:all .15s" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--cyan)'" onmouseout="this.style.background='var(--bg)';this.style.color='var(--text)'">✈️</a>` : ''}
+        </div>
+        <div style="font-family:var(--sans);font-size:12px;color:var(--text3);margin-top:2px">${esc(data.tokenName)} · ${data.chain.toUpperCase()}</div>
       </div>
-      ${isMajor ? `<div style="padding:6px 12px;background:var(--cyan-dim);border-radius:6px;font-family:var(--mono);font-size:10px;color:var(--cyan);font-weight:600">MAJOR</div>` : ''}
     </div>
     ${!isMajor && data.contractAddress ? `<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:16px">
       <span style="font-family:var(--mono);font-size:11px;color:var(--text3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${data.contractAddress}</span>
@@ -1637,6 +1642,52 @@ function renderAnalysis(data) {
       <div style="margin-left:20px">${gaugeHTML(data.confidence)}</div>
     </div>
   </div>`;
+
+  // ── LIVE DATA MARKET (moved to 2nd position)
+  if (data._dex) {
+    const d = data._dex;
+    html += `<div class="card">
+      <div class="sec-title"><span class="sec-icon">📊</span> ${t('liveData')}</div>
+      <div class="grid-3" style="gap:8px">
+        ${[
+          {l:'PRICE',v:fP(parseFloat(d.priceUsd)||0),c:'#fff'},
+          {l:'MARKET CAP',v:'$'+fN(parseFloat(d.marketCap)||0),c:'var(--purple)'},
+          {l:'LIQUIDITY',v:'$'+fN(parseFloat(d.liquidity?.usd)||0),c:'var(--cyan)'},
+          {l:'VOLUME 24H',v:'$'+fN(parseFloat(d.volume?.h24)||0),c:'var(--orange)'},
+          {l:'BUYS 24H',v:fN(d.txns?.h24?.buys||0),c:'var(--green)'},
+          {l:'SELLS 24H',v:fN(d.txns?.h24?.sells||0),c:'var(--red)'},
+        ].map(m => `
+          <div style="background:var(--bg);border-radius:6px;padding:10px;border-left:2px solid ${m.c}">
+            <div style="font-family:var(--mono);font-size:7px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:4px">${m.l}</div>
+            <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${m.c}">${m.v}</div>
+          </div>`).join('')}
+      </div>
+      <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+        ${[{l:'5M',v:d.priceChange?.m5},{l:'1H',v:d.priceChange?.h1},{l:'6H',v:d.priceChange?.h6},{l:'24H',v:d.priceChange?.h24}].map(p => {
+          const v = parseFloat(p.v)||0;
+          const c = v>=0?'var(--green)':'var(--red)';
+          return `<div style="background:var(--bg);border-radius:6px;padding:8px 12px;flex:1;min-width:60px;text-align:center">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:2px">${p.l}</div>
+            <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${c}">${v>=0?'+':''}${v.toFixed(1)}%</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+        <a href="https://dexscreener.com/${d.chainId}/${d.pairAddress}" target="_blank" rel="noopener"
+          style="flex:1;text-align:center;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--cyan);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600;transition:all .15s">
+          📊 DEXSCREENER
+        </a>
+        ${d.chainId==='solana'?`<a href="https://rugcheck.xyz/tokens/${d.baseToken?.address}" target="_blank" rel="noopener"
+          style="flex:1;text-align:center;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--green);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600">
+          🛡 RUGCHECK
+        </a>`:''}
+        <a href="https://app.bubblemaps.io/${d.chainId==='solana'?'sol':'eth'}/token/${d.baseToken?.address}" target="_blank" rel="noopener"
+          style="flex:1;text-align:center;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--purple);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600">
+          🫧 BUBBLEMAPS
+        </a>
+      </div>
+    </div>`;
+  }
 
   // ── TRADE SETUP
   if (data.tradeSetup) {
@@ -1658,10 +1709,10 @@ function renderAnalysis(data) {
         </div>
       </div>`;
     } else {
-      // For other tokens: full trade setup with targets
+      // For other tokens: simplified trade setup (only entry + stop loss)
       html += `<div class="card">
         <div class="sec-title"><span class="sec-icon">◎</span> ${t('tradeSetup')}</div>
-        <div class="grid-2 mb-16">
+        <div class="grid-2">
           <div class="zone-box zone-green">
             <div class="zone-label" style="color:var(--green)">${t('entryPrice')}</div>
             <div class="zone-val">${esc(ts.entry)}</div>
@@ -1671,15 +1722,6 @@ function renderAnalysis(data) {
             <div class="zone-val">${esc(ts.stopLoss)}</div>
           </div>
         </div>
-        <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);margin-bottom:10px">${t('priceTargets')}</div>
-        ${(ts.targets||[]).map((tg,i) => `
-          <div class="target-row">
-            <span class="target-label">Target ${i+1} (${esc(tg.timeframe)})</span>
-            ${progressHTML(tg.probability, 'var(--cyan)', 5)}
-            <span class="target-pct">${tg.probability}%</span>
-            <span class="target-price">${esc(tg.price)}</span>
-            <span class="target-gain">+${tg.gain}%</span>
-          </div>`).join('')}
       </div>`;
     }
   }
@@ -1700,10 +1742,6 @@ function renderAnalysis(data) {
       ${progressHTML(legScore, 'var(--'+legColor+')')}
       <span style="font-family:var(--mono);font-size:13px;color:var(--text2);white-space:nowrap">${legScore} <span style="font-size:10px">/100</span></span>
     </div>
-    ${(data.twitterLink || data.websiteLink) ? `<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-      ${data.twitterLink ? `<a href="${data.twitterLink}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg);border-radius:8px;text-decoration:none;color:var(--text);font-family:var(--mono);font-size:12px;transition:background .15s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg)'"><span style="font-size:14px">𝕏</span> Twitter</a>` : ''}
-      ${data.websiteLink ? `<a href="${data.websiteLink}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg);border-radius:8px;text-decoration:none;color:var(--text);font-family:var(--mono);font-size:12px;transition:background .15s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg)'"><span style="font-size:14px">🌐</span> Website</a>` : ''}
-    </div>` : ''}
     <ul class="note-list">
       ${(data.legitimacyNotes||[]).map(n => `<li class="note-item"><span class="note-icon">${n.type==='positive'?'+':n.type==='negative'?'−':'~'}</span>${esc(n.text)}</li>`).join('')}
     </ul>
@@ -1766,52 +1804,6 @@ function renderAnalysis(data) {
   if (data.onChainAnalysis) {
     html += `<div class="card card-accent" style="margin-top:12px">
       <p style="font-family:var(--sans);font-size:13.5px;line-height:1.75;color:var(--text);margin:0">${esc(data.onChainAnalysis)}</p>
-    </div>`;
-  }
-
-  // ── DEX DATA (if fetched)
-  if (data._dex) {
-    const d = data._dex;
-    html += `<div class="card" style="margin-top:12px">
-      <div class="sec-title"><span class="sec-icon">📊</span> ${t('liveData')}</div>
-      <div class="grid-3" style="gap:8px">
-        ${[
-          {l:'PRICE',v:fP(parseFloat(d.priceUsd)||0),c:'#fff'},
-          {l:'MARKET CAP',v:'$'+fN(parseFloat(d.marketCap)||0),c:'var(--purple)'},
-          {l:'LIQUIDITY',v:'$'+fN(parseFloat(d.liquidity?.usd)||0),c:'var(--cyan)'},
-          {l:'VOLUME 24H',v:'$'+fN(parseFloat(d.volume?.h24)||0),c:'var(--orange)'},
-          {l:'BUYS 24H',v:fN(d.txns?.h24?.buys||0),c:'var(--green)'},
-          {l:'SELLS 24H',v:fN(d.txns?.h24?.sells||0),c:'var(--red)'},
-        ].map(m => `
-          <div style="background:var(--bg);border-radius:6px;padding:10px;border-left:2px solid ${m.c}">
-            <div style="font-family:var(--mono);font-size:7px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:4px">${m.l}</div>
-            <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${m.c}">${m.v}</div>
-          </div>`).join('')}
-      </div>
-      <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
-        ${[{l:'5M',v:d.priceChange?.m5},{l:'1H',v:d.priceChange?.h1},{l:'6H',v:d.priceChange?.h6},{l:'24H',v:d.priceChange?.h24}].map(p => {
-          const v = parseFloat(p.v)||0;
-          const c = v>=0?'var(--green)':'var(--red)';
-          return `<div style="background:var(--bg);border-radius:6px;padding:8px 12px;flex:1;min-width:60px;text-align:center">
-            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:2px">${p.l}</div>
-            <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${c}">${v>=0?'+':''}${v.toFixed(1)}%</div>
-          </div>`;
-        }).join('')}
-      </div>
-      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
-        <a href="https://dexscreener.com/${d.chainId}/${d.pairAddress}" target="_blank" rel="noopener"
-          style="flex:1;text-align:center;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--cyan);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600;transition:all .15s">
-          📊 DEXSCREENER
-        </a>
-        ${d.chainId==='solana'?`<a href="https://rugcheck.xyz/tokens/${d.baseToken?.address}" target="_blank" rel="noopener"
-          style="flex:1;text-align:center;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--green);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600">
-          🛡 RUGCHECK
-        </a>`:''}
-        <a href="https://app.bubblemaps.io/${d.chainId==='solana'?'sol':'eth'}/token/${d.baseToken?.address}" target="_blank" rel="noopener"
-          style="flex:1;text-align:center;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--purple);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600">
-          🫧 BUBBLEMAPS
-        </a>
-      </div>
     </div>`;
   }
 
