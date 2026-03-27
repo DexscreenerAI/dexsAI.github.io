@@ -1621,31 +1621,50 @@ function renderAnalysis(data) {
     </div>
   </div>`;
 
-  // ── TRADE SETUP (always show)
+  // ── TRADE SETUP
   if (data.tradeSetup) {
     const ts = data.tradeSetup;
-    html += `<div class="card">
-      <div class="sec-title"><span class="sec-icon">◎</span> ${t('tradeSetup')}</div>
-      <div class="grid-2 mb-16">
-        <div class="zone-box zone-green">
-          <div class="zone-label" style="color:var(--green)">${t('entryPrice')}</div>
-          <div class="zone-val">${esc(ts.entry)}</div>
+    
+    // For major cryptos: simplified view (only high/low)
+    if (isMajor) {
+      html += `<div class="card">
+        <div class="sec-title"><span class="sec-icon">◎</span> ${t('tradeSetup')}</div>
+        <div class="grid-2">
+          <div class="zone-box zone-green">
+            <div class="zone-label" style="color:var(--green)">🚀 PLUS HAUT POSSIBLE</div>
+            <div class="zone-val" style="font-size:18px;font-weight:700;color:var(--green)">${esc(ts.targets?.[2]?.price || ts.targets?.[1]?.price || 'N/A')}</div>
+          </div>
+          <div class="zone-box zone-red">
+            <div class="zone-label" style="color:var(--red)">💀 PLUS BAS POSSIBLE</div>
+            <div class="zone-val" style="font-size:18px;font-weight:700;color:var(--red)">${esc(ts.stopLoss)}</div>
+          </div>
         </div>
-        <div class="zone-box zone-red">
-          <div class="zone-label" style="color:var(--red)">${t('stopLoss')}</div>
-          <div class="zone-val">${esc(ts.stopLoss)}</div>
+      </div>`;
+    } else {
+      // For other tokens: full trade setup with targets
+      html += `<div class="card">
+        <div class="sec-title"><span class="sec-icon">◎</span> ${t('tradeSetup')}</div>
+        <div class="grid-2 mb-16">
+          <div class="zone-box zone-green">
+            <div class="zone-label" style="color:var(--green)">${t('entryPrice')}</div>
+            <div class="zone-val">${esc(ts.entry)}</div>
+          </div>
+          <div class="zone-box zone-red">
+            <div class="zone-label" style="color:var(--red)">${t('stopLoss')}</div>
+            <div class="zone-val">${esc(ts.stopLoss)}</div>
+          </div>
         </div>
-      </div>
-      <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);margin-bottom:10px">${t('priceTargets')}</div>
-      ${(ts.targets||[]).map((tg,i) => `
-        <div class="target-row">
-          <span class="target-label">Target ${i+1} (${esc(tg.timeframe)})</span>
-          ${progressHTML(tg.probability, 'var(--cyan)', 5)}
-          <span class="target-pct">${tg.probability}%</span>
-          <span class="target-price">${esc(tg.price)}</span>
-          <span class="target-gain">+${tg.gain}%</span>
-        </div>`).join('')}
-    </div>`;
+        <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);margin-bottom:10px">${t('priceTargets')}</div>
+        ${(ts.targets||[]).map((tg,i) => `
+          <div class="target-row">
+            <span class="target-label">Target ${i+1} (${esc(tg.timeframe)})</span>
+            ${progressHTML(tg.probability, 'var(--cyan)', 5)}
+            <span class="target-pct">${tg.probability}%</span>
+            <span class="target-price">${esc(tg.price)}</span>
+            <span class="target-gain">+${tg.gain}%</span>
+          </div>`).join('')}
+      </div>`;
+    }
   }
   
   // For major cryptos, stop here (simplified view)
