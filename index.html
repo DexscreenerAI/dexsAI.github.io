@@ -154,7 +154,92 @@ body {
 }
 @media (max-width: 1000px) {
   .right-panel { display: none; }
+  .mobile-panel { display: block; }
 }
+
+/* Mobile Panel (shows on mobile instead of right panel) */
+.mobile-panel {
+  display: none;
+  background: var(--sidebar);
+  border-bottom: 1px solid var(--card-border);
+  overflow: hidden;
+}
+.mobile-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--card-border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.mobile-tabs::-webkit-scrollbar { display: none; }
+.mobile-tab {
+  flex: 1;
+  min-width: 100px;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  border-bottom: 2px solid transparent;
+}
+.mobile-tab.active {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+  background: rgba(0,212,255,0.05);
+}
+.mobile-tab-content {
+  display: none;
+  padding: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.mobile-tab-content.active { display: block; }
+.mobile-tab-content::-webkit-scrollbar { width: 3px; }
+.mobile-tab-content::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 3px; }
+
+.mobile-token-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.mobile-token-row:hover { background: var(--bg3); }
+.mobile-token-row:last-child { margin-bottom: 0; }
+.mobile-token-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.mobile-token-info { flex: 1; min-width: 0; }
+.mobile-token-ticker { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--cyan); }
+.mobile-token-chain { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.mobile-token-badge {
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+}
+.mobile-token-badge.bullish { background: var(--green-dim); color: var(--green); }
+.mobile-token-badge.neutral { background: var(--yellow-dim); color: var(--yellow); }
+.mobile-token-badge.bearish { background: var(--red-dim); color: var(--red); }
 
 /* ── TOP BAR ── */
 .topbar {
@@ -424,67 +509,110 @@ body {
   .sidebar.closed { margin-left: 0; left: -260px; }
   .tb-toggle { display: block !important; }
   
-  .topbar { padding: 12px 16px; }
-  .tb-title { font-size: 12px; }
+  .topbar { padding: 10px 12px; gap: 8px; }
+  .tb-title { font-size: 11px; letter-spacing: 1px; }
   
-  .messages { padding: 16px 12px 100px; }
+  .messages { padding: 12px 10px 140px; }
   .msg-container { max-width: 100%; }
-  .msg-user-bubble { max-width: 95%; font-size: 14px; }
-  .msg-oracle-label { font-size: 10px; }
+  .msg-user-bubble { max-width: 90%; font-size: 13px; padding: 10px 14px; }
+  .msg-oracle-label { font-size: 9px; }
   
-  .card { padding: 14px; margin-bottom: 10px; border-radius: 8px; }
-  .sec-title { font-size: 9px; letter-spacing: 1.5px; margin-bottom: 12px; }
+  .card { padding: 12px; margin-bottom: 8px; border-radius: 10px; }
+  .sec-title { font-size: 9px; letter-spacing: 1.5px; margin-bottom: 10px; }
   
-  .grid-2 { grid-template-columns: 1fr; gap: 10px; }
-  .grid-3 { grid-template-columns: 1fr; gap: 10px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
   
-  .scenario-box { padding: 12px; }
-  .scenario-label { font-size: 9px; }
-  .scenario-value { font-size: 22px; }
+  .scenario-box { padding: 10px; }
+  .scenario-label { font-size: 8px; }
+  .scenario-value { font-size: 18px; }
   
-  .zone-box { padding: 12px; }
-  .zone-label { font-size: 9px; }
-  .zone-val { font-size: 12px; }
+  .zone-box { padding: 10px; }
+  .zone-label { font-size: 8px; }
+  .zone-val { font-size: 11px; }
   
   .target-row { 
     grid-template-columns: 1fr 1fr; 
     gap: 4px;
-    padding: 8px 0;
+    padding: 6px 0;
     border-bottom: 1px solid var(--card-border);
   }
   .target-row:last-child { border-bottom: none; }
   
-  .sr-box { padding: 12px; }
+  .sr-box { padding: 10px; }
   .sr-item { font-size: 11px; }
   
-  .holder-legend { gap: 8px; }
-  .holder-leg { font-size: 10px; }
+  .holder-legend { gap: 6px; flex-wrap: wrap; }
+  .holder-leg { font-size: 9px; }
   
-  .gauge-wrap { width: 65px; height: 65px; }
-  .gauge-num { font-size: 18px; }
+  .gauge-wrap { width: 60px; height: 60px; }
+  .gauge-num { font-size: 16px; }
   .gauge-label { font-size: 7px; }
   
-  .general-text { font-size: 13px; line-height: 1.6; }
+  .general-text { font-size: 13px; line-height: 1.5; }
   
-  .input-area { padding: 8px 12px 16px; }
-  .input-wrap { border-radius: 12px; padding: 2px 2px 2px 12px; }
-  .input-box { font-size: 14px; }
-  .send-btn { width: 34px; height: 34px; }
+  /* Input area fixed at bottom on mobile */
+  .input-area { 
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 12px 16px;
+    background: var(--bg);
+    border-top: 1px solid var(--card-border);
+    z-index: 50;
+  }
+  .input-wrap { 
+    border-radius: 12px; 
+    padding: 4px 4px 4px 14px;
+    background: var(--bg3);
+  }
+  .input-box { font-size: 15px; min-height: 20px; }
+  .send-btn { width: 38px; height: 38px; border-radius: 10px; }
   
-  .badge { font-size: 10px; padding: 3px 8px; }
+  .badge { font-size: 9px; padding: 3px 6px; }
   
-  /* Hide confidence circle on very small screens to save space */
+  /* Welcome section */
+  .welcome { height: auto; padding: 30px 10px; gap: 6px; }
+  .welcome-icon { width: 50px; height: 50px; }
+  .welcome-title { font-size: 22px; }
+  .welcome-sub { font-size: 13px; }
+  .quick-tokens { gap: 8px; margin-top: 16px; }
+  .quick-btn { padding: 8px 12px; font-size: 12px; }
+  .quick-btn img { width: 18px; height: 18px; }
+  
+  /* Hide confidence circle on mobile */
   .flex-between .gauge-wrap { display: none; }
+  
+  /* Chrome extension button repositioned */
+  .chrome-ext-btn {
+    bottom: 80px;
+    right: 12px;
+    padding: 10px;
+    border-radius: 50%;
+  }
+  .chrome-ext-text { display: none; }
+  .chrome-ext-icon { font-size: 18px; }
 }
 
 /* Very small phones */
 @media (max-width: 400px) {
-  .topbar { padding: 10px 12px; }
-  .card { padding: 12px; }
+  .topbar { padding: 8px 10px; }
+  .tb-title { font-size: 10px; }
+  
+  .card { padding: 10px; }
   .sec-title { font-size: 8px; }
-  .scenario-value { font-size: 20px; }
-  .zone-val { font-size: 11px; }
-  .input-box { font-size: 13px; }
+  
+  .grid-2 { grid-template-columns: 1fr; gap: 8px; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+  
+  .scenario-value { font-size: 16px; }
+  .zone-val { font-size: 10px; }
+  .input-box { font-size: 14px; }
+  
+  .welcome-title { font-size: 20px; }
+  .quick-tokens { gap: 6px; }
+  .quick-btn { padding: 6px 10px; font-size: 11px; }
 }
 
 /* Chrome Extension Button */
@@ -567,6 +695,24 @@ body {
           <option value="en">🇬🇧 EN</option>
           <option value="fr">🇫🇷 FR</option>
         </select>
+      </div>
+    </div>
+
+    <!-- MOBILE PANEL (visible only on mobile) -->
+    <div class="mobile-panel" id="mobilePanel">
+      <div class="mobile-tabs">
+        <button class="mobile-tab active" onclick="switchMobileTab('trending')">🔥 Trending</button>
+        <button class="mobile-tab" onclick="switchMobileTab('new')">🆕 New</button>
+        <button class="mobile-tab" onclick="switchMobileTab('searches')">⭐ Searches</button>
+      </div>
+      <div class="mobile-tab-content active" id="mobileTrending">
+        <div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Loading...</div>
+      </div>
+      <div class="mobile-tab-content" id="mobileNew">
+        <div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Loading...</div>
+      </div>
+      <div class="mobile-tab-content" id="mobileSearches">
+        <div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">No searches yet</div>
       </div>
     </div>
 
@@ -1846,6 +1992,7 @@ function saveSearch(token) {
   if (savedSearches.length > 50) savedSearches = savedSearches.slice(-50);
   localStorage.setItem('oracleSearches', JSON.stringify(savedSearches));
   renderSavedSearches();
+  renderMobileSavedSearches();
 }
 
 // Render saved searches (top 5 bullish)
@@ -2092,6 +2239,195 @@ async function loadPanelNewListings() {
 }
 
 // ═══════════════════════════════════════════
+// MOBILE PANEL FUNCTIONS
+// ═══════════════════════════════════════════
+function switchMobileTab(tab) {
+  // Update tabs
+  document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.mobile-tab-content').forEach(c => c.classList.remove('active'));
+  
+  // Activate selected tab
+  const tabs = document.querySelectorAll('.mobile-tab');
+  const contents = document.querySelectorAll('.mobile-tab-content');
+  
+  if (tab === 'trending') {
+    tabs[0].classList.add('active');
+    document.getElementById('mobileTrending').classList.add('active');
+  } else if (tab === 'new') {
+    tabs[1].classList.add('active');
+    document.getElementById('mobileNew').classList.add('active');
+  } else if (tab === 'searches') {
+    tabs[2].classList.add('active');
+    document.getElementById('mobileSearches').classList.add('active');
+  }
+}
+
+// Render mobile token row
+function renderMobileTokenRow(token) {
+  const badgeClass = token.confidence >= 70 ? 'bullish' : token.confidence >= 50 ? 'neutral' : 'bearish';
+  const badgeLabel = token.confidence >= 70 ? 'BULL' : token.confidence >= 50 ? 'NEUT' : 'BEAR';
+  
+  let html = `<div class="mobile-token-row" onclick="analyzeFromAddress('${token.address}','${token.chain}')">`;
+  if (token.icon && token.icon.length > 5) {
+    html += `<img class="mobile-token-icon" src="${token.icon}" onerror="this.onerror=null;this.outerHTML='<div class=\\'mobile-token-icon\\'>🪙</div>'">`;
+  } else {
+    html += `<div class="mobile-token-icon">🪙</div>`;
+  }
+  html += `<div class="mobile-token-info">`;
+  html += `<div class="mobile-token-ticker">$${token.symbol}</div>`;
+  html += `<div class="mobile-token-chain">${token.chain.toUpperCase()}</div>`;
+  html += `</div>`;
+  html += `<div class="mobile-token-badge ${badgeClass}">${badgeLabel}</div>`;
+  html += `</div>`;
+  return html;
+}
+
+// Load mobile trending
+async function loadMobileTrending() {
+  const container = document.getElementById('mobileTrending');
+  if (!container) return;
+  
+  try {
+    const r = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(15000) });
+    if (!r.ok) throw new Error('API error');
+    const data = await r.json();
+    
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">No data</div>';
+      return;
+    }
+    
+    const enriched = [];
+    const tokens = data.slice(0, 8);
+    
+    for (const token of tokens) {
+      const addr = token.tokenAddress || '';
+      const chain = token.chainId || 'unknown';
+      if (!addr) continue;
+      
+      let symbol = '???', liquidity = 0, volume24h = 0, dexIcon = '';
+      try {
+        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(4000) });
+        if (dexRes.ok) {
+          const dexData = await dexRes.json();
+          if (dexData.pairs && dexData.pairs.length > 0) {
+            symbol = dexData.pairs[0].baseToken?.symbol || '???';
+            liquidity = parseFloat(dexData.pairs[0].liquidity?.usd) || 0;
+            volume24h = parseFloat(dexData.pairs[0].volume?.h24) || 0;
+            dexIcon = dexData.pairs[0].info?.imageUrl || '';
+          }
+        }
+      } catch(e) {}
+      
+      let finalIcon = dexIcon;
+      if (!finalIcon && token.icon && token.icon.length > 5) {
+        finalIcon = `https://cdn.dexscreener.com/cms/images/${token.icon}?width=64&height=64&quality=95&format=auto`;
+      }
+      
+      let confidence = 50;
+      const boosts = token.totalAmount || token.amount || 0;
+      if (boosts >= 500) confidence += 15;
+      else if (boosts >= 100) confidence += 10;
+      if (liquidity >= 100000) confidence += 15;
+      else if (liquidity >= 50000) confidence += 10;
+      else if (liquidity < 5000) confidence -= 10;
+      if (volume24h >= 100000) confidence += 10;
+      if (token.icon || dexIcon) confidence += 5;
+      confidence = Math.max(0, Math.min(100, confidence));
+      
+      enriched.push({ address: addr, chain, symbol, icon: finalIcon, confidence });
+    }
+    
+    enriched.sort((a, b) => b.confidence - a.confidence);
+    container.innerHTML = enriched.slice(0, 5).map(t => renderMobileTokenRow(t)).join('');
+    
+  } catch (err) {
+    console.error('loadMobileTrending error:', err);
+    container.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Error loading</div>';
+  }
+}
+
+// Load mobile new listings
+async function loadMobileNewListings() {
+  const container = document.getElementById('mobileNew');
+  if (!container) return;
+  
+  try {
+    const r = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(15000) });
+    if (!r.ok) throw new Error('API error');
+    const data = await r.json();
+    
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">No data</div>';
+      return;
+    }
+    
+    const enriched = [];
+    const tokens = data.slice(0, 10);
+    
+    for (const token of tokens) {
+      const addr = token.tokenAddress || '';
+      const chain = token.chainId || 'unknown';
+      if (!addr) continue;
+      
+      let symbol = '???', liquidity = 0, volume24h = 0, dexIcon = '';
+      try {
+        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(4000) });
+        if (dexRes.ok) {
+          const dexData = await dexRes.json();
+          if (dexData.pairs && dexData.pairs.length > 0) {
+            symbol = dexData.pairs[0].baseToken?.symbol || '???';
+            liquidity = parseFloat(dexData.pairs[0].liquidity?.usd) || 0;
+            volume24h = parseFloat(dexData.pairs[0].volume?.h24) || 0;
+            dexIcon = dexData.pairs[0].info?.imageUrl || '';
+          }
+        }
+      } catch(e) {}
+      
+      let finalIcon = dexIcon;
+      if (!finalIcon && token.icon && token.icon.length > 5) {
+        finalIcon = `https://cdn.dexscreener.com/cms/images/${token.icon}?width=64&height=64&quality=95&format=auto`;
+      }
+      
+      let confidence = 40;
+      if (liquidity >= 100000) confidence += 25;
+      else if (liquidity >= 50000) confidence += 20;
+      else if (liquidity >= 20000) confidence += 15;
+      else if (liquidity < 2000) confidence -= 15;
+      if (volume24h >= 50000) confidence += 15;
+      else if (volume24h >= 20000) confidence += 10;
+      if (token.icon || dexIcon) confidence += 5;
+      if (token.description && token.description.length > 20) confidence += 5;
+      confidence = Math.max(0, Math.min(100, confidence));
+      
+      enriched.push({ address: addr, chain, symbol, icon: finalIcon, confidence });
+    }
+    
+    enriched.sort((a, b) => b.confidence - a.confidence);
+    container.innerHTML = enriched.slice(0, 5).map(t => renderMobileTokenRow(t)).join('');
+    
+  } catch (err) {
+    console.error('loadMobileNewListings error:', err);
+    container.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Error loading</div>';
+  }
+}
+
+// Render mobile saved searches
+function renderMobileSavedSearches() {
+  const container = document.getElementById('mobileSearches');
+  if (!container) return;
+  
+  const bullish = savedSearches.filter(s => s.confidence >= 50).sort((a,b) => b.confidence - a.confidence).slice(0, 5);
+  
+  if (bullish.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">No searches yet</div>';
+    return;
+  }
+  
+  container.innerHTML = bullish.map(t => renderMobileTokenRow(t)).join('');
+}
+
+// ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
 loadSavedLanguage();
@@ -2100,6 +2436,7 @@ renderMessages();
 updateTopbar();
 updateUILanguage();
 renderSavedSearches();
+renderMobileSavedSearches();
 $('tbToggle').classList.add('show');
 $('tbToggle').classList.remove('show');
 
@@ -2107,6 +2444,8 @@ $('tbToggle').classList.remove('show');
 setTimeout(() => {
   loadPanelTrending();
   loadPanelNewListings();
+  loadMobileTrending();
+  loadMobileNewListings();
 }, 500);
 </script>
 </body>
