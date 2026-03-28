@@ -622,7 +622,7 @@ body {
 }
 
 /* Topbar Social & Chrome buttons */
-.tb-social, .tb-chrome {
+.tb-social, .tb-chrome, .tb-chat {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -635,8 +635,9 @@ body {
   text-decoration: none;
   font-size: 14px;
   transition: all 0.15s;
+  cursor: pointer;
 }
-.tb-social:hover, .tb-chrome:hover {
+.tb-social:hover, .tb-chrome:hover, .tb-chat:hover {
   border-color: var(--cyan);
   color: var(--cyan);
   transform: translateY(-1px);
@@ -644,14 +645,115 @@ body {
 .tb-chrome {
   font-size: 16px;
 }
+.tb-chat {
+  font-size: 15px;
+}
+.tb-chat.active {
+  background: var(--cyan);
+  border-color: var(--cyan);
+  color: var(--bg);
+}
 
 @media (max-width: 500px) {
-  .tb-social, .tb-chrome {
+  .tb-social, .tb-chrome, .tb-chat {
     width: 28px;
     height: 28px;
     font-size: 12px;
   }
   .tb-chrome { font-size: 14px; }
+  .tb-chat { font-size: 13px; }
+}
+
+/* ── CHAT PANEL ── */
+#chatPanel {
+  position: fixed;
+  top: 80px;
+  left: 20px;
+  width: 320px;
+  height: 450px;
+  background: var(--sidebar);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  transition: height 0.25s ease, width 0.25s ease;
+}
+#chatPanel.open { display: flex; }
+#chatPanel.minimized {
+  height: 48px;
+  width: 200px;
+}
+#chatPanel.minimized #chatBody { display: none; }
+
+#chatHeader {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--card-border);
+  cursor: move;
+  user-select: none;
+}
+#chatHeader .chat-icon {
+  font-size: 16px;
+  margin-right: 8px;
+}
+#chatHeader .chat-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cyan);
+  letter-spacing: 1px;
+  flex: 1;
+}
+#chatHeader .chat-status {
+  width: 8px;
+  height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  margin-right: 12px;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+#chatHeader .chat-btn {
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 4px;
+  transition: color 0.15s;
+}
+#chatHeader .chat-btn:hover { color: var(--cyan); }
+
+#chatBody {
+  flex: 1;
+  overflow: hidden;
+  background: #0a0d14;
+  border-radius: 0 0 15px 15px;
+}
+#chatBody iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  #chatPanel {
+    width: 280px;
+    height: 350px;
+    top: 70px;
+    left: 10px;
+  }
+  #chatPanel.minimized { width: 160px; }
 }
 </style>
 </head>
@@ -690,12 +792,31 @@ body {
       <span class="tb-sep" id="tbSep" style="display:none">/</span>
       <span class="tb-sub" id="tbSub"></span>
       <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+        <button class="tb-chat" id="tbChat" onclick="toggleChat()" title="Community Chat">💬</button>
         <a href="https://x.com/dexscreenerai?s=21" target="_blank" rel="noopener" class="tb-social" title="Twitter">𝕏</a>
         <a href="./extension.html" class="tb-chrome" title="Chrome Extension">🧩</a>
         <select id="langSelect" onchange="setLanguage(this.value)" style="background:var(--card);border:1px solid var(--card-border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer;outline:none">
           <option value="en">🇬🇧 EN</option>
           <option value="fr">🇫🇷 FR</option>
         </select>
+      </div>
+    </div>
+
+    <!-- CHAT PANEL -->
+    <div id="chatPanel">
+      <div id="chatHeader">
+        <span class="chat-icon">💬</span>
+        <span class="chat-title">COMMUNITY</span>
+        <span class="chat-status"></span>
+        <button class="chat-btn" onclick="minimizeChat()" title="Minimize">−</button>
+        <button class="chat-btn" onclick="toggleChat()" title="Close">✕</button>
+      </div>
+      <div id="chatBody">
+        <iframe 
+          src="https://dexscreenerai.chatango.com/"
+          style="width:100%;height:100%;border:none;"
+          allowtransparency="true">
+        </iframe>
       </div>
     </div>
 
@@ -2483,6 +2604,100 @@ setTimeout(() => {
   loadMobileTrending();
   loadMobileNewListings();
 }, 500);
+
+// ═══════════════════════════════════════════
+// CHAT PANEL
+// ═══════════════════════════════════════════
+let chatOpen = false;
+let chatMinimized = false;
+let chatDragging = false;
+let chatDragOffset = { x: 0, y: 0 };
+
+function toggleChat() {
+  const panel = document.getElementById('chatPanel');
+  const btn = document.getElementById('tbChat');
+  chatOpen = !chatOpen;
+  
+  if (chatOpen) {
+    panel.classList.add('open');
+    panel.classList.remove('minimized');
+    btn.classList.add('active');
+    chatMinimized = false;
+  } else {
+    panel.classList.remove('open');
+    btn.classList.remove('active');
+  }
+}
+
+function minimizeChat() {
+  const panel = document.getElementById('chatPanel');
+  chatMinimized = !chatMinimized;
+  panel.classList.toggle('minimized', chatMinimized);
+  
+  // Update button text
+  const minBtn = panel.querySelector('.chat-btn');
+  minBtn.textContent = chatMinimized ? '+' : '−';
+}
+
+// Make chat draggable
+document.addEventListener('DOMContentLoaded', () => {
+  const panel = document.getElementById('chatPanel');
+  const header = document.getElementById('chatHeader');
+  
+  header.addEventListener('mousedown', (e) => {
+    if (e.target.classList.contains('chat-btn')) return;
+    chatDragging = true;
+    chatDragOffset.x = e.clientX - panel.offsetLeft;
+    chatDragOffset.y = e.clientY - panel.offsetTop;
+    panel.style.transition = 'none';
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (!chatDragging) return;
+    const newX = e.clientX - chatDragOffset.x;
+    const newY = e.clientY - chatDragOffset.y;
+    
+    // Keep within viewport
+    const maxX = window.innerWidth - panel.offsetWidth - 10;
+    const maxY = window.innerHeight - panel.offsetHeight - 10;
+    
+    panel.style.left = Math.max(10, Math.min(newX, maxX)) + 'px';
+    panel.style.top = Math.max(60, Math.min(newY, maxY)) + 'px';
+  });
+  
+  document.addEventListener('mouseup', () => {
+    chatDragging = false;
+    panel.style.transition = 'height 0.25s ease, width 0.25s ease';
+  });
+  
+  // Touch support for mobile
+  header.addEventListener('touchstart', (e) => {
+    if (e.target.classList.contains('chat-btn')) return;
+    chatDragging = true;
+    const touch = e.touches[0];
+    chatDragOffset.x = touch.clientX - panel.offsetLeft;
+    chatDragOffset.y = touch.clientY - panel.offsetTop;
+    panel.style.transition = 'none';
+  });
+  
+  document.addEventListener('touchmove', (e) => {
+    if (!chatDragging) return;
+    const touch = e.touches[0];
+    const newX = touch.clientX - chatDragOffset.x;
+    const newY = touch.clientY - chatDragOffset.y;
+    
+    const maxX = window.innerWidth - panel.offsetWidth - 10;
+    const maxY = window.innerHeight - panel.offsetHeight - 10;
+    
+    panel.style.left = Math.max(10, Math.min(newX, maxX)) + 'px';
+    panel.style.top = Math.max(60, Math.min(newY, maxY)) + 'px';
+  });
+  
+  document.addEventListener('touchend', () => {
+    chatDragging = false;
+    panel.style.transition = 'height 0.25s ease, width 0.25s ease';
+  });
+});
 </script>
 </body>
 </html>
