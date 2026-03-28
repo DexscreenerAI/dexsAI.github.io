@@ -580,9 +580,11 @@ body {
     <a href="./portfolio.html">Portfolio</a>
     <a href="./whale-tracker.html">Whales</a>
     <a href="./og-detector.html" class="active">OG Detector</a>
-    <a href="./promote.html" style="color:var(--yellow)">⭐ Promote</a>
+    <a href="./telegram-bot.html">Telegram Bot</a>
     <a href="./extension.html">Extension</a>
     <a href="./litepaper.html">Litepaper</a>
+    <a href="https://t.me/dexscreeneraitoken" target="_blank">Telegram</a>
+    <a href="https://x.com/dexscreenerai" target="_blank">Twitter</a>
   </div>
   <button class="nav-menu-btn" onclick="toggleMenu()">☰</button>
 </nav>
@@ -591,9 +593,11 @@ body {
   <a href="./portfolio.html">💼 Portfolio</a>
   <a href="./whale-tracker.html">🐋 Whale Tracker</a>
   <a href="./og-detector.html">🔍 OG Detector</a>
-  <a href="./promote.html" style="color:var(--yellow)">⭐ Promote</a>
+  <a href="./telegram-bot.html">🤖 Telegram Bot</a>
   <a href="./extension.html">🧩 Extension</a>
   <a href="./litepaper.html">📄 Litepaper</a>
+  <a href="https://t.me/dexscreeneraitoken" target="_blank">💬 Telegram</a>
+  <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
 </div>
 
 <!-- PROMO BANNER -->
@@ -896,6 +900,10 @@ const SUPABASE_URL = 'https://sollomdaapwxutpykzlq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvbGxvbWRhYXB3eHV0cHlremxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NDMzODksImV4cCI6MjA5MDIxOTM4OX0.03bYy4wzKCbuyf9Zf4i200TMAbqpR3gMTfWmrcF6Hl8';
 
 async function loadPromoBanner() {
+  const banner = document.getElementById('promoBanner');
+  const inner = document.getElementById('promoBannerInner');
+  if (!banner || !inner) return;
+  
   try {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/active_promotions?select=*&order=approved_at.desc&limit=10`, {
       headers: {
@@ -904,48 +912,50 @@ async function loadPromoBanner() {
       }
     });
     
-    if (!response.ok) return;
-    const data = await response.json();
-    
-    if (!data || data.length === 0) {
-      document.getElementById('promoBanner')?.classList.add('hidden');
+    if (!response.ok) {
+      console.log('Promo API error:', response.status);
+      banner.style.display = 'none';
       return;
     }
     
-    renderPromoBanner(data);
+    const data = await response.json();
+    console.log('Promo data:', data);
+    
+    if (!data || data.length === 0) {
+      banner.style.display = 'none';
+      return;
+    }
+    
+    // Show banner
+    banner.style.display = 'flex';
+    banner.classList.remove('hidden');
+    
+    // Double items for infinite scroll
+    const items = [...data, ...data];
+    
+    let html = '';
+    items.forEach(token => {
+      const addr = token.contract_address || '';
+      const ticker = token.ticker || '???';
+      const logo = token.logo_url || '';
+      const chain = (token.chain || '').toUpperCase();
+      
+      html += `<a href="./index.html?ca=${addr}" class="promo-item">`;
+      if (logo) {
+        html += `<img src="${logo}" onerror="this.style.display='none'" alt="">`;
+      }
+      html += `<span class="promo-badge">AD</span>`;
+      html += `<span>$${ticker}</span>`;
+      html += `<span style="color:var(--text3)">${chain}</span>`;
+      html += `</a>`;
+    });
+    
+    inner.innerHTML = html;
+    
   } catch (err) {
     console.error('Promo banner error:', err);
+    banner.style.display = 'none';
   }
-}
-
-function renderPromoBanner(promoted) {
-  const banner = document.getElementById('promoBanner');
-  const inner = document.getElementById('promoBannerInner');
-  if (!banner || !inner) return;
-  
-  if (promoted.length === 0) {
-    banner.classList.add('hidden');
-    return;
-  }
-  
-  banner.classList.remove('hidden');
-  
-  // Double items for infinite scroll
-  const items = [...promoted, ...promoted];
-  
-  let html = '';
-  items.forEach(token => {
-    html += `
-      <a href="./index.html?ca=${token.contract_address}" class="promo-item">
-        ${token.logo_url ? `<img src="${token.logo_url}" onerror="this.style.display='none'" alt="">` : ''}
-        <span class="promo-badge">AD</span>
-        <span>$${token.ticker || '???'}</span>
-        <span style="color:var(--text3)">${token.chain?.toUpperCase() || ''}</span>
-      </a>
-    `;
-  });
-  
-  inner.innerHTML = html;
 }
 
 // Load promo on page load
