@@ -128,7 +128,7 @@ body {
 .container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 100px 20px 40px;
+  padding: 110px 20px 40px;
 }
 
 /* Header */
@@ -311,15 +311,20 @@ body {
 /* Result Item */
 .result-item {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  flex-direction: column;
+  gap: 12px;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
-  cursor: pointer;
   transition: background 0.15s;
 }
 .result-item:last-child { border-bottom: none; }
 .result-item:hover { background: var(--bg3); }
+
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
 
 .result-rank {
   width: 50px;
@@ -345,22 +350,22 @@ body {
 }
 
 .result-logo {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--border);
   object-fit: cover;
   flex-shrink: 0;
 }
 .result-logo-placeholder {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 20px;
   flex-shrink: 0;
 }
 
@@ -414,6 +419,47 @@ body {
   flex-shrink: 0;
 }
 
+/* Actions Row */
+.result-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-left: 64px;
+}
+.action-btn {
+  padding: 8px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+.action-btn:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: var(--bg3);
+}
+.action-btn.analyze {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: #000;
+  font-weight: 600;
+}
+.action-btn.analyze:hover {
+  background: #ffaa00;
+  transform: translateY(-1px);
+}
+.action-btn.twitter:hover { border-color: #1da1f2; color: #1da1f2; }
+.action-btn.telegram:hover { border-color: #0088cc; color: #0088cc; }
+.action-btn.website:hover { border-color: var(--purple); color: var(--purple); }
+
 /* Copy Button */
 .copy-btn {
   padding: 6px 10px;
@@ -462,9 +508,62 @@ body {
   .header-icon { font-size: 48px; }
   .search-row { flex-direction: column; }
   .search-btn { width: 100%; }
-  .result-item { flex-wrap: wrap; gap: 10px; }
-  .result-stats { align-items: flex-start; flex-direction: row; gap: 12px; width: 100%; margin-top: 8px; }
+  .result-row { flex-wrap: wrap; gap: 10px; }
+  .result-stats { align-items: flex-start; flex-direction: row; gap: 12px; }
   .result-meta { flex-direction: column; gap: 4px; }
+  .result-actions { padding-left: 0; }
+  .action-btn { padding: 6px 10px; font-size: 10px; }
+}
+
+/* Promo Banner */
+.promo-banner {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  background: linear-gradient(90deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 149, 0, 0.1) 100%);
+  border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+  overflow: hidden;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  z-index: 99;
+}
+.promo-banner.hidden { display: none !important; }
+.promo-banner-inner {
+  display: flex;
+  gap: 60px;
+  animation: scrollPromo 30s linear infinite;
+  white-space: nowrap;
+}
+@keyframes scrollPromo {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.promo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  text-decoration: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  transition: color 0.15s;
+}
+.promo-item:hover { color: var(--yellow); }
+.promo-item img {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+.promo-badge {
+  background: var(--yellow);
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
 }
 </style>
 </head>
@@ -495,6 +594,11 @@ body {
   <a href="./promote.html" style="color:var(--yellow)">⭐ Promote</a>
   <a href="./extension.html">🧩 Extension</a>
   <a href="./litepaper.html">📄 Litepaper</a>
+</div>
+
+<!-- PROMO BANNER -->
+<div class="promo-banner hidden" id="promoBanner">
+  <div class="promo-banner-inner" id="promoBannerInner"></div>
 </div>
 
 <div class="container">
@@ -733,37 +837,119 @@ function renderResults(tokens, query) {
     const logo = pair.info?.imageUrl || '';
     const created = pair.pairCreatedAt;
     
+    // Get social links
+    const socials = pair.info?.socials || [];
+    const twitter = socials.find(s => s.type === 'twitter' || s.platform === 'twitter')?.url || '';
+    const telegram = socials.find(s => s.type === 'telegram' || s.platform === 'telegram')?.url || '';
+    const websites = pair.info?.websites || [];
+    const website = websites[0]?.url || '';
+    
     html += `
-      <div class="result-item" onclick="copyAddress('${addr}', this.querySelector('.copy-btn'))">
-        <div class="result-rank">
-          <span class="result-badge ${isOG ? 'og' : 'copy'}">${isOG ? '✓ OG' : '#' + (index + 1)}</span>
-        </div>
-        ${logo ? 
-          `<img class="result-logo" src="${logo}" onerror="this.outerHTML='<div class=\\'result-logo-placeholder\\'>🪙</div>'">` :
-          `<div class="result-logo-placeholder">🪙</div>`
-        }
-        <div class="result-info">
-          <div class="result-name">
-            <span>${name}</span>
-            <span class="result-ticker">$${symbol}</span>
+      <div class="result-item">
+        <div class="result-row">
+          <div class="result-rank">
+            <span class="result-badge ${isOG ? 'og' : 'copy'}">${isOG ? '✓ OG' : '#' + (index + 1)}</span>
           </div>
-          <div class="result-meta">
-            <span>📅 ${formatDate(created)}</span>
-            <span>📍 ${shortAddr}</span>
+          ${logo ? 
+            `<img class="result-logo" src="${logo}" onerror="this.outerHTML='<div class=\\'result-logo-placeholder\\'>🪙</div>'">` :
+            `<div class="result-logo-placeholder">🪙</div>`
+          }
+          <div class="result-info">
+            <div class="result-name">
+              <span>${escapeHtml(name)}</span>
+              <span class="result-ticker">$${escapeHtml(symbol)}</span>
+            </div>
+            <div class="result-meta">
+              <span>📅 ${formatDate(created)}</span>
+              <span>📍 ${shortAddr}</span>
+            </div>
           </div>
+          <div class="result-stats">
+            <span class="result-mc">${formatNumber(mc)}</span>
+            <span class="result-liq">Liq: ${formatNumber(liq)}</span>
+          </div>
+          <span class="result-chain">${getChainEmoji(chain)}</span>
         </div>
-        <div class="result-stats">
-          <span class="result-mc">${formatNumber(mc)}</span>
-          <span class="result-liq">Liq: ${formatNumber(liq)}</span>
+        <div class="result-actions">
+          <a href="./index.html?ca=${addr}" class="action-btn analyze">📊 Analyze</a>
+          <button class="action-btn" onclick="copyAddress('${addr}', this)">📋 Copy CA</button>
+          ${twitter ? `<a href="${twitter}" target="_blank" class="action-btn twitter" onclick="event.stopPropagation()">𝕏 Twitter</a>` : ''}
+          ${telegram ? `<a href="${telegram}" target="_blank" class="action-btn telegram" onclick="event.stopPropagation()">📱 Telegram</a>` : ''}
+          ${website ? `<a href="${website}" target="_blank" class="action-btn website" onclick="event.stopPropagation()">🌐 Website</a>` : ''}
+          <a href="https://dexscreener.com/${chain}/${pair.pairAddress || addr}" target="_blank" class="action-btn" onclick="event.stopPropagation()">📈 DexScreener</a>
         </div>
-        <span class="result-chain">${getChainEmoji(chain)}</span>
-        <button class="copy-btn" onclick="event.stopPropagation(); copyAddress('${addr}', this)">Copy CA</button>
       </div>
     `;
   });
   
   list.innerHTML = html;
 }
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Promo Banner
+const SUPABASE_URL = 'https://sollomdaapwxutpykzlq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvbGxvbWRhYXB3eHV0cHlremxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NDMzODksImV4cCI6MjA5MDIxOTM4OX0.03bYy4wzKCbuyf9Zf4i200TMAbqpR3gMTfWmrcF6Hl8';
+
+async function loadPromoBanner() {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/active_promotions?select=*&order=approved_at.desc&limit=10`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    });
+    
+    if (!response.ok) return;
+    const data = await response.json();
+    
+    if (!data || data.length === 0) {
+      document.getElementById('promoBanner')?.classList.add('hidden');
+      return;
+    }
+    
+    renderPromoBanner(data);
+  } catch (err) {
+    console.error('Promo banner error:', err);
+  }
+}
+
+function renderPromoBanner(promoted) {
+  const banner = document.getElementById('promoBanner');
+  const inner = document.getElementById('promoBannerInner');
+  if (!banner || !inner) return;
+  
+  if (promoted.length === 0) {
+    banner.classList.add('hidden');
+    return;
+  }
+  
+  banner.classList.remove('hidden');
+  
+  // Double items for infinite scroll
+  const items = [...promoted, ...promoted];
+  
+  let html = '';
+  items.forEach(token => {
+    html += `
+      <a href="./index.html?ca=${token.contract_address}" class="promo-item">
+        ${token.logo_url ? `<img src="${token.logo_url}" onerror="this.style.display='none'" alt="">` : ''}
+        <span class="promo-badge">AD</span>
+        <span>$${token.ticker || '???'}</span>
+        <span style="color:var(--text3)">${token.chain?.toUpperCase() || ''}</span>
+      </a>
+    `;
+  });
+  
+  inner.innerHTML = html;
+}
+
+// Load promo on page load
+loadPromoBanner();
 
 // Focus input on load
 document.getElementById('searchInput').focus();
