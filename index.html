@@ -169,8 +169,7 @@ body {
   .rp-ticker { font-size: 13px; }
 }
 @media (max-width: 1000px) {
-  .right-panel { display: none; }
-  .mobile-panel { display: block; }
+  .right-panel { display: none !important; }
 }
 
 /* Mobile Panel (shows on mobile instead of right panel) */
@@ -179,6 +178,9 @@ body {
   background: var(--sidebar);
   border-bottom: 1px solid var(--card-border);
   overflow: hidden;
+}
+@media (max-width: 1000px) {
+  .mobile-panel { display: block !important; }
 }
 .mobile-tabs {
   display: flex;
