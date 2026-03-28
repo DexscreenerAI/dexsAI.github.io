@@ -1,0 +1,589 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OG Detector - DexScreener AI</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0a0a0f;
+  --bg2: #12121a;
+  --bg3: #1a1a24;
+  --card: #1c1c28;
+  --border: #2a2a3a;
+  --cyan: #00d4aa;
+  --cyan-dim: rgba(0, 212, 170, 0.15);
+  --green: #00d4aa;
+  --red: #ff5252;
+  --yellow: #ffc107;
+  --purple: #b388ff;
+  --blue: #4da6ff;
+  --orange: #ff9500;
+  --text: #f0f0f0;
+  --text2: #a0a0a0;
+  --text3: #666;
+}
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Navigation */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+  padding: 16px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+.nav-logo img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+.nav-logo span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+.nav-links {
+  display: flex;
+  gap: 18px;
+}
+.nav-links a {
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--cyan); }
+.nav-links a.active { color: var(--cyan); }
+
+/* Mobile menu */
+.nav-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 24px;
+  cursor: pointer;
+}
+.nav-mobile-menu {
+  display: none;
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  background: rgba(10, 10, 15, 0.98);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 16px;
+  z-index: 99;
+  flex-direction: column;
+  gap: 10px;
+}
+.nav-mobile-menu.open { display: flex; }
+.nav-mobile-menu a {
+  font-size: 14px;
+  padding: 12px 16px;
+  background: var(--card);
+  border-radius: 10px;
+  color: var(--text2);
+  text-decoration: none;
+}
+.nav-mobile-menu a:hover { color: var(--cyan); background: var(--bg3); }
+
+@media (max-width: 768px) {
+  .nav { padding: 12px 16px; }
+  .nav-links { display: none; }
+  .nav-menu-btn { display: block; }
+  .nav-logo span { display: none; }
+}
+
+/* Hero */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120px 20px 60px;
+  text-align: center;
+  background: radial-gradient(ellipse at center top, rgba(255, 149, 0, 0.08) 0%, transparent 60%);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255, 149, 0, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(255, 149, 0, 0.15);
+  border: 1px solid rgba(255, 149, 0, 0.3);
+  border-radius: 30px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--orange);
+  letter-spacing: 1px;
+  margin-bottom: 30px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.3); }
+  50% { box-shadow: 0 0 20px 5px rgba(255, 149, 0, 0.15); }
+}
+
+.hero-icon {
+  font-size: 80px;
+  margin-bottom: 30px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.hero h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  letter-spacing: 2px;
+}
+
+.hero h1 span {
+  color: var(--orange);
+}
+
+.hero p {
+  font-size: 18px;
+  color: var(--text2);
+  max-width: 650px;
+  margin-bottom: 40px;
+}
+
+/* How it works */
+.how-it-works {
+  max-width: 700px;
+  margin-bottom: 50px;
+}
+
+.how-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--orange);
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: left;
+}
+
+.step-num {
+  width: 32px;
+  height: 32px;
+  background: var(--orange);
+  color: #000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-content h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.step-content p {
+  font-size: 13px;
+  color: var(--text2);
+  margin: 0;
+}
+
+/* Preview Card */
+.preview-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 500px;
+  margin-bottom: 40px;
+  text-align: left;
+}
+
+.preview-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preview-search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.preview-input {
+  flex: 1;
+  padding: 12px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+
+.preview-chains {
+  display: flex;
+  gap: 6px;
+}
+
+.chain-btn {
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.chain-btn:hover, .chain-btn.active {
+  border-color: var(--orange);
+  background: rgba(255, 149, 0, 0.1);
+}
+
+.results {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.result-item:last-child { margin-bottom: 0; }
+
+.result-badge {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.result-badge.og {
+  background: rgba(0, 212, 170, 0.15);
+  color: var(--green);
+}
+
+.result-badge.copy {
+  background: rgba(255, 82, 82, 0.15);
+  color: var(--red);
+}
+
+.result-info {
+  flex: 1;
+}
+
+.result-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.result-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+.result-chain {
+  font-size: 18px;
+}
+
+/* Notify Form */
+.notify-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 30px 40px;
+  max-width: 500px;
+}
+
+.notify-box h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--orange);
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+}
+
+.notify-form {
+  display: flex;
+  gap: 10px;
+}
+
+.notify-form input {
+  flex: 1;
+  padding: 14px 18px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.notify-form input:focus {
+  border-color: var(--orange);
+}
+
+.notify-form input::placeholder {
+  color: var(--text3);
+}
+
+.notify-form button {
+  padding: 14px 24px;
+  background: var(--orange);
+  border: none;
+  border-radius: 10px;
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notify-form button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 149, 0, 0.3);
+}
+
+/* Back link */
+.back-link {
+  margin-top: 40px;
+}
+
+.back-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.back-link a:hover {
+  color: var(--orange);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .hero h1 { font-size: 32px; }
+  .hero p { font-size: 16px; }
+  .notify-form { flex-direction: column; }
+  .notify-box { padding: 24px; margin: 0 10px; }
+  .step { flex-direction: column; gap: 12px; }
+  .preview-card { margin: 0 10px 40px; }
+  .preview-search { flex-direction: column; }
+  .preview-chains { justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <a href="./index.html" class="nav-logo">
+    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="Logo">
+    <span>DEXSCREENER AI</span>
+  </a>
+  <div class="nav-links">
+    <a href="./index.html">App</a>
+    <a href="./portfolio.html">Portfolio</a>
+    <a href="./whale-tracker.html">Whales</a>
+    <a href="./og-detector.html" class="active">OG Detector</a>
+    <a href="./extension.html">Extension</a>
+    <a href="./litepaper.html">Litepaper</a>
+    <a href="https://x.com/dexscreenerai" target="_blank">Twitter</a>
+  </div>
+  <button class="nav-menu-btn" onclick="document.getElementById('mobileMenu').classList.toggle('open'); this.textContent = this.textContent === '☰' ? '✕' : '☰'">☰</button>
+</nav>
+<div class="nav-mobile-menu" id="mobileMenu">
+  <a href="./index.html">🏠 App</a>
+  <a href="./extension.html">🧩 Extension</a>
+  <a href="./portfolio.html">💼 Portfolio</a>
+  <a href="./whale-tracker.html">🐋 Whale Tracker</a>
+  <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./litepaper.html">📄 Litepaper</a>
+  <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
+</div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="badge">
+    <span>🚧</span>
+    <span>COMING SOON</span>
+  </div>
+  
+  <div class="hero-icon">🔍</div>
+  
+  <h1>OG <span>DETECTOR</span></h1>
+  
+  <p>Find the original, legitimate contract. Enter any token name or contract address, select the chain, and instantly discover which contract was deployed first — and how many copycats exist.</p>
+  
+  <div class="how-it-works">
+    <div class="how-title">⚙️ HOW IT WORKS</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>Enter Token Name or Contract</h3>
+          <p>Type any token name (e.g., "PEPE", "WIF") or paste a contract address.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Select Your Chain</h3>
+          <p>Choose from Solana, Ethereum, BSC, Base, Arbitrum, and more.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>Get the OG Contract</h3>
+          <p>We scan all deployments and show you the first legitimate contract, along with all copies.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="preview-card">
+    <div class="preview-title">📡 LIVE PREVIEW</div>
+    <div class="preview-search">
+      <input type="text" class="preview-input" value="PEPE" readonly>
+      <div class="preview-chains">
+        <span class="chain-btn active">🟣</span>
+        <span class="chain-btn">🔵</span>
+        <span class="chain-btn">🟡</span>
+      </div>
+    </div>
+    <div class="results">
+      <div class="result-item">
+        <span class="result-badge og">✓ OG</span>
+        <div class="result-info">
+          <div class="result-name">PEPE (Pepe)</div>
+          <div class="result-meta">Deployed: Apr 14, 2023 · 0x6982...508B</div>
+        </div>
+        <span class="result-chain">🔵</span>
+      </div>
+      <div class="result-item">
+        <span class="result-badge copy">COPY #1</span>
+        <div class="result-info">
+          <div class="result-name">PEPE (Pepe)</div>
+          <div class="result-meta">Deployed: Apr 15, 2023 · 0x3f2a...91C4</div>
+        </div>
+        <span class="result-chain">🔵</span>
+      </div>
+      <div class="result-item">
+        <span class="result-badge copy">COPY #47</span>
+        <div class="result-info">
+          <div class="result-name">PEPE (Pepe Sol)</div>
+          <div class="result-meta">Deployed: May 2, 2023 · 7xKp...3mNz</div>
+        </div>
+        <span class="result-chain">🟣</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="notify-box">
+    <h3>🔔 GET NOTIFIED AT LAUNCH</h3>
+    <form class="notify-form" onsubmit="event.preventDefault(); this.innerHTML = '<p style=\'color: var(--orange); text-align: center;\'>✅ You\'re on the list!</p>';">
+      <input type="email" placeholder="Enter your email" required>
+      <button type="submit">NOTIFY ME</button>
+    </form>
+  </div>
+  
+  <div class="back-link">
+    <a href="./index.html">← Back to App</a>
+  </div>
+</div>
+
+</body>
+</html>
