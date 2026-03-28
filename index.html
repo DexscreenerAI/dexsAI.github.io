@@ -160,6 +160,20 @@ body {
   text-align: center; padding: 20px; color: var(--text3);
   font-family: var(--sans); font-size: 12px;
 }
+.rp-promoted {
+  background: linear-gradient(180deg, rgba(255,170,0,0.05) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255,170,0,0.2);
+}
+.rp-promoted .rp-item {
+  border: 1px solid rgba(255,170,0,0.15);
+}
+.rp-promoted .rp-item:hover {
+  border-color: rgba(255,170,0,0.3);
+}
+.rp-badge.promoted {
+  background: rgba(255,170,0,0.15);
+  color: var(--yellow);
+}
 
 /* Responsive: hide right panel on smaller screens */
 @media (max-width: 1200px) {
@@ -945,6 +959,7 @@ body {
     <a href="./portfolio.html">Portfolio</a>
     <a href="./whale-tracker.html">Whales</a>
     <a href="./og-detector.html">OG Detector</a>
+    <a href="./promote.html" style="color:var(--yellow)">⭐ Promote</a>
     <a href="./extension.html">Extension</a>
     <a href="./litepaper.html">Litepaper</a>
     <a href="https://x.com/dexscreenerai" target="_blank">Twitter</a>
@@ -959,6 +974,7 @@ body {
   <a href="./portfolio.html">💼 Portfolio</a>
   <a href="./whale-tracker.html">🐋 Whale Tracker</a>
   <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./promote.html" style="color:var(--yellow)">⭐ Promote Your Token</a>
   <a href="./litepaper.html">📄 Litepaper</a>
   <a href="./privacy.html">🔒 Privacy</a>
   <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
@@ -1066,6 +1082,12 @@ body {
 
   <!-- RIGHT PANEL -->
   <div class="right-panel" id="rightPanel">
+    <!-- Promoted Section -->
+    <div class="rp-section rp-promoted">
+      <div class="rp-title" style="color:var(--yellow)">⭐ Promoted <a href="./promote.html" style="margin-left:auto;font-size:9px;color:var(--cyan);text-decoration:none">+ Add yours</a></div>
+      <div id="rpPromoted"><div class="rp-empty">No promoted tokens</div></div>
+    </div>
+    
     <!-- Trending Section -->
     <div class="rp-section">
       <div class="rp-title">🔥 Trending</div>
@@ -2828,6 +2850,78 @@ function renderMobileSavedSearches() {
 }
 
 // ═══════════════════════════════════════════
+// PROMOTED TOKENS
+// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// SUPABASE CONFIG
+// ═══════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://sollomdaapwxutpykzlq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvbGxvbWRhYXB3eHV0cHlremxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NDMzODksImV4cCI6MjA5MDIxOTM4OX0.03bYy4wzKCbuyf9Zf4i200TMAbqpR3gMTfWmrcF6Hl8';
+
+async function loadPromotedTokens() {
+  const container = document.getElementById('rpPromoted');
+  if (!container) return;
+  
+  // Check if Supabase is configured
+  if (SUPABASE_URL.includes('YOUR_PROJECT')) {
+    // Fallback to localStorage if Supabase not configured
+    const promoted = JSON.parse(localStorage.getItem('promotedTokens') || '[]');
+    renderPromotedTokens(container, promoted);
+    return;
+  }
+  
+  try {
+    // Fetch from Supabase
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/active_promotions?select=*`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch');
+    
+    const promoted = await response.json();
+    renderPromotedTokens(container, promoted.map(p => ({
+      address: p.contract_address,
+      ticker: p.ticker,
+      logo: p.logo_url,
+      chain: p.chain
+    })));
+    
+  } catch (err) {
+    console.error('Error loading promoted:', err);
+    // Fallback to localStorage
+    const promoted = JSON.parse(localStorage.getItem('promotedTokens') || '[]');
+    renderPromotedTokens(container, promoted);
+  }
+}
+
+function renderPromotedTokens(container, promoted) {
+  if (promoted.length === 0) {
+    container.innerHTML = '<div class="rp-empty">No promoted tokens yet<br><a href="./promote.html" style="color:var(--cyan);font-size:11px">Be the first! →</a></div>';
+    return;
+  }
+  
+  let html = '';
+  for (const token of promoted.slice(0, 5)) {
+    html += `<div class="rp-item" onclick="analyzeFromAddress('${token.address}','${token.chain}')">`;
+    if (token.logo) {
+      html += `<img class="rp-icon" src="${token.logo}" onerror="this.onerror=null;this.outerHTML='<div class=\\'rp-icon-emoji\\'>⭐</div>'">`;
+    } else {
+      html += `<div class="rp-icon-emoji">⭐</div>`;
+    }
+    html += `<div class="rp-info">`;
+    html += `<div class="rp-ticker">$${token.ticker}</div>`;
+    html += `<div class="rp-chain">${token.chain.toUpperCase()}</div>`;
+    html += `</div>`;
+    html += `<div class="rp-badge promoted">AD</div>`;
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
 loadSavedLanguage();
@@ -2837,6 +2931,7 @@ updateTopbar();
 updateUILanguage();
 renderSavedSearches();
 renderMobileSavedSearches();
+loadPromotedTokens();
 $('tbToggle').classList.add('show');
 $('tbToggle').classList.remove('show');
 
