@@ -313,8 +313,7 @@ body {
 
 /* ── TOP BAR ── */
 .topbar {
-  padding: 14px 20px; border-bottom: 1px solid var(--card-border);
-  display: flex; align-items: center; gap: 12px;
+  display: none !important; /* Hidden - we use top-nav instead */
 }
 .tb-toggle {
   background: none; border: none; color: var(--text2); cursor: pointer;
@@ -1049,10 +1048,10 @@ body {
 <!-- Floating New Chat Button (mobile) -->
 <button class="fab-new" onclick="newConversation(); closeMobileMenu();" title="New Analysis">+</button>
 
-<!-- PROMO BANNER (mobile only) -->
-<div class="promo-banner hidden" id="promoBanner">
+<!-- PROMO BANNER (PC + mobile - scrolling ticker) -->
+<div class="promo-banner" id="promoBanner">
   <div class="promo-banner-inner" id="promoBannerInner">
-    <!-- Filled by JS -->
+    <!-- Filled by JS - hidden until loaded -->
   </div>
 </div>
 
@@ -1077,23 +1076,6 @@ body {
   <!-- MAIN -->
   <div class="main">
     <!-- TOP BAR -->
-    <div class="topbar">
-      <button class="tb-toggle" id="tbToggle" onclick="toggleSidebar()">☰</button>
-      <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" style="width:24px;height:24px;border-radius:4px" alt="DexScreener AI">
-      <span class="tb-title">DEXSCREENER AI</span>
-      <span class="tb-sep" id="tbSep" style="display:none">/</span>
-      <span class="tb-sub" id="tbSub"></span>
-      <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
-        <button class="tb-chat" id="tbChat" onclick="toggleChat()" title="Community Chat">💬</button>
-        <a href="https://x.com/dexscreenerai?s=21" target="_blank" rel="noopener" class="tb-social" title="Twitter">𝕏</a>
-        <a href="./extension.html" class="tb-chrome" title="Chrome Extension">🧩</a>
-        <select id="langSelect" onchange="setLanguage(this.value)" style="background:var(--card);border:1px solid var(--card-border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer;outline:none">
-          <option value="en">🇬🇧 EN</option>
-          <option value="fr">🇫🇷 FR</option>
-        </select>
-      </div>
-    </div>
-
     <!-- CHAT PANEL -->
     <div id="chatPanel">
       <div id="chatHeader">
@@ -1115,16 +1097,20 @@ body {
     <!-- MOBILE PANEL (visible only on mobile) -->
     <div class="mobile-panel collapsed" id="mobilePanel">
       <div class="mobile-panel-header" onclick="toggleMobilePanel()">
-        <span class="mobile-panel-title">🔥 Trending & New Tokens</span>
+        <span class="mobile-panel-title">⭐ Promoted & Trending</span>
         <button class="mobile-panel-toggle">▼</button>
       </div>
       <div class="mobile-panel-content">
         <div class="mobile-tabs">
-          <button class="mobile-tab active" onclick="event.stopPropagation(); switchMobileTab('trending')">🔥 Trending</button>
+          <button class="mobile-tab active" onclick="event.stopPropagation(); switchMobileTab('promoted')" style="color:var(--yellow)">⭐ Promo</button>
+          <button class="mobile-tab" onclick="event.stopPropagation(); switchMobileTab('trending')">🔥 Trending</button>
           <button class="mobile-tab" onclick="event.stopPropagation(); switchMobileTab('new')">🆕 New</button>
           <button class="mobile-tab" onclick="event.stopPropagation(); switchMobileTab('searches')">⭐ Searches</button>
         </div>
-        <div class="mobile-tab-content active" id="mobileTrending">
+        <div class="mobile-tab-content active" id="mobilePromoted">
+          <div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Loading...</div>
+        </div>
+        <div class="mobile-tab-content" id="mobileTrending">
           <div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Loading...</div>
         </div>
         <div class="mobile-tab-content" id="mobileNew">
@@ -1386,14 +1372,7 @@ function newConversation() {
 }
 
 function updateTopbar() {
-  const c = conversations.find(x => x.id === activeId);
-  if (c && c.messages.length > 0) {
-    $('tbSep').style.display = '';
-    $('tbSub').textContent = c.title;
-  } else {
-    $('tbSep').style.display = 'none';
-    $('tbSub').textContent = '';
-  }
+  // Topbar removed - function kept for compatibility
 }
 
 // ═══════════════════════════════════════════
@@ -2737,16 +2716,18 @@ function switchMobileTab(tab) {
   
   // Activate selected tab
   const tabs = document.querySelectorAll('.mobile-tab');
-  const contents = document.querySelectorAll('.mobile-tab-content');
   
-  if (tab === 'trending') {
+  if (tab === 'promoted') {
     tabs[0].classList.add('active');
+    document.getElementById('mobilePromoted').classList.add('active');
+  } else if (tab === 'trending') {
+    tabs[1].classList.add('active');
     document.getElementById('mobileTrending').classList.add('active');
   } else if (tab === 'new') {
-    tabs[1].classList.add('active');
+    tabs[2].classList.add('active');
     document.getElementById('mobileNew').classList.add('active');
   } else if (tab === 'searches') {
-    tabs[2].classList.add('active');
+    tabs[3].classList.add('active');
     document.getElementById('mobileSearches').classList.add('active');
   }
 }
@@ -2775,6 +2756,70 @@ function renderMobileTokenRow(token) {
   html += `<div class="mobile-token-badge ${badgeClass}">${badgeLabel}</div>`;
   html += `</div>`;
   return html;
+}
+
+// Load mobile promoted tokens
+async function loadMobilePromoted() {
+  const container = document.getElementById('mobilePromoted');
+  if (!container) return;
+  
+  // Check if Supabase is configured
+  if (SUPABASE_URL.includes('YOUR_PROJECT')) {
+    const promoted = JSON.parse(localStorage.getItem('promotedTokens') || '[]');
+    renderMobilePromoted(container, promoted);
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/active_promotions?select=*`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch');
+    
+    const promoted = await response.json();
+    renderMobilePromoted(container, promoted.map(p => ({
+      address: p.contract_address,
+      ticker: p.ticker,
+      logo: p.logo_url,
+      chain: p.chain
+    })));
+    
+  } catch (err) {
+    console.error('Error loading mobile promoted:', err);
+    const promoted = JSON.parse(localStorage.getItem('promotedTokens') || '[]');
+    renderMobilePromoted(container, promoted);
+  }
+}
+
+function renderMobilePromoted(container, promoted) {
+  if (promoted.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">
+      No promoted tokens yet<br>
+      <a href="./promote.html" style="color:var(--yellow);font-size:11px;margin-top:8px;display:inline-block">⭐ Promote your token →</a>
+    </div>`;
+    return;
+  }
+  
+  let html = '';
+  for (const token of promoted.slice(0, 10)) {
+    html += `<div class="mobile-token-row" onclick="analyzeFromAddress('${token.address}','${token.chain}')" style="border-left:2px solid var(--yellow)">`;
+    if (token.logo) {
+      html += `<img class="mobile-token-icon" src="${token.logo}" onerror="this.onerror=null;this.outerHTML='<div class=\\'mobile-token-icon\\' style=\\'background:var(--yellow-dim)\\'>⭐</div>'">`;
+    } else {
+      html += `<div class="mobile-token-icon" style="background:var(--yellow-dim)">⭐</div>`;
+    }
+    html += `<div class="mobile-token-info">`;
+    html += `<div class="mobile-token-ticker" style="color:var(--yellow)">$${token.ticker}</div>`;
+    html += `<div class="mobile-token-chain">${token.chain.toUpperCase()}</div>`;
+    html += `</div>`;
+    html += `<div class="mobile-token-badge" style="background:var(--yellow-dim);color:var(--yellow)">AD</div>`;
+    html += `</div>`;
+  }
+  container.innerHTML = html;
 }
 
 // Load mobile trending
@@ -3047,13 +3092,12 @@ updateUILanguage();
 renderSavedSearches();
 renderMobileSavedSearches();
 loadPromotedTokens();
-$('tbToggle').classList.add('show');
-$('tbToggle').classList.remove('show');
 
 // Load panel data after page loads
 setTimeout(() => {
   loadPanelTrending();
   loadPanelNewListings();
+  loadMobilePromoted();
   loadMobileTrending();
   loadMobileNewListings();
 }, 500);
