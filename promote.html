@@ -1,0 +1,668 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Promote Your Token — DexScreener AI</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060a10;
+  --bg2: #0b1018;
+  --bg3: #101822;
+  --card: #111a26;
+  --card-border: #1a2636;
+  --cyan: #00d4ff;
+  --cyan-dim: rgba(0,212,255,0.12);
+  --green: #00ff88;
+  --green-dim: rgba(0,255,136,0.10);
+  --red: #ff3b4f;
+  --yellow: #ffaa00;
+  --purple: #b388ff;
+  --text: #dfe4ed;
+  --text2: rgba(255,255,255,0.50);
+  --text3: rgba(255,255,255,0.22);
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Navbar */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: rgba(6,10,16,0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 1000;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #fff;
+}
+.nav-logo img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+.nav-logo span {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-left: auto;
+}
+.nav-link {
+  color: var(--text2);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.nav-link:hover { color: #fff; background: var(--bg3); }
+.nav-link.active { color: var(--cyan); background: var(--cyan-dim); }
+
+/* Mobile menu */
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: auto;
+}
+.mobile-menu {
+  display: none;
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--card-border);
+  padding: 12px;
+  z-index: 999;
+  flex-direction: column;
+  gap: 4px;
+}
+.mobile-menu.open { display: flex; }
+.mobile-menu a {
+  color: var(--text);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.mobile-menu a:hover { background: var(--bg3); }
+.mobile-menu a.active { color: var(--cyan); background: var(--cyan-dim); }
+
+@media (max-width: 900px) {
+  .nav-links { display: none; }
+  .mobile-menu-btn { display: block; }
+}
+
+/* Container */
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 80px 20px 40px;
+}
+
+/* Hero */
+.hero {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--cyan-dim), var(--green-dim));
+  border: 1px solid var(--cyan);
+  border-radius: 20px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cyan);
+  margin-bottom: 20px;
+}
+.hero h1 {
+  font-family: var(--mono);
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.hero h1 span { color: var(--cyan); }
+.hero p {
+  color: var(--text2);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Benefits */
+.benefits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.benefit {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+.benefit-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+.benefit-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cyan);
+  margin-bottom: 6px;
+}
+.benefit-text {
+  font-size: 12px;
+  color: var(--text2);
+}
+
+@media (max-width: 600px) {
+  .benefits { grid-template-columns: 1fr; }
+}
+
+/* Payment Box */
+.payment-box {
+  background: linear-gradient(135deg, var(--card) 0%, var(--bg3) 100%);
+  border: 2px solid var(--cyan);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+.payment-title {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cyan);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.payment-amount {
+  font-family: var(--mono);
+  font-size: 42px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.payment-amount span {
+  font-size: 20px;
+  color: var(--purple);
+}
+.payment-address-label {
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.payment-address {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+.payment-address code {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  word-break: break-all;
+  text-align: left;
+}
+.copy-btn {
+  background: var(--cyan);
+  border: none;
+  color: #000;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.copy-btn:hover { transform: scale(1.05); }
+.payment-note {
+  font-size: 12px;
+  color: var(--text3);
+}
+.payment-note a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+/* Form */
+.form-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 24px;
+}
+.form-title {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.form-group {
+  margin-bottom: 18px;
+}
+.form-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.form-label .required {
+  color: var(--red);
+}
+.form-label .optional {
+  color: var(--text3);
+  font-weight: 400;
+}
+.form-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-input:focus {
+  border-color: var(--cyan);
+}
+.form-input::placeholder {
+  color: var(--text3);
+}
+.form-input.small {
+  font-size: 11px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 500px) {
+  .form-row { grid-template-columns: 1fr; }
+}
+
+.submit-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--cyan), #00a0cc);
+  border: none;
+  color: #000;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,212,255,0.3);
+}
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Success message */
+.success-message {
+  display: none;
+  background: var(--green-dim);
+  border: 1px solid var(--green);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  margin-top: 20px;
+}
+.success-message.show { display: block; }
+.success-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+.success-title {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 8px;
+}
+.success-text {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+/* Footer note */
+.footer-note {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text3);
+  font-size: 12px;
+}
+.footer-note a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="./index.html" class="nav-logo">
+    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="Logo">
+    <span>DEXSCREENER AI</span>
+  </a>
+  <div class="nav-links">
+    <a href="./index.html" class="nav-link">App</a>
+    <a href="./portfolio.html" class="nav-link">Portfolio</a>
+    <a href="./whale-tracker.html" class="nav-link">Whales</a>
+    <a href="./og-detector.html" class="nav-link">OG Detector</a>
+    <a href="./promote.html" class="nav-link active">Promote</a>
+    <a href="./extension.html" class="nav-link">Extension</a>
+    <a href="./litepaper.html" class="nav-link">Litepaper</a>
+  </div>
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="./index.html">🏠 App</a>
+  <a href="./portfolio.html">💼 Portfolio</a>
+  <a href="./whale-tracker.html">🐋 Whale Tracker</a>
+  <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./promote.html" class="active">⭐ Promote</a>
+  <a href="./extension.html">🧩 Extension</a>
+  <a href="./litepaper.html">📄 Litepaper</a>
+  <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
+</div>
+
+<div class="container">
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">⭐ PREMIUM LISTING</div>
+    <h1>Promote Your <span>Token</span></h1>
+    <p>Get featured on DexScreener AI homepage. Reach thousands of active traders and investors looking for the next gem.</p>
+  </div>
+
+  <!-- Benefits -->
+  <div class="benefits">
+    <div class="benefit">
+      <div class="benefit-icon">👀</div>
+      <div class="benefit-title">VISIBILITY</div>
+      <div class="benefit-text">Featured spot on homepage</div>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon">⏱️</div>
+      <div class="benefit-title">6 HOURS</div>
+      <div class="benefit-text">Premium placement duration</div>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon">⚡</div>
+      <div class="benefit-title">INSTANT</div>
+      <div class="benefit-text">Live within minutes</div>
+    </div>
+  </div>
+
+  <!-- Payment Box -->
+  <div class="payment-box">
+    <div class="payment-title">
+      <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" style="width:24px;height:24px;border-radius:50%">
+      LISTING FEE
+    </div>
+    <div class="payment-amount">1 <span>SOL</span></div>
+    <div class="payment-address-label">Send to this address</div>
+    <div class="payment-address">
+      <code id="walletAddress">9vtc4dD2bu7oHgZxvouiV4ey5q3HDoC8tnfTCnFrX95A</code>
+      <button class="copy-btn" onclick="copyAddress()">COPY</button>
+    </div>
+    <div class="payment-note">
+      Verify on <a href="https://solscan.io/account/9vtc4dD2bu7oHgZxvouiV4ey5q3HDoC8tnfTCnFrX95A" target="_blank">Solscan ↗</a>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="form-card">
+    <div class="form-title">📝 Token Information</div>
+    
+    <form id="promoteForm" onsubmit="submitForm(event)">
+      <div class="form-group">
+        <label class="form-label">Contract Address <span class="required">*</span></label>
+        <input type="text" class="form-input small" name="contract" placeholder="e.g. 7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Token Name <span class="required">*</span></label>
+          <input type="text" class="form-input" name="name" placeholder="e.g. DexScreener AI" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ticker <span class="required">*</span></label>
+          <input type="text" class="form-input" name="ticker" placeholder="e.g. DEXAI" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Logo URL <span class="required">*</span></label>
+        <input type="url" class="form-input small" name="logo" placeholder="https://... (PNG, JPG, max 512x512)" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Chain <span class="required">*</span></label>
+        <select class="form-input" name="chain" required>
+          <option value="">Select chain...</option>
+          <option value="solana">Solana</option>
+          <option value="ethereum">Ethereum</option>
+          <option value="bsc">BSC</option>
+          <option value="base">Base</option>
+          <option value="arbitrum">Arbitrum</option>
+          <option value="polygon">Polygon</option>
+          <option value="avalanche">Avalanche</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Twitter <span class="optional">(optional)</span></label>
+          <input type="url" class="form-input small" name="twitter" placeholder="https://x.com/...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telegram <span class="optional">(optional)</span></label>
+          <input type="url" class="form-input small" name="telegram" placeholder="https://t.me/...">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Website <span class="optional">(optional)</span></label>
+        <input type="url" class="form-input small" name="website" placeholder="https://...">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Your Email <span class="required">*</span></label>
+        <input type="email" class="form-input" name="email" placeholder="For confirmation & updates" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Transaction Hash <span class="required">*</span></label>
+        <input type="text" class="form-input small" name="txhash" placeholder="Paste the SOL transaction signature here" required>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <span>🚀</span> Submit for Review
+      </button>
+    </form>
+
+    <div class="success-message" id="successMessage">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Submission Received!</div>
+      <div class="success-text">
+        We'll verify your transaction and review your listing within 24 hours.<br>
+        You'll receive a confirmation email once approved.
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Questions? Contact us on <a href="https://x.com/dexscreenerai" target="_blank">Twitter</a> or <a href="https://t.me/dexscreenerai" target="_blank">Telegram</a>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// SUPABASE CONFIG
+// ═══════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://sollomdaapwxutpykzlq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvbGxvbWRhYXB3eHV0cHlremxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NDMzODksImV4cCI6MjA5MDIxOTM4OX0.03bYy4wzKCbuyf9Zf4i200TMAbqpR3gMTfWmrcF6Hl8'; (clé publique)
+
+function toggleMobileMenu() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+
+function copyAddress() {
+  const addr = document.getElementById('walletAddress').textContent;
+  navigator.clipboard.writeText(addr);
+  const btn = event.target;
+  btn.textContent = '✓ COPIED';
+  setTimeout(() => btn.textContent = 'COPY', 2000);
+}
+
+async function submitForm(e) {
+  e.preventDefault();
+  
+  const form = e.target;
+  const btn = document.getElementById('submitBtn');
+  const formData = new FormData(form);
+  
+  // Disable button
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Submitting...';
+  
+  // Collect data for Supabase
+  const data = {
+    contract_address: formData.get('contract'),
+    token_name: formData.get('name'),
+    ticker: formData.get('ticker').toUpperCase(),
+    logo_url: formData.get('logo'),
+    chain: formData.get('chain'),
+    twitter_url: formData.get('twitter') || null,
+    telegram_url: formData.get('telegram') || null,
+    website_url: formData.get('website') || null,
+    email: formData.get('email'),
+    tx_hash: formData.get('txhash'),
+    status: 'pending'
+  };
+  
+  try {
+    // Send to Supabase
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/promotions`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || 'Submission failed');
+    }
+    
+    // Show success
+    form.style.display = 'none';
+    document.getElementById('successMessage').classList.add('show');
+    
+  } catch (err) {
+    console.error('Submission error:', err);
+    
+    // Check if it's a duplicate TX hash error
+    if (err.message.includes('duplicate') || err.message.includes('tx_hash')) {
+      alert('❌ This transaction hash has already been used. Please use a unique transaction.');
+    } else {
+      alert('❌ Error submitting: ' + err.message);
+    }
+    
+    btn.disabled = false;
+    btn.innerHTML = '<span>🚀</span> Submit for Review';
+  }
+}
+</script>
+
+</body>
+</html>
