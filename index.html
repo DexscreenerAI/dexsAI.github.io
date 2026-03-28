@@ -1296,7 +1296,26 @@ function loadSavedLanguage() {
 // ═══════════════════════════════════════════
 const $ = id => document.getElementById(id);
 const esc = s => { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
-const fP = p => p>=1?'$'+p.toFixed(2):p>=0.01?'$'+p.toFixed(4):p>=0.0001?'$'+p.toFixed(6):'$'+p.toFixed(10);
+// Format price with subscript zeros for very small numbers
+// e.g., 0.00000152 → $0.0₅152
+const fP = p => {
+  if (p === 0) return '$0';
+  if (p >= 1000) return '$' + p.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  if (p >= 1) return '$' + p.toFixed(2);
+  if (p >= 0.01) return '$' + p.toFixed(4);
+  if (p >= 0.0001) return '$' + p.toFixed(6);
+  
+  // For very small numbers, count leading zeros and show as subscript
+  const str = p.toFixed(20);
+  const match = str.match(/^0\.(0+)(\d{1,4})/);
+  if (match) {
+    const zeros = match[1].length;
+    const digits = match[2];
+    const subscript = String(zeros).split('').map(d => '₀₁₂₃₄₅₆₇₈₉'[d]).join('');
+    return `$0.0${subscript}${digits}`;
+  }
+  return '$' + p.toExponential(2);
+};
 const fN = n => n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toFixed(0);
 
 function autoResize(el) {
@@ -1562,7 +1581,7 @@ async function fetchTrending() {
       html += `</div>`;
       html += `<div style="display:flex;align-items:center;gap:8px;margin-top:2px">`;
       html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${chain.toUpperCase()}</span>`;
-      if (token.priceUsd > 0) html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text2)">$${token.priceUsd < 0.0001 ? token.priceUsd.toExponential(2) : token.priceUsd.toFixed(token.priceUsd < 1 ? 6 : 2)}</span>`;
+      if (token.priceUsd > 0) html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text2)">${fP(token.priceUsd)}</span>`;
       if (token.priceChange24h !== 0) {
         const changeColor = token.priceChange24h >= 0 ? 'var(--green)' : 'var(--red)';
         html += `<span style="font-family:var(--mono);font-size:10px;color:${changeColor}">${token.priceChange24h >= 0 ? '+' : ''}${token.priceChange24h.toFixed(1)}%</span>`;
@@ -1728,7 +1747,7 @@ async function fetchNewProfiles() {
       html += `</div>`;
       html += `<div style="display:flex;align-items:center;gap:8px;margin-top:2px">`;
       html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${chain.toUpperCase()}</span>`;
-      if (token.priceUsd > 0) html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text2)">$${token.priceUsd < 0.0001 ? token.priceUsd.toExponential(2) : token.priceUsd.toFixed(token.priceUsd < 1 ? 6 : 2)}</span>`;
+      if (token.priceUsd > 0) html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text2)">${fP(token.priceUsd)}</span>`;
       if (token.liquidity > 0) html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text3)">Liq: $${token.liquidity >= 1000 ? (token.liquidity/1000).toFixed(0)+'K' : token.liquidity.toFixed(0)}</span>`;
       html += `</div>`;
       html += `</div>`;
