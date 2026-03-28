@@ -58,7 +58,7 @@ body {
 }
 .nav-links {
   display: flex;
-  gap: 28px;
+  gap: 18px;
 }
 .nav-links a {
   color: var(--text2);
@@ -69,10 +69,46 @@ body {
 }
 .nav-links a:hover { color: var(--cyan); }
 .nav-links a.active { color: var(--cyan); }
-@media (max-width: 600px) {
+
+/* Mobile menu */
+.nav-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 24px;
+  cursor: pointer;
+}
+.nav-mobile-menu {
+  display: none;
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  background: rgba(10, 10, 15, 0.98);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 16px;
+  z-index: 99;
+  flex-direction: column;
+  gap: 10px;
+}
+.nav-mobile-menu.open { display: flex; }
+.nav-mobile-menu a {
+  font-size: 14px;
+  padding: 12px 16px;
+  background: var(--card);
+  border-radius: 10px;
+  color: var(--text2);
+  text-decoration: none;
+}
+.nav-mobile-menu a:hover { color: var(--cyan); background: var(--bg3); }
+
+@media (max-width: 768px) {
   .nav { padding: 12px 16px; }
-  .nav-links { gap: 16px; }
-  .nav-links a { font-size: 12px; }
+  .nav-links { display: none; }
+  .nav-menu-btn { display: block; }
+  .nav-logo span { display: none; }
 }
 .container {
   max-width: 800px;
@@ -179,12 +215,24 @@ footer {
   </a>
   <div class="nav-links">
     <a href="./index.html">App</a>
+    <a href="./portfolio.html">Portfolio</a>
+    <a href="./whale-tracker.html">Whales</a>
+    <a href="./og-detector.html">OG Detector</a>
     <a href="./extension.html">Extension</a>
     <a href="./litepaper.html">Litepaper</a>
-    <a href="./privacy.html" class="active">Privacy</a>
     <a href="https://x.com/dexscreenerai" target="_blank">Twitter</a>
   </div>
+  <button class="nav-menu-btn" onclick="document.getElementById('mobileMenu').classList.toggle('open'); this.textContent = this.textContent === '☰' ? '✕' : '☰'">☰</button>
 </nav>
+<div class="nav-mobile-menu" id="mobileMenu">
+  <a href="./index.html">🏠 App</a>
+  <a href="./extension.html">🧩 Extension</a>
+  <a href="./portfolio.html">💼 Portfolio</a>
+  <a href="./whale-tracker.html">🐋 Whale Tracker</a>
+  <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./litepaper.html">📄 Litepaper</a>
+  <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
+</div>
 
 <div class="container">
   <header>
