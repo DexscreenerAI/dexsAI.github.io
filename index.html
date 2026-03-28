@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -3194,6 +3195,33 @@ document.addEventListener('DOMContentLoaded', () => {
     panel.style.transition = 'height 0.25s ease, width 0.25s ease';
   });
 });
+
+// ═══════════════════════════════════════════
+// AUTO-ANALYZE FROM URL PARAMETER
+// ═══════════════════════════════════════════
+(function checkURLParams() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const ca = urlParams.get('ca');
+  
+  if (ca && ca.trim()) {
+    // Wait for DOM to be ready
+    setTimeout(() => {
+      const input = document.getElementById('inputBox');
+      if (input) {
+        input.value = ca.trim();
+        updateSendBtn();
+        // Small delay then trigger analysis
+        setTimeout(() => {
+          sendFromInput();
+        }, 300);
+      }
+    }, 500);
+    
+    // Clean URL (remove ?ca= parameter)
+    const cleanURL = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanURL);
+  }
+})();
 </script>
 </body>
 </html>
