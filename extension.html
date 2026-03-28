@@ -359,6 +359,52 @@ body {
   .step { flex-direction: column; gap: 12px; }
   .section h2 { font-size: 20px; }
 }
+/* Promo Banner */
+.promo-banner {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  background: linear-gradient(90deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 149, 0, 0.1) 100%);
+  border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+  overflow: hidden;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  z-index: 99;
+}
+.promo-banner.hidden { display: none !important; }
+.promo-banner-inner {
+  display: flex;
+  gap: 60px;
+  animation: scrollPromo 30s linear infinite;
+  white-space: nowrap;
+}
+@keyframes scrollPromo {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.promo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  text-decoration: none;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  transition: color 0.15s;
+}
+.promo-item:hover { color: var(--yellow); }
+.promo-item img { width: 20px; height: 20px; border-radius: 50%; }
+.promo-badge {
+  background: var(--yellow);
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+}
 </style>
 </head>
 <body>
@@ -388,6 +434,11 @@ body {
   <a href="./og-detector.html">🔍 OG Detector</a>
   <a href="./litepaper.html">📄 Litepaper</a>
   <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
+</div>
+
+<!-- PROMO BANNER -->
+<div class="promo-banner hidden" id="promoBanner">
+  <div class="promo-banner-inner" id="promoBannerInner"></div>
 </div>
 
 <!-- HERO -->
@@ -543,5 +594,40 @@ body {
   <p style="margin-top:8px"><a href="https://dexscreener.com" target="_blank">DexScreener</a> · <a href="https://github.com" target="_blank">GitHub</a></p>
 </div>
 
+<script>
+const SUPABASE_URL = 'https://sollomdaapwxutpykzlq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvbGxvbWRhYXB3eHV0cHlremxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NDMzODksImV4cCI6MjA5MDIxOTM4OX0.03bYy4wzKCbuyf9Zf4i200TMAbqpR3gMTfWmrcF6Hl8';
+
+async function loadPromoBanner() {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/active_promotions?select=*&order=approved_at.desc&limit=10`, {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    if (!response.ok) return;
+    const data = await response.json();
+    if (!data || data.length === 0) { document.getElementById('promoBanner')?.classList.add('hidden'); return; }
+    renderPromoBanner(data);
+  } catch (err) { console.error('Promo error:', err); }
+}
+
+function renderPromoBanner(promoted) {
+  const banner = document.getElementById('promoBanner');
+  const inner = document.getElementById('promoBannerInner');
+  if (!banner || !inner || promoted.length === 0) { banner?.classList.add('hidden'); return; }
+  banner.classList.remove('hidden');
+  const items = [...promoted, ...promoted];
+  let html = '';
+  items.forEach(token => {
+    html += `<a href="./index.html?ca=${token.contract_address}" class="promo-item">
+      ${token.logo_url ? `<img src="${token.logo_url}" onerror="this.style.display='none'" alt="">` : ''}
+      <span class="promo-badge">AD</span>
+      <span>$${token.ticker || '???'}</span>
+      <span style="color:var(--text3)">${token.chain?.toUpperCase() || ''}</span>
+    </a>`;
+  });
+  inner.innerHTML = html;
+}
+loadPromoBanner();
+</script>
 </body>
 </html>
