@@ -946,14 +946,17 @@ body {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   PROMO BANNER (mobile only - scrolling ticker)
+   PROMO BANNER (PC + mobile - scrolling ticker)
    ══════════════════════════════════════════════════════════════ */
 .promo-banner {
-  display: none;
+  display: block;
   background: linear-gradient(90deg, rgba(255,170,0,0.15) 0%, rgba(255,170,0,0.05) 50%, rgba(255,170,0,0.15) 100%);
   border-bottom: 1px solid rgba(255,170,0,0.3);
   overflow: hidden;
   position: relative;
+}
+.promo-banner.hidden {
+  display: none !important;
 }
 .promo-banner-inner {
   display: flex;
@@ -976,8 +979,11 @@ body {
   white-space: nowrap;
   transition: background 0.15s;
 }
-.promo-item:active {
+.promo-item:hover {
   background: rgba(255,170,0,0.2);
+}
+.promo-item:active {
+  background: rgba(255,170,0,0.3);
 }
 .promo-item-logo {
   width: 24px;
@@ -1003,11 +1009,6 @@ body {
 }
 .promo-banner-empty {
   display: none;
-}
-
-@media (max-width: 768px) {
-  .promo-banner { display: block !important; }
-  .promo-banner.hidden { display: none !important; }
 }
 </style>
 </head>
@@ -1049,7 +1050,7 @@ body {
 <button class="fab-new" onclick="newConversation(); closeMobileMenu();" title="New Analysis">+</button>
 
 <!-- PROMO BANNER (mobile only) -->
-<div class="promo-banner" id="promoBanner">
+<div class="promo-banner hidden" id="promoBanner">
   <div class="promo-banner-inner" id="promoBannerInner">
     <!-- Filled by JS -->
   </div>
@@ -1144,7 +1145,7 @@ body {
     <div class="input-area">
       <div class="input-wrap">
         <textarea class="input-box" id="inputBox" rows="1"
-          placeholder="Ask about any crypto, stock, or paste a contract address..."
+          placeholder="Paste a contract address..."
           oninput="autoResize(this); updateSendBtn()"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendFromInput()}"></textarea>
         <button class="send-btn inactive" id="sendBtn" onclick="sendFromInput()">↑</button>
@@ -1197,7 +1198,7 @@ const TRANSLATIONS = {
   en: {
     newAnalysis: 'New analysis',
     today: 'Today',
-    placeholder: 'Ask about any crypto, stock, or paste a contract address...',
+    placeholder: 'Paste a contract address...',
     analyzing: 'Analyzing...',
     liveData: 'Live Data Market',
     tokenIntelligence: 'Token Intelligence',
@@ -1232,7 +1233,7 @@ const TRANSLATIONS = {
   fr: {
     newAnalysis: 'Nouvelle analyse',
     today: "Aujourd'hui",
-    placeholder: 'Posez une question sur un crypto, ou collez une adresse de contrat...',
+    placeholder: 'Coller une adresse de contrat...',
     analyzing: 'Analyse en cours...',
     liveData: 'Données Live',
     tokenIntelligence: 'Intelligence Token',
