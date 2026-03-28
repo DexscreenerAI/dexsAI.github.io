@@ -179,6 +179,44 @@ body {
   border-bottom: 1px solid var(--card-border);
   overflow: hidden;
 }
+.mobile-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg3);
+  cursor: pointer;
+}
+.mobile-panel-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cyan);
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mobile-panel-toggle {
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: transform 0.2s;
+}
+.mobile-panel.collapsed .mobile-panel-toggle {
+  transform: rotate(180deg);
+}
+.mobile-panel-content {
+  max-height: 250px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.mobile-panel.collapsed .mobile-panel-content {
+  max-height: 0;
+}
 @media (max-width: 1000px) {
   .mobile-panel { display: block !important; }
 }
@@ -986,20 +1024,26 @@ body {
     </div>
 
     <!-- MOBILE PANEL (visible only on mobile) -->
-    <div class="mobile-panel" id="mobilePanel">
-      <div class="mobile-tabs">
-        <button class="mobile-tab active" onclick="switchMobileTab('trending')">🔥 Trending</button>
-        <button class="mobile-tab" onclick="switchMobileTab('new')">🆕 New</button>
-        <button class="mobile-tab" onclick="switchMobileTab('searches')">⭐ Searches</button>
+    <div class="mobile-panel collapsed" id="mobilePanel">
+      <div class="mobile-panel-header" onclick="toggleMobilePanel()">
+        <span class="mobile-panel-title">🔥 Trending & New Tokens</span>
+        <button class="mobile-panel-toggle">▼</button>
       </div>
-      <div class="mobile-tab-content active" id="mobileTrending">
-        <div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Loading...</div>
-      </div>
-      <div class="mobile-tab-content" id="mobileNew">
-        <div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Loading...</div>
-      </div>
-      <div class="mobile-tab-content" id="mobileSearches">
-        <div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">No searches yet</div>
+      <div class="mobile-panel-content">
+        <div class="mobile-tabs">
+          <button class="mobile-tab active" onclick="event.stopPropagation(); switchMobileTab('trending')">🔥 Trending</button>
+          <button class="mobile-tab" onclick="event.stopPropagation(); switchMobileTab('new')">🆕 New</button>
+          <button class="mobile-tab" onclick="event.stopPropagation(); switchMobileTab('searches')">⭐ Searches</button>
+        </div>
+        <div class="mobile-tab-content active" id="mobileTrending">
+          <div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Loading...</div>
+        </div>
+        <div class="mobile-tab-content" id="mobileNew">
+          <div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Loading...</div>
+        </div>
+        <div class="mobile-tab-content" id="mobileSearches">
+          <div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">No searches yet</div>
+        </div>
       </div>
     </div>
 
@@ -2610,6 +2654,12 @@ function switchMobileTab(tab) {
     tabs[2].classList.add('active');
     document.getElementById('mobileSearches').classList.add('active');
   }
+}
+
+// Toggle mobile panel open/closed
+function toggleMobilePanel() {
+  const panel = document.getElementById('mobilePanel');
+  panel.classList.toggle('collapsed');
 }
 
 // Render mobile token row
