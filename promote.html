@@ -311,6 +311,52 @@ body {
   text-decoration: none;
 }
 
+/* Features Box */
+.features-box {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 30px;
+}
+.features-title {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cyan);
+  margin-bottom: 20px;
+  text-align: center;
+}
+.features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+}
+.feature-item strong {
+  color: var(--cyan);
+}
+.feature-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--green);
+  color: #000;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
 /* Form */
 .form-card {
   background: var(--card);
@@ -550,19 +596,46 @@ body {
   <!-- Benefits -->
   <div class="benefits">
     <div class="benefit">
-      <div class="benefit-icon">👀</div>
-      <div class="benefit-title">VISIBILITY</div>
-      <div class="benefit-text">Featured spot on homepage</div>
+      <div class="benefit-icon">📢</div>
+      <div class="benefit-title">BANNER</div>
+      <div class="benefit-text">Scrolling banner on ALL pages</div>
     </div>
     <div class="benefit">
-      <div class="benefit-icon">⏱️</div>
-      <div class="benefit-title">6 HOURS</div>
-      <div class="benefit-text">Premium placement duration</div>
+      <div class="benefit-icon">💬</div>
+      <div class="benefit-title">TELEGRAM</div>
+      <div class="benefit-text">Featured post in our group</div>
     </div>
     <div class="benefit">
-      <div class="benefit-icon">⚡</div>
-      <div class="benefit-title">INSTANT</div>
-      <div class="benefit-text">Live within minutes</div>
+      <div class="benefit-icon">𝕏</div>
+      <div class="benefit-title">TWITTER</div>
+      <div class="benefit-text">Promotional tweet posted</div>
+    </div>
+  </div>
+
+  <!-- What You Get -->
+  <div class="features-box">
+    <div class="features-title">🎁 WHAT YOU GET</div>
+    <div class="features-list">
+      <div class="feature-item">
+        <span class="feature-check">✓</span>
+        <span>Scrolling banner displayed on <strong>every page</strong> of the website</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-check">✓</span>
+        <span>Dedicated post in our <strong>Telegram community</strong> (2K+ members)</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-check">✓</span>
+        <span>Promotional <strong>Twitter/X post</strong> from @dexscreenerai</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-check">✓</span>
+        <span><strong>6 hours</strong> of premium visibility</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-check">✓</span>
+        <span>Live within <strong>minutes</strong> after payment confirmation</span>
+      </div>
     </div>
   </div>
 
