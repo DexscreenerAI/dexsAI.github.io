@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,6 +29,57 @@ body {
   color: var(--text);
   line-height: 1.6;
 }
+/* Navigation */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(10, 10, 15, 0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+  padding: 16px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+.nav-logo img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+.nav-logo span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+.nav-links {
+  display: flex;
+  gap: 28px;
+}
+.nav-links a {
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--cyan); }
+.nav-links a.active { color: var(--cyan); }
+@media (max-width: 600px) {
+  .nav { padding: 12px 16px; }
+  .nav-links { gap: 16px; }
+  .nav-links a { font-size: 12px; }
+}
 .container {
   max-width: 900px;
   margin: 0 auto;
@@ -37,7 +89,7 @@ body {
 /* Hero */
 .hero {
   text-align: center;
-  padding: 60px 20px;
+  padding: 120px 20px 60px;
   background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
   border-bottom: 1px solid var(--border);
 }
@@ -274,6 +326,21 @@ body {
 </style>
 </head>
 <body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <a href="./index.html" class="nav-logo">
+    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="Logo">
+    <span>DEXSCREENER AI</span>
+  </a>
+  <div class="nav-links">
+    <a href="./index.html">App</a>
+    <a href="./extension.html" class="active">Extension</a>
+    <a href="./litepaper.html">Litepaper</a>
+    <a href="./privacy.html">Privacy</a>
+    <a href="https://x.com/dexscreenerai" target="_blank">Twitter</a>
+  </div>
+</nav>
 
 <!-- HERO -->
 <div class="hero">
