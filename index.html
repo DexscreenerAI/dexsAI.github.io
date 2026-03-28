@@ -944,6 +944,71 @@ body {
   .nav-mobile-menu { top: 50px; }
   .fab-new { bottom: 85px; right: 12px; width: 50px; height: 50px; font-size: 24px; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   PROMO BANNER (mobile only - scrolling ticker)
+   ══════════════════════════════════════════════════════════════ */
+.promo-banner {
+  display: none;
+  background: linear-gradient(90deg, rgba(255,170,0,0.15) 0%, rgba(255,170,0,0.05) 50%, rgba(255,170,0,0.15) 100%);
+  border-bottom: 1px solid rgba(255,170,0,0.3);
+  overflow: hidden;
+  position: relative;
+}
+.promo-banner-inner {
+  display: flex;
+  animation: scrollPromo 20s linear infinite;
+  width: max-content;
+}
+.promo-banner-inner:hover {
+  animation-play-state: paused;
+}
+@keyframes scrollPromo {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.promo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.promo-item:active {
+  background: rgba(255,170,0,0.2);
+}
+.promo-item-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--card-border);
+}
+.promo-item-ticker {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--yellow);
+}
+.promo-item-badge {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 600;
+  color: var(--text3);
+  background: rgba(255,255,255,0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.promo-banner-empty {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .promo-banner { display: block !important; }
+  .promo-banner.hidden { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -982,6 +1047,13 @@ body {
 
 <!-- Floating New Chat Button (mobile) -->
 <button class="fab-new" onclick="newConversation(); closeMobileMenu();" title="New Analysis">+</button>
+
+<!-- PROMO BANNER (mobile only) -->
+<div class="promo-banner" id="promoBanner">
+  <div class="promo-banner-inner" id="promoBannerInner">
+    <!-- Filled by JS -->
+  </div>
+</div>
 
 <div class="app">
 
@@ -2898,8 +2970,12 @@ async function loadPromotedTokens() {
 }
 
 function renderPromotedTokens(container, promoted) {
+  // Render right panel (desktop)
   if (promoted.length === 0) {
     container.innerHTML = '<div class="rp-empty">No promoted tokens yet<br><a href="./promote.html" style="color:var(--cyan);font-size:11px">Be the first! →</a></div>';
+    // Hide mobile banner
+    const banner = document.getElementById('promoBanner');
+    if (banner) banner.classList.add('hidden');
     return;
   }
   
@@ -2919,6 +2995,44 @@ function renderPromotedTokens(container, promoted) {
     html += `</div>`;
   }
   container.innerHTML = html;
+  
+  // Render mobile banner (scrolling ticker)
+  renderPromoBanner(promoted);
+}
+
+function renderPromoBanner(promoted) {
+  const banner = document.getElementById('promoBanner');
+  const inner = document.getElementById('promoBannerInner');
+  if (!banner || !inner) return;
+  
+  if (promoted.length === 0) {
+    banner.classList.add('hidden');
+    return;
+  }
+  
+  // Show banner on mobile (CSS handles desktop hiding)
+  banner.classList.remove('hidden');
+  
+  // Create items (duplicate for infinite scroll effect)
+  let html = '';
+  const items = promoted.slice(0, 5);
+  
+  // Double the items for seamless loop
+  for (let i = 0; i < 2; i++) {
+    for (const token of items) {
+      html += `<div class="promo-item" onclick="analyzeFromAddress('${token.address}','${token.chain}')">`;
+      if (token.logo) {
+        html += `<img class="promo-item-logo" src="${token.logo}" onerror="this.src='https://via.placeholder.com/24'">`;
+      } else {
+        html += `<div class="promo-item-logo" style="display:flex;align-items:center;justify-content:center;font-size:12px">⭐</div>`;
+      }
+      html += `<span class="promo-item-ticker">$${token.ticker}</span>`;
+      html += `<span class="promo-item-badge">AD</span>`;
+      html += `</div>`;
+    }
+  }
+  
+  inner.innerHTML = html;
 }
 
 // ═══════════════════════════════════════════
