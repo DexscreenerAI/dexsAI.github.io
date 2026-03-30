@@ -1597,8 +1597,11 @@ async function fetchRugcheck(addr) {
 }
 
 // ═══════════════════════════════════════════
-// COINGECKO API (Major cryptos)
+// COINGECKO API (Major cryptos) + CACHE + FALLBACK
 // ═══════════════════════════════════════════
+const cgCache = {}; // In-memory cache for CoinGecko data
+const CG_CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+
 function detectMajorCrypto(query) {
   const lower = query.toLowerCase().trim();
   const cgId = COINGECKO_IDS[lower];
@@ -1606,11 +1609,26 @@ function detectMajorCrypto(query) {
 }
 
 async function fetchCoinGecko(coinId) {
+  // Check cache first
+  const cached = cgCache[coinId];
+  if (cached && (Date.now() - cached.timestamp < CG_CACHE_TTL)) {
+    console.log('📦 Using cached data for', coinId);
+    return cached.data;
+  }
+  
   try {
+    console.log('🦎 Fetching CoinGecko:', coinId);
     const r = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&community_data=false&developer_data=false`, { signal: AbortSignal.timeout(10000) });
+    
+    if (r.status === 429) {
+      console.log('⚠️ CoinGecko rate limited, trying CoinCap fallback...');
+      return await fetchCoinCapFallback(coinId);
+    }
+    
     if (!r.ok) return null;
     const data = await r.json();
-    return {
+    
+    const result = {
       id: data.id,
       symbol: data.symbol?.toUpperCase() || '???',
       name: data.name || coinId,
@@ -1639,11 +1657,86 @@ async function fetchCoinGecko(coinId) {
         twitter: data.links?.twitter_screen_name || '',
         telegram: data.links?.telegram_channel_identifier || '',
         reddit: data.links?.subreddit_url || ''
-      }
+      },
+      source: 'coingecko'
     };
+    
+    // Save to cache
+    cgCache[coinId] = { data: result, timestamp: Date.now() };
+    return result;
+    
   } catch(e) { 
     console.error('CoinGecko error:', e);
-    return null; 
+    // Try fallback
+    return await fetchCoinCapFallback(coinId);
+  }
+}
+
+// ═══════════════════════════════════════════
+// COINCAP FALLBACK (100% free, no API key)
+// ═══════════════════════════════════════════
+const COINCAP_IDS = {
+  'bitcoin': 'bitcoin',
+  'ethereum': 'ethereum',
+  'solana': 'solana',
+  'binancecoin': 'binance-coin',
+  'ripple': 'xrp',
+  'cardano': 'cardano',
+  'dogecoin': 'dogecoin',
+  'polkadot': 'polkadot',
+  'matic-network': 'polygon',
+  'shiba-inu': 'shiba-inu',
+  'avalanche-2': 'avalanche',
+  'chainlink': 'chainlink',
+  'litecoin': 'litecoin',
+  'uniswap': 'uniswap',
+  'pepe': 'pepe',
+  'bonk': 'bonk',
+  'the-open-network': 'toncoin'
+};
+
+async function fetchCoinCapFallback(coinGeckoId) {
+  const coinCapId = COINCAP_IDS[coinGeckoId] || coinGeckoId;
+  
+  try {
+    console.log('🔄 Trying CoinCap fallback:', coinCapId);
+    const r = await fetch(`https://api.coincap.io/v2/assets/${coinCapId}`, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return null;
+    
+    const json = await r.json();
+    const data = json.data;
+    if (!data) return null;
+    
+    return {
+      id: data.id,
+      symbol: data.symbol?.toUpperCase() || '???',
+      name: data.name || coinCapId,
+      image: COINGECKO_IMAGES[coinGeckoId] || '',
+      price: parseFloat(data.priceUsd) || 0,
+      marketCap: parseFloat(data.marketCapUsd) || 0,
+      volume24h: parseFloat(data.volumeUsd24Hr) || 0,
+      change24h: parseFloat(data.changePercent24Hr) || 0,
+      change7d: 0, // CoinCap doesn't have 7d change
+      change30d: 0, // CoinCap doesn't have 30d change
+      ath: 0, // CoinCap doesn't have ATH
+      athChange: 0,
+      athDate: null,
+      atl: 0,
+      atlChange: 0,
+      high24h: 0,
+      low24h: 0,
+      circulatingSupply: parseFloat(data.supply) || 0,
+      totalSupply: parseFloat(data.maxSupply) || 0,
+      maxSupply: parseFloat(data.maxSupply) || null,
+      rank: parseInt(data.rank) || 0,
+      categories: [],
+      description: '',
+      links: { website: data.explorer || '', twitter: '', telegram: '', reddit: '' },
+      source: 'coincap'
+    };
+  } catch(e) {
+    console.error('CoinCap fallback error:', e);
+    return null;
   }
 }
 
@@ -1742,6 +1835,7 @@ function analyzeCoinGecko(data) {
   
   return {
     type: 'coingecko',
+    source: data.source || 'coingecko',
     symbol: data.symbol,
     name: data.name,
     image: data.image,
@@ -1779,7 +1873,7 @@ function analyzeCoinGecko(data) {
       ]
     },
     scenarios: {
-      bull: { pct: bullPct, target: fP(data.ath * 1.2), trigger: 'Break above resistance with volume' },
+      bull: { pct: bullPct, target: fP(data.ath > 0 ? data.ath * 1.2 : price * 1.5), trigger: 'Break above resistance with volume' },
       base: { pct: basePct, target: `${fP(support1)} - ${fP(resistance1)}`, trigger: 'Range-bound consolidation' },
       bear: { pct: bearPct, target: fP(support2), trigger: 'Break below support on macro weakness' }
     },
@@ -2405,6 +2499,9 @@ function badgeHTML(text, colorClass) {
 function renderCoinGeckoAnalysis(data) {
   const biasColor = data.bias==='BULLISH'?'green':data.bias==='BEARISH'?'red':'yellow';
   const biasArrow = data.bias==='BULLISH'?'↗':data.bias==='BEARISH'?'↘':'—';
+  const sourceLabel = data.source === 'coincap' ? '🔄 CoinCap' : '🦎 CoinGecko';
+  const hasATH = data.ath > 0;
+  const has7d30d = data.change7d !== 0 || data.change30d !== 0;
   
   let html = '';
   
@@ -2419,7 +2516,7 @@ function renderCoinGeckoAnalysis(data) {
           ${data.links?.twitter ? `<a href="https://twitter.com/${data.links.twitter}" target="_blank" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--bg);border-radius:6px;text-decoration:none;color:var(--text);font-size:13px;transition:all .15s" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--text)'">𝕏</a>` : ''}
           ${data.links?.website ? `<a href="${data.links.website}" target="_blank" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--bg);border-radius:6px;text-decoration:none;color:var(--text);font-size:13px;transition:all .15s" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--text)'">🌐</a>` : ''}
         </div>
-        <div style="font-family:var(--sans);font-size:13px;color:var(--text3);margin-top:4px">${esc(data.name)} · Multi-Chain</div>
+        <div style="font-family:var(--sans);font-size:13px;color:var(--text3);margin-top:4px">${esc(data.name)} · Multi-Chain · <span style="color:var(--text2)">${sourceLabel}</span></div>
       </div>
     </div>
     <div class="flex-between">
@@ -2431,18 +2528,23 @@ function renderCoinGeckoAnalysis(data) {
     </div>
   </div>`;
 
-  // ── LIVE DATA
+  // ── LIVE DATA (adapt based on available data)
+  const liveDataItems = [
+    {l:'PRICE',v:fP(data.price),c:'#fff'},
+    {l:'MARKET CAP',v:'$'+fN(data.marketCap),c:'var(--purple)'},
+    {l:'VOLUME 24H',v:'$'+fN(data.volume24h),c:'var(--cyan)'},
+    {l:'RANK',v:'#'+data.rank,c:'var(--yellow)'}
+  ];
+  
+  if (hasATH) {
+    liveDataItems.push({l:'ATH',v:fP(data.ath),c:'var(--green)'});
+    liveDataItems.push({l:'FROM ATH',v:(data.athChange>0?'+':'')+data.athChange.toFixed(1)+'%',c:data.athChange>-20?'var(--green)':'var(--red)'});
+  }
+  
   html += `<div class="card">
     <div class="sec-title"><span class="sec-icon">📊</span> LIVE MARKET DATA</div>
     <div class="grid-3" style="gap:8px">
-      ${[
-        {l:'PRICE',v:fP(data.price),c:'#fff'},
-        {l:'MARKET CAP',v:'$'+fN(data.marketCap),c:'var(--purple)'},
-        {l:'VOLUME 24H',v:'$'+fN(data.volume24h),c:'var(--cyan)'},
-        {l:'RANK',v:'#'+data.rank,c:'var(--yellow)'},
-        {l:'ATH',v:fP(data.ath),c:'var(--green)'},
-        {l:'FROM ATH',v:(data.athChange>0?'+':'')+data.athChange.toFixed(1)+'%',c:data.athChange>-20?'var(--green)':'var(--red)'},
-      ].map(m => `
+      ${liveDataItems.map(m => `
         <div style="background:var(--bg);border-radius:6px;padding:10px;border-left:2px solid ${m.c}">
           <div style="font-family:var(--mono);font-size:7px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:4px">${m.l}</div>
           <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${m.c}">${m.v}</div>
@@ -2451,8 +2553,7 @@ function renderCoinGeckoAnalysis(data) {
     <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
       ${[
         {l:'24H',v:data.change24h},
-        {l:'7D',v:data.change7d},
-        {l:'30D',v:data.change30d}
+        ...(has7d30d ? [{l:'7D',v:data.change7d}, {l:'30D',v:data.change30d}] : [])
       ].map(p => {
         const v = parseFloat(p.v)||0;
         const c = v>=0?'var(--green)':'var(--red)';
@@ -2943,11 +3044,11 @@ async function sendQuery(query) {
         renderMessages();
         return;
       } else {
-        // CoinGecko failed (rate limit?) - show error, don't fallback to DexScreener
+        // Both CoinGecko and CoinCap failed
         hideLoading();
         c.messages.push({ 
           role: 'assistant', 
-          text: `⚠️ Could not fetch data for ${query.toUpperCase()} from CoinGecko.\n\nThis might be due to rate limiting. Please try again in a few seconds.\n\nTip: CoinGecko allows ~10-30 requests per minute on the free tier.`
+          text: `⚠️ Could not fetch data for ${query.toUpperCase()}.\n\nBoth CoinGecko and CoinCap APIs are unavailable. This might be a temporary issue.\n\nPlease try again in a few seconds.`
         });
         isLoading = false;
         renderMessages();
