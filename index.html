@@ -1657,12 +1657,23 @@ async function fetchCoinGecko(coinId) {
     const r = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&community_data=false&developer_data=false`, { signal: AbortSignal.timeout(10000) });
     
     if (r.status === 429) {
-      console.log('⚠️ CoinGecko rate limited, trying CoinCap fallback...');
+      console.log('\u26A0\uFE0F CoinGecko rate limited, trying CoinCap fallback...');
       return await fetchCoinCapFallback(coinId);
     }
     
-    if (!r.ok) return null;
+    // ANY error -> try fallback (not just 429!)
+    if (!r.ok) {
+      console.log('\u26A0\uFE0F CoinGecko error (status ' + r.status + '), trying CoinCap fallback...');
+      return await fetchCoinCapFallback(coinId);
+    }
+    
     const data = await r.json();
+    
+    // Check if we got valid market data
+    if (!data || !data.market_data) {
+      console.log('\u26A0\uFE0F CoinGecko returned invalid data, trying fallback...');
+      return await fetchCoinCapFallback(coinId);
+    }
     
     const result = {
       id: data.id,
@@ -1728,7 +1739,22 @@ const COINCAP_IDS = {
   'uniswap': 'uniswap',
   'pepe': 'pepe',
   'bonk': 'bonk',
-  'the-open-network': 'toncoin'
+  'the-open-network': 'toncoin',
+  'cosmos': 'cosmos',
+  'stellar': 'stellar',
+  'near': 'near-protocol',
+  'aptos': 'aptos',
+  'sui': 'sui',
+  'arbitrum': 'arbitrum',
+  'optimism': 'optimism',
+  'injective-protocol': 'injective-protocol',
+  'render-token': 'render-token',
+  'fetch-ai': 'fetch-ai',
+  'the-graph': 'the-graph',
+  'aave': 'aave',
+  'maker': 'maker',
+  'curve-dao-token': 'curve-dao-token',
+  'lido-dao': 'lido-dao'
 };
 
 async function fetchCoinCapFallback(coinGeckoId) {
@@ -3063,17 +3089,88 @@ async function sendQuery(query) {
         const analysis = analyzeCoinGecko(cgData);
         c.messages.push({ role: 'assistant', analysis });
         
-        // Save for follow-up questions
+        // Known social links for major cryptos
+        const MAJOR_SOCIALS = {
+          'bitcoin': { website: 'https://bitcoin.org', twitter: 'https://twitter.com/Bitcoin', telegram: null },
+          'ethereum': { website: 'https://ethereum.org', twitter: 'https://twitter.com/ethereum', telegram: null },
+          'solana': { website: 'https://solana.com', twitter: 'https://twitter.com/solana', telegram: 'https://t.me/solana' },
+          'binancecoin': { website: 'https://bnbchain.org', twitter: 'https://twitter.com/bnbchain', telegram: 'https://t.me/bnbchain' },
+          'dogecoin': { website: 'https://dogecoin.com', twitter: 'https://twitter.com/dogecoin', telegram: null },
+          'pepe': { website: 'https://pepe.vip', twitter: 'https://twitter.com/pepecoineth', telegram: 'https://t.me/pepecoineth' },
+          'ripple': { website: 'https://ripple.com', twitter: 'https://twitter.com/Ripple', telegram: null },
+          'cardano': { website: 'https://cardano.org', twitter: 'https://twitter.com/Cardano', telegram: 'https://t.me/Cardano' },
+          'polkadot': { website: 'https://polkadot.network', twitter: 'https://twitter.com/Polkadot', telegram: 'https://t.me/polkadotofficial' },
+          'chainlink': { website: 'https://chain.link', twitter: 'https://twitter.com/chainlink', telegram: 'https://t.me/chainlinkofficial' },
+          'avalanche-2': { website: 'https://avax.network', twitter: 'https://twitter.com/avaboriz', telegram: 'https://t.me/avalancheavax' },
+          'uniswap': { website: 'https://uniswap.org', twitter: 'https://twitter.com/Uniswap', telegram: null },
+          'litecoin': { website: 'https://litecoin.org', twitter: 'https://twitter.com/litecoin', telegram: 'https://t.me/litecoin' },
+          'shiba-inu': { website: 'https://shibatoken.com', twitter: 'https://twitter.com/Shibtoken', telegram: 'https://t.me/shibainuthedogecoinkiller' },
+          'matic-network': { website: 'https://polygon.technology', twitter: 'https://twitter.com/0xPolygon', telegram: 'https://t.me/polygonofficial' },
+          'the-open-network': { website: 'https://ton.org', twitter: 'https://twitter.com/ton_blockchain', telegram: 'https://t.me/toncoin' },
+          'bonk': { website: 'https://bonkcoin.com', twitter: 'https://twitter.com/bonaboriz', telegram: 'https://t.me/official_bonk' },
+          'dogwifcoin': { website: 'https://dogwifcoin.org', twitter: 'https://twitter.com/dogwifcoin', telegram: 'https://t.me/dogwifcoin' }
+        };
+        
+        const socials = MAJOR_SOCIALS[cgId] || {};
+        
+        // Save FULL data for follow-up questions
         lastAnalyzedToken = {
           symbol: cgData.symbol,
           name: cgData.name,
-          price: cgData.price,
-          marketCap: cgData.marketCap,
-          liquidity: 0,
-          volume24h: cgData.volume24h,
-          priceChange24h: cgData.change24h,
           chain: 'multi-chain',
-          address: cgId
+          address: cgId,
+          
+          // Price data
+          price: cgData.price,
+          priceChange1h: 0,
+          priceChange6h: 0,
+          priceChange24h: cgData.change24h,
+          priceChange7d: cgData.change7d,
+          priceChange30d: cgData.change30d,
+          
+          // Market data
+          marketCap: cgData.marketCap,
+          fdv: cgData.marketCap,
+          liquidity: cgData.volume24h * 0.1, // Estimate
+          volume24h: cgData.volume24h,
+          volume6h: 0,
+          volume1h: 0,
+          
+          // ATH data
+          ath: cgData.ath,
+          athChange: cgData.athChange,
+          atl: cgData.atl,
+          
+          // Supply
+          circulatingSupply: cgData.circulatingSupply,
+          totalSupply: cgData.totalSupply,
+          maxSupply: cgData.maxSupply,
+          rank: cgData.rank,
+          
+          // Socials (from CoinGecko + known)
+          website: cgData.links?.website || socials.website || null,
+          twitter: cgData.links?.twitter ? `https://twitter.com/${cgData.links.twitter}` : socials.twitter || null,
+          telegram: cgData.links?.telegram ? `https://t.me/${cgData.links.telegram}` : socials.telegram || null,
+          
+          // Links for display
+          coingeckoUrl: `https://www.coingecko.com/en/coins/${cgId}`,
+          tradingviewUrl: `https://www.tradingview.com/symbols/${cgData.symbol}USD/`,
+          cmcUrl: `https://coinmarketcap.com/currencies/${cgData.name?.toLowerCase().replace(/\s+/g, '-')}/`,
+          
+          // Source
+          source: cgData.source || 'coingecko',
+          
+          // No rugcheck for majors
+          rugcheck: null,
+          
+          // Analysis results
+          analysis: {
+            bias: analysis.bias,
+            confidence: analysis.confidence,
+            liquidityScore: 90, // Majors have good liquidity
+            volumeScore: 85,
+            safetyScore: 95 // Majors are safe
+          }
         };
         
         isLoading = false;
@@ -3156,18 +3253,64 @@ async function sendQuery(query) {
       const analysis = analyzeToken(pair, rugData);
       c.messages.push({ role: 'assistant', analysis });
       
-      // Save this token as lastAnalyzedToken for follow-up questions
+      // Save FULL token data for AI follow-up questions
       lastAnalyzedToken = {
+        // Basic info
         symbol: pair.baseToken?.symbol || '???',
         name: pair.baseToken?.name || '',
-        price: parseFloat(pair.priceUsd) || 0,
-        marketCap: parseFloat(pair.marketCap) || parseFloat(pair.fdv) || 0,
-        liquidity: parseFloat(pair.liquidity?.usd) || 0,
-        volume24h: parseFloat(pair.volume?.h24) || 0,
-        priceChange24h: parseFloat(pair.priceChange?.h24) || 0,
         chain: pair.chainId || 'unknown',
         address: pair.baseToken?.address || '',
-        pairAddress: pair.pairAddress || ''
+        pairAddress: pair.pairAddress || '',
+        
+        // Price data
+        price: parseFloat(pair.priceUsd) || 0,
+        priceChange1h: parseFloat(pair.priceChange?.h1) || 0,
+        priceChange6h: parseFloat(pair.priceChange?.h6) || 0,
+        priceChange24h: parseFloat(pair.priceChange?.h24) || 0,
+        
+        // Market data
+        marketCap: parseFloat(pair.marketCap) || parseFloat(pair.fdv) || 0,
+        fdv: parseFloat(pair.fdv) || 0,
+        liquidity: parseFloat(pair.liquidity?.usd) || 0,
+        volume24h: parseFloat(pair.volume?.h24) || 0,
+        volume6h: parseFloat(pair.volume?.h6) || 0,
+        volume1h: parseFloat(pair.volume?.h1) || 0,
+        
+        // Transaction data
+        buys24h: pair.txns?.h24?.buys || 0,
+        sells24h: pair.txns?.h24?.sells || 0,
+        buys6h: pair.txns?.h6?.buys || 0,
+        sells6h: pair.txns?.h6?.sells || 0,
+        buys1h: pair.txns?.h1?.buys || 0,
+        sells1h: pair.txns?.h1?.sells || 0,
+        
+        // Age
+        pairCreatedAt: pair.pairCreatedAt || null,
+        ageHours: pair.pairCreatedAt ? Math.floor((Date.now() - pair.pairCreatedAt) / 3600000) : null,
+        
+        // Socials
+        website: pair.info?.websites?.[0]?.url || null,
+        twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || null,
+        telegram: pair.info?.socials?.find(s => s.type === 'telegram')?.url || null,
+        
+        // Rugcheck data (if available)
+        rugcheck: rugData ? {
+          score: rugData.score || null,
+          risks: rugData.risks || [],
+          topHolders: rugData.topHolders?.slice(0, 5) || [],
+          mintAuthority: rugData.tokenMeta?.mutable !== false,
+          freezeAuthority: rugData.markets?.[0]?.freezeAuthority !== null,
+          lpBurned: rugData.markets?.[0]?.lp?.lpBurned || false
+        } : null,
+        
+        // Our analysis results
+        analysis: {
+          bias: analysis.bias,
+          confidence: analysis.confidence,
+          liquidityScore: analysis.liquidityScore,
+          volumeScore: analysis.volumeScore,
+          safetyScore: analysis.safetyScore
+        }
       };
       
       // Save search to right panel
