@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Promote Your Token — DexScreener AI</title>
+<title>🚀 Promote Your Token — DexScreener AI</title>
 <link rel="icon" type="image/png" href="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #060a10;
@@ -161,7 +161,7 @@ body {
 
 /* Container */
 .container {
-  max-width: 600px;
+  max-width: 700px;
   margin: 0 auto;
   padding: 80px 20px 40px;
 }
@@ -175,69 +175,200 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, var(--cyan-dim), var(--green-dim));
-  border: 1px solid var(--cyan);
-  border-radius: 20px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, rgba(0,255,136,0.15) 0%, rgba(0,212,255,0.15) 100%);
+  border: 1px solid var(--green);
+  border-radius: 25px;
   font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--cyan);
-  margin-bottom: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 24px;
+  animation: glow 2s infinite;
+}
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(0,255,136,0.3); }
+  50% { box-shadow: 0 0 20px rgba(0,255,136,0.4); }
 }
 .hero h1 {
   font-family: var(--mono);
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 12px;
+  font-size: 36px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  line-height: 1.2;
 }
-.hero h1 span { color: var(--cyan); }
+.hero h1 .cyan { color: var(--cyan); }
+.hero h1 .green { color: var(--green); }
 .hero p {
   color: var(--text2);
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1.6;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
-/* Benefits */
+/* Benefits - 4 columns now */
 .benefits {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
   margin-bottom: 40px;
 }
 .benefit {
-  background: var(--card);
+  background: linear-gradient(145deg, var(--card) 0%, var(--bg2) 100%);
   border: 1px solid var(--card-border);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 14px;
+  padding: 20px 16px;
   text-align: center;
+  transition: all 0.3s;
+}
+.benefit:hover {
+  border-color: var(--cyan);
+  transform: translateY(-4px);
 }
 .benefit-icon {
-  font-size: 28px;
-  margin-bottom: 10px;
+  font-size: 32px;
+  margin-bottom: 12px;
 }
 .benefit-title {
   font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--cyan);
   margin-bottom: 6px;
+  letter-spacing: 0.5px;
 }
 .benefit-text {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text2);
+  line-height: 1.4;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
+  .benefits { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 400px) {
   .benefits { grid-template-columns: 1fr; }
+}
+
+/* Features Box */
+.features-box {
+  background: linear-gradient(145deg, var(--card) 0%, var(--bg2) 100%);
+  border: 2px solid var(--green);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 30px;
+  position: relative;
+  overflow: hidden;
+}
+.features-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--green), var(--cyan), var(--green));
+}
+.features-title {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--green);
+  margin-bottom: 24px;
+  text-align: center;
+}
+.features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 18px;
+  background: rgba(0,255,136,0.05);
+  border: 1px solid rgba(0,255,136,0.15);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+.feature-item:hover {
+  background: rgba(0,255,136,0.1);
+  border-color: rgba(0,255,136,0.3);
+}
+.feature-check {
+  font-size: 18px;
+  color: var(--green);
+  flex-shrink: 0;
+}
+.feature-item span {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.feature-item strong {
+  color: var(--text);
+}
+.feature-item .new-tag {
+  display: inline-block;
+  background: var(--purple);
+  color: #000;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* Buy Bot Highlight */
+.buybot-highlight {
+  background: linear-gradient(135deg, rgba(179,136,255,0.15) 0%, rgba(0,212,255,0.1) 100%);
+  border: 2px solid var(--purple);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+.buybot-highlight .icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+.buybot-highlight h3 {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--purple);
+  margin-bottom: 12px;
+}
+.buybot-highlight p {
+  color: var(--text2);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.buybot-features {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.buybot-feature {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
 }
 
 /* Payment Box */
 .payment-box {
   background: linear-gradient(135deg, var(--card) 0%, var(--bg3) 100%);
   border: 2px solid var(--cyan);
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 20px;
+  padding: 30px;
   margin-bottom: 30px;
   text-align: center;
 }
@@ -250,111 +381,72 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
 }
 .payment-amount {
   font-family: var(--mono);
-  font-size: 42px;
-  font-weight: 700;
+  font-size: 52px;
+  font-weight: 800;
   color: #fff;
   margin-bottom: 8px;
 }
 .payment-amount span {
-  font-size: 20px;
+  font-size: 24px;
   color: var(--purple);
+}
+.payment-duration {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--green);
+  margin-bottom: 20px;
 }
 .payment-address-label {
   font-size: 11px;
   color: var(--text3);
   margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
 }
 .payment-address {
   display: flex;
   align-items: center;
   gap: 10px;
+  justify-content: center;
   background: var(--bg);
-  border: 1px solid var(--card-border);
+  padding: 14px 18px;
   border-radius: 10px;
-  padding: 12px 16px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 .payment-address code {
-  flex: 1;
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--text);
+  color: var(--cyan);
   word-break: break-all;
-  text-align: left;
 }
 .copy-btn {
   background: var(--cyan);
   border: none;
   color: #000;
-  padding: 8px 14px;
-  border-radius: 6px;
   font-family: var(--mono);
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 6px;
   cursor: pointer;
-  white-space: nowrap;
   transition: all 0.15s;
+  flex-shrink: 0;
 }
-.copy-btn:hover { transform: scale(1.05); }
+.copy-btn:hover {
+  transform: scale(1.05);
+}
 .payment-note {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text3);
 }
 .payment-note a {
   color: var(--cyan);
   text-decoration: none;
 }
-
-/* Features Box */
-.features-box {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 30px;
-}
-.features-title {
-  font-family: var(--mono);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--cyan);
-  margin-bottom: 20px;
-  text-align: center;
-}
-.features-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.feature-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  font-size: 14px;
-  color: var(--text);
-  line-height: 1.5;
-}
-.feature-item strong {
-  color: var(--cyan);
-}
-.feature-check {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  background: var(--green);
-  color: #000;
-  border-radius: 50%;
-  font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
+.payment-note a:hover {
+  text-decoration: underline;
 }
 
 /* Form */
@@ -362,17 +454,16 @@ body {
   background: var(--card);
   border: 1px solid var(--card-border);
   border-radius: 16px;
-  padding: 24px;
+  padding: 30px;
+  margin-bottom: 30px;
 }
 .form-title {
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
-  color: #fff;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: var(--cyan);
+  margin-bottom: 24px;
+  text-align: center;
 }
 .form-group {
   margin-bottom: 18px;
@@ -380,20 +471,14 @@ body {
 .form-label {
   display: block;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text2);
-  text-transform: uppercase;
-  letter-spacing: 1px;
   margin-bottom: 8px;
+  letter-spacing: 0.5px;
 }
-.form-label .required {
-  color: var(--red);
-}
-.form-label .optional {
-  color: var(--text3);
-  font-weight: 400;
-}
+.form-label .required { color: var(--red); }
+.form-label .optional { color: var(--text3); font-weight: 400; }
 .form-input {
   width: 100%;
   background: var(--bg);
@@ -401,161 +486,170 @@ body {
   border-radius: 10px;
   padding: 14px 16px;
   color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  outline: none;
+  font-family: var(--sans);
+  font-size: 14px;
   transition: border-color 0.15s;
 }
 .form-input:focus {
+  outline: none;
   border-color: var(--cyan);
+}
+.form-input.small {
+  font-family: var(--mono);
+  font-size: 12px;
 }
 .form-input::placeholder {
   color: var(--text3);
 }
-.form-input.small {
-  font-size: 11px;
-}
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 16px;
 }
 @media (max-width: 500px) {
   .form-row { grid-template-columns: 1fr; }
 }
-
 .submit-btn {
   width: 100%;
-  background: linear-gradient(135deg, var(--cyan), #00a0cc);
+  background: linear-gradient(135deg, var(--green) 0%, #00cc6a 100%);
   border: none;
   color: #000;
-  padding: 16px 24px;
-  border-radius: 12px;
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
+  padding: 18px;
+  border-radius: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   transition: all 0.2s;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 .submit-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,212,255,0.3);
+  box-shadow: 0 8px 25px rgba(0,255,136,0.3);
 }
 .submit-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-/* Success message */
+/* Success Message */
 .success-message {
   display: none;
-  background: var(--green-dim);
-  border: 1px solid var(--green);
-  border-radius: 12px;
-  padding: 20px;
   text-align: center;
-  margin-top: 20px;
+  padding: 30px;
 }
 .success-message.show { display: block; }
 .success-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
+  font-size: 60px;
+  margin-bottom: 20px;
 }
 .success-title {
   font-family: var(--mono);
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--green);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 .success-text {
-  font-size: 13px;
   color: var(--text2);
+  font-size: 14px;
   line-height: 1.6;
 }
 
-/* Footer note */
+/* Footer Note */
 .footer-note {
   text-align: center;
-  padding: 30px 20px;
+  font-size: 13px;
   color: var(--text3);
-  font-size: 12px;
+  padding: 20px 0 40px;
 }
 .footer-note a {
   color: var(--cyan);
   text-decoration: none;
 }
+.footer-note a:hover {
+  text-decoration: underline;
+}
+
 /* Promo Banner */
 .promo-banner {
   position: fixed;
-  top: 64px;
+  bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(90deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 149, 0, 0.1) 100%);
-  border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+  background: linear-gradient(90deg, var(--bg2), var(--card), var(--bg2));
+  border-top: 1px solid var(--card-border);
+  padding: 10px 0;
   overflow: hidden;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  z-index: 99;
+  z-index: 100;
 }
-.promo-banner.hidden { display: none !important; }
+.promo-banner.hidden { display: none; }
 .promo-banner-inner {
   display: flex;
-  gap: 60px;
-  animation: scrollPromo 30s linear infinite;
-  white-space: nowrap;
+  gap: 40px;
+  animation: scroll-banner 30s linear infinite;
+  width: max-content;
 }
-@keyframes scrollPromo {
+@keyframes scroll-banner {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
 .promo-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 20px;
+  gap: 8px;
+  padding: 6px 14px;
+  background: var(--bg3);
+  border-radius: 20px;
   text-decoration: none;
   color: var(--text);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--mono);
   font-size: 12px;
-  transition: color 0.15s;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.15s;
 }
-.promo-item:hover { color: var(--yellow); }
-.promo-item img { width: 20px; height: 20px; border-radius: 50%; }
+.promo-item:hover {
+  background: var(--cyan-dim);
+  color: var(--cyan);
+}
+.promo-item img {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
 .promo-badge-ad {
   background: var(--yellow);
   color: #000;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 3px;
 }
 </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
+<!-- Navbar -->
 <nav class="navbar">
   <a href="./index.html" class="nav-logo">
     <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="Logo">
     <span>DEXSCREENER AI</span>
   </a>
   <div class="nav-links">
-    <a href="./index.html">App</a>
-    <a href="./og-detector.html">OG Detector</a>
-    <a href="./telegram-bot.html">Telegram Bot</a>
-    <a href="./extension.html">Extension</a>
-    <a href="./promote.html" class="active">Promote</a>
-    <a href="./litepaper.html">Litepaper</a>
-    <a href="https://t.me/dexscreeneraitoken" target="_blank">Telegram</a>
-    <a href="https://x.com/dexscreenerai" target="_blank">Twitter</a>
+    <a href="./index.html" class="nav-link">App</a>
+    <a href="./og-detector.html" class="nav-link">OG Detector</a>
+    <a href="./telegram-bot.html" class="nav-link">Telegram Bot</a>
+    <a href="./extension.html" class="nav-link">Extension</a>
+    <a href="./promote.html" class="nav-link active">Promote</a>
+    <a href="./litepaper.html" class="nav-link">Litepaper</a>
+    <a href="https://t.me/dexscreeneraitoken" target="_blank" class="nav-link">Telegram</a>
+    <a href="https://x.com/dexscreenerai" target="_blank" class="nav-link">Twitter</a>
   </div>
   <div class="nav-social-icons">
     <a href="https://t.me/dexscreeneraitoken" target="_blank" title="Telegram">
@@ -580,7 +674,7 @@ body {
   <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
 </div>
 
-<!-- PROMO BANNER -->
+<!-- Promo Banner -->
 <div class="promo-banner hidden" id="promoBanner">
   <div class="promo-banner-inner" id="promoBannerInner"></div>
 </div>
@@ -588,33 +682,54 @@ body {
 <div class="container">
   <!-- Hero -->
   <div class="hero">
-    <div class="hero-badge">⭐ PREMIUM LISTING</div>
-    <h1>Promote Your <span>Token</span></h1>
-    <p>Get featured on DexScreener AI homepage. Reach thousands of active traders and investors looking for the next gem.</p>
+    <div class="hero-badge">🔥 MAXIMUM EXPOSURE — 1 SOL ONLY</div>
+    <h1>
+      Get Your Token<br>
+      <span class="green">In Front</span> of <span class="cyan">Traders</span>
+    </h1>
+    <p>Banner on every page + Telegram post + Twitter post + <strong>Buy Bot</strong> in our group. Everything you need to create hype.</p>
   </div>
 
-  <!-- Benefits -->
+  <!-- Benefits - Now 4 columns -->
   <div class="benefits">
     <div class="benefit">
       <div class="benefit-icon">📢</div>
       <div class="benefit-title">BANNER</div>
-      <div class="benefit-text">Scrolling banner on ALL pages</div>
+      <div class="benefit-text">Scrolling on ALL pages</div>
     </div>
     <div class="benefit">
       <div class="benefit-icon">💬</div>
       <div class="benefit-title">TELEGRAM</div>
-      <div class="benefit-text">Featured post in our group</div>
+      <div class="benefit-text">Post in our group</div>
     </div>
     <div class="benefit">
       <div class="benefit-icon">𝕏</div>
       <div class="benefit-title">TWITTER</div>
-      <div class="benefit-text">Promotional tweet posted</div>
+      <div class="benefit-text">Tweet from @dexscreenerai</div>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon">🤖</div>
+      <div class="benefit-title">BUY BOT</div>
+      <div class="benefit-text">Every buy posted live</div>
+    </div>
+  </div>
+
+  <!-- Buy Bot Highlight Section -->
+  <div class="buybot-highlight">
+    <div class="icon">🛒</div>
+    <h3>BUY BOT INCLUDED</h3>
+    <p>Every time someone buys your token, it gets posted in our Telegram group with the token image, buy amount, and buyer address. Creates <strong>instant FOMO</strong> and shows your token is active!</p>
+    <div class="buybot-features">
+      <div class="buybot-feature">🖼️ Token Image</div>
+      <div class="buybot-feature">💰 Buy Amount</div>
+      <div class="buybot-feature">🐋 Whale Alerts</div>
+      <div class="buybot-feature">📊 Live Stats</div>
     </div>
   </div>
 
   <!-- What You Get -->
   <div class="features-box">
-    <div class="features-title">🎁 WHAT YOU GET</div>
+    <div class="features-title">🎁 WHAT YOU GET FOR 1 SOL</div>
     <div class="features-list">
       <div class="feature-item">
         <span class="feature-check">✓</span>
@@ -622,7 +737,7 @@ body {
       </div>
       <div class="feature-item">
         <span class="feature-check">✓</span>
-        <span>Dedicated post in our <strong>Telegram community</strong> (2K+ members)</span>
+        <span>Dedicated post in our <strong>Telegram community</strong> with your token info</span>
       </div>
       <div class="feature-item">
         <span class="feature-check">✓</span>
@@ -630,7 +745,11 @@ body {
       </div>
       <div class="feature-item">
         <span class="feature-check">✓</span>
-        <span><strong>6 hours</strong> of premium visibility</span>
+        <span><strong>Buy Bot activated</strong> — every purchase shown in Telegram group <span class="new-tag">NEW</span></span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-check">✓</span>
+        <span><strong>6 hours</strong> of premium visibility across all platforms</span>
       </div>
       <div class="feature-item">
         <span class="feature-check">✓</span>
@@ -642,10 +761,11 @@ body {
   <!-- Payment Box -->
   <div class="payment-box">
     <div class="payment-title">
-      <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" style="width:24px;height:24px;border-radius:50%">
+      <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" style="width:28px;height:28px;border-radius:50%">
       LISTING FEE
     </div>
     <div class="payment-amount">1 <span>SOL</span></div>
+    <div class="payment-duration">⏱️ 6 Hours Premium Exposure</div>
     <div class="payment-address-label">Send to this address</div>
     <div class="payment-address">
       <code id="walletAddress">9vtc4dD2bu7oHgZxvouiV4ey5q3HDoC8tnfTCnFrX95A</code>
@@ -658,7 +778,7 @@ body {
 
   <!-- Form -->
   <div class="form-card">
-    <div class="form-title">📝 Token Information</div>
+    <div class="form-title">📝 Submit Your Token</div>
     
     <form id="promoteForm" onsubmit="submitForm(event)">
       <div class="form-group">
@@ -731,8 +851,8 @@ body {
       <div class="success-icon">✅</div>
       <div class="success-title">Submission Received!</div>
       <div class="success-text">
-        We'll verify your transaction and review your listing within 24 hours.<br>
-        You'll receive a confirmation email once approved.
+        We'll verify your transaction and activate your promotion within 30 minutes.<br>
+        You'll receive a confirmation email once live.
       </div>
     </div>
   </div>
@@ -758,7 +878,11 @@ function copyAddress() {
   navigator.clipboard.writeText(addr);
   const btn = event.target;
   btn.textContent = '✓ COPIED';
-  setTimeout(() => btn.textContent = 'COPY', 2000);
+  btn.style.background = 'var(--green)';
+  setTimeout(() => {
+    btn.textContent = 'COPY';
+    btn.style.background = 'var(--cyan)';
+  }, 2000);
 }
 
 async function submitForm(e) {
