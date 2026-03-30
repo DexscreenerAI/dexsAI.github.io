@@ -107,80 +107,6 @@ body {
 .sb-item-icon { color: var(--text3); font-size: 14px; flex-shrink: 0; }
 .sb-item-text { overflow: hidden; text-overflow: ellipsis; }
 
-/* ── AI ANALYSIS CARD ── */
-.ai-card {
-  background: linear-gradient(135deg, rgba(0,212,255,0.04), rgba(179,136,255,0.04));
-  border: 1px solid rgba(0,212,255,0.15);
-  border-radius: 12px;
-  padding: 20px;
-  margin-top: 12px;
-  position: relative;
-  overflow: hidden;
-}
-.ai-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--cyan), var(--purple), var(--cyan));
-  background-size: 200% 100%;
-  animation: aiGradient 3s ease infinite;
-}
-@keyframes aiGradient {
-  0%,100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-.ai-card-header {
-  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
-}
-.ai-card-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 10px; background: rgba(0,212,255,0.08);
-  border: 1px solid rgba(0,212,255,0.2); border-radius: 6px;
-  font-family: var(--mono); font-size: 10px; font-weight: 700;
-  color: var(--cyan); letter-spacing: 1px;
-}
-.ai-card-text {
-  font-family: var(--sans); font-size: 13.5px; line-height: 1.8;
-  color: var(--text); white-space: pre-line;
-}
-.ai-loading-card {
-  background: var(--card); border: 1px solid var(--card-border);
-  border-radius: 12px; padding: 20px; margin-top: 12px;
-  display: flex; align-items: center; gap: 14px;
-}
-.ai-loading-spinner {
-  width: 20px; height: 20px;
-  border: 2px solid var(--card-border); border-top-color: var(--cyan);
-  border-radius: 50%; animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.ai-loading-text {
-  font-family: var(--mono); font-size: 11px; color: var(--text2); letter-spacing: 0.5px;
-}
-.ai-error-card {
-  background: var(--red-dim); border: 1px solid rgba(255,59,79,0.2);
-  border-radius: 12px; padding: 16px; margin-top: 12px;
-  font-family: var(--sans); font-size: 12px; color: var(--red);
-}
-.download-analysis-btn {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  width: 100%; padding: 10px; margin-top: 10px;
-  background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.15);
-  border-radius: 8px; color: var(--cyan); font-family: var(--mono);
-  font-size: 11px; font-weight: 600; cursor: pointer; transition: all .15s;
-  letter-spacing: 0.5px;
-}
-.download-analysis-btn:hover {
-  background: rgba(0,212,255,0.12); border-color: rgba(0,212,255,0.3);
-}
-.mobile-panel.hidden { display: none !important; }
-.mobile-panel-close {
-  background: none; border: none; color: var(--text3);
-  font-size: 14px; cursor: pointer; padding: 4px 8px;
-}
-.mobile-panel-close:hover { color: var(--red); }
-
 /* ── MAIN ── */
 .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
@@ -1110,7 +1036,6 @@ body {
   display: none;
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -1206,10 +1131,7 @@ body {
     <div class="mobile-panel collapsed" id="mobilePanel">
       <div class="mobile-panel-header" onclick="toggleMobilePanel()">
         <span class="mobile-panel-title">⭐ Promoted & Trending</span>
-        <div style="display:flex;align-items:center;gap:4px">
-          <button class="mobile-panel-toggle">▼</button>
-          <button class="mobile-panel-close" onclick="event.stopPropagation(); document.getElementById('mobilePanel').classList.add('hidden')" title="Close">✕</button>
-        </div>
+        <button class="mobile-panel-toggle">▼</button>
       </div>
       <div class="mobile-panel-content">
         <div class="mobile-tabs">
@@ -1242,7 +1164,7 @@ body {
     <div class="input-area">
       <div class="input-wrap">
         <textarea class="input-box" id="inputBox" rows="1"
-          placeholder="Paste an address or ask AI a question..."
+          placeholder="Paste a contract address..."
           oninput="autoResize(this); updateSendBtn()"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendFromInput()}"></textarea>
         <button class="send-btn inactive" id="sendBtn" onclick="sendFromInput()">↑</button>
@@ -1288,10 +1210,6 @@ let isLoading = false;
 let currentLang = 'en';
 let savedSearches = JSON.parse(localStorage.getItem('oracleSearches') || '[]');
 
-// API CONFIG
-const API_URL = 'https://dexscreener-telegram-bot-production.up.railway.app';
-let lastAnalyzedContract = ''; // Track last analyzed token for follow-up questions
-
 // ═══════════════════════════════════════════
 // TRANSLATIONS
 // ═══════════════════════════════════════════
@@ -1299,7 +1217,7 @@ const TRANSLATIONS = {
   en: {
     newAnalysis: 'New analysis',
     today: 'Today',
-    placeholder: 'Paste an address or ask AI a question...',
+    placeholder: 'Paste a contract address...',
     analyzing: 'Analyzing...',
     liveData: 'Live Data Market',
     tokenIntelligence: 'Token Intelligence',
@@ -1954,7 +1872,7 @@ function analyzeToken(pair, rugData) {
   if(risk<35&&chg24h>-5)bias='BULLISH';
   else if(risk>65||chg24h<-30)bias='BEARISH';
 
-  const confidence=Math.max(15,Math.min(95,100-risk));
+  const confidence=Math.max(15,Math.min(95,100-risk+Math.round(Math.random()*10-5)));
 
   let legScore=50;
   const hasSocials=!!(pair.info?.socials?.length);
@@ -2428,83 +2346,13 @@ function renderMessages() {
       html += `<div class="msg-user"><div class="msg-user-bubble">${esc(msg.content)}</div></div>`;
     } else {
       html += `<div class="msg-oracle">
-        <div class="msg-oracle-label"><span style="font-size:12px">📊</span> DEXSCREENER AI</div>`;
+        <div class="msg-oracle-label"><span style="font-size:12px">📊</span> DEX AI</div>`;
       if (msg.analysis) {
-        const dlId = 'analysis-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
-        html += `<div id="${dlId}">`;
         html += renderAnalysis(msg.analysis);
-        if (msg.aiStatus === 'done' && msg.aiData) {
-          html += renderAICard(msg.aiData);
-        }
-        html += `</div>`;
-        if (msg.aiStatus === 'loading') {
-          html += `<div class="ai-loading-card"><div class="ai-loading-spinner"></div><div class="ai-loading-text">🧠 DexScreener AI is analyzing this token...</div></div>`;
-        }
-        html += `<button class="download-analysis-btn" onclick="downloadAnalysis('${dlId}','${esc(msg.analysis?.ticker || 'token')}')">📸 Download Analysis</button>`;
       } else if (msg.html) {
         html += msg.html;
       } else if (msg.text) {
-        if (msg.askStatus === 'loading') {
-          html += `<div class="ai-loading-card"><div class="ai-loading-spinner"></div><div class="ai-loading-text">🧠 DexScreener AI is thinking...</div></div>`;
-        } else if (msg.askStatus === 'done' && !msg.isError) {
-          const askDlId = 'ask-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
-          html += `<div id="${askDlId}">`;
-          // Token info card if available
-          if (msg.tokenInfo) {
-            const ti = msg.tokenInfo;
-            const tiChg = ti.chg24h || 0;
-            const tiSign = tiChg > 0 ? '+' : '';
-            let tiSocialHtml = '';
-            if (ti.socials && ti.socials.length) {
-              tiSocialHtml = ti.socials.map(s => {
-                const label = s.type === 'twitter' ? '𝕏 Twitter' : s.type === 'telegram' ? '✈️ Telegram' : s.type === 'discord' ? '💬 Discord' : '🌐 Website';
-                return `<a href="${s.url}" target="_blank" rel="noopener" style="padding:4px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--cyan);text-decoration:none;font-family:var(--mono);font-size:9px;transition:all .15s">${label}</a>`;
-              }).join('');
-            }
-            // Build DexScreener + BubbleMaps links
-            let tiToolLinks = '';
-            if (ti.dexUrl) {
-              tiToolLinks += `<a href="${ti.dexUrl}" target="_blank" rel="noopener" style="padding:4px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--cyan);text-decoration:none;font-family:var(--mono);font-size:9px">📊 DexScreener</a>`;
-            }
-            const bbChain = (ti.chain||'') === 'solana' ? 'sol' : 'eth';
-            tiToolLinks += `<a href="https://app.bubblemaps.io/${bbChain}/token/${ti.contractAddress || ''}" target="_blank" rel="noopener" style="padding:4px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--purple);text-decoration:none;font-family:var(--mono);font-size:9px">🫧 BubbleMaps</a>`;
-
-            html += `<div class="card" style="margin-bottom:4px">
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-                ${ti.logo ? `<img src="${ti.logo}" style="width:42px;height:42px;border-radius:10px;object-fit:cover;background:var(--card-border)" onerror="this.style.display='none'">` : ''}
-                <div style="flex:1">
-                  <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--cyan)">$${esc(ti.sym)}</div>
-                  <div style="font-size:11px;color:var(--text3)">${esc(ti.name)} · ${(ti.chain||'').toUpperCase()}${ti.type ? ' · ' + ti.type : ''}${ti.momentum ? ' · ' + ti.momentum : ''}</div>
-                </div>
-              </div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-                <div style="background:var(--bg);border-radius:6px;padding:8px 12px;flex:1;min-width:80px;border-left:2px solid var(--cyan)">
-                  <div style="font-family:var(--mono);font-size:7px;color:var(--text3);letter-spacing:1px;margin-bottom:2px">PRICE</div>
-                  <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:#fff">${fP(ti.price||0)}</div>
-                </div>
-                <div style="background:var(--bg);border-radius:6px;padding:8px 12px;flex:1;min-width:80px;border-left:2px solid var(--purple)">
-                  <div style="font-family:var(--mono);font-size:7px;color:var(--text3);letter-spacing:1px;margin-bottom:2px">MCAP</div>
-                  <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--purple)">$${fN(ti.mc||0)}</div>
-                </div>
-                <div style="background:var(--bg);border-radius:6px;padding:8px 12px;flex:1;min-width:80px;border-left:2px solid ${tiChg >= 0 ? 'var(--green)' : 'var(--red)'}">
-                  <div style="font-family:var(--mono);font-size:7px;color:var(--text3);letter-spacing:1px;margin-bottom:2px">24H</div>
-                  <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${tiChg >= 0 ? 'var(--green)' : 'var(--red)'}">${tiSign}${tiChg.toFixed(2)}%</div>
-                </div>
-              </div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap">${tiSocialHtml}${tiToolLinks}</div>
-            </div>`;
-          }
-          html += `<div class="ai-card">
-            <div class="ai-card-header">
-              <div class="ai-card-badge">🧠 DEXSCREENER AI</div>
-            </div>
-            <div class="ai-card-text">${esc(msg.text)}</div>
-          </div>`;
-          html += `</div>`;
-          html += `<button class="download-analysis-btn" onclick="downloadAnalysis('${askDlId}','${esc(msg.tokenInfo?.sym || 'analysis')}')">📸 Download Analysis</button>`;
-        } else {
-          html += `<div class="card card-accent"><div class="general-text">${esc(msg.text)}</div></div>`;
-        }
+        html += `<div class="card card-accent"><div class="general-text">${esc(msg.text)}</div></div>`;
       }
       html += `</div>`;
     }
@@ -2516,36 +2364,6 @@ function renderMessages() {
 function scrollToBottom() {
   const el = $('messagesWrap');
   requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
-}
-
-async function downloadAnalysis(divId, tokenName) {
-  const el = document.getElementById(divId);
-  if (!el) return;
-  
-  const btn = event.target;
-  btn.textContent = 'Generating...';
-  btn.disabled = true;
-  
-  try {
-    const canvas = await html2canvas(el, {
-      backgroundColor: '#060a10',
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      logging: false
-    });
-    
-    const link = document.createElement('a');
-    link.download = 'DexScreenerAI_' + tokenName.toUpperCase() + '_' + new Date().toISOString().slice(0,10) + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    
-    btn.textContent = '✅ Downloaded!';
-    setTimeout(() => { btn.textContent = '📸 Download Analysis'; btn.disabled = false; }, 2000);
-  } catch (e) {
-    btn.textContent = '❌ Error';
-    setTimeout(() => { btn.textContent = '📸 Download Analysis'; btn.disabled = false; }, 2000);
-  }
 }
 
 function scrollToLastUserMessage() {
@@ -2567,7 +2385,7 @@ function showLoading() {
   el.id = 'loadingEl';
   el.className = 'loading-dots';
   el.innerHTML = `
-    <span style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:1.5px">📊 DEXSCREENER AI</span>
+    <span style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:1.5px">📊 DEX AI</span>
     <div class="ld-dot"></div><div class="ld-dot"></div><div class="ld-dot"></div>
     <span class="ld-text">${t('analyzing')}</span>`;
   $('msgContainer').appendChild(el);
@@ -2580,64 +2398,7 @@ function hideLoading() {
 }
 
 // ═══════════════════════════════════════════
-// MAJOR CRYPTO MAPPING
-// ═══════════════════════════════════════════
-const MAJOR_CONTRACTS = {
-  'btc': { addr: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', chain: 'ethereum' },
-  'bitcoin': { addr: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', chain: 'ethereum' },
-  'wbtc': { addr: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', chain: 'ethereum' },
-  'eth': { addr: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', chain: 'ethereum' },
-  'ethereum': { addr: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', chain: 'ethereum' },
-  'weth': { addr: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', chain: 'ethereum' },
-  'sol': { addr: 'So11111111111111111111111111111111111111112', chain: 'solana' },
-  'solana': { addr: 'So11111111111111111111111111111111111111112', chain: 'solana' },
-  'bnb': { addr: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', chain: 'bsc' },
-  'doge': { addr: '0xbA2aE424d960c26247Dd6c32edC70B295c744C43', chain: 'bsc' },
-  'pepe': { addr: '0x6982508145454Ce325dDbE47a25d4ec3d2311933', chain: 'ethereum' },
-  'shib': { addr: '0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE', chain: 'ethereum' },
-  'link': { addr: '0x514910771AF9Ca656af840dff83E8264EcF986CA', chain: 'ethereum' },
-  'uni': { addr: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', chain: 'ethereum' },
-};
-
-function getMajorContract(q) { return MAJOR_CONTRACTS[q.toLowerCase().trim()] || null; }
-
-// ═══════════════════════════════════════════
-// AI ANALYSIS FROM BACKEND
-// ═══════════════════════════════════════════
-async function fetchAIAnalysis(contractAddress) {
-  try {
-    const r = await fetch(`${API_URL}/api/analyze`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contractAddress }),
-      signal: AbortSignal.timeout(30000)
-    });
-    if (!r.ok) {
-      const err = await r.json().catch(() => ({ error: 'Unknown error' }));
-      return { error: err.error || `HTTP ${r.status}` };
-    }
-    return await r.json();
-  } catch (e) {
-    if (e.name === 'TimeoutError') return { error: 'Analysis timed out' };
-    return { error: 'Could not reach AI server' };
-  }
-}
-
-function renderAICard(aiData) {
-  if (aiData.error) {
-    return `<div class="ai-error-card">⚠️ DexScreener AI: ${esc(aiData.error)}</div>`;
-  }
-  return `<div class="ai-card">
-    <div class="ai-card-header">
-      <div class="ai-card-badge">🧠 DEXSCREENER AI ANALYSIS</div>
-      ${aiData.cached ? '<span style="font-family:var(--mono);font-size:9px;color:var(--text3)">CACHED</span>' : ''}
-    </div>
-    <div class="ai-card-text">${esc(aiData.analysis || '')}</div>
-  </div>`;
-}
-
-// ═══════════════════════════════════════════
-// SEND QUERY
+// SEND QUERY (LOCAL ANALYSIS - NO API)
 // ═══════════════════════════════════════════
 function sendFromInput() {
   const val = $('inputBox').value.trim();
@@ -2666,8 +2427,8 @@ async function sendQuery(query) {
     
     // Check for general questions first
     const genKey = Object.keys(GENERAL).find(k => lower.includes(k));
-    if (genKey && !detectAddress(query) && !getMajorContract(query)) {
-      await new Promise(r => setTimeout(r, 800));
+    if (genKey && !detectAddress(query)) {
+      await new Promise(r => setTimeout(r, 800)); // Small delay for UX
       hideLoading();
       c.messages.push({ role: 'assistant', text: GENERAL[genKey] });
       isLoading = false;
@@ -2675,72 +2436,19 @@ async function sendQuery(query) {
       return;
     }
 
+    // Check if it's a contract address
     const addrInfo = detectAddress(query);
-    const majorMatch = getMajorContract(query);
-    
-    // Simple rule: pure contract or pure ticker → local analysis
-    // Anything else (questions, contract+text, etc) → AI
-    const isPureAddress = addrInfo && query.trim() === addrInfo.addr;
-    const isPureTicker = majorMatch && query.trim().split(' ').length === 1;
-    
-    if (!isPureAddress && !isPureTicker) {
-      // Send everything to AI - it handles contracts inside questions automatically
-      hideLoading();
-      const askMsgObj = { role: 'assistant', text: '', askStatus: 'loading' };
-      c.messages.push(askMsgObj);
-      isLoading = false;
-      renderMessages();
-
-      // If no contract in query, inject last analyzed one for context
-      let askQuestion = query;
-      if (!addrInfo && lastAnalyzedContract) {
-        askQuestion = lastAnalyzedContract + ' ' + query;
-      }
-
-      try {
-        const askR = await fetch(`${API_URL}/api/ask`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: askQuestion }),
-          signal: AbortSignal.timeout(30000)
-        });
-        if (!askR.ok) {
-          const askErr = await askR.json().catch(() => ({ error: 'Server error' }));
-          askMsgObj.askStatus = 'done';
-          askMsgObj.text = askErr.error || 'AI error. Try again later.';
-          askMsgObj.isError = true;
-        } else {
-          const askData = await askR.json();
-          askMsgObj.askStatus = 'done';
-          askMsgObj.text = askData.answer;
-          askMsgObj.hasTokenData = askData.hasTokenData;
-          askMsgObj.tokenInfo = askData.tokenInfo || null;
-        }
-      } catch (askE) {
-        askMsgObj.askStatus = 'done';
-        askMsgObj.text = 'Could not reach AI server.';
-        askMsgObj.isError = true;
-      }
-
-      renderMessages();
-      return;
-    }
-
-    // Token analysis flow
     let pair = null;
     let rugData = null;
 
-    if (majorMatch) {
-      pair = await fetchDexScreener(majorMatch.addr);
-      if (pair && pair.chainId === 'solana') {
-        rugData = await fetchRugcheck(majorMatch.addr);
-      }
-    } else if (addrInfo) {
+    if (addrInfo) {
+      // Direct contract address lookup
       pair = await fetchDexScreener(addrInfo.addr);
       if (pair && addrInfo.type === 'sol') {
         rugData = await fetchRugcheck(addrInfo.addr);
       }
     } else {
+      // Search by name on DexScreener
       pair = await searchDexScreener(query);
       if (pair && pair.chainId === 'solana') {
         rugData = await fetchRugcheck(pair.baseToken?.address);
@@ -2755,10 +2463,11 @@ async function sendQuery(query) {
         text: `${t('notFound')} "${query}" on DexScreener.\n\n${t('tryAgain')}\n• ${t('pasteContract')}\n• ${t('searchToken')}` 
       });
     } else {
+      // Run local analysis
       const analysis = analyzeToken(pair, rugData);
-      const msgObj = { role: 'assistant', analysis, aiStatus: 'loading', aiData: null };
-      c.messages.push(msgObj);
+      c.messages.push({ role: 'assistant', analysis });
       
+      // Save search to right panel
       saveSearch({
         address: pair.baseToken?.address || '',
         chain: pair.chainId || 'unknown',
@@ -2766,21 +2475,6 @@ async function sendQuery(query) {
         icon: pair.info?.imageUrl || '',
         confidence: analysis.confidence || 50
       });
-
-      isLoading = false;
-      renderMessages();
-
-      // AI analysis in background
-      const contractAddr = pair.baseToken?.address || (addrInfo ? addrInfo.addr : '');
-      lastAnalyzedContract = contractAddr; // Store for follow-up questions
-      if (contractAddr) {
-        fetchAIAnalysis(contractAddr).then(aiResult => {
-          msgObj.aiStatus = 'done';
-          msgObj.aiData = aiResult;
-          renderMessages();
-        });
-      }
-      return;
     }
 
   } catch (err) {
