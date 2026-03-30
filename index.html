@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1664,74 +1663,40 @@ async function fetchCoinGecko(coinId) {
   // Check cache first
   const cached = cgCache[coinId];
   if (cached && (Date.now() - cached.timestamp < CG_CACHE_TTL)) {
-    console.log('📦 Using cached data for', coinId);
+    console.log('\uD83D\uDCE6 Using cached data for', coinId);
     return cached.data;
   }
   
   try {
-    console.log('🦎 Fetching CoinGecko:', coinId);
-    const r = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&community_data=false&developer_data=false`, { signal: AbortSignal.timeout(10000) });
+    // USE BACKEND API (no CORS issues, server-side fetch)
+    console.log('\uD83C\uDF10 Fetching via backend:', coinId);
+    const r = await fetch(`${API_URL}/api/major/${coinId}`, { 
+      signal: AbortSignal.timeout(15000) 
+    });
     
-    if (r.status === 429) {
-      console.log('\u26A0\uFE0F CoinGecko rate limited, trying CoinCap fallback...');
-      return await fetchCoinCapFallback(coinId);
-    }
-    
-    // ANY error -> try fallback (not just 429!)
     if (!r.ok) {
-      console.log('\u26A0\uFE0F CoinGecko error (status ' + r.status + '), trying CoinCap fallback...');
-      return await fetchCoinCapFallback(coinId);
+      console.log('\u26A0\uFE0F Backend API failed for', coinId);
+      return null;
     }
     
     const data = await r.json();
-    
-    // Check if we got valid market data
-    if (!data || !data.market_data) {
-      console.log('\u26A0\uFE0F CoinGecko returned invalid data, trying fallback...');
-      return await fetchCoinCapFallback(coinId);
+    if (!data || data.error) {
+      console.log('\u26A0\uFE0F No data from backend for', coinId);
+      return null;
     }
     
-    const result = {
-      id: data.id,
-      symbol: data.symbol?.toUpperCase() || '???',
-      name: data.name || coinId,
-      image: data.image?.small || COINGECKO_IMAGES[coinId] || '',
-      price: data.market_data?.current_price?.usd || 0,
-      marketCap: data.market_data?.market_cap?.usd || 0,
-      volume24h: data.market_data?.total_volume?.usd || 0,
-      change24h: data.market_data?.price_change_percentage_24h || 0,
-      change7d: data.market_data?.price_change_percentage_7d || 0,
-      change30d: data.market_data?.price_change_percentage_30d || 0,
-      ath: data.market_data?.ath?.usd || 0,
-      athChange: data.market_data?.ath_change_percentage?.usd || 0,
-      athDate: data.market_data?.ath_date?.usd || null,
-      atl: data.market_data?.atl?.usd || 0,
-      atlChange: data.market_data?.atl_change_percentage?.usd || 0,
-      high24h: data.market_data?.high_24h?.usd || 0,
-      low24h: data.market_data?.low_24h?.usd || 0,
-      circulatingSupply: data.market_data?.circulating_supply || 0,
-      totalSupply: data.market_data?.total_supply || 0,
-      maxSupply: data.market_data?.max_supply || null,
-      rank: data.market_cap_rank || 0,
-      categories: data.categories || [],
-      description: data.description?.en || '',
-      links: {
-        website: data.links?.homepage?.[0] || '',
-        twitter: data.links?.twitter_screen_name || '',
-        telegram: data.links?.telegram_channel_identifier || '',
-        reddit: data.links?.subreddit_url || ''
-      },
-      source: 'coingecko'
-    };
+    // Add image fallback
+    if (!data.image) {
+      data.image = COINGECKO_IMAGES[coinId] || '';
+    }
     
     // Save to cache
-    cgCache[coinId] = { data: result, timestamp: Date.now() };
-    return result;
+    cgCache[coinId] = { data, timestamp: Date.now() };
+    return data;
     
   } catch(e) { 
-    console.error('CoinGecko error:', e);
-    // Try fallback
-    return await fetchCoinCapFallback(coinId);
+    console.error('Backend API error:', e);
+    return null;
   }
 }
 
