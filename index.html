@@ -864,6 +864,32 @@ body {
   color: #fff;
   letter-spacing: 1px;
 }
+
+/* NEW Analysis button (mobile only) */
+.nav-new-btn {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--green) 100%);
+  border: none;
+  color: #000;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-left: 12px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.nav-new-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+}
+.nav-new-btn:active {
+  transform: scale(0.98);
+}
+
 .top-nav-links {
   display: flex;
   align-items: center;
@@ -977,17 +1003,18 @@ body {
 }
 
 @media (max-width: 768px) {
-  .top-nav { padding: 0 16px; }
+  .top-nav { padding: 0 12px; }
   .top-nav-links { display: none; }
   .nav-menu-btn { display: block; }
   .nav-social-icons { display: flex; }
   .top-nav-logo span { display: none; }
-  .fab-new { display: flex; align-items: center; justify-content: center; }
+  .nav-new-btn { display: flex; } /* Show NEW button on mobile */
+  .fab-new { display: none; } /* Hide FAB since we have nav button */
 }
 @media (max-width: 400px) {
   .top-nav { height: 50px; }
   .nav-mobile-menu { top: 50px; }
-  .fab-new { bottom: 85px; right: 12px; width: 50px; height: 50px; font-size: 24px; }
+  .nav-new-btn { padding: 6px 10px; font-size: 10px; }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1065,6 +1092,7 @@ body {
     <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="DexScreener AI">
     <span>DEXSCREENER AI</span>
   </a>
+  <button class="nav-new-btn" onclick="newConversation()">+ NEW</button>
   <div class="top-nav-links">
     <a href="./index.html" class="active">App</a>
     <a href="./og-detector.html">OG Detector</a>
