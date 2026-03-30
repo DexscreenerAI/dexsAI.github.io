@@ -1263,6 +1263,42 @@ let lastAnalyzedToken = null; // Store last token for follow-up questions
 const API_URL = 'https://dexscreener-telegram-bot-production.up.railway.app';
 
 // ═══════════════════════════════════════════
+// AI CHAT (Haiku - cheap & fast, unlimited)
+// ═══════════════════════════════════════════
+async function askAI(message, tokenContext = null) {
+  try {
+    const response = await fetch(`${API_URL}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, tokenContext })
+    });
+    
+    if (!response.ok) {
+      return { error: true, message: 'AI service temporarily unavailable.' };
+    }
+    
+    const data = await response.json();
+    return { error: false, answer: data.answer };
+  } catch (err) {
+    console.error('AI Chat error:', err);
+    return { error: true, message: 'AI service temporarily unavailable. Please try again.' };
+  }
+}
+
+// Detect if query is a question (not a token search)
+function isQuestion(query) {
+  const lower = query.toLowerCase().trim();
+  // Contains question mark
+  if (query.includes('?')) return true;
+  // Starts with question words
+  const questionStarts = ['what', 'why', 'how', 'when', 'where', 'who', 'which', 'is ', 'are ', 'do ', 'does ', 'can ', 'could ', 'should ', 'will ', 'would ', 'tell me', 'explain', 'help me', 'i need', 'i want'];
+  if (questionStarts.some(q => lower.startsWith(q))) return true;
+  // Long text (probably not a token name)
+  if (query.split(' ').length > 4) return true;
+  return false;
+}
+
+// ═══════════════════════════════════════════
 // COINGECKO - MAJOR CRYPTOS
 // ═══════════════════════════════════════════
 const COINGECKO_IDS = {
@@ -3007,7 +3043,7 @@ async function sendQuery(query) {
   try {
     const lower = query.toLowerCase().trim();
     
-    // Check for general questions first
+    // Check for general questions first (static responses)
     const genKey = Object.keys(GENERAL).find(k => lower.includes(k));
     if (genKey && !detectAddress(query)) {
       await new Promise(r => setTimeout(r, 800)); // Small delay for UX
@@ -3048,12 +3084,35 @@ async function sendQuery(query) {
         hideLoading();
         c.messages.push({ 
           role: 'assistant', 
-          text: `⚠️ Could not fetch data for ${query.toUpperCase()}.\n\nBoth CoinGecko and CoinCap APIs are unavailable. This might be a temporary issue.\n\nPlease try again in a few seconds.`
+          text: `\u26A0\uFE0F Could not fetch data for ${query.toUpperCase()}.\n\nBoth CoinGecko and CoinCap APIs are unavailable. This might be a temporary issue.\n\nPlease try again in a few seconds.`
         });
         isLoading = false;
         renderMessages();
         return;
       }
+    }
+
+    // ═══ CHECK IF IT'S A QUESTION (use AI Chat) ═══
+    if (isQuestion(query) && !detectAddress(query)) {
+      const aiResponse = await askAI(query, lastAnalyzedToken);
+      hideLoading();
+      
+      if (aiResponse.error) {
+        c.messages.push({ 
+          role: 'assistant', 
+          text: `\u26A0\uFE0F ${aiResponse.message}` 
+        });
+      } else {
+        const contextNote = lastAnalyzedToken ? `\n\n_Context: ${lastAnalyzedToken.symbol}_` : '';
+        c.messages.push({ 
+          role: 'assistant', 
+          text: `\uD83E\uDD16 **AI Answer**\n\n${aiResponse.answer}${contextNote}` 
+        });
+      }
+      
+      isLoading = false;
+      renderMessages();
+      return;
     }
 
     // Check if it's a contract address
@@ -3068,45 +3127,6 @@ async function sendQuery(query) {
         rugData = await fetchRugcheck(addrInfo.addr);
       }
     } else {
-      // Not a contract address - check if we have a lastAnalyzedToken for context
-      if (lastAnalyzedToken && !genKey) {
-        // User is asking a follow-up question about the last token
-        try {
-          const askResponse = await fetch(`${API_URL}/api/ask`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              question: query,
-              tokenContext: {
-                symbol: lastAnalyzedToken.symbol,
-                name: lastAnalyzedToken.name,
-                price: lastAnalyzedToken.price,
-                marketCap: lastAnalyzedToken.marketCap,
-                liquidity: lastAnalyzedToken.liquidity,
-                volume24h: lastAnalyzedToken.volume24h,
-                priceChange24h: lastAnalyzedToken.priceChange24h,
-                chain: lastAnalyzedToken.chain,
-                address: lastAnalyzedToken.address
-              }
-            })
-          });
-          
-          if (askResponse.ok) {
-            const data = await askResponse.json();
-            hideLoading();
-            c.messages.push({ 
-              role: 'assistant', 
-              text: `💬 *About ${lastAnalyzedToken.symbol}:*\n\n${data.answer || data.response || 'No response from AI.'}` 
-            });
-            isLoading = false;
-            renderMessages();
-            return;
-          }
-        } catch (apiErr) {
-          console.log('API ask error, falling back to search:', apiErr);
-        }
-      }
-      
       // Search by name on DexScreener
       pair = await searchDexScreener(query);
       if (pair && pair.chainId === 'solana') {
@@ -3117,10 +3137,20 @@ async function sendQuery(query) {
     hideLoading();
 
     if (!pair) {
-      c.messages.push({ 
-        role: 'assistant', 
-        text: `${t('notFound')} "${query}" on DexScreener.\n\n${t('tryAgain')}\n• ${t('pasteContract')}\n• ${t('searchToken')}` 
-      });
+      // Token not found - try AI chat as fallback
+      const aiResponse = await askAI(`I searched for "${query}" but couldn't find it on DexScreener. Can you help me understand what this might be or suggest alternatives?`, lastAnalyzedToken);
+      
+      if (aiResponse.error) {
+        c.messages.push({ 
+          role: 'assistant', 
+          text: `${t('notFound')} "${query}" on DexScreener.\n\n${t('tryAgain')}\n\u2022 ${t('pasteContract')}\n\u2022 ${t('searchToken')}` 
+        });
+      } else {
+        c.messages.push({ 
+          role: 'assistant', 
+          text: `\uD83D\uDD0D **"${query}" not found on DexScreener**\n\n\uD83E\uDD16 *AI Assistant:*\n${aiResponse.answer}` 
+        });
+      }
     } else {
       // Run local analysis
       const analysis = analyzeToken(pair, rugData);
