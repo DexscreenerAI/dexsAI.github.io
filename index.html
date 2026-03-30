@@ -1209,6 +1209,10 @@ let activeId = conversations[0].id;
 let isLoading = false;
 let currentLang = 'en';
 let savedSearches = JSON.parse(localStorage.getItem('oracleSearches') || '[]');
+let lastAnalyzedToken = null; // Store last token for follow-up questions
+
+// Backend API URL
+const API_URL = 'https://dexscreener-telegram-bot-production.up.railway.app';
 
 // ═══════════════════════════════════════════
 // TRANSLATIONS
@@ -2448,6 +2452,45 @@ async function sendQuery(query) {
         rugData = await fetchRugcheck(addrInfo.addr);
       }
     } else {
+      // Not a contract address - check if we have a lastAnalyzedToken for context
+      if (lastAnalyzedToken && !genKey) {
+        // User is asking a follow-up question about the last token
+        try {
+          const askResponse = await fetch(`${API_URL}/api/ask`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              question: query,
+              tokenContext: {
+                symbol: lastAnalyzedToken.symbol,
+                name: lastAnalyzedToken.name,
+                price: lastAnalyzedToken.price,
+                marketCap: lastAnalyzedToken.marketCap,
+                liquidity: lastAnalyzedToken.liquidity,
+                volume24h: lastAnalyzedToken.volume24h,
+                priceChange24h: lastAnalyzedToken.priceChange24h,
+                chain: lastAnalyzedToken.chain,
+                address: lastAnalyzedToken.address
+              }
+            })
+          });
+          
+          if (askResponse.ok) {
+            const data = await askResponse.json();
+            hideLoading();
+            c.messages.push({ 
+              role: 'assistant', 
+              text: `💬 *About ${lastAnalyzedToken.symbol}:*\n\n${data.answer || data.response || 'No response from AI.'}` 
+            });
+            isLoading = false;
+            renderMessages();
+            return;
+          }
+        } catch (apiErr) {
+          console.log('API ask error, falling back to search:', apiErr);
+        }
+      }
+      
       // Search by name on DexScreener
       pair = await searchDexScreener(query);
       if (pair && pair.chainId === 'solana') {
@@ -2466,6 +2509,20 @@ async function sendQuery(query) {
       // Run local analysis
       const analysis = analyzeToken(pair, rugData);
       c.messages.push({ role: 'assistant', analysis });
+      
+      // Save this token as lastAnalyzedToken for follow-up questions
+      lastAnalyzedToken = {
+        symbol: pair.baseToken?.symbol || '???',
+        name: pair.baseToken?.name || '',
+        price: parseFloat(pair.priceUsd) || 0,
+        marketCap: parseFloat(pair.marketCap) || parseFloat(pair.fdv) || 0,
+        liquidity: parseFloat(pair.liquidity?.usd) || 0,
+        volume24h: parseFloat(pair.volume?.h24) || 0,
+        priceChange24h: parseFloat(pair.priceChange?.h24) || 0,
+        chain: pair.chainId || 'unknown',
+        address: pair.baseToken?.address || '',
+        pairAddress: pair.pairAddress || ''
+      };
       
       // Save search to right panel
       saveSearch({
