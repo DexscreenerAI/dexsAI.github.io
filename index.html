@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>DexScreener AI — Token Intelligence</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
@@ -33,17 +33,24 @@
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
-html, body { height:100%; overflow:hidden; }
+html, body { height:100%; overflow:hidden; touch-action: manipulation; }
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+
+/* Prevent zoom on input focus (iOS) */
+@media (max-width: 768px) {
+  input, textarea, select, button { font-size: 16px !important; }
+}
 
 /* ── LAYOUT ── */
 .app { display: flex; height: calc(100vh - 56px); margin-top: 56px; }
@@ -637,7 +644,7 @@ body {
     padding: 4px 4px 4px 14px;
     background: var(--bg3);
   }
-  .input-box { font-size: 15px; min-height: 20px; }
+  .input-box { font-size: 16px; min-height: 20px; }
   .send-btn { width: 38px; height: 38px; border-radius: 10px; }
   
   .badge { font-size: 9px; padding: 3px 6px; }
@@ -668,7 +675,7 @@ body {
   
   .scenario-value { font-size: 16px; }
   .zone-val { font-size: 10px; }
-  .input-box { font-size: 14px; }
+  .input-box { font-size: 16px; }
   
   .welcome-title { font-size: 20px; }
   .quick-tokens { gap: 6px; }
