@@ -2478,7 +2478,6 @@ function renderMessages() {
               ${msg.hasTokenData ? '<span style="font-family:var(--mono);font-size:9px;color:var(--text3)">+ TOKEN DATA</span>' : ''}
             </div>
             <div class="ai-card-text">${esc(msg.text)}</div>
-            ${msg.remaining !== undefined ? '<div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:10px;text-align:right">' + msg.remaining + '/5 questions remaining</div>' : ''}
           </div>`;
         } else {
           html += `<div class="card card-accent"><div class="general-text">${esc(msg.text)}</div></div>`;
@@ -2643,8 +2642,8 @@ async function sendQuery(query) {
     const majorMatch = getMajorContract(query);
     const isQuestion = !addrInfo && !majorMatch && (
       query.includes('?') ||
-      query.split(' ').length >= 3 ||
-      /^(what|how|why|when|where|should|is |are |can |do |does |will |would |could |tell|explain|compare|which)/i.test(lower)
+      query.split(' ').length >= 4 ||
+      /^(what|how|why|when|where|should|is it|are there|can i|do i|does |will |would |could |tell me|explain|compare)/i.test(lower)
     );
 
     if (isQuestion) {
@@ -2689,9 +2688,6 @@ async function sendQuery(query) {
     let pair = null;
     let rugData = null;
 
-    // 1. Check if it's a known major crypto (BTC, ETH, SOL...)
-    const majorMatch = getMajorContract(query);
-    
     if (majorMatch) {
       pair = await fetchDexScreener(majorMatch.addr);
       if (pair && pair.chainId === 'solana') {
