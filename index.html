@@ -879,7 +879,7 @@ body {
   padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
-  margin-left: 12px;
+  margin-left: auto;
   transition: transform 0.15s, box-shadow 0.15s;
 }
 .nav-new-btn:hover {
@@ -888,6 +888,79 @@ body {
 }
 .nav-new-btn:active {
   transform: scale(0.98);
+}
+
+/* Mobile Quick Dropdown (Trending/Promote) */
+.nav-quick-dropdown {
+  display: none;
+  position: relative;
+  margin-left: 8px;
+}
+.nav-quick-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.nav-quick-btn:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: var(--cyan);
+}
+.nav-quick-btn .arrow {
+  font-size: 8px;
+  transition: transform 0.2s;
+}
+.nav-quick-dropdown.open .nav-quick-btn .arrow {
+  transform: rotate(180deg);
+}
+.nav-quick-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 130px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 1000;
+  overflow: hidden;
+}
+.nav-quick-dropdown.open .nav-quick-menu {
+  display: block;
+  animation: dropdownFadeIn 0.15s ease;
+}
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.nav-quick-menu a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  text-decoration: none;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.nav-quick-menu a:hover {
+  background: rgba(255,255,255,0.08);
+}
+.nav-quick-menu a:first-child {
+  border-bottom: 1px solid var(--border);
 }
 
 .top-nav-links {
@@ -1009,12 +1082,14 @@ body {
   .nav-social-icons { display: flex; }
   .top-nav-logo span { display: none; }
   .nav-new-btn { display: flex; } /* Show NEW button on mobile */
+  .nav-quick-dropdown { display: block; } /* Show dropdown on mobile */
   .fab-new { display: none; } /* Hide FAB since we have nav button */
 }
 @media (max-width: 400px) {
   .top-nav { height: 50px; }
   .nav-mobile-menu { top: 50px; }
   .nav-new-btn { padding: 6px 10px; font-size: 10px; }
+  .nav-quick-btn { padding: 5px 8px; font-size: 9px; }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1092,6 +1167,19 @@ body {
     <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="DexScreener AI">
     <span>DEXSCREENER AI</span>
   </a>
+  
+  <!-- Mobile Quick Dropdown (between logo and NEW) -->
+  <div class="nav-quick-dropdown" id="navQuickDropdown">
+    <button class="nav-quick-btn" onclick="toggleQuickDropdown(event)">
+      <span>\u26A1</span>
+      <span class="arrow">\u25BC</span>
+    </button>
+    <div class="nav-quick-menu">
+      <a href="javascript:void(0)" onclick="showTrending(); closeQuickDropdown();">\uD83D\uDD25 Trending</a>
+      <a href="./promote.html">\u2B50 Promote</a>
+    </div>
+  </div>
+  
   <button class="nav-new-btn" onclick="newConversation()">+ NEW</button>
   <div class="top-nav-links">
     <a href="./index.html" class="active">App</a>
@@ -1111,7 +1199,7 @@ body {
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
     </a>
   </div>
-  <button class="nav-menu-btn" onclick="toggleMobileMenu()">☰</button>
+  <button class="nav-menu-btn" onclick="toggleMobileMenu()">\u2630</button>
 </nav>
 
 <!-- Mobile Menu -->
@@ -1537,9 +1625,31 @@ function closeMobileMenu() {
   const btn = document.querySelector('.nav-menu-btn');
   if (menu) {
     menu.classList.remove('open');
-    btn.textContent = '☰';
+    btn.textContent = '\u2630';
   }
 }
+
+// Quick dropdown (mobile - Trending/Promote)
+function toggleQuickDropdown(e) {
+  e.stopPropagation();
+  const dropdown = $('navQuickDropdown');
+  dropdown.classList.toggle('open');
+}
+
+function closeQuickDropdown() {
+  const dropdown = $('navQuickDropdown');
+  if (dropdown) dropdown.classList.remove('open');
+}
+
+// Close quick dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  const dropdown = $('navQuickDropdown');
+  if (dropdown && dropdown.classList.contains('open')) {
+    if (!dropdown.contains(e.target)) {
+      closeQuickDropdown();
+    }
+  }
+});
 
 // Close mobile menu when clicking outside
 document.addEventListener('click', function(e) {
@@ -1927,6 +2037,15 @@ function analyzeCoinGecko(data) {
 // ═══════════════════════════════════════════
 // TRENDING TOKENS (Boosted)
 // ═══════════════════════════════════════════
+// Show trending (from mobile dropdown)
+function showTrending() {
+  closeMobileMenu();
+  newConversation();
+  setTimeout(() => {
+    fetchTrending();
+  }, 100);
+}
+
 async function fetchTrending() {
   if (isLoading) return;
   isLoading = true;
