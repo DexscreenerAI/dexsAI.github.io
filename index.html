@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2445,7 +2444,7 @@ function renderMessages() {
         html += renderAnalysis(msg.analysis);
         // Show AI analysis card (loading, result, or error)
         if (msg.aiStatus === 'loading') {
-          html += `<div class="ai-loading-card"><div class="ai-loading-spinner"></div><div class="ai-loading-text">🧠 Claude AI is analyzing this token...</div></div>`;
+          html += `<div class="ai-loading-card"><div class="ai-loading-spinner"></div><div class="ai-loading-text">🧠 DexScreener AI is analyzing this token...</div></div>`;
         } else if (msg.aiStatus === 'done' && msg.aiData) {
           html += renderAICard(msg.aiData);
         }
@@ -2529,7 +2528,7 @@ function renderAICard(aiData) {
   const text = aiData.analysis || '';
   return `<div class="ai-card">
     <div class="ai-card-header">
-      <div class="ai-card-badge">🧠 CLAUDE AI ANALYSIS</div>
+      <div class="ai-card-badge">🧠 DEXSCREENER AI ANALYSIS</div>
       ${aiData.cached ? '<span style="font-family:var(--mono);font-size:9px;color:var(--text3)">CACHED</span>' : ''}
     </div>
     <div class="ai-card-text">${esc(text)}</div>
