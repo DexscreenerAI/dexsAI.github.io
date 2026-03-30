@@ -163,6 +163,17 @@ body {
   border-radius: 12px; padding: 16px; margin-top: 12px;
   font-family: var(--sans); font-size: 12px; color: var(--red);
 }
+.download-analysis-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 10px; margin-top: 10px;
+  background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.15);
+  border-radius: 8px; color: var(--cyan); font-family: var(--mono);
+  font-size: 11px; font-weight: 600; cursor: pointer; transition: all .15s;
+  letter-spacing: 0.5px;
+}
+.download-analysis-btn:hover {
+  background: rgba(0,212,255,0.12); border-color: rgba(0,212,255,0.3);
+}
 .mobile-panel.hidden { display: none !important; }
 .mobile-panel-close {
   background: none; border: none; color: var(--text3);
@@ -1099,6 +1110,7 @@ body {
   display: none;
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -2418,23 +2430,29 @@ function renderMessages() {
       html += `<div class="msg-oracle">
         <div class="msg-oracle-label"><span style="font-size:12px">📊</span> DEXSCREENER AI</div>`;
       if (msg.analysis) {
+        const dlId = 'analysis-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
+        html += `<div id="${dlId}">`;
         html += renderAnalysis(msg.analysis);
-        if (msg.aiStatus === 'loading') {
-          html += `<div class="ai-loading-card"><div class="ai-loading-spinner"></div><div class="ai-loading-text">🧠 DexScreener AI is analyzing this token...</div></div>`;
-        } else if (msg.aiStatus === 'done' && msg.aiData) {
+        if (msg.aiStatus === 'done' && msg.aiData) {
           html += renderAICard(msg.aiData);
         }
+        html += `</div>`;
+        if (msg.aiStatus === 'loading') {
+          html += `<div class="ai-loading-card"><div class="ai-loading-spinner"></div><div class="ai-loading-text">🧠 DexScreener AI is analyzing this token...</div></div>`;
+        }
+        html += `<button class="download-analysis-btn" onclick="downloadAnalysis('${dlId}','${esc(msg.analysis?.ticker || 'token')}')">📸 Download Analysis</button>`;
       } else if (msg.html) {
         html += msg.html;
       } else if (msg.text) {
         if (msg.askStatus === 'loading') {
           html += `<div class="ai-loading-card"><div class="ai-loading-spinner"></div><div class="ai-loading-text">🧠 DexScreener AI is thinking...</div></div>`;
         } else if (msg.askStatus === 'done' && !msg.isError) {
+          const askDlId = 'ask-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
+          html += `<div id="${askDlId}">`;
           // Token info card if available
           if (msg.tokenInfo) {
             const ti = msg.tokenInfo;
             const tiChg = ti.chg24h || 0;
-            const tiArrow = tiChg >= 0 ? '📈' : '📉';
             const tiSign = tiChg > 0 ? '+' : '';
             let tiSocialHtml = '';
             if (ti.socials && ti.socials.length) {
@@ -2443,12 +2461,20 @@ function renderMessages() {
                 return `<a href="${s.url}" target="_blank" rel="noopener" style="padding:4px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--cyan);text-decoration:none;font-family:var(--mono);font-size:9px;transition:all .15s">${label}</a>`;
               }).join('');
             }
+            // Build DexScreener + BubbleMaps links
+            let tiToolLinks = '';
+            if (ti.dexUrl) {
+              tiToolLinks += `<a href="${ti.dexUrl}" target="_blank" rel="noopener" style="padding:4px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--cyan);text-decoration:none;font-family:var(--mono);font-size:9px">📊 DexScreener</a>`;
+            }
+            const bbChain = (ti.chain||'') === 'solana' ? 'sol' : 'eth';
+            tiToolLinks += `<a href="https://app.bubblemaps.io/${bbChain}/token/${ti.contractAddress || ''}" target="_blank" rel="noopener" style="padding:4px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--purple);text-decoration:none;font-family:var(--mono);font-size:9px">🫧 BubbleMaps</a>`;
+
             html += `<div class="card" style="margin-bottom:4px">
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
                 ${ti.logo ? `<img src="${ti.logo}" style="width:42px;height:42px;border-radius:10px;object-fit:cover;background:var(--card-border)" onerror="this.style.display='none'">` : ''}
                 <div style="flex:1">
                   <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--cyan)">$${esc(ti.sym)}</div>
-                  <div style="font-size:11px;color:var(--text3)">${esc(ti.name)} · ${(ti.chain||'').toUpperCase()}</div>
+                  <div style="font-size:11px;color:var(--text3)">${esc(ti.name)} · ${(ti.chain||'').toUpperCase()}${ti.type ? ' · ' + ti.type : ''}${ti.momentum ? ' · ' + ti.momentum : ''}</div>
                 </div>
               </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
@@ -2465,7 +2491,7 @@ function renderMessages() {
                   <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${tiChg >= 0 ? 'var(--green)' : 'var(--red)'}">${tiSign}${tiChg.toFixed(2)}%</div>
                 </div>
               </div>
-              ${tiSocialHtml ? `<div style="display:flex;gap:6px;flex-wrap:wrap">${tiSocialHtml}</div>` : ''}
+              <div style="display:flex;gap:6px;flex-wrap:wrap">${tiSocialHtml}${tiToolLinks}</div>
             </div>`;
           }
           html += `<div class="ai-card">
@@ -2474,6 +2500,8 @@ function renderMessages() {
             </div>
             <div class="ai-card-text">${esc(msg.text)}</div>
           </div>`;
+          html += `</div>`;
+          html += `<button class="download-analysis-btn" onclick="downloadAnalysis('${askDlId}','${esc(msg.tokenInfo?.sym || 'analysis')}')">📸 Download Analysis</button>`;
         } else {
           html += `<div class="card card-accent"><div class="general-text">${esc(msg.text)}</div></div>`;
         }
@@ -2488,6 +2516,36 @@ function renderMessages() {
 function scrollToBottom() {
   const el = $('messagesWrap');
   requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+}
+
+async function downloadAnalysis(divId, tokenName) {
+  const el = document.getElementById(divId);
+  if (!el) return;
+  
+  const btn = event.target;
+  btn.textContent = 'Generating...';
+  btn.disabled = true;
+  
+  try {
+    const canvas = await html2canvas(el, {
+      backgroundColor: '#060a10',
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false
+    });
+    
+    const link = document.createElement('a');
+    link.download = 'DexScreenerAI_' + tokenName.toUpperCase() + '_' + new Date().toISOString().slice(0,10) + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    
+    btn.textContent = '✅ Downloaded!';
+    setTimeout(() => { btn.textContent = '📸 Download Analysis'; btn.disabled = false; }, 2000);
+  } catch (e) {
+    btn.textContent = '❌ Error';
+    setTimeout(() => { btn.textContent = '📸 Download Analysis'; btn.disabled = false; }, 2000);
+  }
 }
 
 function scrollToLastUserMessage() {
