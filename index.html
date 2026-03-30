@@ -1589,9 +1589,24 @@ function updateTopbar() {
 // ═══════════════════════════════════════════
 function detectAddress(input) {
   const trimmed = input.trim();
+  
+  // Check if EXACT address
   if (/^0x[a-fA-F0-9]{40}$/.test(trimmed)) return { type: 'evm', addr: trimmed };
   if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(trimmed)) return { type: 'sol', addr: trimmed };
+  
+  // Try to EXTRACT address from text (e.g. "0x123... is this good?")
+  const evmMatch = trimmed.match(/0x[a-fA-F0-9]{40}/);
+  if (evmMatch) return { type: 'evm', addr: evmMatch[0], hasQuestion: trimmed.length > evmMatch[0].length };
+  
+  const solMatch = trimmed.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
+  if (solMatch && solMatch[0].length >= 32) return { type: 'sol', addr: solMatch[0], hasQuestion: trimmed.length > solMatch[0].length };
+  
   return null;
+}
+
+// Extract question part from a message containing an address
+function extractQuestion(input, address) {
+  return input.replace(address, '').trim().replace(/^[\s,\-:]+|[\s,\-:]+$/g, '');
 }
 
 // ═══════════════════════════════════════════
@@ -3190,8 +3205,138 @@ async function sendQuery(query) {
       }
     }
 
-    // ═══ CHECK IF IT'S A QUESTION (use AI Chat) ═══
-    if (isQuestion(query) && !detectAddress(query)) {
+    // ═══ CHECK IF MESSAGE CONTAINS A CONTRACT ADDRESS ═══
+    const addrInfo = detectAddress(query);
+    let pair = null;
+    let rugData = null;
+    let questionPart = null;
+
+    if (addrInfo) {
+      // Extract question part if exists (e.g. "0x123... is this good?")
+      if (addrInfo.hasQuestion) {
+        questionPart = extractQuestion(query, addrInfo.addr);
+      }
+      
+      // Fetch token data from DexScreener
+      pair = await fetchDexScreener(addrInfo.addr);
+      if (pair && addrInfo.type === 'sol') {
+        rugData = await fetchRugcheck(addrInfo.addr);
+      }
+      
+      if (pair) {
+        // Run local analysis
+        const analysis = analyzeToken(pair, rugData);
+        
+        // Save FULL token data for AI follow-up questions
+        lastAnalyzedToken = {
+          // Basic info
+          symbol: pair.baseToken?.symbol || '???',
+          name: pair.baseToken?.name || '',
+          chain: pair.chainId || 'unknown',
+          address: pair.baseToken?.address || '',
+          pairAddress: pair.pairAddress || '',
+          
+          // Price data
+          price: parseFloat(pair.priceUsd) || 0,
+          priceChange1h: parseFloat(pair.priceChange?.h1) || 0,
+          priceChange6h: parseFloat(pair.priceChange?.h6) || 0,
+          priceChange24h: parseFloat(pair.priceChange?.h24) || 0,
+          
+          // Market data
+          marketCap: parseFloat(pair.marketCap) || parseFloat(pair.fdv) || 0,
+          fdv: parseFloat(pair.fdv) || 0,
+          liquidity: parseFloat(pair.liquidity?.usd) || 0,
+          volume24h: parseFloat(pair.volume?.h24) || 0,
+          volume6h: parseFloat(pair.volume?.h6) || 0,
+          volume1h: parseFloat(pair.volume?.h1) || 0,
+          
+          // Transaction data
+          buys24h: pair.txns?.h24?.buys || 0,
+          sells24h: pair.txns?.h24?.sells || 0,
+          buys6h: pair.txns?.h6?.buys || 0,
+          sells6h: pair.txns?.h6?.sells || 0,
+          buys1h: pair.txns?.h1?.buys || 0,
+          sells1h: pair.txns?.h1?.sells || 0,
+          
+          // Age
+          pairCreatedAt: pair.pairCreatedAt || null,
+          ageHours: pair.pairCreatedAt ? Math.floor((Date.now() - pair.pairCreatedAt) / 3600000) : null,
+          
+          // Socials
+          website: pair.info?.websites?.[0]?.url || null,
+          twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || null,
+          telegram: pair.info?.socials?.find(s => s.type === 'telegram')?.url || null,
+          
+          // Rugcheck data (if available)
+          rugcheck: rugData ? {
+            score: rugData.score || null,
+            risks: rugData.risks || [],
+            topHolders: rugData.topHolders?.slice(0, 5) || [],
+            mintAuthority: rugData.tokenMeta?.mutable !== false,
+            freezeAuthority: rugData.markets?.[0]?.freezeAuthority !== null,
+            lpBurned: rugData.markets?.[0]?.lp?.lpBurned || false
+          } : null,
+          
+          // Our analysis results
+          analysis: {
+            bias: analysis.bias,
+            confidence: analysis.confidence,
+            liquidityScore: analysis.liquidityScore,
+            volumeScore: analysis.volumeScore,
+            safetyScore: analysis.safetyScore
+          }
+        };
+        
+        // If there was a question with the address, answer it with AI using full context
+        if (questionPart && questionPart.length > 3) {
+          // Show analysis first
+          c.messages.push({ role: 'assistant', analysis });
+          renderMessages();
+          
+          // Then answer the question with AI
+          showLoading();
+          const aiResponse = await askAI(questionPart, lastAnalyzedToken);
+          hideLoading();
+          
+          if (!aiResponse.error) {
+            c.messages.push({ 
+              role: 'assistant', 
+              text: `\uD83E\uDD16 **AI Answer about ${lastAnalyzedToken.symbol}**\n\n${aiResponse.answer}` 
+            });
+          }
+        } else {
+          // Just show the analysis
+          c.messages.push({ role: 'assistant', analysis });
+        }
+        
+        // Save search to right panel
+        saveSearch({
+          address: pair.baseToken?.address || '',
+          chain: pair.chainId || 'unknown',
+          symbol: pair.baseToken?.symbol || '???',
+          icon: pair.info?.imageUrl || '',
+          confidence: analysis.confidence || 50
+        });
+        
+        hideLoading();
+        isLoading = false;
+        renderMessages();
+        return;
+      } else {
+        // Contract not found on DexScreener
+        hideLoading();
+        c.messages.push({ 
+          role: 'assistant', 
+          text: `\u274C Contract \`${addrInfo.addr.slice(0, 8)}...${addrInfo.addr.slice(-6)}\` not found on DexScreener.\n\n${t('tryAgain')}\n\u2022 Make sure it's a valid token contract\n\u2022 Check if the token has liquidity` 
+        });
+        isLoading = false;
+        renderMessages();
+        return;
+      }
+    }
+
+    // ═══ CHECK IF IT'S A QUESTION (no address - use AI Chat) ═══
+    if (isQuestion(query)) {
       const aiResponse = await askAI(query, lastAnalyzedToken);
       hideLoading();
       
@@ -3213,23 +3358,10 @@ async function sendQuery(query) {
       return;
     }
 
-    // Check if it's a contract address
-    const addrInfo = detectAddress(query);
-    let pair = null;
-    let rugData = null;
-
-    if (addrInfo) {
-      // Direct contract address lookup
-      pair = await fetchDexScreener(addrInfo.addr);
-      if (pair && addrInfo.type === 'sol') {
-        rugData = await fetchRugcheck(addrInfo.addr);
-      }
-    } else {
-      // Search by name on DexScreener
-      pair = await searchDexScreener(query);
-      if (pair && pair.chainId === 'solana') {
-        rugData = await fetchRugcheck(pair.baseToken?.address);
-      }
+    // ═══ SEARCH BY NAME ON DEXSCREENER ═══
+    pair = await searchDexScreener(query);
+    if (pair && pair.chainId === 'solana') {
+      rugData = await fetchRugcheck(pair.baseToken?.address);
     }
 
     hideLoading();
