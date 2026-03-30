@@ -131,66 +131,44 @@ body {
   50% { background-position: 100% 50%; }
 }
 .ai-card-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
 }
 .ai-card-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: rgba(0,212,255,0.08);
-  border: 1px solid rgba(0,212,255,0.2);
-  border-radius: 6px;
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--cyan);
-  letter-spacing: 1px;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; background: rgba(0,212,255,0.08);
+  border: 1px solid rgba(0,212,255,0.2); border-radius: 6px;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: var(--cyan); letter-spacing: 1px;
 }
 .ai-card-text {
-  font-family: var(--sans);
-  font-size: 13.5px;
-  line-height: 1.8;
-  color: var(--text);
-  white-space: pre-line;
+  font-family: var(--sans); font-size: 13.5px; line-height: 1.8;
+  color: var(--text); white-space: pre-line;
 }
 .ai-loading-card {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: 12px; padding: 20px; margin-top: 12px;
+  display: flex; align-items: center; gap: 14px;
 }
 .ai-loading-spinner {
   width: 20px; height: 20px;
-  border: 2px solid var(--card-border);
-  border-top-color: var(--cyan);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  border: 2px solid var(--card-border); border-top-color: var(--cyan);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .ai-loading-text {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text2);
-  letter-spacing: 0.5px;
+  font-family: var(--mono); font-size: 11px; color: var(--text2); letter-spacing: 0.5px;
 }
 .ai-error-card {
-  background: var(--red-dim);
-  border: 1px solid rgba(255,59,79,0.2);
-  border-radius: 12px;
-  padding: 16px;
-  margin-top: 12px;
-  font-family: var(--sans);
-  font-size: 12px;
-  color: var(--red);
+  background: var(--red-dim); border: 1px solid rgba(255,59,79,0.2);
+  border-radius: 12px; padding: 16px; margin-top: 12px;
+  font-family: var(--sans); font-size: 12px; color: var(--red);
 }
+.mobile-panel.hidden { display: none !important; }
+.mobile-panel-close {
+  background: none; border: none; color: var(--text3);
+  font-size: 14px; cursor: pointer; padding: 4px 8px;
+}
+.mobile-panel-close:hover { color: var(--red); }
 
 /* ── MAIN ── */
 .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
@@ -314,21 +292,6 @@ body {
 }
 .mobile-panel.collapsed .mobile-panel-content {
   max-height: 0;
-}
-.mobile-panel.hidden {
-  display: none !important;
-}
-.mobile-panel-close {
-  background: none;
-  border: none;
-  color: var(--text3);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 4px 8px;
-  transition: color 0.15s;
-}
-.mobile-panel-close:hover {
-  color: var(--red);
 }
 @media (max-width: 1000px) {
   .mobile-panel { display: block !important; }
@@ -1233,7 +1196,7 @@ body {
         <span class="mobile-panel-title">⭐ Promoted & Trending</span>
         <div style="display:flex;align-items:center;gap:4px">
           <button class="mobile-panel-toggle">▼</button>
-          <button class="mobile-panel-close" onclick="event.stopPropagation(); closeMobilePanelFull()" title="Close">✕</button>
+          <button class="mobile-panel-close" onclick="event.stopPropagation(); document.getElementById('mobilePanel').classList.add('hidden')" title="Close">✕</button>
         </div>
       </div>
       <div class="mobile-panel-content">
@@ -1313,13 +1276,9 @@ let isLoading = false;
 let currentLang = 'en';
 let savedSearches = JSON.parse(localStorage.getItem('oracleSearches') || '[]');
 
-// ═══════════════════════════════════════════
 // API CONFIG
-// ═══════════════════════════════════════════
-// IMPORTANT: Replace with YOUR Railway bot service URL
-// Go to Railway > your bot service > Settings > Networking > Generate Domain
-// Then copy the URL here (without trailing slash)
 const API_URL = 'https://dexscreener-telegram-bot-production.up.railway.app';
+let lastAnalyzedContract = ''; // Track last analyzed token for follow-up questions
 
 // ═══════════════════════════════════════════
 // TRANSLATIONS
@@ -2460,7 +2419,6 @@ function renderMessages() {
         <div class="msg-oracle-label"><span style="font-size:12px">📊</span> DEXSCREENER AI</div>`;
       if (msg.analysis) {
         html += renderAnalysis(msg.analysis);
-        // Show AI analysis card (loading, result, or error)
         if (msg.aiStatus === 'loading') {
           html += `<div class="ai-loading-card"><div class="ai-loading-spinner"></div><div class="ai-loading-text">🧠 DexScreener AI is analyzing this token...</div></div>`;
         } else if (msg.aiStatus === 'done' && msg.aiData) {
@@ -2472,10 +2430,47 @@ function renderMessages() {
         if (msg.askStatus === 'loading') {
           html += `<div class="ai-loading-card"><div class="ai-loading-spinner"></div><div class="ai-loading-text">🧠 DexScreener AI is thinking...</div></div>`;
         } else if (msg.askStatus === 'done' && !msg.isError) {
+          // Token info card if available
+          if (msg.tokenInfo) {
+            const ti = msg.tokenInfo;
+            const tiChg = ti.chg24h || 0;
+            const tiArrow = tiChg >= 0 ? '📈' : '📉';
+            const tiSign = tiChg > 0 ? '+' : '';
+            let tiSocialHtml = '';
+            if (ti.socials && ti.socials.length) {
+              tiSocialHtml = ti.socials.map(s => {
+                const label = s.type === 'twitter' ? '𝕏 Twitter' : s.type === 'telegram' ? '✈️ Telegram' : s.type === 'discord' ? '💬 Discord' : '🌐 Website';
+                return `<a href="${s.url}" target="_blank" rel="noopener" style="padding:4px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--cyan);text-decoration:none;font-family:var(--mono);font-size:9px;transition:all .15s">${label}</a>`;
+              }).join('');
+            }
+            html += `<div class="card" style="margin-bottom:4px">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                ${ti.logo ? `<img src="${ti.logo}" style="width:42px;height:42px;border-radius:10px;object-fit:cover;background:var(--card-border)" onerror="this.style.display='none'">` : ''}
+                <div style="flex:1">
+                  <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--cyan)">$${esc(ti.sym)}</div>
+                  <div style="font-size:11px;color:var(--text3)">${esc(ti.name)} · ${(ti.chain||'').toUpperCase()}</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+                <div style="background:var(--bg);border-radius:6px;padding:8px 12px;flex:1;min-width:80px;border-left:2px solid var(--cyan)">
+                  <div style="font-family:var(--mono);font-size:7px;color:var(--text3);letter-spacing:1px;margin-bottom:2px">PRICE</div>
+                  <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:#fff">${fP(ti.price||0)}</div>
+                </div>
+                <div style="background:var(--bg);border-radius:6px;padding:8px 12px;flex:1;min-width:80px;border-left:2px solid var(--purple)">
+                  <div style="font-family:var(--mono);font-size:7px;color:var(--text3);letter-spacing:1px;margin-bottom:2px">MCAP</div>
+                  <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--purple)">$${fN(ti.mc||0)}</div>
+                </div>
+                <div style="background:var(--bg);border-radius:6px;padding:8px 12px;flex:1;min-width:80px;border-left:2px solid ${tiChg >= 0 ? 'var(--green)' : 'var(--red)'}">
+                  <div style="font-family:var(--mono);font-size:7px;color:var(--text3);letter-spacing:1px;margin-bottom:2px">24H</div>
+                  <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${tiChg >= 0 ? 'var(--green)' : 'var(--red)'}">${tiSign}${tiChg.toFixed(2)}%</div>
+                </div>
+              </div>
+              ${tiSocialHtml ? `<div style="display:flex;gap:6px;flex-wrap:wrap">${tiSocialHtml}</div>` : ''}
+            </div>`;
+          }
           html += `<div class="ai-card">
             <div class="ai-card-header">
               <div class="ai-card-badge">🧠 DEXSCREENER AI</div>
-              ${msg.hasTokenData ? '<span style="font-family:var(--mono);font-size:9px;color:var(--text3)">+ TOKEN DATA</span>' : ''}
             </div>
             <div class="ai-card-text">${esc(msg.text)}</div>
           </div>`;
@@ -2527,9 +2522,31 @@ function hideLoading() {
 }
 
 // ═══════════════════════════════════════════
-// 🧠 FETCH AI ANALYSIS FROM BACKEND
+// MAJOR CRYPTO MAPPING
 // ═══════════════════════════════════════════
-async function fetchAIAnalysis(contractAddress, messageIndex) {
+const MAJOR_CONTRACTS = {
+  'btc': { addr: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', chain: 'ethereum' },
+  'bitcoin': { addr: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', chain: 'ethereum' },
+  'wbtc': { addr: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', chain: 'ethereum' },
+  'eth': { addr: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', chain: 'ethereum' },
+  'ethereum': { addr: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', chain: 'ethereum' },
+  'weth': { addr: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', chain: 'ethereum' },
+  'sol': { addr: 'So11111111111111111111111111111111111111112', chain: 'solana' },
+  'solana': { addr: 'So11111111111111111111111111111111111111112', chain: 'solana' },
+  'bnb': { addr: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', chain: 'bsc' },
+  'doge': { addr: '0xbA2aE424d960c26247Dd6c32edC70B295c744C43', chain: 'bsc' },
+  'pepe': { addr: '0x6982508145454Ce325dDbE47a25d4ec3d2311933', chain: 'ethereum' },
+  'shib': { addr: '0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE', chain: 'ethereum' },
+  'link': { addr: '0x514910771AF9Ca656af840dff83E8264EcF986CA', chain: 'ethereum' },
+  'uni': { addr: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', chain: 'ethereum' },
+};
+
+function getMajorContract(q) { return MAJOR_CONTRACTS[q.toLowerCase().trim()] || null; }
+
+// ═══════════════════════════════════════════
+// AI ANALYSIS FROM BACKEND
+// ═══════════════════════════════════════════
+async function fetchAIAnalysis(contractAddress) {
   try {
     const r = await fetch(`${API_URL}/api/analyze`, {
       method: 'POST',
@@ -2537,16 +2554,14 @@ async function fetchAIAnalysis(contractAddress, messageIndex) {
       body: JSON.stringify({ contractAddress }),
       signal: AbortSignal.timeout(30000)
     });
-    
     if (!r.ok) {
       const err = await r.json().catch(() => ({ error: 'Unknown error' }));
       return { error: err.error || `HTTP ${r.status}` };
     }
-    
     return await r.json();
   } catch (e) {
-    if (e.name === 'TimeoutError') return { error: 'Analysis timed out. Try again.' };
-    return { error: 'Could not reach AI server.' };
+    if (e.name === 'TimeoutError') return { error: 'Analysis timed out' };
+    return { error: 'Could not reach AI server' };
   }
 }
 
@@ -2554,19 +2569,17 @@ function renderAICard(aiData) {
   if (aiData.error) {
     return `<div class="ai-error-card">⚠️ DexScreener AI: ${esc(aiData.error)}</div>`;
   }
-  
-  const text = aiData.analysis || '';
   return `<div class="ai-card">
     <div class="ai-card-header">
       <div class="ai-card-badge">🧠 DEXSCREENER AI ANALYSIS</div>
       ${aiData.cached ? '<span style="font-family:var(--mono);font-size:9px;color:var(--text3)">CACHED</span>' : ''}
     </div>
-    <div class="ai-card-text">${esc(text)}</div>
+    <div class="ai-card-text">${esc(aiData.analysis || '')}</div>
   </div>`;
 }
 
 // ═══════════════════════════════════════════
-// SEND QUERY (LOCAL ANALYSIS + AI API)
+// SEND QUERY
 // ═══════════════════════════════════════════
 function sendFromInput() {
   const val = $('inputBox').value.trim();
@@ -2575,39 +2588,6 @@ function sendFromInput() {
   $('inputBox').style.height = 'auto';
   updateSendBtn();
   sendQuery(val);
-}
-
-// ═══════════════════════════════════════════
-// 🏦 MAJOR CRYPTO MAPPING (contrats connus)
-// ═══════════════════════════════════════════
-const MAJOR_CONTRACTS = {
-  'btc':  { addr: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', chain: 'ethereum' },  // WBTC
-  'bitcoin':  { addr: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', chain: 'ethereum' },
-  'wbtc': { addr: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', chain: 'ethereum' },
-  'eth':  { addr: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', chain: 'ethereum' },  // WETH
-  'ethereum':  { addr: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', chain: 'ethereum' },
-  'weth': { addr: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', chain: 'ethereum' },
-  'sol':  { addr: 'So11111111111111111111111111111111111111112', chain: 'solana' },       // Wrapped SOL
-  'solana':  { addr: 'So11111111111111111111111111111111111111112', chain: 'solana' },
-  'wsol': { addr: 'So11111111111111111111111111111111111111112', chain: 'solana' },
-  'bnb':  { addr: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', chain: 'bsc' },        // WBNB
-  'wbnb': { addr: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', chain: 'bsc' },
-  'doge': { addr: '0xbA2aE424d960c26247Dd6c32edC70B295c744C43', chain: 'bsc' },        // DOGE on BSC
-  'dogecoin': { addr: '0xbA2aE424d960c26247Dd6c32edC70B295c744C43', chain: 'bsc' },
-  'pepe': { addr: '0x6982508145454Ce325dDbE47a25d4ec3d2311933', chain: 'ethereum' },    // PEPE
-  'shib': { addr: '0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE', chain: 'ethereum' },    // SHIB
-  'link': { addr: '0x514910771AF9Ca656af840dff83E8264EcF986CA', chain: 'ethereum' },    // LINK
-  'uni':  { addr: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', chain: 'ethereum' },    // UNI
-  'aave': { addr: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9', chain: 'ethereum' },    // AAVE
-  'matic': { addr: '0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0', chain: 'ethereum' },   // MATIC
-  'arb':  { addr: '0x912CE59144191C1204E64559FE8253a0e49E6548', chain: 'arbitrum' },     // ARB
-  'op':   { addr: '0x4200000000000000000000000000000000000042', chain: 'optimism' },      // OP
-  'avax': { addr: '0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7', chain: 'avalanche' },   // WAVAX
-  'sui':  { addr: '0x2::sui::SUI', chain: 'sui' },
-};
-
-function getMajorContract(query) {
-  return MAJOR_CONTRACTS[query.toLowerCase().trim()] || null;
 }
 
 async function sendQuery(query) {
@@ -2628,7 +2608,7 @@ async function sendQuery(query) {
     
     // Check for general questions first
     const genKey = Object.keys(GENERAL).find(k => lower.includes(k));
-    if (genKey && !detectAddress(query)) {
+    if (genKey && !detectAddress(query) && !getMajorContract(query)) {
       await new Promise(r => setTimeout(r, 800));
       hideLoading();
       c.messages.push({ role: 'assistant', text: GENERAL[genKey] });
@@ -2637,31 +2617,35 @@ async function sendQuery(query) {
       return;
     }
 
-    // Detect if input is a free question (not a contract/token name)
     const addrInfo = detectAddress(query);
     const majorMatch = getMajorContract(query);
-    const isQuestion = !addrInfo && !majorMatch && (
-      query.includes('?') ||
-      query.split(' ').length >= 4 ||
-      /^(what|how|why|when|where|should|is it|are there|can i|do i|does |will |would |could |tell me|explain|compare)/i.test(lower)
-    );
-
-    if (isQuestion) {
-      // Send to AI /api/ask
+    
+    // Simple rule: pure contract or pure ticker → local analysis
+    // Anything else (questions, contract+text, etc) → AI
+    const isPureAddress = addrInfo && query.trim() === addrInfo.addr;
+    const isPureTicker = majorMatch && query.trim().split(' ').length === 1;
+    
+    if (!isPureAddress && !isPureTicker) {
+      // Send everything to AI - it handles contracts inside questions automatically
       hideLoading();
       const askMsgObj = { role: 'assistant', text: '', askStatus: 'loading' };
       c.messages.push(askMsgObj);
       isLoading = false;
       renderMessages();
 
+      // If no contract in query, inject last analyzed one for context
+      let askQuestion = query;
+      if (!addrInfo && lastAnalyzedContract) {
+        askQuestion = lastAnalyzedContract + ' ' + query;
+      }
+
       try {
         const askR = await fetch(`${API_URL}/api/ask`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: query }),
+          body: JSON.stringify({ question: askQuestion }),
           signal: AbortSignal.timeout(30000)
         });
-
         if (!askR.ok) {
           const askErr = await askR.json().catch(() => ({ error: 'Server error' }));
           askMsgObj.askStatus = 'done';
@@ -2672,7 +2656,7 @@ async function sendQuery(query) {
           askMsgObj.askStatus = 'done';
           askMsgObj.text = askData.answer;
           askMsgObj.hasTokenData = askData.hasTokenData;
-          askMsgObj.remaining = askData.remaining;
+          askMsgObj.tokenInfo = askData.tokenInfo || null;
         }
       } catch (askE) {
         askMsgObj.askStatus = 'done';
@@ -2694,13 +2678,11 @@ async function sendQuery(query) {
         rugData = await fetchRugcheck(majorMatch.addr);
       }
     } else if (addrInfo) {
-      // Direct contract address lookup
       pair = await fetchDexScreener(addrInfo.addr);
       if (pair && addrInfo.type === 'sol') {
         rugData = await fetchRugcheck(addrInfo.addr);
       }
     } else {
-      // Search by name on DexScreener
       pair = await searchDexScreener(query);
       if (pair && pair.chainId === 'solana') {
         rugData = await fetchRugcheck(pair.baseToken?.address);
@@ -2715,12 +2697,10 @@ async function sendQuery(query) {
         text: `${t('notFound')} "${query}" on DexScreener.\n\n${t('tryAgain')}\n• ${t('pasteContract')}\n• ${t('searchToken')}` 
       });
     } else {
-      // Run local analysis (instant)
       const analysis = analyzeToken(pair, rugData);
       const msgObj = { role: 'assistant', analysis, aiStatus: 'loading', aiData: null };
       c.messages.push(msgObj);
       
-      // Save search to right panel
       saveSearch({
         address: pair.baseToken?.address || '',
         chain: pair.chainId || 'unknown',
@@ -2728,13 +2708,13 @@ async function sendQuery(query) {
         icon: pair.info?.imageUrl || '',
         confidence: analysis.confidence || 50
       });
-      
-      // Render local analysis immediately
+
       isLoading = false;
       renderMessages();
-      
-      // Kick off AI analysis in background (non-blocking)
+
+      // AI analysis in background
       const contractAddr = pair.baseToken?.address || (addrInfo ? addrInfo.addr : '');
+      lastAnalyzedContract = contractAddr; // Store for follow-up questions
       if (contractAddr) {
         fetchAIAnalysis(contractAddr).then(aiResult => {
           msgObj.aiStatus = 'done';
@@ -3056,11 +3036,6 @@ function switchMobileTab(tab) {
 function toggleMobilePanel() {
   const panel = document.getElementById('mobilePanel');
   panel.classList.toggle('collapsed');
-}
-
-function closeMobilePanelFull() {
-  const panel = document.getElementById('mobilePanel');
-  panel.classList.add('hidden');
 }
 
 // Render mobile token row
