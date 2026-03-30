@@ -1267,7 +1267,7 @@ body {
     <div class="input-area">
       <div class="input-wrap">
         <textarea class="input-box" id="inputBox" rows="1"
-          placeholder="Paste a contract address..."
+          placeholder="Paste an address or ask AI a question..."
           oninput="autoResize(this); updateSendBtn()"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendFromInput()}"></textarea>
         <button class="send-btn inactive" id="sendBtn" onclick="sendFromInput()">↑</button>
@@ -1328,7 +1328,7 @@ const TRANSLATIONS = {
   en: {
     newAnalysis: 'New analysis',
     today: 'Today',
-    placeholder: 'Paste a contract address...',
+    placeholder: 'Paste an address or ask AI a question...',
     analyzing: 'Analyzing...',
     liveData: 'Live Data Market',
     tokenIntelligence: 'Token Intelligence',
@@ -2469,7 +2469,20 @@ function renderMessages() {
       } else if (msg.html) {
         html += msg.html;
       } else if (msg.text) {
-        html += `<div class="card card-accent"><div class="general-text">${esc(msg.text)}</div></div>`;
+        if (msg.askStatus === 'loading') {
+          html += `<div class="ai-loading-card"><div class="ai-loading-spinner"></div><div class="ai-loading-text">🧠 DexScreener AI is thinking...</div></div>`;
+        } else if (msg.askStatus === 'done' && !msg.isError) {
+          html += `<div class="ai-card">
+            <div class="ai-card-header">
+              <div class="ai-card-badge">🧠 DEXSCREENER AI</div>
+              ${msg.hasTokenData ? '<span style="font-family:var(--mono);font-size:9px;color:var(--text3)">+ TOKEN DATA</span>' : ''}
+            </div>
+            <div class="ai-card-text">${esc(msg.text)}</div>
+            ${msg.remaining !== undefined ? '<div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:10px;text-align:right">' + msg.remaining + '/5 questions remaining</div>' : ''}
+          </div>`;
+        } else {
+          html += `<div class="card card-accent"><div class="general-text">${esc(msg.text)}</div></div>`;
+        }
       }
       html += `</div>`;
     }
@@ -2617,7 +2630,7 @@ async function sendQuery(query) {
     // Check for general questions first
     const genKey = Object.keys(GENERAL).find(k => lower.includes(k));
     if (genKey && !detectAddress(query)) {
-      await new Promise(r => setTimeout(r, 800)); // Small delay for UX
+      await new Promise(r => setTimeout(r, 800));
       hideLoading();
       c.messages.push({ role: 'assistant', text: GENERAL[genKey] });
       isLoading = false;
@@ -2625,8 +2638,54 @@ async function sendQuery(query) {
       return;
     }
 
-    // Check if it's a contract address
+    // Detect if input is a free question (not a contract/token name)
     const addrInfo = detectAddress(query);
+    const majorMatch = getMajorContract(query);
+    const isQuestion = !addrInfo && !majorMatch && (
+      query.includes('?') ||
+      query.split(' ').length >= 3 ||
+      /^(what|how|why|when|where|should|is |are |can |do |does |will |would |could |tell|explain|compare|which)/i.test(lower)
+    );
+
+    if (isQuestion) {
+      // Send to AI /api/ask
+      hideLoading();
+      const askMsgObj = { role: 'assistant', text: '', askStatus: 'loading' };
+      c.messages.push(askMsgObj);
+      isLoading = false;
+      renderMessages();
+
+      try {
+        const askR = await fetch(`${API_URL}/api/ask`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: query }),
+          signal: AbortSignal.timeout(30000)
+        });
+
+        if (!askR.ok) {
+          const askErr = await askR.json().catch(() => ({ error: 'Server error' }));
+          askMsgObj.askStatus = 'done';
+          askMsgObj.text = askErr.error || 'AI error. Try again later.';
+          askMsgObj.isError = true;
+        } else {
+          const askData = await askR.json();
+          askMsgObj.askStatus = 'done';
+          askMsgObj.text = askData.answer;
+          askMsgObj.hasTokenData = askData.hasTokenData;
+          askMsgObj.remaining = askData.remaining;
+        }
+      } catch (askE) {
+        askMsgObj.askStatus = 'done';
+        askMsgObj.text = 'Could not reach AI server.';
+        askMsgObj.isError = true;
+      }
+
+      renderMessages();
+      return;
+    }
+
+    // Token analysis flow
     let pair = null;
     let rugData = null;
 
