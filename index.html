@@ -1537,6 +1537,7 @@ function newConversation() {
   const c = { id: Date.now(), title: 'New analysis', messages: [] };
   conversations.unshift(c);
   activeId = c.id;
+  lastAnalyzedToken = null; // Reset memory for follow-up questions
   renderSidebar();
   renderMessages();
   updateTopbar();
@@ -2938,6 +2939,16 @@ async function sendQuery(query) {
           address: cgId
         };
         
+        isLoading = false;
+        renderMessages();
+        return;
+      } else {
+        // CoinGecko failed (rate limit?) - show error, don't fallback to DexScreener
+        hideLoading();
+        c.messages.push({ 
+          role: 'assistant', 
+          text: `⚠️ Could not fetch data for ${query.toUpperCase()} from CoinGecko.\n\nThis might be due to rate limiting. Please try again in a few seconds.\n\nTip: CoinGecko allows ~10-30 requests per minute on the free tier.`
+        });
         isLoading = false;
         renderMessages();
         return;
