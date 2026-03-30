@@ -315,6 +315,21 @@ body {
 .mobile-panel.collapsed .mobile-panel-content {
   max-height: 0;
 }
+.mobile-panel.hidden {
+  display: none !important;
+}
+.mobile-panel-close {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.15s;
+}
+.mobile-panel-close:hover {
+  color: var(--red);
+}
 @media (max-width: 1000px) {
   .mobile-panel { display: block !important; }
 }
@@ -1216,7 +1231,10 @@ body {
     <div class="mobile-panel collapsed" id="mobilePanel">
       <div class="mobile-panel-header" onclick="toggleMobilePanel()">
         <span class="mobile-panel-title">⭐ Promoted & Trending</span>
-        <button class="mobile-panel-toggle">▼</button>
+        <div style="display:flex;align-items:center;gap:4px">
+          <button class="mobile-panel-toggle">▼</button>
+          <button class="mobile-panel-close" onclick="event.stopPropagation(); closeMobilePanelFull()" title="Close">✕</button>
+        </div>
       </div>
       <div class="mobile-panel-content">
         <div class="mobile-tabs">
@@ -2439,7 +2457,7 @@ function renderMessages() {
       html += `<div class="msg-user"><div class="msg-user-bubble">${esc(msg.content)}</div></div>`;
     } else {
       html += `<div class="msg-oracle">
-        <div class="msg-oracle-label"><span style="font-size:12px">📊</span> DEX AI</div>`;
+        <div class="msg-oracle-label"><span style="font-size:12px">📊</span> DEXSCREENER AI</div>`;
       if (msg.analysis) {
         html += renderAnalysis(msg.analysis);
         // Show AI analysis card (loading, result, or error)
@@ -2484,7 +2502,7 @@ function showLoading() {
   el.id = 'loadingEl';
   el.className = 'loading-dots';
   el.innerHTML = `
-    <span style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:1.5px">📊 DEX AI</span>
+    <span style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:1.5px">📊 DEXSCREENER AI</span>
     <div class="ld-dot"></div><div class="ld-dot"></div><div class="ld-dot"></div>
     <span class="ld-text">${t('analyzing')}</span>`;
   $('msgContainer').appendChild(el);
@@ -2522,7 +2540,7 @@ async function fetchAIAnalysis(contractAddress, messageIndex) {
 
 function renderAICard(aiData) {
   if (aiData.error) {
-    return `<div class="ai-error-card">⚠️ AI Analysis: ${esc(aiData.error)}</div>`;
+    return `<div class="ai-error-card">⚠️ DexScreener AI: ${esc(aiData.error)}</div>`;
   }
   
   const text = aiData.analysis || '';
@@ -2983,6 +3001,11 @@ function switchMobileTab(tab) {
 function toggleMobilePanel() {
   const panel = document.getElementById('mobilePanel');
   panel.classList.toggle('collapsed');
+}
+
+function closeMobilePanelFull() {
+  const panel = document.getElementById('mobilePanel');
+  panel.classList.add('hidden');
 }
 
 // Render mobile token row
