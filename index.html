@@ -1263,6 +1263,73 @@ let lastAnalyzedToken = null; // Store last token for follow-up questions
 const API_URL = 'https://dexscreener-telegram-bot-production.up.railway.app';
 
 // ═══════════════════════════════════════════
+// COINGECKO - MAJOR CRYPTOS
+// ═══════════════════════════════════════════
+const COINGECKO_IDS = {
+  'btc': 'bitcoin', 'bitcoin': 'bitcoin',
+  'eth': 'ethereum', 'ethereum': 'ethereum',
+  'sol': 'solana', 'solana': 'solana',
+  'bnb': 'binancecoin', 'binance': 'binancecoin',
+  'xrp': 'ripple', 'ripple': 'ripple',
+  'ada': 'cardano', 'cardano': 'cardano',
+  'doge': 'dogecoin', 'dogecoin': 'dogecoin',
+  'dot': 'polkadot', 'polkadot': 'polkadot',
+  'matic': 'matic-network', 'polygon': 'matic-network',
+  'shib': 'shiba-inu', 'shiba': 'shiba-inu',
+  'avax': 'avalanche-2', 'avalanche': 'avalanche-2',
+  'link': 'chainlink', 'chainlink': 'chainlink',
+  'atom': 'cosmos', 'cosmos': 'cosmos',
+  'ltc': 'litecoin', 'litecoin': 'litecoin',
+  'uni': 'uniswap', 'uniswap': 'uniswap',
+  'xlm': 'stellar', 'stellar': 'stellar',
+  'near': 'near', 
+  'apt': 'aptos', 'aptos': 'aptos',
+  'sui': 'sui',
+  'arb': 'arbitrum', 'arbitrum': 'arbitrum',
+  'op': 'optimism', 'optimism': 'optimism',
+  'inj': 'injective-protocol', 'injective': 'injective-protocol',
+  'sei': 'sei-network',
+  'pepe': 'pepe',
+  'wif': 'dogwifcoin', 'dogwifhat': 'dogwifcoin',
+  'bonk': 'bonk',
+  'floki': 'floki',
+  'render': 'render-token',
+  'fet': 'fetch-ai',
+  'grt': 'the-graph',
+  'aave': 'aave',
+  'mkr': 'maker', 'maker': 'maker',
+  'crv': 'curve-dao-token', 'curve': 'curve-dao-token',
+  'snx': 'synthetix-network-token', 'synthetix': 'synthetix-network-token',
+  'ldo': 'lido-dao', 'lido': 'lido-dao',
+  'ton': 'the-open-network', 'toncoin': 'the-open-network',
+  'trx': 'tron', 'tron': 'tron',
+  'hbar': 'hedera-hashgraph', 'hedera': 'hedera-hashgraph',
+  'kas': 'kaspa', 'kaspa': 'kaspa'
+};
+
+const COINGECKO_IMAGES = {
+  'bitcoin': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+  'ethereum': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+  'solana': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+  'binancecoin': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png',
+  'ripple': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+  'cardano': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+  'dogecoin': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+  'polkadot': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
+  'matic-network': 'https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png',
+  'shiba-inu': 'https://assets.coingecko.com/coins/images/11939/small/shiba.png',
+  'avalanche-2': 'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png',
+  'chainlink': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
+  'cosmos': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
+  'litecoin': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
+  'uniswap': 'https://assets.coingecko.com/coins/images/12504/small/uniswap-logo.png',
+  'pepe': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
+  'bonk': 'https://assets.coingecko.com/coins/images/28600/small/bonk.jpg',
+  'dogwifcoin': 'https://assets.coingecko.com/coins/images/33566/small/dogwifhat.jpg',
+  'the-open-network': 'https://assets.coingecko.com/coins/images/17980/small/ton_symbol.png'
+};
+
+// ═══════════════════════════════════════════
 // TRANSLATIONS
 // ═══════════════════════════════════════════
 const TRANSLATIONS = {
@@ -1526,6 +1593,197 @@ async function fetchRugcheck(addr) {
     if (!r.ok) return null;
     return await r.json();
   } catch(e) { return null; }
+}
+
+// ═══════════════════════════════════════════
+// COINGECKO API (Major cryptos)
+// ═══════════════════════════════════════════
+function detectMajorCrypto(query) {
+  const lower = query.toLowerCase().trim();
+  const cgId = COINGECKO_IDS[lower];
+  return cgId || null;
+}
+
+async function fetchCoinGecko(coinId) {
+  try {
+    const r = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&community_data=false&developer_data=false`, { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) return null;
+    const data = await r.json();
+    return {
+      id: data.id,
+      symbol: data.symbol?.toUpperCase() || '???',
+      name: data.name || coinId,
+      image: data.image?.small || COINGECKO_IMAGES[coinId] || '',
+      price: data.market_data?.current_price?.usd || 0,
+      marketCap: data.market_data?.market_cap?.usd || 0,
+      volume24h: data.market_data?.total_volume?.usd || 0,
+      change24h: data.market_data?.price_change_percentage_24h || 0,
+      change7d: data.market_data?.price_change_percentage_7d || 0,
+      change30d: data.market_data?.price_change_percentage_30d || 0,
+      ath: data.market_data?.ath?.usd || 0,
+      athChange: data.market_data?.ath_change_percentage?.usd || 0,
+      athDate: data.market_data?.ath_date?.usd || null,
+      atl: data.market_data?.atl?.usd || 0,
+      atlChange: data.market_data?.atl_change_percentage?.usd || 0,
+      high24h: data.market_data?.high_24h?.usd || 0,
+      low24h: data.market_data?.low_24h?.usd || 0,
+      circulatingSupply: data.market_data?.circulating_supply || 0,
+      totalSupply: data.market_data?.total_supply || 0,
+      maxSupply: data.market_data?.max_supply || null,
+      rank: data.market_cap_rank || 0,
+      categories: data.categories || [],
+      description: data.description?.en || '',
+      links: {
+        website: data.links?.homepage?.[0] || '',
+        twitter: data.links?.twitter_screen_name || '',
+        telegram: data.links?.telegram_channel_identifier || '',
+        reddit: data.links?.subreddit_url || ''
+      }
+    };
+  } catch(e) { 
+    console.error('CoinGecko error:', e);
+    return null; 
+  }
+}
+
+// ═══════════════════════════════════════════
+// ANALYZE COINGECKO DATA (Major cryptos)
+// ═══════════════════════════════════════════
+function analyzeCoinGecko(data) {
+  const price = data.price;
+  const mc = data.marketCap;
+  const vol = data.volume24h;
+  const chg24h = data.change24h;
+  const chg7d = data.change7d;
+  const chg30d = data.change30d;
+  const athChange = data.athChange;
+  const rank = data.rank;
+  
+  // Calculate bias
+  let bias = 'NEUTRAL';
+  let biasScore = 50;
+  
+  // Short term momentum
+  if (chg24h > 5) biasScore += 15;
+  else if (chg24h > 2) biasScore += 8;
+  else if (chg24h < -5) biasScore -= 15;
+  else if (chg24h < -2) biasScore -= 8;
+  
+  // Medium term trend
+  if (chg7d > 10) biasScore += 12;
+  else if (chg7d > 5) biasScore += 6;
+  else if (chg7d < -10) biasScore -= 12;
+  else if (chg7d < -5) biasScore -= 6;
+  
+  // Long term trend
+  if (chg30d > 20) biasScore += 10;
+  else if (chg30d < -20) biasScore -= 10;
+  
+  // ATH proximity (closer = more bullish sentiment)
+  if (athChange > -10) biasScore += 8;
+  else if (athChange > -25) biasScore += 4;
+  else if (athChange < -50) biasScore -= 5;
+  
+  // Volume strength
+  const vmr = mc > 0 ? vol / mc : 0;
+  if (vmr > 0.1) biasScore += 5;
+  else if (vmr < 0.02) biasScore -= 5;
+  
+  biasScore = Math.max(10, Math.min(90, biasScore));
+  
+  if (biasScore >= 65) bias = 'BULLISH';
+  else if (biasScore <= 35) bias = 'BEARISH';
+  
+  // Calculate confidence (higher for major cryptos with lots of data)
+  let confidence = 60;
+  if (rank <= 10) confidence += 15;
+  else if (rank <= 50) confidence += 10;
+  else if (rank <= 100) confidence += 5;
+  
+  if (vol > 1000000000) confidence += 10;
+  else if (vol > 100000000) confidence += 5;
+  
+  confidence = Math.min(92, confidence);
+  
+  // Price levels
+  const support1 = price * 0.95;
+  const support2 = price * 0.88;
+  const resistance1 = price * 1.05;
+  const resistance2 = price * 1.12;
+  
+  // Trade setup
+  const entry1 = price * 0.97;
+  const entry2 = price * 0.93;
+  const sl = price * 0.88;
+  const t1 = price * 1.10;
+  const t2 = price * 1.25;
+  const t3 = price * 1.50;
+  
+  // Scenarios
+  const bullPct = biasScore >= 60 ? 40 : biasScore >= 50 ? 30 : 20;
+  const basePct = 45;
+  const bearPct = 100 - bullPct - basePct;
+  
+  // Generate summary
+  let summary = `${data.name} (${data.symbol}) is ranked #${rank} with a market cap of $${fN(mc)}. `;
+  
+  if (chg24h > 5) summary += `Strong momentum with +${chg24h.toFixed(1)}% in 24h. `;
+  else if (chg24h < -5) summary += `Selling pressure with ${chg24h.toFixed(1)}% in 24h. `;
+  else summary += `Consolidating with ${chg24h > 0 ? '+' : ''}${chg24h.toFixed(1)}% in 24h. `;
+  
+  if (athChange > -15) summary += `Trading near ATH (${athChange.toFixed(1)}% from peak). `;
+  else if (athChange < -50) summary += `Significant discount from ATH (${athChange.toFixed(1)}%). `;
+  
+  if (chg7d > 10) summary += `Weekly trend is strongly bullish (+${chg7d.toFixed(1)}%). `;
+  else if (chg7d < -10) summary += `Weekly trend shows weakness (${chg7d.toFixed(1)}%). `;
+  
+  summary += `Volume at $${fN(vol)} indicates ${vmr > 0.05 ? 'healthy' : 'low'} market activity.`;
+  
+  return {
+    type: 'coingecko',
+    symbol: data.symbol,
+    name: data.name,
+    image: data.image,
+    chain: 'multi-chain',
+    rank: rank,
+    price: price,
+    marketCap: mc,
+    volume24h: vol,
+    change24h: chg24h,
+    change7d: chg7d,
+    change30d: chg30d,
+    high24h: data.high24h,
+    low24h: data.low24h,
+    ath: data.ath,
+    athChange: athChange,
+    athDate: data.athDate,
+    atl: data.atl,
+    atlChange: data.atlChange,
+    circulatingSupply: data.circulatingSupply,
+    totalSupply: data.totalSupply,
+    maxSupply: data.maxSupply,
+    bias: bias,
+    biasScore: biasScore,
+    confidence: confidence,
+    summary: summary,
+    support: [support1, support2],
+    resistance: [resistance1, resistance2],
+    tradeSetup: {
+      entry: `DCA zone: ${fP(entry1)} - ${fP(entry2)}`,
+      stopLoss: `Below ${fP(sl)} (-${((1 - sl/price) * 100).toFixed(0)}%)`,
+      targets: [
+        { timeframe: '1-2 weeks', price: fP(t1), probability: 45, gain: Math.round((t1/price - 1) * 100) },
+        { timeframe: '1-2 months', price: fP(t2), probability: 25, gain: Math.round((t2/price - 1) * 100) },
+        { timeframe: 'cycle top', price: fP(t3), probability: 12, gain: Math.round((t3/price - 1) * 100) }
+      ]
+    },
+    scenarios: {
+      bull: { pct: bullPct, target: fP(data.ath * 1.2), trigger: 'Break above resistance with volume' },
+      base: { pct: basePct, target: `${fP(support1)} - ${fP(resistance1)}`, trigger: 'Range-bound consolidation' },
+      bear: { pct: bearPct, target: fP(support2), trigger: 'Break below support on macro weakness' }
+    },
+    links: data.links
+  };
 }
 
 // ═══════════════════════════════════════════
@@ -2141,9 +2399,179 @@ function badgeHTML(text, colorClass) {
 }
 
 // ═══════════════════════════════════════════
+// RENDER COINGECKO ANALYSIS (Major Cryptos)
+// ═══════════════════════════════════════════
+function renderCoinGeckoAnalysis(data) {
+  const biasColor = data.bias==='BULLISH'?'green':data.bias==='BEARISH'?'red':'yellow';
+  const biasArrow = data.bias==='BULLISH'?'↗':data.bias==='BEARISH'?'↘':'—';
+  
+  let html = '';
+  
+  // ── TOKEN HEADER
+  html += `<div class="card">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+      ${data.image ? `<img src="${data.image}" style="width:52px;height:52px;border-radius:12px;object-fit:cover;background:var(--card-border)" onerror="this.style.display='none'">` : `<div style="width:52px;height:52px;border-radius:12px;background:var(--card-border);display:flex;align-items:center;justify-content:center;font-size:28px">🪙</div>`}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--cyan)">\$${esc(data.symbol)}</span>
+          <span style="padding:4px 10px;background:linear-gradient(135deg,var(--cyan-dim),var(--purple-dim,rgba(179,136,255,0.15)));border:1px solid var(--cyan);border-radius:6px;font-family:var(--mono);font-size:10px;color:var(--cyan);font-weight:700">RANK #${data.rank}</span>
+          ${data.links?.twitter ? `<a href="https://twitter.com/${data.links.twitter}" target="_blank" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--bg);border-radius:6px;text-decoration:none;color:var(--text);font-size:13px;transition:all .15s" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--text)'">𝕏</a>` : ''}
+          ${data.links?.website ? `<a href="${data.links.website}" target="_blank" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--bg);border-radius:6px;text-decoration:none;color:var(--text);font-size:13px;transition:all .15s" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--text)'">🌐</a>` : ''}
+        </div>
+        <div style="font-family:var(--sans);font-size:13px;color:var(--text3);margin-top:4px">${esc(data.name)} · Multi-Chain</div>
+      </div>
+    </div>
+    <div class="flex-between">
+      <div style="flex:1">
+        <div class="mb-10">${badgeHTML(biasArrow+' '+data.bias+' BIAS','badge-'+biasColor)}</div>
+        <p style="font-family:var(--sans);font-size:14px;line-height:1.65;color:var(--text);margin:0">${esc(data.summary)}</p>
+      </div>
+      <div style="margin-left:20px">${gaugeHTML(data.confidence)}</div>
+    </div>
+  </div>`;
+
+  // ── LIVE DATA
+  html += `<div class="card">
+    <div class="sec-title"><span class="sec-icon">📊</span> LIVE MARKET DATA</div>
+    <div class="grid-3" style="gap:8px">
+      ${[
+        {l:'PRICE',v:fP(data.price),c:'#fff'},
+        {l:'MARKET CAP',v:'$'+fN(data.marketCap),c:'var(--purple)'},
+        {l:'VOLUME 24H',v:'$'+fN(data.volume24h),c:'var(--cyan)'},
+        {l:'RANK',v:'#'+data.rank,c:'var(--yellow)'},
+        {l:'ATH',v:fP(data.ath),c:'var(--green)'},
+        {l:'FROM ATH',v:(data.athChange>0?'+':'')+data.athChange.toFixed(1)+'%',c:data.athChange>-20?'var(--green)':'var(--red)'},
+      ].map(m => `
+        <div style="background:var(--bg);border-radius:6px;padding:10px;border-left:2px solid ${m.c}">
+          <div style="font-family:var(--mono);font-size:7px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:4px">${m.l}</div>
+          <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${m.c}">${m.v}</div>
+        </div>`).join('')}
+    </div>
+    <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+      ${[
+        {l:'24H',v:data.change24h},
+        {l:'7D',v:data.change7d},
+        {l:'30D',v:data.change30d}
+      ].map(p => {
+        const v = parseFloat(p.v)||0;
+        const c = v>=0?'var(--green)':'var(--red)';
+        return `<div style="background:var(--bg);border-radius:6px;padding:10px 14px;flex:1;min-width:70px;text-align:center">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">${p.l}</div>
+          <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:${c}">${v>=0?'+':''}${v.toFixed(1)}%</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+      <a href="https://www.coingecko.com/en/coins/${data.symbol.toLowerCase()}" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--green);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600">🦎 COINGECKO</a>
+      <a href="https://www.tradingview.com/symbols/${data.symbol}USD/" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--cyan);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600">📈 TRADINGVIEW</a>
+      <a href="https://coinmarketcap.com/currencies/${data.name.toLowerCase().replace(/\s+/g,'-')}/" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--purple);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600">📊 CMC</a>
+    </div>
+  </div>`;
+
+  // ── SUPPLY INFO
+  html += `<div class="card">
+    <div class="sec-title"><span class="sec-icon">💎</span> SUPPLY METRICS</div>
+    <div class="grid-3" style="gap:8px">
+      ${[
+        {l:'CIRCULATING',v:fN(data.circulatingSupply),c:'var(--cyan)'},
+        {l:'TOTAL SUPPLY',v:fN(data.totalSupply),c:'var(--purple)'},
+        {l:'MAX SUPPLY',v:data.maxSupply ? fN(data.maxSupply) : '∞',c:'var(--yellow)'},
+      ].map(m => `
+        <div style="background:var(--bg);border-radius:6px;padding:10px;border-left:2px solid ${m.c}">
+          <div style="font-family:var(--mono);font-size:7px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:4px">${m.l}</div>
+          <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${m.c}">${m.v}</div>
+        </div>`).join('')}
+    </div>
+    ${data.maxSupply && data.circulatingSupply ? `
+    <div style="margin-top:12px;background:var(--bg);border-radius:8px;padding:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">SUPPLY PROGRESS</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--cyan)">${((data.circulatingSupply/data.maxSupply)*100).toFixed(1)}%</span>
+      </div>
+      <div style="height:8px;background:var(--card-border);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${Math.min(100,(data.circulatingSupply/data.maxSupply)*100)}%;background:linear-gradient(90deg,var(--cyan),var(--green))"></div>
+      </div>
+    </div>` : ''}
+  </div>`;
+
+  // ── TRADE SETUP
+  if (data.tradeSetup) {
+    html += `<div class="card">
+      <div class="sec-title"><span class="sec-icon">🎯</span> ${t('tradeSetup')}</div>
+      <div class="grid-2" style="gap:10px;margin-bottom:12px">
+        <div class="zone-box zone-green">
+          <div class="zone-label" style="color:var(--green)">${t('entryPrice')}</div>
+          <div class="zone-val">${data.tradeSetup.entry}</div>
+        </div>
+        <div class="zone-box zone-red">
+          <div class="zone-label" style="color:var(--red)">${t('stopLoss')}</div>
+          <div class="zone-val">${data.tradeSetup.stopLoss}</div>
+        </div>
+      </div>
+      <div class="sec-title" style="margin-top:16px;margin-bottom:10px"><span class="sec-icon">🎯</span> ${t('priceTargets')}</div>
+      ${data.tradeSetup.targets.map(tg => `
+        <div class="target-row">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase">${tg.timeframe}</span>
+          <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green)">${tg.price}</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--cyan)">+${tg.gain}%</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${tg.probability}%</span>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  // ── SCENARIOS
+  if (data.scenarios) {
+    html += `<div class="card">
+      <div class="sec-title"><span class="sec-icon">📊</span> ${t('scenarioProb')}</div>
+      <div class="grid-3" style="gap:10px">
+        <div class="scenario-box" style="border-color:var(--green)">
+          <div class="scenario-label">${t('bullCase')}</div>
+          <div class="scenario-value" style="color:var(--green)">${data.scenarios.bull.pct}%</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px">→ ${data.scenarios.bull.target}</div>
+        </div>
+        <div class="scenario-box" style="border-color:var(--yellow)">
+          <div class="scenario-label">${t('baseCase')}</div>
+          <div class="scenario-value" style="color:var(--yellow)">${data.scenarios.base.pct}%</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px">→ ${data.scenarios.base.target}</div>
+        </div>
+        <div class="scenario-box" style="border-color:var(--red)">
+          <div class="scenario-label">${t('bearCase')}</div>
+          <div class="scenario-value" style="color:var(--red)">${data.scenarios.bear.pct}%</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px">→ ${data.scenarios.bear.target}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ── SUPPORT/RESISTANCE
+  if (data.support?.length && data.resistance?.length) {
+    html += `<div class="card">
+      <div class="sec-title"><span class="sec-icon">📏</span> KEY LEVELS</div>
+      <div class="grid-2" style="gap:12px">
+        <div class="sr-box sr-green">
+          <div class="sr-label" style="color:var(--green)">${t('support')}</div>
+          ${data.support.map(s => `<div class="sr-item"><span style="color:var(--green);margin-right:6px">▸</span>${fP(s)}</div>`).join('')}
+        </div>
+        <div class="sr-box sr-red">
+          <div class="sr-label" style="color:var(--red)">${t('resistance')}</div>
+          ${data.resistance.map(r => `<div class="sr-item"><span style="color:var(--red);margin-right:6px">▸</span>${fP(r)}</div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  return html;
+}
+
+// ═══════════════════════════════════════════
 // RENDER FULL ANALYSIS CARD
 // ═══════════════════════════════════════════
 function renderAnalysis(data) {
+  // ═══ COINGECKO RENDER (Major Cryptos) ═══
+  if (data.type === 'coingecko') {
+    return renderCoinGeckoAnalysis(data);
+  }
+  
   const biasColor = data.bias==='BULLISH'?'green':data.bias==='BEARISH'?'red':'yellow';
   const biasArrow = data.bias==='BULLISH'?'↗':data.bias==='BEARISH'?'↘':'—';
   const legScore = data.legitimacyScore;
@@ -2381,6 +2809,10 @@ function renderMessages() {
         <div class="welcome-title">DEXSCREENER AI</div>
         <div class="welcome-sub">${t('tokenIntelligence')}</div>
         <div class="quick-tokens">
+          <button class="quick-btn" onclick="quickAnalyze('BTC')"><img src="https://assets.coingecko.com/coins/images/1/small/bitcoin.png" onerror="this.style.display='none'"><span>BTC</span></button>
+          <button class="quick-btn" onclick="quickAnalyze('ETH')"><img src="https://assets.coingecko.com/coins/images/279/small/ethereum.png" onerror="this.style.display='none'"><span>ETH</span></button>
+          <button class="quick-btn" onclick="quickAnalyze('SOL')"><img src="https://assets.coingecko.com/coins/images/4128/small/solana.png" onerror="this.style.display='none'"><span>SOL</span></button>
+          <button class="quick-btn" onclick="quickAnalyze('BNB')"><img src="https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png" onerror="this.style.display='none'"><span>BNB</span></button>
           <button class="quick-btn" onclick="quickAnalyze('DOGE')"><img src="https://assets.coingecko.com/coins/images/5/small/dogecoin.png" onerror="this.style.display='none'"><span>DOGE</span></button>
           <button class="quick-btn" onclick="quickAnalyze('PEPE')"><img src="https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg" onerror="this.style.display='none'"><span>PEPE</span></button>
         </div>
@@ -2482,6 +2914,34 @@ async function sendQuery(query) {
       isLoading = false;
       renderMessages();
       return;
+    }
+
+    // ═══ CHECK IF IT'S A MAJOR CRYPTO (CoinGecko) ═══
+    const cgId = detectMajorCrypto(query);
+    if (cgId && !detectAddress(query)) {
+      const cgData = await fetchCoinGecko(cgId);
+      if (cgData) {
+        hideLoading();
+        const analysis = analyzeCoinGecko(cgData);
+        c.messages.push({ role: 'assistant', analysis });
+        
+        // Save for follow-up questions
+        lastAnalyzedToken = {
+          symbol: cgData.symbol,
+          name: cgData.name,
+          price: cgData.price,
+          marketCap: cgData.marketCap,
+          liquidity: 0,
+          volume24h: cgData.volume24h,
+          priceChange24h: cgData.change24h,
+          chain: 'multi-chain',
+          address: cgId
+        };
+        
+        isLoading = false;
+        renderMessages();
+        return;
+      }
     }
 
     // Check if it's a contract address
