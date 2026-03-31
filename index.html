@@ -1104,13 +1104,13 @@ body {
 .nav-result-btns {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 .nav-result-btn {
-  padding: 6px 10px;
-  border-radius: 6px;
+  padding: 5px 8px;
+  border-radius: 5px;
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
@@ -1124,6 +1124,15 @@ body {
 }
 .nav-result-btn-analyze:hover {
   background: var(--cyan);
+  color: #000;
+}
+.nav-result-btn-chart {
+  background: var(--green-dim);
+  border-color: var(--green);
+  color: var(--green);
+}
+.nav-result-btn-chart:hover {
+  background: var(--green);
   color: #000;
 }
 .nav-result-btn-ai {
@@ -5798,6 +5807,7 @@ async function searchNav(query) {
       const safeSymbol = symbol.replace(/'/g, "\\'").replace(/"/g, '&quot;');
       const safeLogo = logo.replace(/'/g, "\\'").replace(/"/g, '&quot;');
       const safeDesc = description.replace(/[\n\r]/g, ' ').replace(/'/g, "\\'").replace(/"/g, '&quot;').slice(0, 200);
+      const pairAddr = pair.pairAddress || '';
       
       html += `<div class="nav-result-item">
         <div class="nav-result-logo">
@@ -5818,6 +5828,7 @@ async function searchNav(query) {
         </div>
         <div class="nav-result-btns">
           <button class="nav-result-btn nav-result-btn-analyze" onclick="event.stopPropagation(); analyzeFromNav('${addr}','${chain}')">🔍 Analyze</button>
+          <button class="nav-result-btn nav-result-btn-chart" onclick="event.stopPropagation(); chartFromNav('${safeSymbol}','${chain}','${pairAddr}')">📊 Chart</button>
           <button class="nav-result-btn nav-result-btn-ai" onclick="event.stopPropagation(); aiFromNav({symbol:'${safeSymbol}',chain:'${chain}',address:'${addr}',logo:'${safeLogo}',price:${price},mc:${mc},liq:${liq},vol24h:${vol24h},buyRatio:${buyRatio},chg24h:${chg24h},description:'${safeDesc}'})">🤖 AI</button>
         </div>
       </div>`;
@@ -5835,6 +5846,18 @@ function analyzeFromNav(addr, chain) {
   clearNavSearch();
   document.getElementById('inputBox').value = addr;
   sendFromInput();
+}
+
+function chartFromNav(symbol, chain, pairAddress) {
+  clearNavSearch();
+  const c = conversations.find(x => x.id === activeId);
+  c.messages.push({ role: 'user', content: `📊 Show chart for $${symbol}` });
+  c.messages.push({ role: 'assistant', html: renderChart(symbol, chain, pairAddress) });
+  c.title = `📊 Chart: $${symbol}`;
+  renderSidebar();
+  renderMessages();
+  updateTopbar();
+  scrollToLastUserMessage();
 }
 
 function aiFromNav(tokenData) {
