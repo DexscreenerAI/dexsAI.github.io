@@ -1575,19 +1575,9 @@ body {
       <!-- Filled by JS -->
     </div>
     <div class="ai-popup-grid">
-      <button class="ai-opt-btn" onclick="handleAIOption('insight')">
-        <span class="ai-opt-icon">🤖</span>
-        <span class="ai-opt-label">AI INSIGHT</span>
-        <span class="ai-opt-desc">Why pumping? Risks?</span>
-      </button>
-      <button class="ai-opt-btn" onclick="handleAIOption('deep')">
-        <span class="ai-opt-icon">🧠</span>
-        <span class="ai-opt-label">DEEP ANALYSIS</span>
-        <span class="ai-opt-desc">Full tokenomics review</span>
-      </button>
-      <button class="ai-opt-btn" onclick="handleAIOption('trending')">
+      <button class="ai-opt-btn" onclick="handleAIOption('pumping')">
         <span class="ai-opt-icon">💡</span>
-        <span class="ai-opt-label">WHY TRENDING?</span>
+        <span class="ai-opt-label">WHY PUMPING?</span>
         <span class="ai-opt-desc">Narrative & catalysts</span>
       </button>
       <button class="ai-opt-btn" onclick="handleAIOption('strategy')">
@@ -1600,9 +1590,9 @@ body {
         <span class="ai-opt-label">QUICK TAKE</span>
         <span class="ai-opt-desc">Buy / Wait / Avoid</span>
       </button>
-      <button class="ai-opt-btn" onclick="handleAIOption('potential')">
+      <button class="ai-opt-btn" onclick="handleAIOption('target')">
         <span class="ai-opt-icon">🔮</span>
-        <span class="ai-opt-label">POTENTIAL</span>
+        <span class="ai-opt-label">TARGET</span>
         <span class="ai-opt-desc">2x? 10x? Or rug?</span>
       </button>
     </div>
@@ -4764,17 +4754,7 @@ Token Age: ${token.ageHours ? (token.ageHours < 24 ? token.ageHours + ' hours' :
 
   // Build prompt based on type
   const prompts = {
-    insight: `${context}\n\nGive me a quick 2-3 sentence AI insight. Why is this token interesting or pumping? What's the main risk to watch?`,
-    
-    deep: `${context}\n\nProvide a deep analysis covering:
-1. Tokenomics assessment (supply, distribution if available)
-2. Red flags or concerns
-3. Positive indicators
-4. Holder behavior if data available
-5. Overall risk rating (1-10)
-Keep it concise but thorough.`,
-    
-    trending: `${context}\n\nExplain WHY this token might be trending:
+    pumping: `${context}\n\nExplain WHY this token is pumping or trending:
 - What narrative or sector is it part of?
 - Any recent catalysts?
 - Whale activity indicators?
@@ -4792,7 +4772,7 @@ Keep it concise but thorough.`,
     quick: `${context}\n\nGive me a ONE WORD verdict: BUY, WAIT, or AVOID.
 Then ONE sentence explaining why. Be direct and decisive.`,
     
-    potential: `${context}\n\nEstimate the realistic potential:
+    target: `${context}\n\nEstimate the realistic price targets:
 - Can this 2x from here? Why/why not?
 - Is 5x-10x possible? Under what conditions?
 - Rug risk assessment (Low/Medium/High)
@@ -4801,12 +4781,10 @@ Be realistic, not hopeful.`
   };
   
   const typeLabels = {
-    insight: '🤖 AI Insight',
-    deep: '🧠 Deep Analysis',
-    trending: '💡 Why Trending?',
+    pumping: '💡 Why Pumping?',
     strategy: '🎯 AI Strategy',
     quick: '⚡ Quick Take',
-    potential: '🔮 Potential'
+    target: '🔮 Target'
   };
   
   // Show user message
