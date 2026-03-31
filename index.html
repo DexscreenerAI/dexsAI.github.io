@@ -6156,324 +6156,77 @@ async function handleTrending() {
 }
 
 // ═══════════════════════════════════════════
-// 💎 HANDLE GEMS (HIDDEN GEMS)
+// 💎 HANDLE GEMS (IS THIS TOKEN A GEM?)
 // ═══════════════════════════════════════════
 async function handleGems() {
   if (isLoading) return;
-  isLoading = true;
   
   const c = conversations.find(x => x.id === activeId);
-  c.title = '💎 Hidden Gems';
-  c.messages.push({ role: 'user', content: '💎 Find me hidden gems' });
   
-  renderSidebar();
+  // Check if we have a token in memory
+  if (!lastAnalyzedToken || !lastAnalyzedToken.symbol) {
+    c.messages.push({ role: 'user', content: '💎 Is this a gem?' });
+    c.messages.push({ role: 'assistant', content: '💎 **No token in memory**\n\nSend me a contract address first, then I\'ll tell you if it\'s a potential gem!' });
+    renderMessages();
+    return;
+  }
+  
+  isLoading = true;
+  
+  const t = lastAnalyzedToken;
+  c.messages.push({ role: 'user', content: `💎 Is $${t.symbol} a gem?` });
   renderMessages();
-  updateTopbar();
-  showLoading('Scanning multiple sources...');
+  showLoading('Analyzing gem potential...');
   
   try {
-    // ═══ PHASE 1: Multiple parallel searches ═══
-    const [latestTokens, boostedTokens, trendingSearch] = await Promise.allSettled([
-      // Source 1: Latest token profiles (newest tokens)
-      fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(10000) })
-        .then(r => r.json()).catch(() => []),
-      
-      // Source 2: Top boosted tokens (actively promoted)
-      fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(10000) })
-        .then(r => r.json()).catch(() => []),
-      
-      // Source 3: Search for potential gems keywords
-      fetch('https://api.dexscreener.com/latest/dex/search?q=moon', { signal: AbortSignal.timeout(10000) })
-        .then(r => r.json()).then(d => d.pairs || []).catch(() => [])
-    ]);
-    
-    showLoading('Processing candidates...');
-    
-    // Combine all sources
-    const allCandidates = [];
-    const seen = new Set();
-    
-    // Process latest tokens
-    const latest = latestTokens.status === 'fulfilled' ? latestTokens.value : [];
-    for (const t of (latest || []).slice(0, 20)) {
-      if (t.tokenAddress && !seen.has(t.tokenAddress)) {
-        seen.add(t.tokenAddress);
-        allCandidates.push({ address: t.tokenAddress, chain: t.chainId, source: 'new', icon: t.icon, desc: t.description });
-      }
-    }
-    
-    // Process boosted tokens
-    const boosted = boostedTokens.status === 'fulfilled' ? boostedTokens.value : [];
-    for (const t of (boosted || []).slice(0, 15)) {
-      if (t.tokenAddress && !seen.has(t.tokenAddress)) {
-        seen.add(t.tokenAddress);
-        allCandidates.push({ address: t.tokenAddress, chain: t.chainId, source: 'boosted', icon: t.icon, boostAmount: t.amount });
-      }
-    }
-    
-    // Process trending search
-    const trending = trendingSearch.status === 'fulfilled' ? trendingSearch.value : [];
-    for (const p of (trending || []).slice(0, 15)) {
-      const addr = p.baseToken?.address;
-      if (addr && !seen.has(addr) && ['solana', 'ethereum', 'base', 'bsc'].includes(p.chainId)) {
-        seen.add(addr);
-        allCandidates.push({ address: addr, chain: p.chainId, source: 'trending', pair: p });
-      }
-    }
-    
-    showLoading(`Analyzing ${allCandidates.length} tokens...`);
-    
-    // ═══ PHASE 2: Enrich with DexScreener data ═══
-    const enriched = [];
-    const validChains = ['solana', 'ethereum', 'base', 'bsc', 'arbitrum', 'polygon'];
-    
-    for (const cand of allCandidates.slice(0, 30)) {
-      try {
-        if (!validChains.includes(cand.chain)) continue;
-        
-        let pair = cand.pair;
-        if (!pair) {
-          const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cand.address}`, { signal: AbortSignal.timeout(4000) });
-          const dexData = await dexRes.json();
-          if (dexData.pairs && dexData.pairs.length > 0) {
-            pair = dexData.pairs.sort((a, b) => (parseFloat(b.liquidity?.usd) || 0) - (parseFloat(a.liquidity?.usd) || 0))[0];
-          }
-        }
-        
-        if (!pair) continue;
-        
-        const buys = pair.txns?.h24?.buys || 0;
-        const sells = pair.txns?.h24?.sells || 0;
-        const total = buys + sells;
-        const buyRatio = total > 0 ? buys / total : 0.5;
-        const liq = parseFloat(pair.liquidity?.usd) || 0;
-        const vol = parseFloat(pair.volume?.h24) || 0;
-        const mc = parseFloat(pair.marketCap) || 0;
-        const chg24h = parseFloat(pair.priceChange?.h24) || 0;
-        const chg1h = parseFloat(pair.priceChange?.h1) || 0;
-        const chg5m = parseFloat(pair.priceChange?.m5) || 0;
-        const age = pair.pairCreatedAt ? (Date.now() - new Date(pair.pairCreatedAt).getTime()) / 3600000 : 999;
-        
-        // ═══ GEM FILTERS ═══
-        if (mc > 10000000) continue; // Max 10M MC
-        if (mc < 5000) continue; // Min 5K MC (filter dead tokens)
-        if (liq < 3000) continue; // Min 3K liquidity
-        if (buyRatio < 0.40) continue; // At least 40% buyers
-        
-        // ═══ GEM SCORE ═══
-        let gemScore = 0;
-        
-        // Buy pressure (max 30)
-        gemScore += Math.min(30, buyRatio * 40);
-        
-        // Sweet spot MC (max 25)
-        if (mc >= 50000 && mc <= 500000) gemScore += 25;
-        else if (mc >= 500000 && mc <= 2000000) gemScore += 15;
-        else if (mc >= 10000 && mc < 50000) gemScore += 10;
-        
-        // Liquidity strength (max 15)
-        if (liq > 50000) gemScore += 15;
-        else if (liq > 20000) gemScore += 10;
-        else if (liq > 10000) gemScore += 5;
-        
-        // Momentum (max 15)
-        if (chg1h > 5 && chg1h < 100) gemScore += 8;
-        if (chg24h > 10 && chg24h < 300) gemScore += 7;
-        
-        // Freshness (max 10)
-        if (age < 24) gemScore += 10;
-        else if (age < 72) gemScore += 5;
-        
-        // Activity (max 10)
-        if (total > 500) gemScore += 10;
-        else if (total > 100) gemScore += 5;
-        
-        // Source bonus
-        if (cand.source === 'boosted') gemScore += 5;
-        if (cand.source === 'new') gemScore += 3;
-        
-        // Rugcheck for Solana
-        let rugStatus = 'unknown';
-        let rugRisks = [];
-        if (pair.chainId === 'solana') {
-          try {
-            const rugRes = await fetch(`https://api.rugcheck.xyz/v1/tokens/${cand.address}/report/summary`, { signal: AbortSignal.timeout(3000) });
-            const rug = await rugRes.json();
-            rugRisks = rug.risks || [];
-            if (rug.mintAuthority) gemScore -= 15;
-            if (rug.freezeAuthority) gemScore -= 10;
-            rugStatus = rugRisks.length === 0 ? 'good' : rugRisks.length <= 2 ? 'warning' : 'danger';
-          } catch(e) {}
-        }
-        
-        enriched.push({
-          symbol: pair.baseToken?.symbol || '???',
-          name: pair.baseToken?.name || '',
-          chain: pair.chainId || 'unknown',
-          price: parseFloat(pair.priceUsd) || 0,
-          mc, liq, vol, chg24h, chg1h, chg5m,
-          vol24h: vol,
-          buyRatio: Math.round(buyRatio * 100),
-          buys, sells,
-          age: Math.round(age),
-          ageHours: Math.round(age),
-          gemScore: Math.round(gemScore),
-          rugStatus, rugRisks,
-          source: cand.source,
-          logo: pair.info?.imageUrl || cand.icon || '',
-          address: pair.baseToken?.address || cand.address,
-          pairAddress: pair.pairAddress,
-          twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || '',
-          website: pair.info?.websites?.[0]?.url || '',
-          telegram: pair.info?.socials?.find(s => s.type === 'telegram')?.url || '',
-          description: cand.desc || pair.info?.description || ''
-        });
-        
-      } catch(e) { /* skip */ }
-    }
-    
-    // Sort by gem score
-    enriched.sort((a, b) => b.gemScore - a.gemScore);
-    const topGems = enriched.slice(0, 6);
-    
-    if (topGems.length === 0) {
-      hideLoading();
-      c.messages.push({ role: 'assistant', text: '💎 No hidden gems found matching our criteria right now.\n\nFilters: MC $5K-$10M • Liquidity > $3K • Buy ratio > 40%\n\nTry again later — new tokens launch constantly!' });
-      isLoading = false;
-      renderMessages();
-      return;
-    }
-    
-    // ═══ PHASE 3: AI Analysis ═══
-    showLoading('AI analyzing top picks...');
-    
-    const gemsContext = topGems.map((g, i) => `
-${i+1}. $${g.symbol} (${g.chain})
-   MC: $${fN(g.mc)} | Liq: $${fN(g.liq)} | Vol24h: $${fN(g.vol24h)}
-   24h: ${g.chg24h > 0 ? '+' : ''}${g.chg24h.toFixed(1)}% | 1h: ${g.chg1h > 0 ? '+' : ''}${g.chg1h.toFixed(1)}%
-   Buy Ratio: ${g.buyRatio}% | Age: ${g.ageHours}h | Score: ${g.gemScore}
-   Source: ${g.source} | Rug: ${g.rugStatus}
-   ${g.description ? `Desc: ${g.description.slice(0, 100)}` : ''}`).join('\n');
-    
-    let aiAnalysis = null;
-    try {
-      const aiPrompt = `You are a crypto gem hunter. Analyze these potential gems and give a SHORT verdict for each (1-2 sentences max per token).
+    const tokenContext = `
+Token: $${t.symbol} (${t.chain})
+Price: ${fP(t.price)}
+Market Cap: $${fN(t.marketCap || 0)}
+Liquidity: $${fN(t.liquidity || 0)}
+Volume 24h: $${fN(t.volume24h || 0)}
+Price Change 1h: ${t.priceChange1h > 0 ? '+' : ''}${(t.priceChange1h || 0).toFixed(1)}%
+Price Change 24h: ${t.priceChange24h > 0 ? '+' : ''}${(t.priceChange24h || 0).toFixed(1)}%
+Buys 24h: ${t.buys24h || 0}
+Sells 24h: ${t.sells24h || 0}
+Buy Ratio: ${t.buys24h && t.sells24h ? Math.round((t.buys24h / (t.buys24h + t.sells24h)) * 100) : 50}%
+Rug Status: ${t.rugData?.status || 'unknown'}
+${t.rugData?.risks?.length ? 'Risks: ' + t.rugData.risks.map(r => r.name).join(', ') : ''}`;
 
-${gemsContext}
+    const prompt = `You are a crypto gem hunter. Analyze this token and tell me if it's a potential GEM or not.
 
-For each token, rate: 🟢 HIGH POTENTIAL / 🟡 MODERATE / 🔴 RISKY
-Focus on: buy pressure, liquidity ratio, momentum, red flags.
-Be brutally honest. Format: "$SYMBOL: [emoji] verdict"
-End with your TOP PICK and why (1 sentence).`;
+${tokenContext}
 
-      const aiRes = await askAI(aiPrompt, { gems: true });
-      if (aiRes && aiRes.answer) {
-        aiAnalysis = aiRes.answer;
-      }
-    } catch(e) {
-      console.log('AI analysis failed:', e);
-    }
-    
+GEM CRITERIA:
+- Market Cap: Sweet spot $30K-$500K (early), acceptable up to $5M
+- Liquidity: At least $3K, ratio to MC > 5% is good
+- Buy Pressure: > 50% is bullish, > 60% is very bullish
+- Momentum: Positive 1h and 24h changes
+- Safety: No major rug risks
+
+Give your verdict:
+🟢 POTENTIAL GEM - if it meets most criteria
+🟡 MAYBE - if mixed signals
+🔴 NOT A GEM - if too risky or doesn't fit
+
+Be DIRECT and SHORT (3-4 sentences max). Explain WHY with specific numbers.`;
+
+    const aiRes = await askAI(prompt);
     hideLoading();
-    c.messages.push({ role: 'assistant', html: renderGemsWithAI(topGems, aiAnalysis) });
+    
+    if (aiRes && aiRes.answer) {
+      c.messages.push({ role: 'assistant', content: `💎 **GEM ANALYSIS: $${t.symbol}**\n\n${aiRes.answer}` });
+    } else {
+      c.messages.push({ role: 'assistant', content: `💎 Could not analyze gem potential. Try again!` });
+    }
     
   } catch (err) {
     hideLoading();
-    c.messages.push({ role: 'assistant', text: '❌ Error searching for gems: ' + err.message });
+    c.messages.push({ role: 'assistant', content: `❌ Error analyzing gem potential: ${err.message}` });
   }
   
   isLoading = false;
   renderMessages();
-  scrollToLastUserMessage();
-}
-
-function renderGemsWithAI(gems, aiAnalysis) {
-  let html = `<div class="card" style="border-left:3px solid var(--cyan)">
-    <div class="sec-title"><span class="sec-icon">💎</span> HIDDEN GEMS SCANNER</div>
-    <p style="font-size:12px;color:var(--text2);margin:0 0 16px 0">
-      Scanned <strong>3 sources</strong> • Analyzed <strong>${gems.length} candidates</strong> • Filtered by MC, liquidity & buy pressure
-    </p>
-  </div>`;
-  
-  // Render each gem
-  gems.forEach((g, i) => {
-    const rank = i + 1;
-    const mcColor = g.mc < 500000 ? 'var(--green)' : g.mc < 2000000 ? 'var(--cyan)' : 'var(--yellow)';
-    const chgColor = g.chg24h >= 0 ? 'var(--green)' : 'var(--red)';
-    const buyColor = g.buyRatio >= 60 ? 'var(--green)' : g.buyRatio >= 50 ? 'var(--cyan)' : 'var(--yellow)';
-    const rugIcon = g.rugStatus === 'good' ? '✅' : g.rugStatus === 'warning' ? '⚠️' : g.rugStatus === 'danger' ? '🔴' : '❓';
-    const sourceIcon = g.source === 'boosted' ? '🚀' : g.source === 'new' ? '🆕' : '📈';
-    
-    html += `<div class="card" style="margin-bottom:10px;position:relative">
-      <div style="position:absolute;top:12px;right:12px;display:flex;gap:6px;align-items:center">
-        <span style="font-size:10px;color:var(--text3)">${sourceIcon} ${g.source}</span>
-        <span style="background:linear-gradient(135deg,var(--cyan),#a855f7);color:#000;font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px">SCORE ${g.gemScore}</span>
-      </div>
-      
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <div style="width:44px;height:44px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--cyan);overflow:hidden">
-          ${g.logo ? `<img src="${g.logo}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML='${g.symbol.charAt(0)}'">` : g.symbol.charAt(0)}
-        </div>
-        <div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-family:var(--mono);font-size:16px;font-weight:700;color:#fff">$${esc(g.symbol)}</span>
-            <span style="font-size:9px;padding:2px 6px;background:var(--bg3);border-radius:4px;color:var(--text2)">${g.chain}</span>
-            ${g.ageHours < 24 ? '<span style="font-size:8px;padding:2px 5px;background:var(--green-dim);border:1px solid var(--green);border-radius:3px;color:var(--green)">NEW</span>' : ''}
-          </div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">${esc(g.name.slice(0, 30))}</div>
-        </div>
-      </div>
-      
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
-        <div style="background:var(--bg);padding:8px;border-radius:6px;text-align:center">
-          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">MCAP</div>
-          <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:${mcColor}">$${fN(g.mc)}</div>
-        </div>
-        <div style="background:var(--bg);padding:8px;border-radius:6px;text-align:center">
-          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">LIQ</div>
-          <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text)">$${fN(g.liq)}</div>
-        </div>
-        <div style="background:var(--bg);padding:8px;border-radius:6px;text-align:center">
-          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">24H</div>
-          <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:${chgColor}">${g.chg24h > 0 ? '+' : ''}${g.chg24h.toFixed(1)}%</div>
-        </div>
-        <div style="background:var(--bg);padding:8px;border-radius:6px;text-align:center">
-          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">BUYERS</div>
-          <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:${buyColor}">${g.buyRatio}%</div>
-        </div>
-      </div>
-      
-      <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--card-border)">
-        <div style="display:flex;gap:8px;align-items:center">
-          <span style="font-size:11px;color:var(--text2)">${rugIcon} Rug: ${g.rugStatus}</span>
-          <span style="font-size:11px;color:var(--text3)">•</span>
-          <span style="font-size:11px;color:var(--text2)">Vol: $${fN(g.vol24h)}</span>
-          <span style="font-size:11px;color:var(--text3)">•</span>
-          <span style="font-size:11px;color:var(--text2)">${g.ageHours}h old</span>
-        </div>
-        <div style="display:flex;gap:6px">
-          <button onclick="analyzeFromNav('${g.address}','${g.chain}')" style="background:var(--bg3);border:1px solid var(--card-border);border-radius:6px;padding:5px 10px;font-size:10px;color:var(--text);cursor:pointer;font-family:var(--mono)">🔍 Analyze</button>
-          <button onclick="chartFromNav('${g.symbol}','${g.chain}','${g.pairAddress}')" style="background:var(--bg3);border:1px solid var(--card-border);border-radius:6px;padding:5px 10px;font-size:10px;color:var(--text);cursor:pointer;font-family:var(--mono)">📊 Chart</button>
-          <button onclick="aiFromNav({symbol:'${g.symbol}',chain:'${g.chain}',address:'${g.address}',price:${g.price},mc:${g.mc},liq:${g.liq},vol24h:${g.vol24h},buyRatio:${g.buyRatio},chg24h:${g.chg24h}})" style="background:linear-gradient(135deg,#a855f7,var(--cyan));border:none;border-radius:6px;padding:5px 10px;font-size:10px;color:#000;cursor:pointer;font-family:var(--mono);font-weight:600">🤖 AI</button>
-        </div>
-      </div>
-    </div>`;
-  });
-  
-  // AI Analysis section
-  if (aiAnalysis) {
-    html += `<div class="card" style="border-left:3px solid #a855f7;margin-top:12px">
-      <div class="sec-title"><span class="sec-icon">🤖</span> AI ANALYSIS</div>
-      <div style="font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap">${esc(aiAnalysis)}</div>
-    </div>`;
-  }
-  
-  // Disclaimer
-  html += `<div style="text-align:center;padding:12px;margin-top:8px">
-    <span style="font-size:10px;color:var(--text3)">⚠️ DYOR — This is not financial advice. Always verify on-chain data before investing.</span>
-  </div>`;
-  
-  return html;
 }
 
 // ═══════════════════════════════════════════
@@ -7035,11 +6788,47 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ═══════════════════════════════════════════
-// AUTO-ANALYZE FROM URL PARAMETER
+// AUTO-ANALYZE FROM URL PARAMETER OR LOCALSTORAGE
 // ═══════════════════════════════════════════
-(function checkURLParams() {
+(function checkPendingAnalysis() {
+  // Check localStorage first (from gems.html or compare.html)
+  const pending = localStorage.getItem('pendingAnalysis');
+  if (pending) {
+    try {
+      const data = JSON.parse(pending);
+      localStorage.removeItem('pendingAnalysis'); // Clear it
+      
+      // Action: Show Chart
+      if (data.action === 'chart' && data.pairAddress) {
+        setTimeout(() => {
+          renderChart(data.symbol || 'TOKEN', data.chain || 'solana', data.pairAddress);
+          addMessage(`📊 Chart loaded for $${data.symbol || 'TOKEN'}`, 'bot');
+        }, 500);
+        return;
+      }
+      
+      // Action: Analyze (default)
+      if (data.address) {
+        setTimeout(() => {
+          const input = document.getElementById('inputBox');
+          if (input) {
+            input.value = data.address;
+            updateSendBtn();
+            setTimeout(() => {
+              sendFromInput();
+            }, 300);
+          }
+        }, 500);
+        return; // Don't check URL params if we have pending
+      }
+    } catch (e) {
+      localStorage.removeItem('pendingAnalysis');
+    }
+  }
+  
+  // Check URL params (legacy support)
   const urlParams = new URLSearchParams(window.location.search);
-  const ca = urlParams.get('ca');
+  const ca = urlParams.get('ca') || urlParams.get('analyze');
   
   if (ca && ca.trim()) {
     // Wait for DOM to be ready
