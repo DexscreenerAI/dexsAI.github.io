@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=0.85, minimum-scale=0.85, maximum-scale=0.85, user-scalable=no">
+<title>Find the GEM — DexScreener AI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #060a10;
+  --bg2: #0b1018;
+  --bg3: #101822;
+  --card: #111a26;
+  --card-border: rgba(255,255,255,0.06);
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --cyan: #00d4ff;
+  --green: #00ff88;
+  --red: #ff3b4f;
+  --yellow: #ffaa00;
+  --purple: #a855f7;
+  --gold: #ffd700;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; touch-action: pan-x pan-y; }
+html, body { min-height:100%; background: var(--bg); color: var(--text); font-family: var(--sans); }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 6px; }
+
+/* ── HEADER ── */
+.header {
+  background: rgba(6, 10, 16, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--card-border);
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+.header-logo img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+.header-logo-text {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+}
+.header-logo-sub {
+  font-size: 11px;
+  color: var(--gold);
+  font-weight: 400;
+}
+.header-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg3);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  color: var(--text);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  transition: all 0.15s;
+}
+.header-back:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+/* ── CONTAINER ── */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* ── HERO SECTION ── */
+.hero {
+  text-align: center;
+  padding: 60px 20px;
+  background: linear-gradient(180deg, rgba(168,85,247,0.08) 0%, transparent 100%);
+  border-radius: 24px;
+  margin-bottom: 30px;
+  border: 1px solid rgba(168,85,247,0.15);
+}
+.hero-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.hero-title {
+  font-family: var(--mono);
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  background: linear-gradient(135deg, var(--gold), var(--yellow), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+}
+.hero-subtitle {
+  font-size: 16px;
+  color: var(--text2);
+  margin-bottom: 30px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+.hunt-btn {
+  padding: 20px 60px;
+  background: linear-gradient(135deg, var(--gold), var(--yellow));
+  border: none;
+  border-radius: 16px;
+  color: #000;
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 40px rgba(255,215,0,0.3);
+}
+.hunt-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 50px rgba(255,215,0,0.5);
+}
+.hunt-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.hunt-btn-icon {
+  font-size: 24px;
+}
+
+/* ── FILTERS INFO ── */
+.filters-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 30px;
+}
+.filter-badge {
+  background: var(--bg3);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text2);
+}
+.filter-badge-icon {
+  font-size: 18px;
+}
+.filter-badge-text {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+}
+
+/* ── PROGRESS SECTION ── */
+.progress-section {
+  display: none;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 30px;
+  margin-bottom: 24px;
+}
+.progress-section.active {
+  display: block;
+}
+.progress-title {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--cyan);
+  margin-bottom: 20px;
+  text-align: center;
+}
+.progress-bar-wrap {
+  background: var(--bg);
+  border-radius: 12px;
+  height: 24px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple), var(--cyan), var(--gold));
+  background-size: 200% 100%;
+  animation: progressGlow 2s linear infinite;
+  border-radius: 12px;
+  transition: width 0.3s;
+  width: 0%;
+}
+@keyframes progressGlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.progress-status {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text2);
+}
+.progress-stats {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.progress-stat {
+  text-align: center;
+}
+.progress-stat-num {
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--cyan);
+}
+.progress-stat-label {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+/* ── RESULTS SECTION ── */
+.results-section {
+  display: none;
+}
+.results-section.active {
+  display: block;
+}
+.results-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.results-title {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.results-subtitle {
+  font-size: 14px;
+  color: var(--text2);
+}
+
+/* ── GEM CARDS ── */
+.gems-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.gem-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  transition: all 0.2s;
+}
+.gem-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+.gem-card.top-3 {
+  border-color: rgba(255,215,0,0.3);
+  background: linear-gradient(135deg, rgba(255,215,0,0.05), transparent);
+}
+.gem-rank {
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+.gem-rank.gold { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; }
+.gem-rank.silver { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); color: #000; }
+.gem-rank.bronze { background: linear-gradient(135deg, #cd7f32, #b87333); color: #000; }
+.gem-rank.normal { background: var(--bg3); color: var(--text); }
+
+.gem-score {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+.gem-score.high { background: var(--green); color: #000; }
+.gem-score.medium { background: var(--yellow); color: #000; }
+.gem-score.low { background: var(--red); color: #fff; }
+
+.gem-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  margin-top: 10px;
+}
+.gem-logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: var(--bg3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--cyan);
+  overflow: hidden;
+}
+.gem-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gem-info {
+  flex: 1;
+}
+.gem-symbol {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gem-chain {
+  font-size: 9px;
+  padding: 2px 6px;
+  background: var(--bg);
+  border-radius: 4px;
+  color: var(--text3);
+}
+.gem-name {
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 4px;
+}
+.gem-badges {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.gem-badge {
+  font-size: 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-weight: 600;
+}
+.gem-badge.new { background: var(--green-dim, rgba(0,255,136,0.15)); border: 1px solid var(--green); color: var(--green); }
+.gem-badge.boosted { background: rgba(168,85,247,0.15); border: 1px solid var(--purple); color: var(--purple); }
+.gem-badge.trending { background: rgba(0,212,255,0.15); border: 1px solid var(--cyan); color: var(--cyan); }
+.gem-badge.cto { background: rgba(255,170,0,0.15); border: 1px solid var(--yellow); color: var(--yellow); }
+
+.gem-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.gem-stat {
+  background: var(--bg);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+}
+.gem-stat-label {
+  font-size: 9px;
+  color: var(--text3);
+  margin-bottom: 4px;
+  font-family: var(--mono);
+  letter-spacing: 0.5px;
+}
+.gem-stat-value {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+.gem-stat-value.green { color: var(--green); }
+.gem-stat-value.red { color: var(--red); }
+.gem-stat-value.yellow { color: var(--yellow); }
+
+.gem-metrics {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--card-border);
+  margin-bottom: 14px;
+}
+.gem-metric {
+  flex: 1;
+  text-align: center;
+}
+.gem-metric-label {
+  font-size: 9px;
+  color: var(--text3);
+}
+.gem-metric-value {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.gem-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.gem-rug {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text2);
+}
+.gem-actions {
+  display: flex;
+  gap: 6px;
+}
+.gem-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--card-border);
+  background: var(--bg3);
+  color: var(--text);
+}
+.gem-btn:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.gem-btn.primary {
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  border: none;
+  color: #000;
+}
+.gem-btn.primary:hover {
+  transform: scale(1.05);
+}
+
+/* ── AI SUMMARY ── */
+.ai-summary {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-left: 3px solid var(--purple);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.ai-summary-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--purple);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai-summary-content {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+.ai-top-pick {
+  margin-top: 20px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(168,85,247,0.1));
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: 12px;
+}
+.ai-top-pick-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+.ai-top-pick-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* ── RESET ── */
+.reset-btn {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  margin: 30px auto 0;
+  padding: 16px;
+  background: var(--bg3);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.reset-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* ── DISCLAIMER ── */
+.disclaimer {
+  text-align: center;
+  padding: 20px;
+  font-size: 11px;
+  color: var(--text3);
+}
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  .container { padding: 16px; }
+  .header { padding: 12px 16px; }
+  .hero { padding: 40px 16px; }
+  .hero-icon { font-size: 48px; }
+  .hero-title { font-size: 24px; }
+  .hero-subtitle { font-size: 14px; }
+  .hunt-btn { padding: 16px 40px; font-size: 14px; }
+  .filters-info { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .filter-badge { padding: 10px 12px; }
+  .filter-badge-text { font-size: 10px; }
+  .gems-grid { grid-template-columns: 1fr; }
+  .gem-card { padding: 16px; }
+  .gem-stats { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .gem-stat { padding: 8px; }
+  .gem-stat-value { font-size: 11px; }
+  .progress-stats { gap: 20px; }
+  .progress-stat-num { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <a href="index.html" class="header-logo">
+      <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="Logo">
+      <div>
+        <div class="header-logo-text">FIND THE GEM</div>
+        <div class="header-logo-sub">💎 AI-Powered Scanner</div>
+      </div>
+    </a>
+    <a href="index.html" class="header-back">← Back to App</a>
+  </div>
+</header>
+
+<!-- CONTAINER -->
+<div class="container">
+  
+  <!-- HERO SECTION -->
+  <div class="hero" id="heroSection">
+    <div class="hero-icon">💎</div>
+    <h1 class="hero-title">FIND THE GEM</h1>
+    <p class="hero-subtitle">
+      AI scans multiple sources, applies advanced filters, and ranks the top 20 potential gems for you.
+    </p>
+    <button class="hunt-btn" id="huntBtn" onclick="startHunt()">
+      <span class="hunt-btn-icon">🔍</span>
+      <span>HUNT FOR GEMS</span>
+    </button>
+    
+    <div class="filters-info">
+      <div class="filter-badge">
+        <span class="filter-badge-icon">📊</span>
+        <div>
+          <div class="filter-badge-text">6 Data Sources</div>
+          <div style="font-size:10px;color:var(--text3)">Latest, Boosted, Trending...</div>
+        </div>
+      </div>
+      <div class="filter-badge">
+        <span class="filter-badge-icon">🎯</span>
+        <div>
+          <div class="filter-badge-text">MC $5K - $10M</div>
+          <div style="font-size:10px;color:var(--text3)">Micro & Low Cap Only</div>
+        </div>
+      </div>
+      <div class="filter-badge">
+        <span class="filter-badge-icon">💧</span>
+        <div>
+          <div class="filter-badge-text">Liquidity > $3K</div>
+          <div style="font-size:10px;color:var(--text3)">Tradeable Tokens</div>
+        </div>
+      </div>
+      <div class="filter-badge">
+        <span class="filter-badge-icon">📈</span>
+        <div>
+          <div class="filter-badge-text">Buy Ratio > 40%</div>
+          <div style="font-size:10px;color:var(--text3)">Positive Pressure</div>
+        </div>
+      </div>
+      <div class="filter-badge">
+        <span class="filter-badge-icon">🔒</span>
+        <div>
+          <div class="filter-badge-text">Rugcheck Verified</div>
+          <div style="font-size:10px;color:var(--text3)">Solana Tokens</div>
+        </div>
+      </div>
+      <div class="filter-badge">
+        <span class="filter-badge-icon">🤖</span>
+        <div>
+          <div class="filter-badge-text">AI Ranking</div>
+          <div style="font-size:10px;color:var(--text3)">Smart Sorting</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- PROGRESS SECTION -->
+  <div class="progress-section" id="progressSection">
+    <div class="progress-title">🔍 HUNTING FOR GEMS...</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="progress-status" id="progressStatus">Initializing scanner...</div>
+    <div class="progress-stats">
+      <div class="progress-stat">
+        <div class="progress-stat-num" id="statSources">0</div>
+        <div class="progress-stat-label">Sources Scanned</div>
+      </div>
+      <div class="progress-stat">
+        <div class="progress-stat-num" id="statTokens">0</div>
+        <div class="progress-stat-label">Tokens Found</div>
+      </div>
+      <div class="progress-stat">
+        <div class="progress-stat-num" id="statFiltered">0</div>
+        <div class="progress-stat-label">Passed Filters</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- RESULTS SECTION -->
+  <div class="results-section" id="resultsSection">
+    <div class="results-header">
+      <h2 class="results-title">🏆 TOP 20 GEMS</h2>
+      <p class="results-subtitle">Ranked by AI analysis • Updated just now</p>
+    </div>
+    
+    <div id="aiSummaryContainer"></div>
+    <div class="gems-grid" id="gemsGrid"></div>
+    
+    <button class="reset-btn" onclick="resetHunt()">🔄 Hunt Again</button>
+    
+    <div class="disclaimer">
+      ⚠️ DYOR — This is not financial advice. Always verify on-chain data before investing.<br>
+      Crypto is highly volatile. Never invest more than you can afford to lose.
+    </div>
+  </div>
+  
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+const $ = id => document.getElementById(id);
+
+function fN(n) {
+  if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return n.toFixed(0);
+}
+
+function fP(p) {
+  if (p === 0) return '$0';
+  if (p < 0.00000001) return '$' + p.toExponential(2);
+  if (p < 0.0001) return '$' + p.toFixed(8);
+  if (p < 0.01) return '$' + p.toFixed(6);
+  if (p < 1) return '$' + p.toFixed(4);
+  if (p < 1000) return '$' + p.toFixed(2);
+  return '$' + fN(p);
+}
+
+function esc(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function updateProgress(pct, status) {
+  $('progressBar').style.width = pct + '%';
+  $('progressStatus').textContent = status;
+}
+
+function updateStats(sources, tokens, filtered) {
+  $('statSources').textContent = sources;
+  $('statTokens').textContent = tokens;
+  $('statFiltered').textContent = filtered;
+}
+
+// ═══════════════════════════════════════════
+// MAIN HUNT FUNCTION
+// ═══════════════════════════════════════════
+async function startHunt() {
+  $('huntBtn').disabled = true;
+  $('heroSection').style.display = 'none';
+  $('progressSection').classList.add('active');
+  $('resultsSection').classList.remove('active');
+  
+  const allCandidates = new Map(); // Use Map for deduplication
+  let sourcesScanned = 0;
+  let totalTokensFound = 0;
+  
+  const validChains = ['solana', 'ethereum', 'base', 'bsc', 'arbitrum', 'polygon', 'avalanche'];
+  
+  try {
+    // ═══ PHASE 1: MULTI-SOURCE FETCH ═══
+    updateProgress(5, 'Scanning latest token profiles...');
+    
+    // Source 1: Latest profiles
+    try {
+      const res = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(10000) });
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        for (const t of data.slice(0, 40)) {
+          if (t.tokenAddress && validChains.includes(t.chainId)) {
+            allCandidates.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'new', icon: t.icon, desc: t.description });
+            totalTokensFound++;
+          }
+        }
+      }
+      sourcesScanned++;
+      updateStats(sourcesScanned, totalTokensFound, 0);
+    } catch(e) { console.log('Source 1 failed'); }
+    
+    updateProgress(15, 'Scanning boosted tokens...');
+    
+    // Source 2: Boosted tokens
+    try {
+      const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(10000) });
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        for (const t of data.slice(0, 30)) {
+          if (t.tokenAddress && validChains.includes(t.chainId) && !allCandidates.has(t.tokenAddress)) {
+            allCandidates.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'boosted', icon: t.icon, boost: t.amount });
+            totalTokensFound++;
+          }
+        }
+      }
+      sourcesScanned++;
+      updateStats(sourcesScanned, totalTokensFound, 0);
+    } catch(e) { console.log('Source 2 failed'); }
+    
+    updateProgress(25, 'Searching trending keywords...');
+    
+    // Source 3-6: Multiple search queries
+    const searchQueries = ['moon', 'pump', 'gem', 'degen'];
+    
+    for (let i = 0; i < searchQueries.length; i++) {
+      const query = searchQueries[i];
+      updateProgress(25 + (i * 5), `Searching "${query}" tokens...`);
+      
+      try {
+        const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${query}`, { signal: AbortSignal.timeout(8000) });
+        const data = await res.json();
+        if (data.pairs) {
+          for (const p of data.pairs.slice(0, 25)) {
+            const addr = p.baseToken?.address;
+            if (addr && validChains.includes(p.chainId) && !allCandidates.has(addr)) {
+              allCandidates.set(addr, { 
+                address: addr, 
+                chain: p.chainId, 
+                source: 'trending', 
+                pair: p,
+                icon: p.info?.imageUrl 
+              });
+              totalTokensFound++;
+            }
+          }
+        }
+        sourcesScanned++;
+        updateStats(sourcesScanned, totalTokensFound, 0);
+      } catch(e) { console.log(`Search ${query} failed`); }
+    }
+    
+    updateProgress(45, `Enriching ${allCandidates.size} candidates...`);
+    
+    // ═══ PHASE 2: ENRICH WITH FULL DATA ═══
+    const enriched = [];
+    const candidates = Array.from(allCandidates.values());
+    let processed = 0;
+    
+    for (const cand of candidates.slice(0, 80)) {
+      processed++;
+      if (processed % 10 === 0) {
+        updateProgress(45 + Math.floor((processed / Math.min(80, candidates.length)) * 25), 
+          `Analyzing token ${processed}/${Math.min(80, candidates.length)}...`);
+      }
+      
+      try {
+        let pair = cand.pair;
+        
+        if (!pair) {
+          const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cand.address}`, { signal: AbortSignal.timeout(4000) });
+          const dexData = await dexRes.json();
+          if (dexData.pairs && dexData.pairs.length > 0) {
+            pair = dexData.pairs.sort((a, b) => (parseFloat(b.liquidity?.usd) || 0) - (parseFloat(a.liquidity?.usd) || 0))[0];
+          }
+        }
+        
+        if (!pair) continue;
+        
+        const buys = pair.txns?.h24?.buys || 0;
+        const sells = pair.txns?.h24?.sells || 0;
+        const total = buys + sells;
+        const buyRatio = total > 0 ? buys / total : 0.5;
+        const liq = parseFloat(pair.liquidity?.usd) || 0;
+        const vol = parseFloat(pair.volume?.h24) || 0;
+        const mc = parseFloat(pair.marketCap) || 0;
+        const chg5m = parseFloat(pair.priceChange?.m5) || 0;
+        const chg1h = parseFloat(pair.priceChange?.h1) || 0;
+        const chg6h = parseFloat(pair.priceChange?.h6) || 0;
+        const chg24h = parseFloat(pair.priceChange?.h24) || 0;
+        const age = pair.pairCreatedAt ? (Date.now() - new Date(pair.pairCreatedAt).getTime()) / 3600000 : 999;
+        
+        // ═══ FILTERS ═══
+        if (mc > 10000000) continue; // Max 10M
+        if (mc < 5000) continue; // Min 5K
+        if (liq < 3000) continue; // Min 3K liq
+        if (buyRatio < 0.40) continue; // Min 40% buyers
+        
+        // ═══ GEM SCORE CALCULATION ═══
+        let score = 0;
+        
+        // Buy pressure (max 25)
+        score += Math.min(25, (buyRatio - 0.4) * 50);
+        
+        // MC sweet spot (max 20)
+        if (mc >= 30000 && mc <= 300000) score += 20;
+        else if (mc >= 300000 && mc <= 1000000) score += 15;
+        else if (mc >= 10000 && mc < 30000) score += 12;
+        else if (mc >= 1000000 && mc <= 5000000) score += 8;
+        
+        // Liquidity ratio (max 15)
+        const liqRatio = mc > 0 ? (liq / mc) : 0;
+        if (liqRatio > 0.1) score += 15;
+        else if (liqRatio > 0.05) score += 10;
+        else if (liqRatio > 0.02) score += 5;
+        
+        // Momentum (max 15)
+        if (chg1h > 5 && chg1h < 100) score += 8;
+        if (chg24h > 10 && chg24h < 500) score += 7;
+        
+        // Freshness (max 10)
+        if (age < 24) score += 10;
+        else if (age < 72) score += 6;
+        else if (age < 168) score += 3;
+        
+        // Activity (max 10)
+        if (total > 500) score += 10;
+        else if (total > 200) score += 7;
+        else if (total > 50) score += 4;
+        
+        // Volume to liq ratio (max 10)
+        const volLiqRatio = liq > 0 ? (vol / liq) : 0;
+        if (volLiqRatio > 3) score += 10;
+        else if (volLiqRatio > 1.5) score += 6;
+        else if (volLiqRatio > 0.5) score += 3;
+        
+        // Source bonus (max 5)
+        if (cand.source === 'boosted') score += 5;
+        else if (cand.source === 'new') score += 3;
+        
+        // Check for CTO (community takeover)
+        const isCTO = pair.info?.socials?.some(s => s.type === 'twitter' && s.url?.includes('/community')) ||
+                      (pair.info?.description || '').toLowerCase().includes('cto');
+        if (isCTO) score += 5;
+        
+        // Rugcheck for Solana
+        let rugStatus = 'unknown';
+        let rugRisks = [];
+        if (pair.chainId === 'solana') {
+          try {
+            const rugRes = await fetch(`https://api.rugcheck.xyz/v1/tokens/${cand.address}/report/summary`, { signal: AbortSignal.timeout(2500) });
+            const rug = await rugRes.json();
+            rugRisks = rug.risks || [];
+            if (rug.mintAuthority) { score -= 15; rugStatus = 'danger'; }
+            else if (rug.freezeAuthority) { score -= 10; rugStatus = 'warning'; }
+            else if (rugRisks.length === 0) { score += 10; rugStatus = 'good'; }
+            else if (rugRisks.length <= 2) { rugStatus = 'warning'; }
+            else { rugStatus = 'danger'; score -= 5; }
+          } catch(e) {}
+        }
+        
+        enriched.push({
+          symbol: pair.baseToken?.symbol || '???',
+          name: pair.baseToken?.name || '',
+          chain: pair.chainId || 'unknown',
+          price: parseFloat(pair.priceUsd) || 0,
+          mc, liq, vol,
+          chg5m, chg1h, chg6h, chg24h,
+          buys, sells,
+          buyRatio: Math.round(buyRatio * 100),
+          txns: total,
+          age: Math.round(age),
+          score: Math.max(0, Math.min(100, Math.round(score))),
+          rugStatus, rugRisks,
+          source: cand.source,
+          isCTO,
+          logo: pair.info?.imageUrl || cand.icon || '',
+          address: cand.address,
+          pairAddress: pair.pairAddress || '',
+          twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || '',
+          website: pair.info?.websites?.[0]?.url || '',
+          telegram: pair.info?.socials?.find(s => s.type === 'telegram')?.url || '',
+          description: cand.desc || pair.info?.description || ''
+        });
+        
+        updateStats(sourcesScanned, totalTokensFound, enriched.length);
+        
+      } catch(e) { /* skip */ }
+    }
+    
+    updateProgress(75, 'Sorting by gem score...');
+    
+    // Sort by score
+    enriched.sort((a, b) => b.score - a.score);
+    const topGems = enriched.slice(0, 20);
+    
+    if (topGems.length === 0) {
+      $('progressSection').classList.remove('active');
+      $('heroSection').style.display = 'block';
+      $('huntBtn').disabled = false;
+      alert('No gems found matching criteria. Try again later!');
+      return;
+    }
+    
+    // ═══ PHASE 3: AI ANALYSIS ═══
+    updateProgress(80, 'AI analyzing top gems...');
+    
+    let aiAnalysis = '';
+    let topPick = '';
+    
+    try {
+      const gemsContext = topGems.slice(0, 10).map((g, i) => `
+${i+1}. $${g.symbol} (${g.chain}) - Score: ${g.score}
+   MC: $${fN(g.mc)} | Liq: $${fN(g.liq)} | Vol: $${fN(g.vol)}
+   24h: ${g.chg24h > 0 ? '+' : ''}${g.chg24h.toFixed(1)}% | 1h: ${g.chg1h > 0 ? '+' : ''}${g.chg1h.toFixed(1)}%
+   Buy Ratio: ${g.buyRatio}% | Txns: ${g.txns} | Age: ${g.age}h
+   Rug: ${g.rugStatus} | Source: ${g.source}${g.isCTO ? ' | CTO' : ''}`).join('\n');
+      
+      const prompt = `You are a crypto gem hunter. Analyze these top 10 gems and give your verdict.
+
+${gemsContext}
+
+Be BRUTAL and SPECIFIC. For each gem:
+- Rate: 🟢 HIGH POTENTIAL / 🟡 MODERATE / 🔴 RISKY
+- Give 1 short sentence why
+
+Then pick your #1 TOP GEM with clear reasoning (2-3 sentences max).
+
+Format cleanly. No fluff.`;
+
+      const aiRes = await askAI(prompt);
+      if (aiRes && aiRes.answer) {
+        aiAnalysis = aiRes.answer;
+        
+        // Extract top pick
+        const topPickMatch = aiAnalysis.match(/(?:TOP(?:\s+GEM)?|#1|PICK)[:\s]+\$?(\w+)/i);
+        if (topPickMatch) {
+          const pickSymbol = topPickMatch[1].toUpperCase();
+          const pickGem = topGems.find(g => g.symbol.toUpperCase() === pickSymbol);
+          if (pickGem) {
+            topPick = `$${pickGem.symbol} - AI's #1 pick based on risk/reward analysis`;
+          }
+        }
+      }
+    } catch(e) {
+      console.log('AI analysis failed:', e);
+      aiAnalysis = 'AI analysis unavailable. Review the scores and metrics above.';
+    }
+    
+    updateProgress(95, 'Rendering results...');
+    
+    // ═══ PHASE 4: RENDER ═══
+    renderResults(topGems, aiAnalysis, topPick);
+    
+    updateProgress(100, 'Complete!');
+    
+    setTimeout(() => {
+      $('progressSection').classList.remove('active');
+      $('resultsSection').classList.add('active');
+      $('huntBtn').disabled = false;
+    }, 500);
+    
+  } catch (err) {
+    console.error('Hunt failed:', err);
+    $('progressSection').classList.remove('active');
+    $('heroSection').style.display = 'block';
+    $('huntBtn').disabled = false;
+    alert('Hunt failed: ' + err.message);
+  }
+}
+
+async function askAI(prompt) {
+  try {
+    const res = await fetch('https://dexscreener-telegram-bot-production.up.railway.app/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: prompt }),
+      signal: AbortSignal.timeout(30000)
+    });
+    return await res.json();
+  } catch (e) {
+    return { error: true, message: e.message };
+  }
+}
+
+function renderResults(gems, aiAnalysis, topPick) {
+  // AI Summary
+  let aiHtml = '';
+  if (aiAnalysis) {
+    aiHtml = `<div class="ai-summary">
+      <div class="ai-summary-title">🤖 AI ANALYSIS</div>
+      <div class="ai-summary-content">${esc(aiAnalysis)}</div>
+      ${topPick ? `<div class="ai-top-pick">
+        <div class="ai-top-pick-label">🏆 TOP PICK</div>
+        <div class="ai-top-pick-text">${esc(topPick)}</div>
+      </div>` : ''}
+    </div>`;
+  }
+  $('aiSummaryContainer').innerHTML = aiHtml;
+  
+  // Gem cards
+  let cardsHtml = '';
+  
+  gems.forEach((g, i) => {
+    const rank = i + 1;
+    const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'normal';
+    const isTop3 = rank <= 3;
+    const scoreClass = g.score >= 70 ? 'high' : g.score >= 50 ? 'medium' : 'low';
+    const chg24hColor = g.chg24h >= 0 ? 'green' : 'red';
+    const chg1hColor = g.chg1h >= 0 ? 'green' : 'red';
+    const buyColor = g.buyRatio >= 55 ? 'green' : g.buyRatio >= 45 ? '' : 'red';
+    const rugIcon = g.rugStatus === 'good' ? '✅' : g.rugStatus === 'warning' ? '⚠️' : g.rugStatus === 'danger' ? '🔴' : '❓';
+    
+    let badges = '';
+    if (g.age < 24) badges += '<span class="gem-badge new">🆕 NEW</span>';
+    if (g.source === 'boosted') badges += '<span class="gem-badge boosted">🚀 BOOSTED</span>';
+    if (g.source === 'trending') badges += '<span class="gem-badge trending">📈 TRENDING</span>';
+    if (g.isCTO) badges += '<span class="gem-badge cto">👥 CTO</span>';
+    
+    cardsHtml += `<div class="gem-card ${isTop3 ? 'top-3' : ''}">
+      <div class="gem-rank ${rankClass}">#${rank}</div>
+      <div class="gem-score ${scoreClass}">${g.score}</div>
+      
+      <div class="gem-header">
+        <div class="gem-logo">
+          ${g.logo ? `<img src="${g.logo}" onerror="this.style.display='none';this.parentElement.textContent='${g.symbol.charAt(0)}'">` : g.symbol.charAt(0)}
+        </div>
+        <div class="gem-info">
+          <div class="gem-symbol">
+            $${esc(g.symbol)}
+            <span class="gem-chain">${g.chain}</span>
+          </div>
+          <div class="gem-name">${esc(g.name.slice(0, 25))}</div>
+          ${badges ? `<div class="gem-badges">${badges}</div>` : ''}
+        </div>
+      </div>
+      
+      <div class="gem-stats">
+        <div class="gem-stat">
+          <div class="gem-stat-label">MCAP</div>
+          <div class="gem-stat-value">$${fN(g.mc)}</div>
+        </div>
+        <div class="gem-stat">
+          <div class="gem-stat-label">LIQ</div>
+          <div class="gem-stat-value">$${fN(g.liq)}</div>
+        </div>
+        <div class="gem-stat">
+          <div class="gem-stat-label">VOL 24H</div>
+          <div class="gem-stat-value">$${fN(g.vol)}</div>
+        </div>
+        <div class="gem-stat">
+          <div class="gem-stat-label">1H</div>
+          <div class="gem-stat-value ${chg1hColor}">${g.chg1h > 0 ? '+' : ''}${g.chg1h.toFixed(1)}%</div>
+        </div>
+        <div class="gem-stat">
+          <div class="gem-stat-label">24H</div>
+          <div class="gem-stat-value ${chg24hColor}">${g.chg24h > 0 ? '+' : ''}${g.chg24h.toFixed(1)}%</div>
+        </div>
+        <div class="gem-stat">
+          <div class="gem-stat-label">BUYERS</div>
+          <div class="gem-stat-value ${buyColor}">${g.buyRatio}%</div>
+        </div>
+      </div>
+      
+      <div class="gem-metrics">
+        <div class="gem-metric">
+          <div class="gem-metric-label">Txns 24h</div>
+          <div class="gem-metric-value">${g.txns}</div>
+        </div>
+        <div class="gem-metric">
+          <div class="gem-metric-label">Age</div>
+          <div class="gem-metric-value">${g.age}h</div>
+        </div>
+        <div class="gem-metric">
+          <div class="gem-metric-label">Price</div>
+          <div class="gem-metric-value">${fP(g.price)}</div>
+        </div>
+      </div>
+      
+      <div class="gem-footer">
+        <div class="gem-rug">${rugIcon} Rug: ${g.rugStatus}</div>
+        <div class="gem-actions">
+          <button class="gem-btn" onclick="window.open('https://dexscreener.com/${g.chain}/${g.pairAddress}', '_blank')">📊 Chart</button>
+          <button class="gem-btn primary" onclick="window.location.href='index.html?analyze=${g.address}'">🔍 Analyze</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  
+  $('gemsGrid').innerHTML = cardsHtml;
+}
+
+function resetHunt() {
+  $('resultsSection').classList.remove('active');
+  $('heroSection').style.display = 'block';
+  $('gemsGrid').innerHTML = '';
+  $('aiSummaryContainer').innerHTML = '';
+  updateProgress(0, 'Ready');
+  updateStats(0, 0, 0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
