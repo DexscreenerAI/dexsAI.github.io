@@ -1212,9 +1212,207 @@ body {
 .promo-banner-empty {
   display: none;
 }
+
+/* AI OPTIONS POPUP */
+.ai-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+}
+.ai-popup-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+.ai-popup {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  transform: scale(0.9);
+  transition: transform 0.2s;
+}
+.ai-popup-overlay.active .ai-popup {
+  transform: scale(1);
+}
+.ai-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.ai-popup-title {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cyan);
+}
+.ai-popup-close {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.ai-popup-close:hover {
+  background: var(--bg3);
+  color: var(--text);
+}
+.ai-popup-token {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.ai-popup-token img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.ai-popup-token-info {
+  flex: 1;
+}
+.ai-popup-token-symbol {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.ai-popup-token-chain {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+.ai-popup-cto {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--yellow);
+  background: rgba(255,170,0,0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.ai-popup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.ai-opt-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 14px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ai-opt-btn:hover {
+  background: var(--bg3);
+  border-color: var(--cyan);
+  transform: translateY(-2px);
+}
+.ai-opt-btn:active {
+  transform: translateY(0);
+}
+.ai-opt-icon {
+  font-size: 22px;
+}
+.ai-opt-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+}
+.ai-opt-desc {
+  font-size: 9px;
+  color: var(--text3);
+  text-align: center;
+  line-height: 1.3;
+}
+@media (max-width: 600px) {
+  .ai-popup {
+    width: 95%;
+    padding: 16px;
+  }
+  .ai-popup-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .ai-opt-btn {
+    padding: 12px 8px;
+  }
+}
 </style>
 </head>
 <body>
+
+<!-- AI OPTIONS POPUP -->
+<div class="ai-popup-overlay" id="aiPopupOverlay" onclick="if(event.target===this)hideAIOptions()">
+  <div class="ai-popup">
+    <div class="ai-popup-header">
+      <span class="ai-popup-title">🤖 AI ANALYSIS</span>
+      <button class="ai-popup-close" onclick="hideAIOptions()">✕</button>
+    </div>
+    <div class="ai-popup-token" id="aiPopupToken">
+      <!-- Filled by JS -->
+    </div>
+    <div class="ai-popup-grid">
+      <button class="ai-opt-btn" onclick="handleAIOption('insight')">
+        <span class="ai-opt-icon">🤖</span>
+        <span class="ai-opt-label">AI INSIGHT</span>
+        <span class="ai-opt-desc">Why pumping? Risks?</span>
+      </button>
+      <button class="ai-opt-btn" onclick="handleAIOption('deep')">
+        <span class="ai-opt-icon">🧠</span>
+        <span class="ai-opt-label">DEEP ANALYSIS</span>
+        <span class="ai-opt-desc">Full tokenomics review</span>
+      </button>
+      <button class="ai-opt-btn" onclick="handleAIOption('trending')">
+        <span class="ai-opt-icon">💡</span>
+        <span class="ai-opt-label">WHY TRENDING?</span>
+        <span class="ai-opt-desc">Narrative & catalysts</span>
+      </button>
+      <button class="ai-opt-btn" onclick="handleAIOption('strategy')">
+        <span class="ai-opt-icon">🎯</span>
+        <span class="ai-opt-label">AI STRATEGY</span>
+        <span class="ai-opt-desc">Entry, TP, SL plan</span>
+      </button>
+      <button class="ai-opt-btn" onclick="handleAIOption('quick')">
+        <span class="ai-opt-icon">⚡</span>
+        <span class="ai-opt-label">QUICK TAKE</span>
+        <span class="ai-opt-desc">Buy / Wait / Avoid</span>
+      </button>
+      <button class="ai-opt-btn" onclick="handleAIOption('potential')">
+        <span class="ai-opt-icon">🔮</span>
+        <span class="ai-opt-label">POTENTIAL</span>
+        <span class="ai-opt-desc">2x? 10x? Or rug?</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- TOP NAV -->
 <nav class="top-nav">
@@ -4286,6 +4484,176 @@ function renderPromoBanner(promoted) {
 }
 
 // ═══════════════════════════════════════════
+// 🤖 AI OPTIONS POPUP SYSTEM
+// ═══════════════════════════════════════════
+let currentAIToken = null; // Store token for AI analysis
+
+function detectCTO(description) {
+  if (!description) return false;
+  const lower = description.toLowerCase();
+  return lower.includes('cto') || 
+         lower.includes('community take over') || 
+         lower.includes('community takeover') ||
+         lower.includes('taken over by community') ||
+         lower.includes('community-owned') ||
+         lower.includes('dev abandoned');
+}
+
+function showAIOptions(tokenData) {
+  currentAIToken = tokenData;
+  const overlay = document.getElementById('aiPopupOverlay');
+  const tokenEl = document.getElementById('aiPopupToken');
+  
+  const isCTO = detectCTO(tokenData.description);
+  
+  tokenEl.innerHTML = `
+    ${tokenData.logo ? `<img src="${tokenData.logo}" onerror="this.style.display='none'">` : '<div style="width:32px;height:32px;background:var(--bg3);border-radius:50%"></div>'}
+    <div class="ai-popup-token-info">
+      <div class="ai-popup-token-symbol">$${tokenData.symbol}</div>
+      <div class="ai-popup-token-chain">${tokenData.chain?.toUpperCase() || 'UNKNOWN'}</div>
+    </div>
+    ${isCTO ? '<span class="ai-popup-cto">👥 CTO</span>' : ''}
+  `;
+  
+  overlay.classList.add('active');
+}
+
+function hideAIOptions() {
+  document.getElementById('aiPopupOverlay').classList.remove('active');
+  currentAIToken = null;
+}
+
+async function handleAIOption(type) {
+  if (!currentAIToken || isLoading) return;
+  
+  const token = currentAIToken;
+  hideAIOptions();
+  
+  const c = conversations.find(x => x.id === activeId);
+  const isCTO = detectCTO(token.description);
+  
+  // Build context string with all token data
+  let context = `Token: $${token.symbol}
+Chain: ${token.chain || 'Unknown'}
+Price: ${fP(token.price || 0)}
+Market Cap: $${fN(token.mc || 0)}
+Liquidity: $${fN(token.liq || 0)}
+Volume 24h: $${fN(token.vol24h || 0)}
+Buy Ratio: ${token.buyRatio ? token.buyRatio.toFixed(1) + '%' : 'N/A'}
+24h Change: ${token.chg24h ? (token.chg24h > 0 ? '+' : '') + token.chg24h.toFixed(1) + '%' : 'N/A'}
+Token Age: ${token.ageHours ? (token.ageHours < 24 ? token.ageHours + ' hours' : Math.floor(token.ageHours/24) + ' days') : 'Unknown'}`;
+
+  if (isCTO) {
+    context += `\n\n⚠️ CTO TOKEN: This is a Community Take Over - the original dev abandoned the project and the community took control. This changes the risk profile (no dev to rug, but also no dev support).`;
+  }
+  
+  if (token.rugData) {
+    context += `\n\nRugcheck Data:`;
+    if (token.rugData.score !== undefined) context += `\n- Score: ${token.rugData.score}`;
+    if (token.rugData.risks && token.rugData.risks.length > 0) {
+      context += `\n- Risks: ${token.rugData.risks.map(r => r.name || r).join(', ')}`;
+    }
+  }
+  
+  if (token.description) {
+    context += `\n\nDescription: ${token.description.slice(0, 200)}`;
+  }
+
+  // Build prompt based on type
+  const prompts = {
+    insight: `${context}\n\nGive me a quick 2-3 sentence AI insight. Why is this token interesting or pumping? What's the main risk to watch?`,
+    
+    deep: `${context}\n\nProvide a deep analysis covering:
+1. Tokenomics assessment (supply, distribution if available)
+2. Red flags or concerns
+3. Positive indicators
+4. Holder behavior if data available
+5. Overall risk rating (1-10)
+Keep it concise but thorough.`,
+    
+    trending: `${context}\n\nExplain WHY this token might be trending:
+- What narrative or sector is it part of?
+- Any recent catalysts?
+- Whale activity indicators?
+- Social media momentum?
+- Is the hype justified or suspicious?`,
+    
+    strategy: `${context}\n\nProvide a specific trade strategy:
+1. Suggested entry zone (price range)
+2. Stop loss level
+3. Take profit targets (TP1, TP2, TP3)
+4. Position sizing recommendation (% of portfolio)
+5. Timeframe (scalp/swing/hold)
+6. Key invalidation signals`,
+    
+    quick: `${context}\n\nGive me a ONE WORD verdict: BUY, WAIT, or AVOID.
+Then ONE sentence explaining why. Be direct and decisive.`,
+    
+    potential: `${context}\n\nEstimate the realistic potential:
+- Can this 2x from here? Why/why not?
+- Is 5x-10x possible? Under what conditions?
+- Rug risk assessment (Low/Medium/High)
+- Best case vs worst case scenario
+Be realistic, not hopeful.`
+  };
+  
+  const typeLabels = {
+    insight: '🤖 AI Insight',
+    deep: '🧠 Deep Analysis',
+    trending: '💡 Why Trending?',
+    strategy: '🎯 AI Strategy',
+    quick: '⚡ Quick Take',
+    potential: '🔮 Potential'
+  };
+  
+  // Show user message
+  c.messages.push({ role: 'user', content: `${typeLabels[type]} for $${token.symbol}` });
+  c.title = `${typeLabels[type].split(' ')[0]} $${token.symbol}`;
+  renderSidebar();
+  renderMessages();
+  updateTopbar();
+  showLoading();
+  
+  try {
+    // Call Haiku via Railway
+    const response = await askAI(prompts[type], {
+      symbol: token.symbol,
+      chain: token.chain,
+      price: token.price,
+      marketCap: token.mc,
+      liquidity: token.liq,
+      volume24h: token.vol24h,
+      isCTO: isCTO
+    });
+    
+    hideLoading();
+    
+    if (response.error) {
+      c.messages.push({ 
+        role: 'assistant', 
+        text: `⚠️ ${response.message || 'AI analysis failed. Please try again.'}` 
+      });
+    } else {
+      const ctoNote = isCTO ? '\n\n👥 _Note: This is a CTO (Community Take Over) token_' : '';
+      c.messages.push({ 
+        role: 'assistant', 
+        text: `${typeLabels[type]} **$${token.symbol}**${ctoNote}\n\n${response.answer}` 
+      });
+    }
+  } catch (err) {
+    hideLoading();
+    c.messages.push({ 
+      role: 'assistant', 
+      text: `❌ AI analysis error: ${err.message}` 
+    });
+  }
+  
+  isLoading = false;
+  renderMessages();
+  scrollToLastUserMessage();
+}
+
+// ═══════════════════════════════════════════
 // 🛡️ HANDLE SAFE CHECK
 // ═══════════════════════════════════════════
 function handleSafeCheck() {
@@ -4520,7 +4888,8 @@ async function handleTrending() {
             logo: pair.info?.imageUrl || token.icon || '',
             address: pair.baseToken?.address || addr,
             twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || '',
-            website: pair.info?.websites?.[0]?.url || ''
+            website: pair.info?.websites?.[0]?.url || '',
+            description: token.description || pair.info?.description || ''
           });
         }
       } catch(e) { /* skip */ }
@@ -4636,14 +5005,17 @@ async function handleGems() {
             chain: pair.chainId || 'unknown',
             price: parseFloat(pair.priceUsd) || 0,
             mc, liq, vol, chg24h, chg1h,
+            vol24h: vol,
             buyRatio: Math.round(buyRatio * 100),
             age: Math.round(age),
+            ageHours: Math.round(age),
             gemScore: Math.round(gemScore),
             rugOk,
             logo: pair.info?.imageUrl || token.icon || '',
             address: pair.baseToken?.address || addr,
             twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || '',
-            website: pair.info?.websites?.[0]?.url || ''
+            website: pair.info?.websites?.[0]?.url || '',
+            description: token.description || pair.info?.description || ''
           });
         }
       } catch(e) { /* skip */ }
@@ -4856,7 +5228,10 @@ function renderTrendingPicks(tokens) {
         <span style="color:var(--text2)">Buy <span style="color:${t.buyRatio >= 55 ? 'var(--green)' : t.buyRatio >= 45 ? 'var(--yellow)' : 'var(--red)'}">${t.buyRatio}%</span></span>
         <span style="color:${t.chg24h >= 0 ? 'var(--green)' : 'var(--red)'}">${t.chg24h > 0 ? '+' : ''}${t.chg24h.toFixed(1)}%</span>
       </div>
-      <button onclick="analyzeFromAddress('${t.address}','${t.chain}')" style="width:100%;padding:8px;background:var(--cyan-dim);border:1px solid var(--cyan);border-radius:6px;color:var(--cyan);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='var(--cyan)';this.style.color='#000'" onmouseout="this.style.background='var(--cyan-dim)';this.style.color='var(--cyan)'">🔍 ANALYZE</button>
+      <div style="display:flex;gap:6px">
+        <button onclick="analyzeFromAddress('${t.address}','${t.chain}')" style="flex:1;padding:8px;background:var(--cyan-dim);border:1px solid var(--cyan);border-radius:6px;color:var(--cyan);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='var(--cyan)';this.style.color='#000'" onmouseout="this.style.background='var(--cyan-dim)';this.style.color='var(--cyan)'">🔍 ANALYZE</button>
+        <button onclick="showAIOptions({symbol:'${t.symbol}',chain:'${t.chain}',address:'${t.address}',logo:'${t.logo || ''}',price:${t.price || 0},mc:${t.mc || 0},liq:${t.liq || 0},vol24h:${t.vol || 0},buyRatio:${t.buyRatio || 0},chg24h:${t.chg24h || 0},description:'${(t.description || '').replace(/'/g, "\\'")}'})" style="padding:8px 12px;background:var(--purple-dim);border:1px solid var(--purple);border-radius:6px;color:var(--purple);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='var(--purple)';this.style.color='#000'" onmouseout="this.style.background='var(--purple-dim)';this.style.color='var(--purple)'">🤖 AI</button>
+      </div>
     </div>`;
   });
   
@@ -4898,7 +5273,10 @@ function renderGemPicks(tokens) {
         <span style="color:${t.chg24h >= 0 ? 'var(--green)' : 'var(--red)'}">${t.chg24h > 0 ? '+' : ''}${t.chg24h.toFixed(1)}%</span>
         <span style="color:var(--text3)">${ageLabel}</span>
       </div>
-      <button onclick="analyzeFromAddress('${t.address}','${t.chain}')" style="width:100%;padding:8px;background:var(--purple-dim);border:1px solid var(--purple);border-radius:6px;color:var(--purple);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='var(--purple)';this.style.color='#000'" onmouseout="this.style.background='var(--purple-dim)';this.style.color='var(--purple)'">🔍 ANALYZE</button>
+      <div style="display:flex;gap:6px">
+        <button onclick="analyzeFromAddress('${t.address}','${t.chain}')" style="flex:1;padding:8px;background:var(--purple-dim);border:1px solid var(--purple);border-radius:6px;color:var(--purple);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='var(--purple)';this.style.color='#000'" onmouseout="this.style.background='var(--purple-dim)';this.style.color='var(--purple)'">🔍 ANALYZE</button>
+        <button onclick="showAIOptions({symbol:'${t.symbol}',chain:'${t.chain}',address:'${t.address}',logo:'${t.logo || ''}',price:${t.price || 0},mc:${t.mc || 0},liq:${t.liq || 0},vol24h:${t.vol24h || 0},buyRatio:${t.buyRatio || 0},chg24h:${t.chg24h || 0},ageHours:${t.ageHours || 0},description:'${(t.description || '').replace(/'/g, "\\'")}',rugData:${t.rugData ? 'true' : 'null'}})" style="padding:8px 12px;background:var(--cyan-dim);border:1px solid var(--cyan);border-radius:6px;color:var(--cyan);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='var(--cyan)';this.style.color='#000'" onmouseout="this.style.background='var(--cyan-dim)';this.style.color='var(--cyan)'">🤖 AI</button>
+      </div>
     </div>`;
   });
   
