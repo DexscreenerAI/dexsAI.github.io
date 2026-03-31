@@ -5242,6 +5242,7 @@ function handleChart() {
 function renderChart(symbol, chain, pairAddress) {
   const embedUrl = `https://dexscreener.com/${chain}/${pairAddress}?embed=1&theme=dark&trades=0&info=0`;
   const fullUrl = `https://dexscreener.com/${chain}/${pairAddress}`;
+  const safeSymbol = symbol.replace(/'/g, "\\'");
   
   return `<div class="card" style="border-left:3px solid var(--cyan);padding:0;overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--card-border)">
@@ -5261,10 +5262,151 @@ function renderChart(symbol, chain, pairAddress) {
         allow="clipboard-write"
       ></iframe>
     </div>
-    <div style="padding:10px 16px;background:var(--bg);border-top:1px solid var(--card-border);font-size:11px;color:var(--text3);text-align:center">
-      Powered by DexScreener · ${chain.toUpperCase()}
+    <div style="padding:12px 16px;background:var(--bg);border-top:1px solid var(--card-border);display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:11px;color:var(--text3)">Powered by DexScreener · ${chain.toUpperCase()}</span>
+      <button onclick="analyzeChartAI('${safeSymbol}','${chain}','${pairAddress}')" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:linear-gradient(135deg, var(--purple) 0%, var(--cyan) 100%);border:none;border-radius:8px;color:#000;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(136,0,255,0.3)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+        🤖 Analyze Chart
+      </button>
     </div>
   </div>`;
+}
+
+// ═══════════════════════════════════════════
+// 🤖 ANALYZE CHART WITH AI
+// ═══════════════════════════════════════════
+async function analyzeChartAI(symbol, chain, pairAddress) {
+  if (isLoading) return;
+  
+  const c = conversations.find(x => x.id === activeId);
+  c.messages.push({ role: 'user', content: `🤖 Analyze the $${symbol} chart` });
+  renderMessages();
+  showLoading('Fetching chart data...');
+  
+  try {
+    // Fetch fresh data from DexScreener
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${chain}/${pairAddress}`, {
+      signal: AbortSignal.timeout(8000)
+    });
+    const data = await res.json();
+    const pair = data.pairs?.[0] || data.pair;
+    
+    if (!pair) {
+      hideLoading();
+      c.messages.push({ role: 'assistant', text: '❌ Could not fetch chart data. Please try again.' });
+      renderMessages();
+      return;
+    }
+    
+    // Extract all price/volume data
+    const price = parseFloat(pair.priceUsd) || 0;
+    const chg5m = parseFloat(pair.priceChange?.m5) || 0;
+    const chg1h = parseFloat(pair.priceChange?.h1) || 0;
+    const chg6h = parseFloat(pair.priceChange?.h6) || 0;
+    const chg24h = parseFloat(pair.priceChange?.h24) || 0;
+    const vol5m = parseFloat(pair.volume?.m5) || 0;
+    const vol1h = parseFloat(pair.volume?.h1) || 0;
+    const vol6h = parseFloat(pair.volume?.h6) || 0;
+    const vol24h = parseFloat(pair.volume?.h24) || 0;
+    const liq = parseFloat(pair.liquidity?.usd) || 0;
+    const mc = parseFloat(pair.marketCap) || parseFloat(pair.fdv) || 0;
+    const buys5m = pair.txns?.m5?.buys || 0;
+    const sells5m = pair.txns?.m5?.sells || 0;
+    const buys1h = pair.txns?.h1?.buys || 0;
+    const sells1h = pair.txns?.h1?.sells || 0;
+    const buys24h = pair.txns?.h24?.buys || 0;
+    const sells24h = pair.txns?.h24?.sells || 0;
+    
+    // Calculate ratios
+    const buyRatio5m = (buys5m + sells5m) > 0 ? Math.round((buys5m / (buys5m + sells5m)) * 100) : 50;
+    const buyRatio1h = (buys1h + sells1h) > 0 ? Math.round((buys1h / (buys1h + sells1h)) * 100) : 50;
+    const buyRatio24h = (buys24h + sells24h) > 0 ? Math.round((buys24h / (buys24h + sells24h)) * 100) : 50;
+    
+    // Build context
+    const context = `CHART ANALYSIS REQUEST for $${symbol} (${chain.toUpperCase()})
+
+CURRENT PRICE: ${fP(price)}
+MARKET CAP: $${fN(mc)}
+LIQUIDITY: $${fN(liq)}
+
+PRICE ACTION:
+- 5 min: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(2)}%
+- 1 hour: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(2)}%
+- 6 hours: ${chg6h > 0 ? '+' : ''}${chg6h.toFixed(2)}%
+- 24 hours: ${chg24h > 0 ? '+' : ''}${chg24h.toFixed(2)}%
+
+VOLUME:
+- 5 min: $${fN(vol5m)}
+- 1 hour: $${fN(vol1h)}
+- 6 hours: $${fN(vol6h)}
+- 24 hours: $${fN(vol24h)}
+
+BUY/SELL PRESSURE:
+- Last 5 min: ${buyRatio5m}% buys (${buys5m} buys / ${sells5m} sells)
+- Last 1 hour: ${buyRatio1h}% buys (${buys1h} buys / ${sells1h} sells)
+- Last 24 hours: ${buyRatio24h}% buys (${buys24h} buys / ${sells24h} sells)
+
+VOLUME/LIQUIDITY RATIO: ${(vol24h / liq).toFixed(2)}x`;
+
+    const prompt = `${context}
+
+Analyze this chart like a professional trader. Give me:
+
+1. **TREND**: What's the current trend? (Bullish/Bearish/Sideways/Reversal)
+
+2. **MOMENTUM**: Is momentum increasing or fading? Look at the 5min vs 1h vs 6h changes.
+
+3. **VOLUME ANALYSIS**: Is volume supporting the price action? Any red flags?
+
+4. **BUY/SELL PRESSURE**: What does the order flow tell us?
+
+5. **KEY LEVELS**: Based on the data, estimate:
+   - Immediate support
+   - Immediate resistance
+   - Key breakout level
+
+6. **VERDICT**: SHORT TERM outlook (next 1-6 hours)
+   - BUY / WAIT / SELL
+   - Confidence level
+   - Risk level
+
+Be concise and actionable. Speak like a trader, not a textbook.`;
+
+    showLoading('AI analyzing chart...');
+    
+    const response = await askAI(prompt, {
+      symbol: symbol,
+      chain: chain,
+      price: price,
+      marketCap: mc,
+      liquidity: liq,
+      volume24h: vol24h
+    });
+    
+    hideLoading();
+    
+    if (response.error) {
+      c.messages.push({ 
+        role: 'assistant', 
+        text: `⚠️ ${response.message || 'Chart analysis failed. Please try again.'}` 
+      });
+    } else {
+      c.messages.push({ 
+        role: 'assistant', 
+        text: `📊 **Chart Analysis: $${symbol}**\n\n${response.answer}` 
+      });
+    }
+    
+  } catch (err) {
+    hideLoading();
+    c.messages.push({ 
+      role: 'assistant', 
+      text: `❌ Error analyzing chart: ${err.message}` 
+    });
+  }
+  
+  isLoading = false;
+  renderMessages();
+  scrollToLastUserMessage();
 }
 
 // ═══════════════════════════════════════════
