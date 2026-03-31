@@ -3372,7 +3372,7 @@ async function sendQuery(query) {
           // Store original objects for Safe/BuySell buttons
           pair: pair,
           rugData: rugData,
-          analysis: analysis,
+          fullAnalysis: analysis,  // Renamed to avoid collision with simplified analysis below
           
           // Basic info
           symbol: pair.baseToken?.symbol || '???',
@@ -3556,7 +3556,7 @@ async function sendQuery(query) {
         // Store original objects for Safe/BuySell buttons
         pair: pair,
         rugData: rugData,
-        analysis: analysis,
+        fullAnalysis: analysis,  // Renamed to avoid collision with simplified analysis below
         
         // Basic info
         symbol: pair.baseToken?.symbol || '???',
@@ -4291,12 +4291,12 @@ function handleSafeCheck() {
   
   if (lastAnalyzedToken) {
     // Check if it's a DexScreener token (has pair) or a major crypto (CoinGecko)
-    if (lastAnalyzedToken.pair && lastAnalyzedToken.analysis) {
+    if (lastAnalyzedToken.pair && lastAnalyzedToken.fullAnalysis) {
       // DexScreener token - use full safety report
-      const { pair, rugData, analysis } = lastAnalyzedToken;
-      c.messages.push({ role: 'user', content: `🛡️ Is $${analysis.ticker} safe?` });
-      c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
-      c.title = `🛡️ Safety: $${analysis.ticker}`;
+      const { pair, rugData, fullAnalysis } = lastAnalyzedToken;
+      c.messages.push({ role: 'user', content: `🛡️ Is $${fullAnalysis.ticker} safe?` });
+      c.messages.push({ role: 'assistant', html: renderSafeReport(fullAnalysis, rugData) });
+      c.title = `🛡️ Safety: $${fullAnalysis.ticker}`;
     } else {
       // Major crypto (BTC, ETH, etc.) - simplified safe message
       const symbol = lastAnalyzedToken.symbol?.toUpperCase() || '???';
@@ -4354,12 +4354,12 @@ function handleBuySell() {
   
   if (lastAnalyzedToken) {
     // Check if it's a DexScreener token (has pair) or a major crypto (CoinGecko)
-    if (lastAnalyzedToken.pair && lastAnalyzedToken.analysis) {
+    if (lastAnalyzedToken.pair && lastAnalyzedToken.fullAnalysis) {
       // DexScreener token - use full trade signal
-      const { pair, rugData, analysis } = lastAnalyzedToken;
-      c.messages.push({ role: 'user', content: `📈 Should I buy or sell $${analysis.ticker}?` });
-      c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
-      c.title = `📈 Signal: $${analysis.ticker}`;
+      const { pair, rugData, fullAnalysis } = lastAnalyzedToken;
+      c.messages.push({ role: 'user', content: `📈 Should I buy or sell $${fullAnalysis.ticker}?` });
+      c.messages.push({ role: 'assistant', html: renderBuySellSignal(fullAnalysis) });
+      c.title = `📈 Signal: $${fullAnalysis.ticker}`;
     } else {
       // Major crypto (BTC, ETH, etc.) - simplified signal
       const symbol = lastAnalyzedToken.symbol?.toUpperCase() || '???';
