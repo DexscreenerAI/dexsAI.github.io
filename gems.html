@@ -412,6 +412,7 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
 .gem-badge.cto { background: rgba(255,170,0,0.15); border: 1px solid var(--yellow); color: var(--yellow); }
 .gem-badge.potential { background: linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,212,255,0.2)); border: 1px solid var(--green); color: var(--green); font-weight: 700; }
 .gem-badge.ai-pick { background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(0,212,255,0.3)); border: 1px solid var(--purple); color: #fff; font-weight: 700; animation: pulse 2s infinite; }
+.gem-badge.ai-ranked { background: rgba(168,85,247,0.2); border: 1px solid var(--purple); color: var(--purple); font-weight: 600; }
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
@@ -716,7 +717,7 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
   <div class="results-section" id="resultsSection">
     <div class="results-header">
       <h2 class="results-title">🟢 HIGH POTENTIAL GEMS</h2>
-      <p class="results-subtitle">🤖 AI Pick first • Sorted by confidence</p>
+      <p class="results-subtitle">🤖 Ranked by AI • Best opportunities first</p>
     </div>
     
     <div class="gems-grid" id="gemsGrid"></div>
@@ -1030,7 +1031,8 @@ async function startHunt() {
       return true;
     });
     
-    const topGems = highPotentialGems.slice(0, 20);
+    // Take more gems for display
+    const topGems = highPotentialGems.slice(0, 30);
     
     if (topGems.length === 0) {
       $('progressSection').classList.remove('active');
@@ -1040,37 +1042,42 @@ async function startHunt() {
       return;
     }
     
-    // ═══ PHASE 3: AI ANALYSIS (background) ═══
-    updateProgress(80, 'AI ranking by confidence...');
+    // ═══ PHASE 3: AI RANKING ═══
+    updateProgress(80, 'AI ranking gems...');
     
-    let topPick = '';
+    let aiRanking = [];
     
     try {
-      const gemsContext = topGems.slice(0, 10).map((g, i) => `
-${i+1}. $${g.symbol} - Score:${g.score} MC:$${fN(g.mc)} Liq:$${fN(g.liq)} Buy:${g.buyRatio}% 24h:${g.chg24h > 0 ? '+' : ''}${g.chg24h.toFixed(0)}%`).join('\n');
+      // Send top 20 to AI for ranking
+      const gemsForAI = topGems.slice(0, 20);
+      const gemsContext = gemsForAI.map((g, i) => `${g.symbol}: Score=${g.score} MC=$${fN(g.mc)} Liq=$${fN(g.liq)} Buy=${g.buyRatio}% 1h=${g.chg1h > 0 ? '+' : ''}${g.chg1h.toFixed(0)}% 24h=${g.chg24h > 0 ? '+' : ''}${g.chg24h.toFixed(0)}%`).join('\n');
       
-      const prompt = `Pick the #1 best crypto from this list. Reply with ONLY the symbol (e.g. "PEPE"):
+      const prompt = `Rank these crypto gems from BEST to WORST opportunity. Consider: buy pressure, momentum, liquidity ratio, market cap sweet spot.
 
 ${gemsContext}
 
-Consider: score, buy ratio, momentum, liquidity. Just reply with the symbol, nothing else.`;
+Reply with ONLY the symbols in order, separated by commas. Example: PEPE,BONK,WIF,DOGE
+No explanations, just the ranked list of symbols.`;
 
       const aiRes = await askAI(prompt);
       if (aiRes && aiRes.answer) {
-        // Extract just the symbol
-        const match = aiRes.answer.match(/\$?([A-Za-z0-9]+)/);
-        if (match) {
-          topPick = match[1].toUpperCase();
+        // Parse AI ranking - extract symbols
+        const answer = aiRes.answer.replace(/\s/g, '').toUpperCase();
+        const symbols = answer.split(',').map(s => s.replace(/[^A-Z0-9]/g, '')).filter(s => s.length > 0);
+        
+        if (symbols.length > 0) {
+          aiRanking = symbols;
+          console.log('AI Ranking:', aiRanking);
         }
       }
     } catch(e) {
-      console.log('AI pick failed:', e);
+      console.log('AI ranking failed:', e);
     }
     
     updateProgress(95, 'Rendering results...');
     
     // ═══ PHASE 4: RENDER ═══
-    renderResults(topGems, null, topPick);
+    renderResults(topGems, aiRanking);
     
     updateProgress(100, 'Complete!');
     
@@ -1103,17 +1110,23 @@ async function askAI(prompt) {
   }
 }
 
-function renderResults(gems, aiAnalysis, topPick) {
-  // AI analysis is done in background - topPick is just the symbol
-  const aiTopPick = topPick ? topPick.toUpperCase() : null;
-  
-  // Sort gems: AI pick first, then by score
-  if (aiTopPick) {
+function renderResults(gems, aiRanking) {
+  // Sort gems by AI ranking if available
+  if (aiRanking && aiRanking.length > 0) {
     gems.sort((a, b) => {
-      const aIsAI = a.symbol.toUpperCase() === aiTopPick;
-      const bIsAI = b.symbol.toUpperCase() === aiTopPick;
-      if (aIsAI && !bIsAI) return -1;
-      if (!aIsAI && bIsAI) return 1;
+      const aSymbol = a.symbol.toUpperCase();
+      const bSymbol = b.symbol.toUpperCase();
+      const aIndex = aiRanking.indexOf(aSymbol);
+      const bIndex = aiRanking.indexOf(bSymbol);
+      
+      // If both are in AI ranking, sort by AI order
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex;
+      }
+      // If only one is in AI ranking, prioritize it
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      // If neither, sort by score
       return b.score - a.score;
     });
   }
@@ -1125,7 +1138,8 @@ function renderResults(gems, aiAnalysis, topPick) {
     const rank = i + 1;
     const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'normal';
     const isTop3 = rank <= 3;
-    const isAIPick = aiTopPick && g.symbol.toUpperCase() === aiTopPick;
+    const isAIRanked = aiRanking && aiRanking.includes(g.symbol.toUpperCase());
+    const aiPosition = aiRanking ? aiRanking.indexOf(g.symbol.toUpperCase()) + 1 : 0;
     const chg24hColor = g.chg24h >= 0 ? 'green' : 'red';
     const chg1hColor = g.chg1h >= 0 ? 'green' : 'red';
     const buyColor = g.buyRatio >= 60 ? 'green' : g.buyRatio >= 55 ? '' : 'yellow';
@@ -1136,12 +1150,13 @@ function renderResults(gems, aiAnalysis, topPick) {
     const confidenceColor = g.score >= 75 ? '#00ff88' : g.score >= 65 ? '#00d4ff' : g.score >= 55 ? '#ffaa00' : '#94a3b8';
     
     let badges = '';
-    if (isAIPick) badges += '<span class="gem-badge ai-pick">🤖 AI PICK</span>';
+    if (rank === 1 && isAIRanked) badges += '<span class="gem-badge ai-pick">🤖 AI #1</span>';
+    else if (isAIRanked && aiPosition <= 3) badges += `<span class="gem-badge ai-ranked">🤖 AI #${aiPosition}</span>`;
     if (g.age < 48) badges += '<span class="gem-badge new">🆕 FRESH</span>';
     if (g.source === 'boosted') badges += '<span class="gem-badge boosted">🚀 BOOSTED</span>';
     if (g.isCTO) badges += '<span class="gem-badge cto">👥 CTO</span>';
     
-    cardsHtml += `<div class="gem-card ${isTop3 ? 'top-3' : ''} ${isAIPick ? 'ai-pick-card' : ''}">
+    cardsHtml += `<div class="gem-card ${isTop3 ? 'top-3' : ''} ${rank === 1 && isAIRanked ? 'ai-pick-card' : ''}">
       <div class="gem-rank ${rankClass}">#${rank}</div>
       <div class="gem-score high" style="background:${confidenceColor}">${g.score}</div>
       
