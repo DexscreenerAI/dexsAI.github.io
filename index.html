@@ -429,6 +429,9 @@ body {
   .action-btns { grid-template-columns: 1fr; max-width: 100%; gap: 8px; margin-top: 20px; }
   .action-btn { padding: 12px 14px; }
   .action-btn .ab-icon { width: 36px; height: 36px; font-size: 18px; }
+  .ia-btn { padding: 5px 10px; font-size: 11px; }
+  .ia-btn span { font-size: 12px; }
+  .input-actions { gap: 6px; }
 }
 
 /* ── INPUT AREA ── */
@@ -436,6 +439,19 @@ body {
   padding: 10px 20px 20px;
   display: flex; flex-direction: column; align-items: center;
 }
+.input-actions {
+  display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center;
+  max-width: 720px; width: 100%;
+}
+.ia-btn {
+  padding: 7px 14px; border-radius: 20px; background: var(--card);
+  border: 1px solid var(--card-border); color: var(--text2);
+  font-family: var(--mono); font-size: 12px; font-weight: 500; cursor: pointer;
+  display: flex; align-items: center; gap: 5px; transition: all .15s;
+  white-space: nowrap;
+}
+.ia-btn:hover { border-color: rgba(0,212,255,0.4); color: #fff; background: var(--bg3); }
+.ia-btn span { font-size: 14px; }
 .quick-btns { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; justify-content: center; }
 .quick-btn {
   padding: 7px 14px; border-radius: 20px; background: var(--card);
@@ -1109,6 +1125,12 @@ body {
 
     <!-- INPUT -->
     <div class="input-area">
+      <div class="input-actions" id="inputActions">
+        <button class="ia-btn" onclick="handleSafeCheck()"><span>🛡️</span> Safe?</button>
+        <button class="ia-btn" onclick="handleBuySell()"><span>📈</span> Buy/Sell?</button>
+        <button class="ia-btn" onclick="handleTrending()"><span>🔥</span> Trending</button>
+        <button class="ia-btn" onclick="handleGems()"><span>💎</span> Gems</button>
+      </div>
       <div class="input-wrap">
         <textarea class="input-box" id="inputBox" rows="1"
           placeholder="Ask about any crypto, stock, or paste a contract address..."
@@ -1155,6 +1177,7 @@ let conversations = [{ id: Date.now(), title: 'New analysis', messages: [] }];
 let activeId = conversations[0].id;
 let isLoading = false;
 let pendingQuestion = null; // Stores {question, mode} when token not found
+let lastAnalyzedToken = null; // Stores {pair, rugData, analysis} of last analyzed token
 let currentLang = 'en';
 let savedSearches = JSON.parse(localStorage.getItem('oracleSearches') || '[]');
 
@@ -1347,6 +1370,8 @@ function newConversation() {
   const c = { id: Date.now(), title: 'New analysis', messages: [] };
   conversations.unshift(c);
   activeId = c.id;
+  lastAnalyzedToken = null;
+  pendingQuestion = null;
   renderSidebar();
   renderMessages();
   updateTopbar();
@@ -2397,6 +2422,7 @@ async function sendQuery(query) {
         c.messages.push({ role: 'assistant', html: `<div class="card card-accent"><div style="font-size:13px;color:var(--text)">❌ Token not found for this address either. Double-check the contract address and try again.</div></div>` });
       } else {
         const analysis = analyzeToken(pair, rugData);
+        lastAnalyzedToken = { pair, rugData, analysis };
         
         if (pq.mode === 'safe') {
           c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
@@ -2426,6 +2452,83 @@ async function sendQuery(query) {
       await new Promise(r => setTimeout(r, 800));
       hideLoading();
       c.messages.push({ role: 'assistant', text: GENERAL[genKey] });
+      isLoading = false;
+      renderMessages();
+      return;
+    }
+
+    // If we have a last analyzed token AND the query is NOT a contract address,
+    // answer the question about the current token instead of searching
+    if (lastAnalyzedToken && !addrInfo) {
+      const { pair, rugData, analysis } = lastAnalyzedToken;
+      const sym = analysis.ticker;
+      
+      // Detect question type
+      const isSafeQ = /safe|scam|rug|risk|legit|trust|secure|danger|fraud/i.test(lower);
+      const isBuyQ = /buy|sell|entry|trade|signal|long|short|invest|hold|position/i.test(lower);
+      const isPriceQ = /price|worth|value|cost|how much/i.test(lower);
+      const isLiqQ = /liquid|volume|pool|depth/i.test(lower);
+      
+      await new Promise(r => setTimeout(r, 400));
+      hideLoading();
+      
+      if (isSafeQ) {
+        c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
+      } else if (isBuyQ) {
+        c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
+      } else {
+        // For any other question, show a quick summary card about the token
+        const price = analysis.currentPrice;
+        const liq = parseFloat(pair.liquidity?.usd) || 0;
+        const vol = parseFloat(pair.volume?.h24) || 0;
+        const mc = parseFloat(pair.marketCap) || 0;
+        const buys = pair.txns?.h24?.buys || 0;
+        const sells = pair.txns?.h24?.sells || 0;
+        const chg24h = parseFloat(pair.priceChange?.h24) || 0;
+        const biasColor = analysis.bias === 'BULLISH' ? 'var(--green)' : analysis.bias === 'BEARISH' ? 'var(--red)' : 'var(--yellow)';
+        
+        c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            ${analysis.logo ? `<img src="${analysis.logo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : ''}
+            <div>
+              <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--cyan)">$${sym}</div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text3)">${analysis.chain.toUpperCase()}</div>
+            </div>
+            <span class="badge badge-${analysis.bias === 'BULLISH' ? 'green' : analysis.bias === 'BEARISH' ? 'red' : 'yellow'}" style="margin-left:auto">${analysis.bias}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">PRICE</div>
+              <div style="font-family:var(--mono);font-size:13px;font-weight:600">${fP(price)}</div>
+            </div>
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">MC</div>
+              <div style="font-family:var(--mono);font-size:13px;font-weight:600">$${fN(mc)}</div>
+            </div>
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">24H</div>
+              <div style="font-family:var(--mono);font-size:13px;font-weight:600;color:${chg24h >= 0 ? 'var(--green)' : 'var(--red)'}">${chg24h > 0 ? '+' : ''}${chg24h.toFixed(1)}%</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">LIQUIDITY</div>
+              <div style="font-family:var(--mono);font-size:13px;font-weight:600">$${fN(liq)}</div>
+            </div>
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">VOLUME 24H</div>
+              <div style="font-family:var(--mono);font-size:13px;font-weight:600">$${fN(vol)}</div>
+            </div>
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">BUYS/SELLS</div>
+              <div style="font-family:var(--mono);font-size:13px;font-weight:600">${buys}/${sells}</div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--text);line-height:1.6">${analysis.summary}</div>
+          <div style="margin-top:10px;font-size:11px;color:var(--text3)">💡 Use the buttons below for a detailed Safety Report or Trade Signal.</div>
+        </div>` });
+      }
+      
       isLoading = false;
       renderMessages();
       return;
@@ -2463,6 +2566,7 @@ async function sendQuery(query) {
     } else {
       pendingQuestion = null;
       const analysis = analyzeToken(pair, rugData);
+      lastAnalyzedToken = { pair, rugData, analysis };
       c.messages.push({ role: 'assistant', analysis });
       
       saveSearch({
@@ -2499,36 +2603,63 @@ async function quickAnalyze(symbol) {
 // 🛡️ IS THIS TOKEN SAFE?
 function handleSafeCheck() {
   if (isLoading) return;
-  pendingQuestion = { question: 'Is this token safe?', mode: 'safe' };
   const c = conversations.find(x => x.id === activeId);
-  c.title = '🛡️ Safety Check';
-  c.messages.push({ role: 'user', content: '🛡️ Is this token safe?' });
-  c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
-    <div style="font-size:13px;color:var(--text);margin-bottom:10px">🛡️ Sure! Paste the <strong>contract address</strong> below and I'll run a full safety check.</div>
-    <div style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 12px;background:var(--bg);border-radius:6px">💡 Example: DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263</div>
-  </div>` });
-  renderSidebar();
-  renderMessages();
-  updateTopbar();
+  
+  if (lastAnalyzedToken) {
+    // Use last analyzed token directly
+    const { pair, rugData, analysis } = lastAnalyzedToken;
+    c.messages.push({ role: 'user', content: `🛡️ Is $${analysis.ticker} safe?` });
+    c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
+    c.title = `🛡️ Safety: $${analysis.ticker}`;
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+    scrollToLastUserMessage();
+  } else {
+    // No token yet, ask for contract
+    pendingQuestion = { question: 'Is this token safe?', mode: 'safe' };
+    c.messages.push({ role: 'user', content: '🛡️ Is this token safe?' });
+    c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
+      <div style="font-size:13px;color:var(--text);margin-bottom:10px">🛡️ Sure! Paste the <strong>contract address</strong> below and I'll run a full safety check.</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 12px;background:var(--bg);border-radius:6px">💡 Example: DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263</div>
+    </div>` });
+    c.title = '🛡️ Safety Check';
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+  }
 }
 
 // 📈 SHOULD I BUY OR SELL?
 function handleBuySell() {
   if (isLoading) return;
-  pendingQuestion = { question: 'Should I buy or sell?', mode: 'buysell' };
   const c = conversations.find(x => x.id === activeId);
-  c.title = '📈 Trade Signal';
-  c.messages.push({ role: 'user', content: '📈 Should I buy or sell?' });
-  c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
-    <div style="font-size:13px;color:var(--text);margin-bottom:10px">📈 Sure! Paste the <strong>contract address</strong> below and I'll give you a trade signal.</div>
-    <div style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 12px;background:var(--bg);border-radius:6px">💡 Example: DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263</div>
-  </div>` });
-  renderSidebar();
-  renderMessages();
-  updateTopbar();
+  
+  if (lastAnalyzedToken) {
+    // Use last analyzed token directly
+    const { pair, rugData, analysis } = lastAnalyzedToken;
+    c.messages.push({ role: 'user', content: `📈 Should I buy or sell $${analysis.ticker}?` });
+    c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
+    c.title = `📈 Signal: $${analysis.ticker}`;
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+    scrollToLastUserMessage();
+  } else {
+    // No token yet, ask for contract
+    pendingQuestion = { question: 'Should I buy or sell?', mode: 'buysell' };
+    c.messages.push({ role: 'user', content: '📈 Should I buy or sell?' });
+    c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
+      <div style="font-size:13px;color:var(--text);margin-bottom:10px">📈 Sure! Paste the <strong>contract address</strong> below and I'll give you a trade signal.</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 12px;background:var(--bg);border-radius:6px">💡 Example: DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263</div>
+    </div>` });
+    c.title = '📈 Trade Signal';
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+  }
 }
 
-// Special query handler for when contract is provided after safe/buysell
 // Now handled directly in sendQuery via pendingQuestion
 
 // Render SAFETY REPORT
