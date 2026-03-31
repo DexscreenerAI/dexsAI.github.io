@@ -1182,6 +1182,11 @@ let currentLang = 'en';
 let savedSearches = JSON.parse(localStorage.getItem('oracleSearches') || '[]');
 
 // ═══════════════════════════════════════════
+// API CONFIG — Change this to your Railway bot URL
+// ═══════════════════════════════════════════
+const API_URL = 'https://YOUR-BOT.up.railway.app'; // ← CHANGE THIS
+
+// ═══════════════════════════════════════════
 // TRANSLATIONS
 // ═══════════════════════════════════════════
 const TRANSLATIONS = {
@@ -2463,69 +2468,75 @@ async function sendQuery(query) {
       const { pair, rugData, analysis } = lastAnalyzedToken;
       const sym = analysis.ticker;
       
-      // Detect question type
+      // Detect question type for buttons
       const isSafeQ = /safe|scam|rug|risk|legit|trust|secure|danger|fraud/i.test(lower);
       const isBuyQ = /buy|sell|entry|trade|signal|long|short|invest|hold|position/i.test(lower);
-      const isPriceQ = /price|worth|value|cost|how much/i.test(lower);
-      const isLiqQ = /liquid|volume|pool|depth/i.test(lower);
-      
-      await new Promise(r => setTimeout(r, 400));
-      hideLoading();
       
       if (isSafeQ) {
+        hideLoading();
         c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
+        isLoading = false;
+        renderMessages();
+        return;
       } else if (isBuyQ) {
+        hideLoading();
         c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
-      } else {
-        // For any other question, show a quick summary card about the token
-        const price = analysis.currentPrice;
-        const liq = parseFloat(pair.liquidity?.usd) || 0;
-        const vol = parseFloat(pair.volume?.h24) || 0;
-        const mc = parseFloat(pair.marketCap) || 0;
-        const buys = pair.txns?.h24?.buys || 0;
-        const sells = pair.txns?.h24?.sells || 0;
-        const chg24h = parseFloat(pair.priceChange?.h24) || 0;
-        const biasColor = analysis.bias === 'BULLISH' ? 'var(--green)' : analysis.bias === 'BEARISH' ? 'var(--red)' : 'var(--yellow)';
+        isLoading = false;
+        renderMessages();
+        return;
+      }
+      
+      // For any other question, call Haiku API with token context
+      try {
+        const tokenContext = {
+          symbol: sym,
+          name: analysis.tokenName,
+          price: analysis.currentPrice,
+          marketCap: parseFloat(pair.marketCap) || 0,
+          liquidity: parseFloat(pair.liquidity?.usd) || 0,
+          volume24h: parseFloat(pair.volume?.h24) || 0,
+          priceChange24h: parseFloat(pair.priceChange?.h24) || 0,
+          priceChange1h: parseFloat(pair.priceChange?.h1) || 0,
+          buys: pair.txns?.h24?.buys || 0,
+          sells: pair.txns?.h24?.sells || 0,
+          chain: analysis.chain,
+          address: pair.baseToken?.address || '',
+          bias: analysis.bias,
+          confidence: analysis.confidence,
+          risk: analysis.risk
+        };
         
+        const aiRes = await fetch(`${API_URL}/api/ask`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: query, tokenContext }),
+          signal: AbortSignal.timeout(15000)
+        });
+        
+        hideLoading();
+        
+        if (aiRes.ok) {
+          const aiData = await aiRes.json();
+          c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              ${analysis.logo ? `<img src="${analysis.logo}" style="width:24px;height:24px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : ''}
+              <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--cyan)">$${sym}</span>
+              <span class="badge badge-${analysis.bias === 'BULLISH' ? 'green' : analysis.bias === 'BEARISH' ? 'red' : 'yellow'}" style="font-size:9px">${analysis.bias}</span>
+            </div>
+            <div style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap">${esc(aiData.answer)}</div>
+          </div>` });
+        } else {
+          // API failed, fallback to summary
+          c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
+            <div style="font-size:13px;color:var(--text)">${analysis.summary}</div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text3)">⚠️ AI unavailable. Use 🛡️ Safe? or 📈 Buy/Sell? for detailed analysis.</div>
+          </div>` });
+        }
+      } catch(apiErr) {
+        hideLoading();
         c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-            ${analysis.logo ? `<img src="${analysis.logo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : ''}
-            <div>
-              <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--cyan)">$${sym}</div>
-              <div style="font-family:var(--mono);font-size:11px;color:var(--text3)">${analysis.chain.toUpperCase()}</div>
-            </div>
-            <span class="badge badge-${analysis.bias === 'BULLISH' ? 'green' : analysis.bias === 'BEARISH' ? 'red' : 'yellow'}" style="margin-left:auto">${analysis.bias}</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">PRICE</div>
-              <div style="font-family:var(--mono);font-size:13px;font-weight:600">${fP(price)}</div>
-            </div>
-            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">MC</div>
-              <div style="font-family:var(--mono);font-size:13px;font-weight:600">$${fN(mc)}</div>
-            </div>
-            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">24H</div>
-              <div style="font-family:var(--mono);font-size:13px;font-weight:600;color:${chg24h >= 0 ? 'var(--green)' : 'var(--red)'}">${chg24h > 0 ? '+' : ''}${chg24h.toFixed(1)}%</div>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">LIQUIDITY</div>
-              <div style="font-family:var(--mono);font-size:13px;font-weight:600">$${fN(liq)}</div>
-            </div>
-            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">VOLUME 24H</div>
-              <div style="font-family:var(--mono);font-size:13px;font-weight:600">$${fN(vol)}</div>
-            </div>
-            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">BUYS/SELLS</div>
-              <div style="font-family:var(--mono);font-size:13px;font-weight:600">${buys}/${sells}</div>
-            </div>
-          </div>
-          <div style="font-size:12px;color:var(--text);line-height:1.6">${analysis.summary}</div>
-          <div style="margin-top:10px;font-size:11px;color:var(--text3)">💡 Use the buttons below for a detailed Safety Report or Trade Signal.</div>
+          <div style="font-size:13px;color:var(--text)">${analysis.summary}</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text3)">⚠️ Could not reach AI server. Make sure your bot is running.</div>
         </div>` });
       }
       
