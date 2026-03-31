@@ -1182,9 +1182,11 @@ let currentLang = 'en';
 let savedSearches = JSON.parse(localStorage.getItem('oracleSearches') || '[]');
 
 // ═══════════════════════════════════════════
-// API CONFIG — Auto-detects: same server if served by bot, or set manually
+// API CONFIG — Auto-detects: same server if served by bot, or Railway
 // ═══════════════════════════════════════════
-const API_URL = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+const API_URL = window.location.hostname === 'localhost' || window.location.protocol === 'file:' 
+  ? 'https://dexscreener-telegram-bot-production.up.railway.app' 
+  : '';
 
 // ═══════════════════════════════════════════
 // TRANSLATIONS
