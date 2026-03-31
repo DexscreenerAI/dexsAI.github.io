@@ -4855,6 +4855,79 @@ Be realistic, not hopeful.`
 }
 
 // ═══════════════════════════════════════════
+// 🤖 GET AI BUY/SELL OPINION (from button)
+// ═══════════════════════════════════════════
+async function getAIBuySellOpinion(token) {
+  if (isLoading) return;
+  
+  const c = conversations.find(x => x.id === activeId);
+  
+  // Build context
+  const context = `Token: $${token.symbol}
+Chain: ${token.chain || 'Unknown'}
+Price: ${fP(token.price || 0)}
+Market Cap: $${fN(token.mc || 0)}
+Liquidity: $${fN(token.liq || 0)}
+Volume 24h: $${fN(token.vol24h || 0)}
+Buy Pressure: ${token.buyRatio || 50}%
+Price Change 1h: ${token.chg1h > 0 ? '+' : ''}${(token.chg1h || 0).toFixed(1)}%
+Price Change 6h: ${token.chg6h > 0 ? '+' : ''}${(token.chg6h || 0).toFixed(1)}%
+Price Change 24h: ${token.chg24h > 0 ? '+' : ''}${(token.chg24h || 0).toFixed(1)}%
+Local Analysis Bias: ${token.bias || 'NEUTRAL'}
+Local Confidence: ${token.confidence || 50}%`;
+
+  const prompt = `${context}
+
+Based on this data, give me your HONEST opinion:
+1. Should I BUY, SELL, or WAIT? (one word)
+2. Why? (2-3 sentences max)
+3. What's the biggest risk right now?
+4. Ideal entry if buying, or exit if selling
+
+Be direct and decisive. No fluff.`;
+
+  // Show user message
+  c.messages.push({ role: 'user', content: `🤖 AI Opinion: Should I buy or sell $${token.symbol}?` });
+  renderMessages();
+  showLoading();
+  
+  try {
+    const response = await askAI(prompt, {
+      symbol: token.symbol,
+      chain: token.chain,
+      price: token.price,
+      marketCap: token.mc,
+      liquidity: token.liq,
+      volume24h: token.vol24h
+    });
+    
+    hideLoading();
+    
+    if (response.error) {
+      c.messages.push({ 
+        role: 'assistant', 
+        text: `⚠️ ${response.message || 'AI opinion failed. Please try again.'}` 
+      });
+    } else {
+      c.messages.push({ 
+        role: 'assistant', 
+        text: `🤖 **AI Opinion on $${token.symbol}**\n\n${response.answer}` 
+      });
+    }
+  } catch (err) {
+    hideLoading();
+    c.messages.push({ 
+      role: 'assistant', 
+      text: `❌ AI error: ${err.message}` 
+    });
+  }
+  
+  isLoading = false;
+  renderMessages();
+  scrollToLastUserMessage();
+}
+
+// ═══════════════════════════════════════════
 // 🛡️ HANDLE SAFE CHECK
 // ═══════════════════════════════════════════
 function handleSafeCheck() {
@@ -5321,6 +5394,8 @@ function renderBuySellSignal(data) {
   const badgeClass = data.bias === 'BULLISH' ? 'badge-green' : data.bias === 'BEARISH' ? 'badge-red' : 'badge-yellow';
   
   const price = data.currentPrice;
+  const mc = data._dex?.marketCap || 0;
+  const liq = parseFloat(data._dex?.liquidity?.usd) || 0;
   const buys = data._dex?.txns?.h24?.buys || 0;
   const sells = data._dex?.txns?.h24?.sells || 0;
   const total = buys + sells;
@@ -5329,6 +5404,8 @@ function renderBuySellSignal(data) {
   const chg6h = parseFloat(data._dex?.priceChange?.h6) || 0;
   const chg24h = parseFloat(data._dex?.priceChange?.h24) || 0;
   const vol = parseFloat(data._dex?.volume?.h24) || 0;
+  const chain = data.chain || 'unknown';
+  const addr = data.contractAddress || '';
   
   // Momentum analysis
   let momentum = '';
@@ -5337,6 +5414,10 @@ function renderBuySellSignal(data) {
   else if (chg1h < -5 && chg6h < -10) momentum = '📉 Strong downward pressure — consider waiting';
   else if (buyRatio < 40) momentum = '🔻 Sell pressure dominant — not ideal entry';
   else momentum = '➡️ Sideways action — wait for clear direction';
+  
+  // Escape for onclick
+  const safeSymbol = (data.ticker || '').replace(/'/g, "\\'");
+  const safeLogo = (data.logo || '').replace(/'/g, "\\'");
   
   return `<div class="card" style="border-left:3px solid ${biasColor}">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
@@ -5389,8 +5470,13 @@ function renderBuySellSignal(data) {
       </div>
     </div>
 
-    <div style="font-size:12px;color:var(--text2);line-height:1.6">${data.summary}</div>
-    <div style="margin-top:12px;font-size:11px;color:var(--text3);font-style:italic">⚠️ Not financial advice. Always DYOR.</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px">${data.summary}</div>
+    
+    <button onclick="getAIBuySellOpinion({symbol:'${safeSymbol}',chain:'${chain}',address:'${addr}',logo:'${safeLogo}',price:${price},mc:${mc},liq:${liq},vol24h:${vol},buyRatio:${buyRatio},chg1h:${chg1h},chg6h:${chg6h},chg24h:${chg24h},bias:'${data.bias}',confidence:${data.confidence}})" style="width:100%;padding:12px;background:linear-gradient(135deg, var(--purple) 0%, var(--cyan) 100%);border:none;border-radius:8px;color:#000;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(136,0,255,0.3)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+      <span style="font-size:16px">🤖</span> GET AI OPINION
+    </button>
+    
+    <div style="margin-top:10px;font-size:11px;color:var(--text3);font-style:italic;text-align:center">⚠️ Not financial advice. Always DYOR.</div>
   </div>`;
 }
 
