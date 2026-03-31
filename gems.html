@@ -411,6 +411,22 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
 .gem-badge.trending { background: rgba(0,212,255,0.15); border: 1px solid var(--cyan); color: var(--cyan); }
 .gem-badge.cto { background: rgba(255,170,0,0.15); border: 1px solid var(--yellow); color: var(--yellow); }
 .gem-badge.potential { background: linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,212,255,0.2)); border: 1px solid var(--green); color: var(--green); font-weight: 700; }
+.gem-badge.ai-pick { background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(0,212,255,0.3)); border: 1px solid var(--purple); color: #fff; font-weight: 700; animation: pulse 2s infinite; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.gem-confidence {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+}
+.gem-card.ai-pick-card {
+  border: 2px solid var(--purple);
+  background: linear-gradient(135deg, rgba(168,85,247,0.1), transparent);
+}
 
 .gem-stats {
   display: grid;
@@ -548,52 +564,6 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
 }
 .gem-btn.app:hover {
   transform: scale(1.05);
-}
-
-/* ── AI SUMMARY ── */
-.ai-summary {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-left: 3px solid var(--purple);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-}
-.ai-summary-title {
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  color: var(--purple);
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.ai-summary-content {
-  font-size: 14px;
-  line-height: 1.8;
-  color: var(--text);
-  white-space: pre-wrap;
-}
-.ai-top-pick {
-  margin-top: 20px;
-  padding: 16px;
-  background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(168,85,247,0.1));
-  border: 1px solid rgba(255,215,0,0.3);
-  border-radius: 12px;
-}
-.ai-top-pick-label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  color: var(--gold);
-  margin-bottom: 6px;
-}
-.ai-top-pick-text {
-  font-size: 15px;
-  font-weight: 600;
-  color: #fff;
 }
 
 /* ── RESET ── */
@@ -751,10 +721,9 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
   <div class="results-section" id="resultsSection">
     <div class="results-header">
       <h2 class="results-title">🟢 HIGH POTENTIAL GEMS</h2>
-      <p class="results-subtitle">Only quality tokens • No risky plays • Updated just now</p>
+      <p class="results-subtitle">Sorted by confidence • AI Pick marked with 🤖</p>
     </div>
     
-    <div id="aiSummaryContainer"></div>
     <div class="gems-grid" id="gemsGrid"></div>
     
     <button class="reset-btn" onclick="resetHunt()">🔄 Hunt Again</button>
@@ -1076,54 +1045,37 @@ async function startHunt() {
       return;
     }
     
-    // ═══ PHASE 3: AI ANALYSIS ═══
-    updateProgress(80, 'AI confirming top picks...');
+    // ═══ PHASE 3: AI ANALYSIS (background) ═══
+    updateProgress(80, 'AI ranking by confidence...');
     
-    let aiAnalysis = '';
     let topPick = '';
     
     try {
-      const gemsContext = topGems.slice(0, 12).map((g, i) => `
-${i+1}. $${g.symbol} (${g.chain}) - Score: ${g.score}
-   MC: $${fN(g.mc)} | Liq: $${fN(g.liq)} | Vol: $${fN(g.vol)}
-   24h: ${g.chg24h > 0 ? '+' : ''}${g.chg24h.toFixed(1)}% | 1h: ${g.chg1h > 0 ? '+' : ''}${g.chg1h.toFixed(1)}%
-   Buy Ratio: ${g.buyRatio}% | Txns: ${g.txns} | Age: ${g.age}h
-   Rug: ${g.rugStatus} | Source: ${g.source}${g.isCTO ? ' | CTO' : ''}`).join('\n');
+      const gemsContext = topGems.slice(0, 10).map((g, i) => `
+${i+1}. $${g.symbol} - Score:${g.score} MC:$${fN(g.mc)} Liq:$${fN(g.liq)} Buy:${g.buyRatio}% 24h:${g.chg24h > 0 ? '+' : ''}${g.chg24h.toFixed(0)}%`).join('\n');
       
-      const prompt = `You are a crypto gem hunter. These tokens have already passed strict filters (score 55+, no dumps, good rug check, 50%+ buy ratio).
+      const prompt = `Pick the #1 best crypto from this list. Reply with ONLY the symbol (e.g. "PEPE"):
 
 ${gemsContext}
 
-Your job: Rank the TOP 5 best opportunities. For each:
-- 🟢 Why it's HIGH POTENTIAL (1 sentence with specific numbers)
-
-Then pick your #1 TOP GEM with clear reasoning (why THIS one over others).
-
-Be concise. Only positive analysis - these are pre-filtered quality tokens.`;
+Consider: score, buy ratio, momentum, liquidity. Just reply with the symbol, nothing else.`;
 
       const aiRes = await askAI(prompt);
       if (aiRes && aiRes.answer) {
-        aiAnalysis = aiRes.answer;
-        
-        // Extract top pick
-        const topPickMatch = aiAnalysis.match(/(?:TOP(?:\s+GEM)?|#1|PICK)[:\s]+\$?(\w+)/i);
-        if (topPickMatch) {
-          const pickSymbol = topPickMatch[1].toUpperCase();
-          const pickGem = topGems.find(g => g.symbol.toUpperCase() === pickSymbol);
-          if (pickGem) {
-            topPick = `$${pickGem.symbol} - AI's #1 pick based on risk/reward analysis`;
-          }
+        // Extract just the symbol
+        const match = aiRes.answer.match(/\$?([A-Za-z0-9]+)/);
+        if (match) {
+          topPick = match[1].toUpperCase();
         }
       }
     } catch(e) {
-      console.log('AI analysis failed:', e);
-      aiAnalysis = 'AI analysis unavailable. All tokens shown passed strict quality filters.';
+      console.log('AI pick failed:', e);
     }
     
     updateProgress(95, 'Rendering results...');
     
     // ═══ PHASE 4: RENDER ═══
-    renderResults(topGems, aiAnalysis, topPick);
+    renderResults(topGems, null, topPick);
     
     updateProgress(100, 'Complete!');
     
@@ -1157,41 +1109,35 @@ async function askAI(prompt) {
 }
 
 function renderResults(gems, aiAnalysis, topPick) {
-  // AI Summary
-  let aiHtml = '';
-  if (aiAnalysis) {
-    aiHtml = `<div class="ai-summary">
-      <div class="ai-summary-title">🤖 AI TOP PICKS</div>
-      <div class="ai-summary-content">${esc(aiAnalysis)}</div>
-      ${topPick ? `<div class="ai-top-pick">
-        <div class="ai-top-pick-label">🏆 #1 TOP GEM</div>
-        <div class="ai-top-pick-text">${esc(topPick)}</div>
-      </div>` : ''}
-    </div>`;
-  }
-  $('aiSummaryContainer').innerHTML = aiHtml;
+  // AI analysis is done in background - topPick is just the symbol
+  const aiTopPick = topPick ? topPick.toUpperCase() : null;
   
-  // Gem cards
+  // Gem cards - sorted by score (confidence)
   let cardsHtml = '';
   
   gems.forEach((g, i) => {
     const rank = i + 1;
     const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'normal';
     const isTop3 = rank <= 3;
+    const isAIPick = aiTopPick && g.symbol.toUpperCase() === aiTopPick;
     const chg24hColor = g.chg24h >= 0 ? 'green' : 'red';
     const chg1hColor = g.chg1h >= 0 ? 'green' : 'red';
     const buyColor = g.buyRatio >= 60 ? 'green' : g.buyRatio >= 55 ? '' : 'yellow';
     const rugIcon = g.rugStatus === 'good' ? '✅' : g.rugStatus === 'warning' ? '⚠️' : '❓';
     
+    // Confidence based on score
+    const confidence = g.score >= 75 ? 'VERY HIGH' : g.score >= 65 ? 'HIGH' : g.score >= 55 ? 'GOOD' : 'MODERATE';
+    const confidenceColor = g.score >= 75 ? '#00ff88' : g.score >= 65 ? '#00d4ff' : g.score >= 55 ? '#ffaa00' : '#94a3b8';
+    
     let badges = '';
-    badges += '<span class="gem-badge potential">🟢 HIGH POTENTIAL</span>';
+    if (isAIPick) badges += '<span class="gem-badge ai-pick">🤖 AI PICK</span>';
     if (g.age < 48) badges += '<span class="gem-badge new">🆕 FRESH</span>';
     if (g.source === 'boosted') badges += '<span class="gem-badge boosted">🚀 BOOSTED</span>';
     if (g.isCTO) badges += '<span class="gem-badge cto">👥 CTO</span>';
     
-    cardsHtml += `<div class="gem-card ${isTop3 ? 'top-3' : ''}">
+    cardsHtml += `<div class="gem-card ${isTop3 ? 'top-3' : ''} ${isAIPick ? 'ai-pick-card' : ''}">
       <div class="gem-rank ${rankClass}">#${rank}</div>
-      <div class="gem-score high">🟢 ${g.score}</div>
+      <div class="gem-score high" style="background:${confidenceColor}">${g.score}</div>
       
       <div class="gem-header">
         <div class="gem-logo">
@@ -1203,6 +1149,7 @@ function renderResults(gems, aiAnalysis, topPick) {
             <span class="gem-chain">${g.chain}</span>
           </div>
           <div class="gem-name">${esc(g.name.slice(0, 25))}</div>
+          <div class="gem-confidence" style="color:${confidenceColor}">Confidence: ${confidence}</div>
           ${badges ? `<div class="gem-badges">${badges}</div>` : ''}
         </div>
       </div>
