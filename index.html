@@ -181,201 +181,6 @@ body {
   color: var(--yellow);
 }
 
-/* Explore Search Bar */
-.explore-search-wrap {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--card-border);
-  position: relative;
-}
-.explore-search-input {
-  width: 100%;
-  padding: 10px 14px;
-  padding-left: 36px;
-  background: var(--bg);
-  border: 1px solid var(--card-border);
-  border-radius: 10px;
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 13px;
-  outline: none;
-  transition: all 0.2s;
-}
-.explore-search-input::placeholder {
-  color: var(--text3);
-}
-.explore-search-input:focus {
-  border-color: var(--cyan);
-  background: var(--bg3);
-}
-.explore-search-icon {
-  position: absolute;
-  left: 28px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px;
-  color: var(--text3);
-  pointer-events: none;
-}
-.explore-search-clear {
-  position: absolute;
-  right: 28px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: var(--text3);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 4px;
-  display: none;
-}
-.explore-search-clear.visible {
-  display: block;
-}
-.explore-search-clear:hover {
-  color: var(--text);
-}
-.explore-results {
-  position: absolute;
-  top: 100%;
-  left: 12px;
-  right: 12px;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  max-height: 350px;
-  overflow-y: auto;
-  z-index: 100;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  display: none;
-}
-.explore-results.active {
-  display: block;
-}
-.explore-results-loading {
-  padding: 20px;
-  text-align: center;
-  color: var(--text3);
-  font-family: var(--mono);
-  font-size: 11px;
-}
-.explore-result-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  cursor: pointer;
-  transition: background 0.15s;
-  border-bottom: 1px solid var(--card-border);
-}
-.explore-result-item:last-child {
-  border-bottom: none;
-}
-.explore-result-item:hover {
-  background: var(--bg3);
-}
-.explore-result-logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--bg);
-  flex-shrink: 0;
-}
-.explore-result-info {
-  flex: 1;
-  min-width: 0;
-}
-.explore-result-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.explore-result-symbol {
-  font-family: var(--mono);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--cyan);
-}
-.explore-result-name {
-  font-size: 12px;
-  color: var(--text2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.explore-result-chain {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  color: var(--text3);
-  background: var(--bg);
-  padding: 2px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
-}
-.explore-result-cto {
-  font-family: var(--mono);
-  font-size: 8px;
-  font-weight: 600;
-  color: var(--yellow);
-  background: rgba(255,170,0,0.15);
-  padding: 2px 5px;
-  border-radius: 4px;
-}
-.explore-result-price {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text);
-  margin-top: 3px;
-}
-.explore-result-mc {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text3);
-  margin-left: 8px;
-}
-.explore-result-btns {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.explore-btn {
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  border: 1px solid;
-  white-space: nowrap;
-}
-.explore-btn-analyze {
-  background: var(--cyan-dim);
-  border-color: var(--cyan);
-  color: var(--cyan);
-}
-.explore-btn-analyze:hover {
-  background: var(--cyan);
-  color: #000;
-}
-.explore-btn-ai {
-  background: var(--purple-dim);
-  border-color: var(--purple);
-  color: var(--purple);
-}
-.explore-btn-ai:hover {
-  background: var(--purple);
-  color: #000;
-}
-.explore-no-results {
-  padding: 24px;
-  text-align: center;
-  color: var(--text3);
-  font-size: 12px;
-}
-
 /* Responsive: hide right panel on smaller screens */
 @media (max-width: 1200px) {
   .right-panel { width: 260px; }
@@ -1112,6 +917,220 @@ body {
   letter-spacing: 1px;
 }
 
+/* Nav Search Bar */
+.nav-search-wrap {
+  position: relative;
+  margin-left: 20px;
+  flex: 1;
+  max-width: 320px;
+}
+.nav-search-input {
+  width: 100%;
+  padding: 9px 14px;
+  padding-left: 36px;
+  padding-right: 32px;
+  background: var(--bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s;
+}
+.nav-search-input::placeholder {
+  color: var(--text3);
+}
+.nav-search-input:focus {
+  border-color: var(--cyan);
+  background: var(--bg3);
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
+}
+.nav-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: var(--text3);
+  pointer-events: none;
+}
+.nav-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px;
+  display: none;
+}
+.nav-search-clear.visible {
+  display: block;
+}
+.nav-search-clear:hover {
+  color: var(--text);
+}
+.nav-search-results {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  width: 400px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+  z-index: 10000;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  display: none;
+}
+.nav-search-results.active {
+  display: block;
+}
+.nav-search-loading {
+  padding: 20px;
+  text-align: center;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.nav-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid var(--card-border);
+}
+.nav-result-item:last-child {
+  border-bottom: none;
+}
+.nav-result-item:hover {
+  background: var(--bg3);
+}
+.nav-result-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg3);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--text3);
+  overflow: hidden;
+}
+.nav-result-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.nav-result-info {
+  flex: 1;
+  min-width: 0;
+}
+.nav-result-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.nav-result-symbol {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cyan);
+}
+.nav-result-name {
+  font-size: 12px;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+.nav-result-chain {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text3);
+  background: var(--bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.nav-result-cto {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 600;
+  color: var(--yellow);
+  background: rgba(255,170,0,0.15);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+.nav-result-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.nav-result-price {
+  color: var(--text);
+}
+.nav-result-mc {
+  color: var(--text3);
+}
+.nav-result-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.nav-result-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.nav-result-btn-analyze {
+  background: var(--cyan-dim);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.nav-result-btn-analyze:hover {
+  background: var(--cyan);
+  color: #000;
+}
+.nav-result-btn-ai {
+  background: var(--purple-dim);
+  border-color: var(--purple);
+  color: var(--purple);
+}
+.nav-result-btn-ai:hover {
+  background: var(--purple);
+  color: #000;
+}
+.nav-no-results {
+  padding: 24px;
+  text-align: center;
+  color: var(--text3);
+  font-size: 12px;
+}
+
 /* NEW Analysis button (mobile only) */
 .nav-new-btn {
   display: none;
@@ -1334,6 +1353,7 @@ body {
   .top-nav-logo span { display: none; }
   .nav-new-btn { display: flex; }
   .nav-quick-dropdown { display: none; } /* Hide dropdown on mobile - use hamburger menu instead */
+  .nav-search-wrap { display: none; } /* Hide search on mobile */
   .fab-new { display: none; }
 }
 @media (max-width: 400px) {
@@ -1606,6 +1626,14 @@ body {
     <span>DEXSCREENER AI</span>
   </a>
   
+  <!-- Global Search Bar -->
+  <div class="nav-search-wrap" id="navSearchWrap">
+    <span class="nav-search-icon">🔍</span>
+    <input type="text" class="nav-search-input" id="navSearchInput" placeholder="Search token..." autocomplete="off">
+    <button class="nav-search-clear" id="navSearchClear" onclick="clearNavSearch()">✕</button>
+    <div class="nav-search-results" id="navSearchResults"></div>
+  </div>
+  
   <!-- Quick Dropdown (compact menu) -->
   <div class="nav-quick-dropdown" id="navQuickDropdown">
     <button class="nav-quick-btn" onclick="toggleQuickDropdown(event)">
@@ -1751,14 +1779,6 @@ body {
 
   <!-- RIGHT PANEL -->
   <div class="right-panel" id="rightPanel">
-    <!-- Search Bar -->
-    <div class="explore-search-wrap">
-      <span class="explore-search-icon">🔍</span>
-      <input type="text" class="explore-search-input" id="exploreSearchInput" placeholder="Search token..." autocomplete="off">
-      <button class="explore-search-clear" id="exploreSearchClear" onclick="clearExploreSearch()">✕</button>
-      <div class="explore-results" id="exploreResults"></div>
-    </div>
-    
     <!-- Promoted Section -->
     <div class="rp-section rp-promoted">
       <div class="rp-title" style="color:var(--yellow)">⭐ Promoted <a href="./promote.html" style="margin-left:auto;font-size:9px;color:var(--cyan);text-decoration:none">+ Add yours</a></div>
@@ -5466,15 +5486,15 @@ function renderGemPicks(tokens) {
 }
 
 // ═══════════════════════════════════════════
-// 🔍 EXPLORE SEARCH (Right Panel)
+// 🔍 NAV SEARCH (Top Navigation Bar)
 // ═══════════════════════════════════════════
-let exploreSearchTimeout = null;
-let exploreSearchResults = [];
+let navSearchTimeout = null;
+let navSearchResults = [];
 
 function initExploreSearch() {
-  const input = document.getElementById('exploreSearchInput');
-  const results = document.getElementById('exploreResults');
-  const clearBtn = document.getElementById('exploreSearchClear');
+  const input = document.getElementById('navSearchInput');
+  const results = document.getElementById('navSearchResults');
+  const clearBtn = document.getElementById('navSearchClear');
   
   if (!input) return;
   
@@ -5485,47 +5505,47 @@ function initExploreSearch() {
     clearBtn.classList.toggle('visible', query.length > 0);
     
     // Debounce search
-    clearTimeout(exploreSearchTimeout);
+    clearTimeout(navSearchTimeout);
     
     if (query.length < 2) {
       results.classList.remove('active');
       return;
     }
     
-    exploreSearchTimeout = setTimeout(() => {
-      searchExplore(query);
+    navSearchTimeout = setTimeout(() => {
+      searchNav(query);
     }, 300);
   });
   
   input.addEventListener('focus', () => {
-    if (exploreSearchResults.length > 0) {
+    if (navSearchResults.length > 0) {
       results.classList.add('active');
     }
   });
   
   // Close on click outside
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.explore-search-wrap')) {
+    if (!e.target.closest('.nav-search-wrap')) {
       results.classList.remove('active');
     }
   });
 }
 
-function clearExploreSearch() {
-  const input = document.getElementById('exploreSearchInput');
-  const results = document.getElementById('exploreResults');
-  const clearBtn = document.getElementById('exploreSearchClear');
+function clearNavSearch() {
+  const input = document.getElementById('navSearchInput');
+  const results = document.getElementById('navSearchResults');
+  const clearBtn = document.getElementById('navSearchClear');
   
-  input.value = '';
-  clearBtn.classList.remove('visible');
-  results.classList.remove('active');
-  exploreSearchResults = [];
+  if (input) input.value = '';
+  if (clearBtn) clearBtn.classList.remove('visible');
+  if (results) results.classList.remove('active');
+  navSearchResults = [];
 }
 
-async function searchExplore(query) {
-  const results = document.getElementById('exploreResults');
+async function searchNav(query) {
+  const results = document.getElementById('navSearchResults');
   
-  results.innerHTML = '<div class="explore-results-loading">🔍 Searching...</div>';
+  results.innerHTML = '<div class="nav-search-loading">🔍 Searching...</div>';
   results.classList.add('active');
   
   try {
@@ -5535,8 +5555,8 @@ async function searchExplore(query) {
     const data = await res.json();
     
     if (!data.pairs || data.pairs.length === 0) {
-      results.innerHTML = '<div class="explore-no-results">No tokens found for "' + esc(query) + '"</div>';
-      exploreSearchResults = [];
+      results.innerHTML = '<div class="nav-no-results">No tokens found for "' + esc(query) + '"</div>';
+      navSearchResults = [];
       return;
     }
     
@@ -5559,7 +5579,7 @@ async function searchExplore(query) {
       .sort((a, b) => (parseFloat(b.liquidity?.usd) || 0) - (parseFloat(a.liquidity?.usd) || 0))
       .slice(0, 8);
     
-    exploreSearchResults = tokens;
+    navSearchResults = tokens;
     
     let html = '';
     for (const pair of tokens) {
@@ -5580,20 +5600,30 @@ async function searchExplore(query) {
       const buyRatio = total > 0 ? Math.round((buys / total) * 100) : 50;
       const chg24h = parseFloat(pair.priceChange?.h24) || 0;
       
-      html += `<div class="explore-result-item">
-        ${logo ? `<img src="${logo}" class="explore-result-logo" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 36 36%22><circle cx=%2218%22 cy=%2218%22 r=%2218%22 fill=%22%23333%22/><text x=%2218%22 y=%2223%22 text-anchor=%22middle%22 fill=%22%23888%22 font-size=%2214%22>${symbol.charAt(0)}</text></svg>'">` : `<div class="explore-result-logo" style="display:flex;align-items:center;justify-content:center;background:var(--bg3);font-size:14px;color:var(--text3)">${symbol.charAt(0)}</div>`}
-        <div class="explore-result-info">
-          <div class="explore-result-row">
-            <span class="explore-result-symbol">$${esc(symbol)}</span>
-            <span class="explore-result-chain">${chain}</span>
-            ${isCTO ? '<span class="explore-result-cto">👥 CTO</span>' : ''}
-          </div>
-          <div class="explore-result-name">${esc(name)}</div>
-          <div class="explore-result-price">${fP(price)} <span class="explore-result-mc">MC: $${fN(mc)}</span></div>
+      // Escape for onclick
+      const safeSymbol = symbol.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const safeLogo = logo.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const safeDesc = description.replace(/[\n\r]/g, ' ').replace(/'/g, "\\'").replace(/"/g, '&quot;').slice(0, 200);
+      
+      html += `<div class="nav-result-item">
+        <div class="nav-result-logo">
+          ${logo ? `<img src="${logo}" onerror="this.style.display='none'; this.parentElement.innerHTML='${symbol.charAt(0).toUpperCase()}'">` : symbol.charAt(0).toUpperCase()}
         </div>
-        <div class="explore-result-btns">
-          <button class="explore-btn explore-btn-analyze" onclick="event.stopPropagation(); analyzeFromExplore('${addr}','${chain}')">🔍 Analyze</button>
-          <button class="explore-btn explore-btn-ai" onclick="event.stopPropagation(); aiFromExplore({symbol:'${symbol.replace(/'/g, "\\'")}',chain:'${chain}',address:'${addr}',logo:'${logo.replace(/'/g, "\\'")}',price:${price},mc:${mc},liq:${liq},vol24h:${vol24h},buyRatio:${buyRatio},chg24h:${chg24h},description:'${description.replace(/[\n\r]/g, ' ').replace(/'/g, "\\'").slice(0, 200)}'})">🤖 AI</button>
+        <div class="nav-result-info">
+          <div class="nav-result-row">
+            <span class="nav-result-symbol">$${esc(symbol)}</span>
+            <span class="nav-result-chain">${chain}</span>
+            ${isCTO ? '<span class="nav-result-cto">👥 CTO</span>' : ''}
+          </div>
+          <div class="nav-result-name">${esc(name)}</div>
+          <div class="nav-result-meta">
+            <span class="nav-result-price">${fP(price)}</span>
+            <span class="nav-result-mc">MC: $${fN(mc)}</span>
+          </div>
+        </div>
+        <div class="nav-result-btns">
+          <button class="nav-result-btn nav-result-btn-analyze" onclick="event.stopPropagation(); analyzeFromNav('${addr}','${chain}')">🔍 Analyze</button>
+          <button class="nav-result-btn nav-result-btn-ai" onclick="event.stopPropagation(); aiFromNav({symbol:'${safeSymbol}',chain:'${chain}',address:'${addr}',logo:'${safeLogo}',price:${price},mc:${mc},liq:${liq},vol24h:${vol24h},buyRatio:${buyRatio},chg24h:${chg24h},description:'${safeDesc}'})">🤖 AI</button>
         </div>
       </div>`;
     }
@@ -5601,19 +5631,19 @@ async function searchExplore(query) {
     results.innerHTML = html;
     
   } catch (err) {
-    results.innerHTML = '<div class="explore-no-results">Search failed. Try again.</div>';
-    exploreSearchResults = [];
+    results.innerHTML = '<div class="nav-no-results">Search failed. Try again.</div>';
+    navSearchResults = [];
   }
 }
 
-function analyzeFromExplore(addr, chain) {
-  clearExploreSearch();
+function analyzeFromNav(addr, chain) {
+  clearNavSearch();
   document.getElementById('inputBox').value = addr;
   sendFromInput();
 }
 
-function aiFromExplore(tokenData) {
-  clearExploreSearch();
+function aiFromNav(tokenData) {
+  clearNavSearch();
   showAIOptions(tokenData);
 }
 
