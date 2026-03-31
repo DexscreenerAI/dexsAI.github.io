@@ -1366,20 +1366,67 @@ body {
 }
 
 @media (max-width: 768px) {
-  .top-nav { padding: 0 12px; }
+  .top-nav { padding: 0 10px; }
   .top-nav-links { display: none; }
   .nav-menu-btn { display: block; }
   .nav-social-icons { display: flex; }
   .top-nav-logo span { display: none; }
-  .nav-new-btn { display: flex; }
+  .nav-new-btn { display: none; }
   .nav-quick-dropdown { display: none; } /* Hide dropdown on mobile - use hamburger menu instead */
-  .nav-search-wrap { display: none; } /* Hide search on mobile */
-  .fab-new { display: none; }
+  .nav-search-wrap { 
+    display: block;
+    margin-left: 10px;
+    flex: 1;
+    max-width: 180px;
+  }
+  .nav-search-input {
+    padding: 7px 10px 7px 30px;
+    font-size: 12px;
+  }
+  .nav-search-icon {
+    left: 8px;
+    font-size: 11px;
+  }
+  .nav-search-clear {
+    right: 6px;
+    font-size: 10px;
+  }
+  .nav-search-results {
+    width: calc(100vw - 20px);
+    left: -10px;
+    max-height: 60vh;
+  }
+  .nav-result-item {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .nav-result-logo {
+    width: 34px;
+    height: 34px;
+  }
+  .nav-result-symbol {
+    font-size: 12px;
+  }
+  .nav-result-btns {
+    flex-direction: row;
+    gap: 4px;
+  }
+  .nav-result-btn {
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+  .fab-new { display: flex; }
 }
 @media (max-width: 400px) {
   .top-nav { height: 50px; }
   .nav-mobile-menu { top: 50px; }
-  .nav-new-btn { padding: 6px 10px; font-size: 10px; }
+  .nav-search-wrap {
+    max-width: 140px;
+  }
+  .nav-search-input {
+    padding: 6px 8px 6px 26px;
+    font-size: 11px;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
