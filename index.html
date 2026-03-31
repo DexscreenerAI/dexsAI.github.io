@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=0.80, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes">
 <title>DexScreener AI — Token Intelligence</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
@@ -1394,19 +1394,19 @@ body {
   .nav-search-results {
     width: calc(100vw - 16px);
     left: -8px;
-    max-height: 55vh;
+    max-height: 60vh;
   }
   .nav-result-item {
     padding: 8px 10px;
     gap: 8px;
   }
   .nav-result-logo {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
   }
   .nav-result-symbol {
-    font-size: 11px;
+    font-size: 12px;
   }
   .nav-result-chain {
     font-size: 7px;
@@ -1417,11 +1417,10 @@ body {
     padding: 1px 3px;
   }
   .nav-result-name {
-    font-size: 10px;
-    max-width: 80px;
+    display: none; /* Hide name on mobile */
   }
   .nav-result-meta {
-    gap: 8px;
+    gap: 6px;
     margin-top: 2px;
   }
   .nav-result-price {
@@ -1431,12 +1430,18 @@ body {
     font-size: 9px;
   }
   .nav-result-btns {
-    flex-direction: column;
-    gap: 3px;
+    flex-direction: row;
+    gap: 6px;
   }
+  /* Hide text in buttons on mobile - show only emoji */
   .nav-result-btn {
-    padding: 4px 6px;
-    font-size: 8px;
+    padding: 6px 8px;
+    font-size: 14px;
+    min-width: 32px;
+    justify-content: center;
+  }
+  .nav-result-btn-text {
+    display: none;
   }
   .nav-search-loading, .nav-no-results {
     padding: 14px;
@@ -6661,9 +6666,9 @@ async function searchNav(query) {
           </div>
         </div>
         <div class="nav-result-btns">
-          <button class="nav-result-btn nav-result-btn-analyze" onclick="event.stopPropagation(); analyzeFromNav('${addr}','${chain}')">🔍 Analyze</button>
-          <button class="nav-result-btn nav-result-btn-chart" onclick="event.stopPropagation(); chartFromNav('${safeSymbol}','${chain}','${pairAddr}')">📊 Chart</button>
-          <button class="nav-result-btn nav-result-btn-ai" onclick="event.stopPropagation(); aiFromNav({symbol:'${safeSymbol}',chain:'${chain}',address:'${addr}',logo:'${safeLogo}',price:${price},mc:${mc},liq:${liq},vol24h:${vol24h},buyRatio:${buyRatio},chg24h:${chg24h},description:'${safeDesc}'})">🤖 AI</button>
+          <button class="nav-result-btn nav-result-btn-analyze" onclick="event.stopPropagation(); analyzeFromNav('${addr}','${chain}')" title="Analyze">🔍<span class="nav-result-btn-text"> Analyze</span></button>
+          <button class="nav-result-btn nav-result-btn-chart" onclick="event.stopPropagation(); chartFromNav('${safeSymbol}','${chain}','${pairAddr}')" title="Chart">📊<span class="nav-result-btn-text"> Chart</span></button>
+          <button class="nav-result-btn nav-result-btn-ai" onclick="event.stopPropagation(); aiFromNav({symbol:'${safeSymbol}',chain:'${chain}',address:'${addr}',logo:'${safeLogo}',price:${price},mc:${mc},liq:${liq},vol24h:${vol24h},buyRatio:${buyRatio},chg24h:${chg24h},description:'${safeDesc}'})" title="AI">🤖<span class="nav-result-btn-text"> AI</span></button>
         </div>
       </div>`;
     }
