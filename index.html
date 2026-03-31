@@ -1380,52 +1380,143 @@ body {
     max-width: 180px;
   }
   .nav-search-input {
-    padding: 7px 10px 7px 30px;
-    font-size: 12px;
+    padding: 6px 8px 6px 26px;
+    font-size: 11px;
   }
   .nav-search-icon {
     left: 8px;
-    font-size: 11px;
-  }
-  .nav-search-clear {
-    right: 6px;
     font-size: 10px;
   }
-  .nav-search-results {
-    width: calc(100vw - 20px);
-    left: -10px;
-    max-height: 60vh;
-  }
-  .nav-result-item {
-    padding: 10px 12px;
-    gap: 10px;
-  }
-  .nav-result-logo {
-    width: 34px;
-    height: 34px;
-  }
-  .nav-result-symbol {
-    font-size: 12px;
-  }
-  .nav-result-btns {
-    flex-direction: row;
-    gap: 4px;
-  }
-  .nav-result-btn {
-    padding: 6px 8px;
+  .nav-search-clear {
+    right: 5px;
     font-size: 9px;
   }
+  .nav-search-results {
+    width: calc(100vw - 16px);
+    left: -8px;
+    max-height: 55vh;
+  }
+  .nav-result-item {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .nav-result-logo {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  .nav-result-symbol {
+    font-size: 11px;
+  }
+  .nav-result-chain {
+    font-size: 7px;
+    padding: 1px 4px;
+  }
+  .nav-result-cto, .nav-result-noupdate {
+    font-size: 6px;
+    padding: 1px 3px;
+  }
+  .nav-result-name {
+    font-size: 10px;
+    max-width: 80px;
+  }
+  .nav-result-meta {
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .nav-result-price {
+    font-size: 10px;
+  }
+  .nav-result-mc {
+    font-size: 9px;
+  }
+  .nav-result-btns {
+    flex-direction: column;
+    gap: 3px;
+  }
+  .nav-result-btn {
+    padding: 4px 6px;
+    font-size: 8px;
+  }
+  .nav-search-loading, .nav-no-results {
+    padding: 14px;
+    font-size: 11px;
+  }
   .fab-new { display: flex; }
+  
+  /* Messages mobile - plus compacts */
+  .msg { 
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .msg-assistant {
+    max-width: 95%;
+  }
+  .card {
+    padding: 12px;
+  }
+  .sec-title {
+    font-size: 9px;
+  }
+  .welcome-title {
+    font-size: 20px;
+  }
+  .welcome-sub {
+    font-size: 12px;
+  }
+  .input-wrap {
+    padding: 8px;
+  }
+  .input-box {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+  .input-actions {
+    gap: 4px;
+    padding: 0 4px;
+  }
+  .ia-btn {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+  .ia-btn span {
+    font-size: 12px;
+  }
 }
 @media (max-width: 400px) {
   .top-nav { height: 50px; }
   .nav-mobile-menu { top: 50px; }
   .nav-search-wrap {
-    max-width: 140px;
+    max-width: 120px;
   }
   .nav-search-input {
-    padding: 6px 8px 6px 26px;
-    font-size: 11px;
+    padding: 5px 6px 5px 22px;
+    font-size: 10px;
+  }
+  .nav-search-icon {
+    font-size: 9px;
+    left: 6px;
+  }
+  .nav-result-item {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+  .nav-result-logo {
+    width: 24px;
+    height: 24px;
+  }
+  .nav-result-symbol {
+    font-size: 10px;
+  }
+  .nav-result-name {
+    display: none;
+  }
+  .msg {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+  .card {
+    padding: 10px;
   }
 }
 
@@ -2254,6 +2345,360 @@ function detectAddress(input) {
 // Extract question part from a message containing an address
 function extractQuestion(input, address) {
   return input.replace(address, '').trim().replace(/^[\s,\-:]+|[\s,\-:]+$/g, '');
+}
+
+// ═══════════════════════════════════════════
+// 💬 FREE CHAT - Detect token mentions & handle questions
+// ═══════════════════════════════════════════
+function detectTokenMention(text) {
+  // Detect $SYMBOL (e.g. $BONK, $PEPE, $WIF)
+  const symbolMatch = text.match(/\$([A-Za-z0-9]{2,10})/i);
+  if (symbolMatch) {
+    return { type: 'symbol', value: symbolMatch[1].toUpperCase() };
+  }
+  
+  // Detect EVM address (0x...)
+  const evmMatch = text.match(/0x[a-fA-F0-9]{40}/);
+  if (evmMatch) {
+    return { type: 'address', value: evmMatch[0], chain: 'evm' };
+  }
+  
+  // Detect Solana address (base58)
+  const solMatch = text.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
+  if (solMatch && solMatch[0].length >= 32 && !text.includes('http')) {
+    return { type: 'address', value: solMatch[0], chain: 'solana' };
+  }
+  
+  // Detect known token names WITHOUT $ (case insensitive)
+  const knownTokens = [
+    'pepe', 'bonk', 'wif', 'shib', 'doge', 'floki', 'mog', 'popcat', 'brett', 'andy',
+    'myro', 'wen', 'bome', 'slerf', 'tremp', 'maga', 'trump', 'jeo', 'biden',
+    'pnut', 'goat', 'fwog', 'moodeng', 'neiro', 'turbo', 'toshi', 'mfer', 'wojak',
+    'chad', 'gigachad', 'smol', 'hoppy', 'landwolf', 'dog', 'cat', 'ponke', 'ape',
+    'pengu', 'penguin', 'harambe', 'joe', 'samo', 'cheems', 'hpos10i', 'bitcoin',
+    'ethereum', 'solana', 'avalanche', 'polygon', 'arbitrum', 'optimism', 'base'
+  ];
+  
+  const lower = text.toLowerCase();
+  const words = lower.split(/[\s,.\-!?'"]+/);
+  
+  for (const word of words) {
+    // Check if it's a known token
+    if (knownTokens.includes(word) && word.length >= 2) {
+      return { type: 'symbol', value: word.toUpperCase() };
+    }
+  }
+  
+  // Detect ALL CAPS words that look like tickers (3-5 chars, not common words)
+  const commonWords = ['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'its', 'may', 'new', 'now', 'old', 'see', 'way', 'who', 'buy', 'sell', 'hold', 'long', 'short', 'pump', 'dump', 'moon', 'dip', 'ath', 'atl', 'roi', 'apy', 'apr', 'tvl', 'dex', 'cex', 'nft', 'dao', 'defi', 'cefi', 'hodl', 'fomo', 'fud', 'dyor', 'nfa', 'gm', 'gn', 'wen', 'ser', 'ngmi', 'wagmi', 'lol', 'wtf', 'omg', 'btw', 'imo', 'idk', 'tbh', 'smh', 'lmao', 'rofl', 'brb', 'afk', 'gg', 'ez', 'rip', 'pov', 'irl', 'dm', 'pm', 'aka', 'asap', 'etc', 'fyi', 'tba', 'tbd', 'vs', 'pro', 'con', 'yes', 'no', 'ok', 'hi', 'hey', 'bye', 'thx', 'pls', 'plz', 'ty', 'np', 'oui', 'non', 'avec', 'pour', 'dans', 'sur', 'par', 'que', 'qui', 'quoi', 'est', 'sont', 'etre', 'avoir', 'fait', 'bien', 'mal', 'bon', 'this', 'that', 'what', 'when', 'where', 'which', 'there', 'here', 'than', 'then', 'from', 'have', 'been', 'were', 'will', 'would', 'could', 'should', 'about', 'after', 'before', 'between', 'into', 'through', 'during', 'under', 'over', 'again', 'once', 'more', 'most', 'other', 'some', 'such', 'only', 'same', 'just', 'also', 'back', 'much', 'even', 'well', 'very', 'good', 'want', 'give', 'take', 'come', 'make', 'know', 'think', 'look', 'need', 'feel', 'seem', 'keep', 'let', 'begin', 'seem', 'help', 'show', 'hear', 'play', 'run', 'move', 'live', 'believe', 'bring', 'happen', 'write', 'provide', 'sit', 'stand', 'lose', 'pay', 'meet', 'include', 'continue', 'set', 'learn', 'change', 'lead', 'understand', 'watch', 'follow', 'stop', 'create', 'speak', 'read', 'spend', 'grow', 'open', 'walk', 'win', 'offer', 'remember', 'love', 'consider', 'appear', 'wait', 'serve', 'die', 'send', 'expect', 'build', 'stay', 'fall', 'cut', 'reach', 'kill', 'remain', 'suggest', 'raise', 'pass', 'sell', 'require', 'report', 'decide', 'pull'];
+  
+  const capsMatch = text.match(/\b([A-Z]{3,6})\b/);
+  if (capsMatch && !commonWords.includes(capsMatch[1].toLowerCase())) {
+    return { type: 'symbol', value: capsMatch[1] };
+  }
+  
+  return null;
+}
+
+function isFreeQuestion(query) {
+  const trimmed = query.trim();
+  
+  // If it's JUST an address (no other words), it's not a free question
+  if (/^0x[a-fA-F0-9]{40}$/.test(trimmed)) return false;
+  if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(trimmed)) return false;
+  
+  // If it's a major crypto name alone (btc, eth, sol, etc.), it's not a free question
+  const majorCryptos = ['btc', 'bitcoin', 'eth', 'ethereum', 'sol', 'solana', 'bnb', 'doge', 'xrp', 'ada', 'dot', 'link', 'avax', 'uni', 'pepe', 'shib', 'bonk', 'wif'];
+  if (majorCryptos.includes(trimmed.toLowerCase())) return false;
+  
+  // If contains question words or is a sentence, it's a free question
+  const questionIndicators = [
+    // English
+    '?', 'what', 'why', 'how', 'when', 'should', 'is ', 'are ', 'can ', 'will ', 'would', 'could',
+    'compare', 'vs', 'versus', 'between', 'tell me', 'explain', 'analyse', 'analyze', 'analysis',
+    'risk', 'safe', 'buy', 'sell', 'think', 'opinion', 'thoughts', 'good', 'bad', 'worth',
+    'pump', 'dump', 'moon', 'rug', 'scam', 'legit', 'hold', 'entry', 'target', 'potential',
+    // French
+    'quoi', 'pourquoi', 'comment', 'est-ce', 'c\'est', 'penses', 'avis', 'pense', 'tu penses',
+    'tu crois', 'crois', 'bien', 'mal', 'risque', 'safe', 'sûr', 'acheter', 'vendre', 
+    'comparer', 'comparé', 'avec', 'entre', 'lequel', 'laquelle', 'meilleur', 'pire',
+    'potentiel', 'opportunité', 'investir', 'hold', 'garder', 'attendre', 'target', 'objectif'
+  ];
+  const lower = trimmed.toLowerCase();
+  
+  for (const indicator of questionIndicators) {
+    if (lower.includes(indicator)) return true;
+  }
+  
+  // If it has multiple words (more than 2), probably a question
+  const words = trimmed.split(/\s+/).filter(w => w.length > 1);
+  if (words.length >= 3) return true;
+  
+  return false;
+}
+
+// ═══════════════════════════════════════════
+// 📊 CHART REQUEST DETECTION
+// ═══════════════════════════════════════════
+function isChartRequest(query) {
+  const lower = query.toLowerCase().trim();
+  
+  // Keywords that indicate a chart request
+  const chartKeywords = [
+    'chart', 'graphique', 'graph', 'courbe', 'affiche le chart', 'affiche la chart',
+    'show chart', 'show the chart', 'display chart', 'see chart', 'voir le chart',
+    'voir la chart', 'montre le chart', 'montre la chart', 'donne le chart',
+    'show me the chart', 'pull up chart', 'get chart', 'open chart'
+  ];
+  
+  for (const keyword of chartKeywords) {
+    if (lower.includes(keyword)) {
+      return { isChart: true };
+    }
+  }
+  
+  return null;
+}
+
+async function handleChartRequest(query, chartRequest) {
+  const c = conversations.find(x => x.id === activeId);
+  
+  // Check if there's a token/contract mentioned in the query
+  const mention = detectTokenMention(query);
+  const address = detectAddress(query);
+  
+  let pair = null;
+  let symbol = '???';
+  let chain = 'solana';
+  let pairAddress = '';
+  
+  if (address) {
+    // User provided a contract address
+    showLoading('Fetching chart...');
+    pair = await fetchDexScreener(address.addr);
+    
+    if (pair) {
+      symbol = pair.baseToken?.symbol || '???';
+      chain = pair.chainId || 'solana';
+      pairAddress = pair.pairAddress || '';
+    }
+  } else if (mention) {
+    // User mentioned a token symbol
+    showLoading('Searching token...');
+    
+    if (mention.type === 'symbol') {
+      pair = await fetchTokenBySymbol(mention.value);
+    } else if (mention.type === 'address') {
+      pair = await fetchDexScreener(mention.value);
+    }
+    
+    if (pair) {
+      symbol = pair.baseToken?.symbol || mention.value;
+      chain = pair.chainId || 'solana';
+      pairAddress = pair.pairAddress || '';
+    }
+  } else if (lastAnalyzedToken) {
+    // No token mentioned, use last analyzed token
+    symbol = lastAnalyzedToken.symbol || lastAnalyzedToken.fullAnalysis?.ticker || '???';
+    chain = lastAnalyzedToken.chain || 'solana';
+    pairAddress = lastAnalyzedToken.pairAddress || lastAnalyzedToken.pair?.pairAddress || '';
+    
+    if (!pairAddress && lastAnalyzedToken.address) {
+      // Try to fetch pair address
+      showLoading('Fetching chart...');
+      pair = await fetchDexScreener(lastAnalyzedToken.address);
+      if (pair) {
+        pairAddress = pair.pairAddress || '';
+        chain = pair.chainId || chain;
+      }
+    }
+  }
+  
+  hideLoading();
+  
+  if (!pairAddress) {
+    // No chart available
+    if (!lastAnalyzedToken && !mention && !address) {
+      c.messages.push({ 
+        role: 'assistant', 
+        text: '📊 Pour afficher un chart, donne-moi d\'abord une adresse de contrat ou un symbole de token. Par exemple: `$BONK` ou `DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263`' 
+      });
+    } else {
+      c.messages.push({ 
+        role: 'assistant', 
+        text: '❌ Impossible de trouver le chart pour ce token. Vérifie l\'adresse ou le symbole.' 
+      });
+    }
+    isLoading = false;
+    renderMessages();
+    return;
+  }
+  
+  // Display the chart
+  c.messages.push({ role: 'assistant', html: renderChart(symbol, chain, pairAddress) });
+  c.title = `📊 Chart: $${symbol}`;
+  
+  isLoading = false;
+  renderSidebar();
+  renderMessages();
+  updateTopbar();
+  scrollToLastUserMessage();
+}
+
+async function fetchTokenBySymbol(symbol) {
+  try {
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(symbol)}`, {
+      signal: AbortSignal.timeout(6000)
+    });
+    const data = await res.json();
+    
+    if (!data.pairs || data.pairs.length === 0) return null;
+    
+    // Find best match (exact symbol match + highest liquidity)
+    const exactMatches = data.pairs.filter(p => 
+      p.baseToken?.symbol?.toUpperCase() === symbol.toUpperCase()
+    );
+    
+    const matches = exactMatches.length > 0 ? exactMatches : data.pairs;
+    matches.sort((a, b) => (parseFloat(b.liquidity?.usd) || 0) - (parseFloat(a.liquidity?.usd) || 0));
+    
+    return matches[0];
+  } catch (err) {
+    console.log('Fetch by symbol failed:', err);
+    return null;
+  }
+}
+
+function buildTokenContext(tokenData) {
+  if (!tokenData) return '';
+  
+  // Handle lastAnalyzedToken format
+  if (tokenData.fullAnalysis) {
+    const t = tokenData;
+    return `CURRENT TOKEN CONTEXT:
+Token: $${t.symbol}
+Name: ${t.name}
+Chain: ${t.chain}
+Contract: ${t.address || 'N/A'}
+Price: ${fP(t.price)}
+Market Cap: $${fN(t.marketCap)}
+Liquidity: $${fN(t.liquidity)}
+Volume 24h: $${fN(t.volume24h)}
+24h Change: ${t.priceChange24h > 0 ? '+' : ''}${(t.priceChange24h || 0).toFixed(1)}%
+Buy Ratio 24h: ${t.buys24h && t.sells24h ? Math.round((t.buys24h / (t.buys24h + t.sells24h)) * 100) : 50}%
+Analysis Bias: ${t.fullAnalysis.bias}
+Confidence: ${t.fullAnalysis.confidence}%`;
+  }
+  
+  // Handle DexScreener pair format
+  const p = tokenData;
+  const buys = p.txns?.h24?.buys || 0;
+  const sells = p.txns?.h24?.sells || 0;
+  const buyRatio = (buys + sells) > 0 ? Math.round((buys / (buys + sells)) * 100) : 50;
+  
+  return `TOKEN CONTEXT:
+Token: $${p.baseToken?.symbol || '???'}
+Name: ${p.baseToken?.name || 'Unknown'}
+Chain: ${p.chainId || 'unknown'}
+Contract: ${p.baseToken?.address || 'N/A'}
+Price: ${fP(parseFloat(p.priceUsd) || 0)}
+Market Cap: $${fN(parseFloat(p.marketCap) || 0)}
+Liquidity: $${fN(parseFloat(p.liquidity?.usd) || 0)}
+Volume 24h: $${fN(parseFloat(p.volume?.h24) || 0)}
+1h Change: ${(parseFloat(p.priceChange?.h1) || 0) > 0 ? '+' : ''}${(parseFloat(p.priceChange?.h1) || 0).toFixed(1)}%
+24h Change: ${(parseFloat(p.priceChange?.h24) || 0) > 0 ? '+' : ''}${(parseFloat(p.priceChange?.h24) || 0).toFixed(1)}%
+Buy Ratio 24h: ${buyRatio}% (${buys} buys / ${sells} sells)`;
+}
+
+async function handleFreeChat(query) {
+  const c = conversations.find(x => x.id === activeId);
+  
+  // Check if a specific token is mentioned in the query
+  const mention = detectTokenMention(query);
+  let tokenContext = '';
+  let mentionedToken = null;
+  
+  if (mention) {
+    showLoading('Fetching token data...');
+    
+    if (mention.type === 'symbol') {
+      // Fetch by symbol (e.g. $PEPE)
+      mentionedToken = await fetchTokenBySymbol(mention.value);
+    } else if (mention.type === 'address') {
+      // Fetch by address
+      mentionedToken = await fetchDexScreener(mention.value);
+    }
+    
+    if (mentionedToken) {
+      tokenContext = buildTokenContext(mentionedToken);
+    }
+  }
+  
+  // If no mentioned token, use last analyzed token
+  if (!tokenContext && lastAnalyzedToken) {
+    tokenContext = buildTokenContext(lastAnalyzedToken);
+  }
+  
+  // Build conversation history for context
+  let conversationHistory = '';
+  const recentMessages = c.messages.slice(-6); // Last 6 messages
+  for (const msg of recentMessages) {
+    if (msg.role === 'user') {
+      conversationHistory += `User: ${msg.content}\n`;
+    } else if (msg.text) {
+      conversationHistory += `Assistant: ${msg.text.slice(0, 200)}...\n`;
+    }
+  }
+  
+  // Build full prompt
+  let fullPrompt = '';
+  
+  if (tokenContext) {
+    fullPrompt = `${tokenContext}
+
+${conversationHistory ? `RECENT CONVERSATION:\n${conversationHistory}\n` : ''}
+USER QUESTION: ${query}
+
+Answer the user's question based on the token data above. Be specific, concise and helpful. If comparing tokens, highlight key differences. If asked about risks, be honest about red flags. Speak like a crypto trader, not a textbook.`;
+  } else {
+    fullPrompt = `${conversationHistory ? `RECENT CONVERSATION:\n${conversationHistory}\n` : ''}
+USER QUESTION: ${query}
+
+The user is asking a general crypto question. No specific token is being analyzed. Answer helpfully and concisely. If they want to analyze a specific token, ask them to provide the contract address or symbol.`;
+  }
+  
+  showLoading('AI thinking...');
+  
+  try {
+    const response = await askAI(fullPrompt, {
+      freeChat: true,
+      mentionedToken: mention?.value || null
+    });
+    
+    hideLoading();
+    
+    if (response.error) {
+      c.messages.push({ 
+        role: 'assistant', 
+        text: `⚠️ ${response.message || 'AI response failed. Please try again.'}` 
+      });
+    } else {
+      c.messages.push({ 
+        role: 'assistant', 
+        text: response.answer 
+      });
+    }
+  } catch (err) {
+    hideLoading();
+    c.messages.push({ 
+      role: 'assistant', 
+      text: `❌ Error: ${err.message}` 
+    });
+  }
+  
+  isLoading = false;
+  renderMessages();
+  scrollToLastUserMessage();
 }
 
 // ═══════════════════════════════════════════
@@ -3713,6 +4158,21 @@ async function sendQuery(query) {
 
   try {
     const lower = query.toLowerCase().trim();
+    
+    // ═══ CHECK IF IT'S A CHART REQUEST ═══
+    const chartRequest = isChartRequest(query);
+    if (chartRequest) {
+      await handleChartRequest(query, chartRequest);
+      return;
+    }
+    
+    // ═══ CHECK IF IT'S A FREE QUESTION (AI Chat) ═══
+    // Must be checked BEFORE general questions to allow AI to answer
+    if (isFreeQuestion(query)) {
+      hideLoading();
+      await handleFreeChat(query);
+      return;
+    }
     
     // Check for general questions first (static responses)
     const genKey = Object.keys(GENERAL).find(k => lower.includes(k));
