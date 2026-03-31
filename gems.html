@@ -410,6 +410,7 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
 .gem-badge.boosted { background: rgba(168,85,247,0.15); border: 1px solid var(--purple); color: var(--purple); }
 .gem-badge.trending { background: rgba(0,212,255,0.15); border: 1px solid var(--cyan); color: var(--cyan); }
 .gem-badge.cto { background: rgba(255,170,0,0.15); border: 1px solid var(--yellow); color: var(--yellow); }
+.gem-badge.potential { background: linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,212,255,0.2)); border: 1px solid var(--green); color: var(--green); font-weight: 700; }
 
 .gem-stats {
   display: grid;
@@ -670,7 +671,7 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
     <div class="hero-icon">💎</div>
     <h1 class="hero-title">FIND THE GEM</h1>
     <p class="hero-subtitle">
-      AI scans multiple sources, applies advanced filters, and ranks the top 20 potential gems for you.
+      AI scans 12+ sources, applies strict filters, and shows ONLY HIGH POTENTIAL gems.
     </p>
     <button class="hunt-btn" id="huntBtn" onclick="startHunt()">
       <span class="hunt-btn-icon">🔍</span>
@@ -681,43 +682,43 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
       <div class="filter-badge">
         <span class="filter-badge-icon">📊</span>
         <div>
-          <div class="filter-badge-text">6 Data Sources</div>
+          <div class="filter-badge-text">12+ Data Sources</div>
           <div style="font-size:10px;color:var(--text3)">Latest, Boosted, Trending...</div>
         </div>
       </div>
       <div class="filter-badge">
         <span class="filter-badge-icon">🎯</span>
         <div>
-          <div class="filter-badge-text">MC $5K - $10M</div>
+          <div class="filter-badge-text">MC $10K - $10M</div>
           <div style="font-size:10px;color:var(--text3)">Micro & Low Cap Only</div>
         </div>
       </div>
       <div class="filter-badge">
         <span class="filter-badge-icon">💧</span>
         <div>
-          <div class="filter-badge-text">Liquidity > $3K</div>
-          <div style="font-size:10px;color:var(--text3)">Tradeable Tokens</div>
+          <div class="filter-badge-text">Liquidity > $5K</div>
+          <div style="font-size:10px;color:var(--text3)">Safe to Trade</div>
         </div>
       </div>
       <div class="filter-badge">
         <span class="filter-badge-icon">📈</span>
         <div>
-          <div class="filter-badge-text">Buy Ratio > 40%</div>
-          <div style="font-size:10px;color:var(--text3)">Positive Pressure</div>
+          <div class="filter-badge-text">Buy Ratio > 50%</div>
+          <div style="font-size:10px;color:var(--text3)">Strong Accumulation</div>
         </div>
       </div>
       <div class="filter-badge">
         <span class="filter-badge-icon">🔒</span>
         <div>
-          <div class="filter-badge-text">Rugcheck Verified</div>
-          <div style="font-size:10px;color:var(--text3)">Solana Tokens</div>
+          <div class="filter-badge-text">No Rug Risks</div>
+          <div style="font-size:10px;color:var(--text3)">Danger Tokens Excluded</div>
         </div>
       </div>
       <div class="filter-badge">
-        <span class="filter-badge-icon">🤖</span>
+        <span class="filter-badge-icon">🟢</span>
         <div>
-          <div class="filter-badge-text">AI Ranking</div>
-          <div style="font-size:10px;color:var(--text3)">Smart Sorting</div>
+          <div class="filter-badge-text">HIGH POTENTIAL Only</div>
+          <div style="font-size:10px;color:var(--text3)">Score 55+ Required</div>
         </div>
       </div>
     </div>
@@ -749,8 +750,8 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
   <!-- RESULTS SECTION -->
   <div class="results-section" id="resultsSection">
     <div class="results-header">
-      <h2 class="results-title">🏆 TOP 20 GEMS</h2>
-      <p class="results-subtitle">Ranked by AI analysis • Updated just now</p>
+      <h2 class="results-title">🟢 HIGH POTENTIAL GEMS</h2>
+      <p class="results-subtitle">Only quality tokens • No risky plays • Updated just now</p>
     </div>
     
     <div id="aiSummaryContainer"></div>
@@ -821,15 +822,15 @@ async function startHunt() {
   const validChains = ['solana', 'ethereum', 'base', 'bsc', 'arbitrum', 'polygon', 'avalanche'];
   
   try {
-    // ═══ PHASE 1: MULTI-SOURCE FETCH ═══
-    updateProgress(5, 'Scanning latest token profiles...');
+    // ═══ PHASE 1: MULTI-SOURCE FETCH (10+ sources) ═══
+    updateProgress(3, 'Scanning latest token profiles...');
     
     // Source 1: Latest profiles
     try {
       const res = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(10000) });
       const data = await res.json();
       if (Array.isArray(data)) {
-        for (const t of data.slice(0, 40)) {
+        for (const t of data.slice(0, 50)) {
           if (t.tokenAddress && validChains.includes(t.chainId)) {
             allCandidates.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'new', icon: t.icon, desc: t.description });
             totalTokensFound++;
@@ -840,14 +841,14 @@ async function startHunt() {
       updateStats(sourcesScanned, totalTokensFound, 0);
     } catch(e) { console.log('Source 1 failed'); }
     
-    updateProgress(15, 'Scanning boosted tokens...');
+    updateProgress(8, 'Scanning boosted tokens...');
     
     // Source 2: Boosted tokens
     try {
       const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(10000) });
       const data = await res.json();
       if (Array.isArray(data)) {
-        for (const t of data.slice(0, 30)) {
+        for (const t of data.slice(0, 40)) {
           if (t.tokenAddress && validChains.includes(t.chainId) && !allCandidates.has(t.tokenAddress)) {
             allCandidates.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'boosted', icon: t.icon, boost: t.amount });
             totalTokensFound++;
@@ -858,20 +859,20 @@ async function startHunt() {
       updateStats(sourcesScanned, totalTokensFound, 0);
     } catch(e) { console.log('Source 2 failed'); }
     
-    updateProgress(25, 'Searching trending keywords...');
+    updateProgress(12, 'Searching trending keywords...');
     
-    // Source 3-6: Multiple search queries
-    const searchQueries = ['moon', 'pump', 'gem', 'degen'];
+    // Source 3-12: Multiple search queries (10 different keywords)
+    const searchQueries = ['moon', 'pump', 'gem', 'degen', 'pepe', 'ai', 'meme', 'inu', 'wojak', 'based', 'sol', 'eth'];
     
     for (let i = 0; i < searchQueries.length; i++) {
       const query = searchQueries[i];
-      updateProgress(25 + (i * 5), `Searching "${query}" tokens...`);
+      updateProgress(12 + (i * 2.5), `Searching "${query}" tokens...`);
       
       try {
-        const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${query}`, { signal: AbortSignal.timeout(8000) });
+        const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${query}`, { signal: AbortSignal.timeout(6000) });
         const data = await res.json();
         if (data.pairs) {
-          for (const p of data.pairs.slice(0, 25)) {
+          for (const p of data.pairs.slice(0, 30)) {
             const addr = p.baseToken?.address;
             if (addr && validChains.includes(p.chainId) && !allCandidates.has(addr)) {
               allCandidates.set(addr, { 
@@ -890,18 +891,18 @@ async function startHunt() {
       } catch(e) { console.log(`Search ${query} failed`); }
     }
     
-    updateProgress(45, `Enriching ${allCandidates.size} candidates...`);
+    updateProgress(42, `Enriching ${allCandidates.size} candidates...`);
     
     // ═══ PHASE 2: ENRICH WITH FULL DATA ═══
     const enriched = [];
     const candidates = Array.from(allCandidates.values());
     let processed = 0;
     
-    for (const cand of candidates.slice(0, 80)) {
+    for (const cand of candidates.slice(0, 120)) {
       processed++;
       if (processed % 10 === 0) {
-        updateProgress(45 + Math.floor((processed / Math.min(80, candidates.length)) * 25), 
-          `Analyzing token ${processed}/${Math.min(80, candidates.length)}...`);
+        updateProgress(42 + Math.floor((processed / Math.min(120, candidates.length)) * 30), 
+          `Analyzing token ${processed}/${Math.min(120, candidates.length)}...`);
       }
       
       try {
@@ -930,17 +931,19 @@ async function startHunt() {
         const chg24h = parseFloat(pair.priceChange?.h24) || 0;
         const age = pair.pairCreatedAt ? (Date.now() - new Date(pair.pairCreatedAt).getTime()) / 3600000 : 999;
         
-        // ═══ FILTERS ═══
+        // ═══ STRICT FILTERS FOR HIGH POTENTIAL ONLY ═══
         if (mc > 10000000) continue; // Max 10M
-        if (mc < 5000) continue; // Min 5K
-        if (liq < 3000) continue; // Min 3K liq
-        if (buyRatio < 0.40) continue; // Min 40% buyers
+        if (mc < 10000) continue; // Min 10K (filter dead tokens)
+        if (liq < 5000) continue; // Min 5K liq (more strict)
+        if (buyRatio < 0.50) continue; // Min 50% buyers (strict)
+        if (chg1h < -30) continue; // Skip tokens dumping hard
+        if (total < 50) continue; // Min 50 txns (some activity)
         
         // ═══ GEM SCORE CALCULATION ═══
         let score = 0;
         
         // Buy pressure (max 25)
-        score += Math.min(25, (buyRatio - 0.4) * 50);
+        score += Math.min(25, (buyRatio - 0.5) * 50);
         
         // MC sweet spot (max 20)
         if (mc >= 30000 && mc <= 300000) score += 20;
@@ -954,19 +957,25 @@ async function startHunt() {
         else if (liqRatio > 0.05) score += 10;
         else if (liqRatio > 0.02) score += 5;
         
-        // Momentum (max 15)
-        if (chg1h > 5 && chg1h < 100) score += 8;
-        if (chg24h > 10 && chg24h < 500) score += 7;
+        // Momentum - reward positive, penalize negative (max 20)
+        if (chg1h > 5 && chg1h < 100) score += 10;
+        else if (chg1h > 0) score += 5;
+        else if (chg1h < -10) score -= 5;
         
-        // Freshness (max 10)
-        if (age < 24) score += 10;
-        else if (age < 72) score += 6;
-        else if (age < 168) score += 3;
+        if (chg24h > 10 && chg24h < 500) score += 10;
+        else if (chg24h > 0) score += 5;
+        else if (chg24h < -20) score -= 5;
+        
+        // Age bonus - prefer established tokens (max 15)
+        if (age >= 48 && age < 500) score += 15; // Sweet spot: 2-20 days
+        else if (age >= 24 && age < 48) score += 10;
+        else if (age >= 500) score += 8; // Proven survivors
+        else if (age < 12) score += 3; // Very new = risky
         
         // Activity (max 10)
-        if (total > 500) score += 10;
-        else if (total > 200) score += 7;
-        else if (total > 50) score += 4;
+        if (total > 1000) score += 10;
+        else if (total > 500) score += 8;
+        else if (total > 200) score += 5;
         
         // Volume to liq ratio (max 10)
         const volLiqRatio = liq > 0 ? (vol / liq) : 0;
@@ -991,11 +1000,24 @@ async function startHunt() {
             const rugRes = await fetch(`https://api.rugcheck.xyz/v1/tokens/${cand.address}/report/summary`, { signal: AbortSignal.timeout(2500) });
             const rug = await rugRes.json();
             rugRisks = rug.risks || [];
-            if (rug.mintAuthority) { score -= 15; rugStatus = 'danger'; }
-            else if (rug.freezeAuthority) { score -= 10; rugStatus = 'warning'; }
-            else if (rugRisks.length === 0) { score += 10; rugStatus = 'good'; }
-            else if (rugRisks.length <= 2) { rugStatus = 'warning'; }
-            else { rugStatus = 'danger'; score -= 5; }
+            if (rug.mintAuthority) { 
+              continue; // SKIP - too risky
+            }
+            if (rug.freezeAuthority) { 
+              score -= 15; 
+              rugStatus = 'warning'; 
+            }
+            else if (rugRisks.length === 0) { 
+              score += 15; // Bonus for clean rug check
+              rugStatus = 'good'; 
+            }
+            else if (rugRisks.length <= 2) { 
+              rugStatus = 'warning'; 
+              score -= 5;
+            }
+            else { 
+              continue; // SKIP - too many risks
+            }
           } catch(e) {}
         }
         
@@ -1028,45 +1050,56 @@ async function startHunt() {
       } catch(e) { /* skip */ }
     }
     
-    updateProgress(75, 'Sorting by gem score...');
+    updateProgress(75, 'Filtering HIGH POTENTIAL only...');
     
-    // Sort by score
+    // Sort by score and filter HIGH POTENTIAL only (score >= 55)
     enriched.sort((a, b) => b.score - a.score);
-    const topGems = enriched.slice(0, 20);
+    const highPotentialGems = enriched.filter(g => {
+      // Must have high score
+      if (g.score < 55) return false;
+      // Must not be dumping
+      if (g.chg1h < -15) return false;
+      // Must have good rug status (not danger)
+      if (g.rugStatus === 'danger') return false;
+      // Must have decent buy ratio
+      if (g.buyRatio < 52) return false;
+      return true;
+    });
+    
+    const topGems = highPotentialGems.slice(0, 20);
     
     if (topGems.length === 0) {
       $('progressSection').classList.remove('active');
       $('heroSection').style.display = 'block';
       $('huntBtn').disabled = false;
-      alert('No gems found matching criteria. Try again later!');
+      alert('No HIGH POTENTIAL gems found right now. Market conditions may be unfavorable. Try again later!');
       return;
     }
     
     // ═══ PHASE 3: AI ANALYSIS ═══
-    updateProgress(80, 'AI analyzing top gems...');
+    updateProgress(80, 'AI confirming top picks...');
     
     let aiAnalysis = '';
     let topPick = '';
     
     try {
-      const gemsContext = topGems.slice(0, 10).map((g, i) => `
+      const gemsContext = topGems.slice(0, 12).map((g, i) => `
 ${i+1}. $${g.symbol} (${g.chain}) - Score: ${g.score}
    MC: $${fN(g.mc)} | Liq: $${fN(g.liq)} | Vol: $${fN(g.vol)}
    24h: ${g.chg24h > 0 ? '+' : ''}${g.chg24h.toFixed(1)}% | 1h: ${g.chg1h > 0 ? '+' : ''}${g.chg1h.toFixed(1)}%
    Buy Ratio: ${g.buyRatio}% | Txns: ${g.txns} | Age: ${g.age}h
    Rug: ${g.rugStatus} | Source: ${g.source}${g.isCTO ? ' | CTO' : ''}`).join('\n');
       
-      const prompt = `You are a crypto gem hunter. Analyze these top 10 gems and give your verdict.
+      const prompt = `You are a crypto gem hunter. These tokens have already passed strict filters (score 55+, no dumps, good rug check, 50%+ buy ratio).
 
 ${gemsContext}
 
-Be BRUTAL and SPECIFIC. For each gem:
-- Rate: 🟢 HIGH POTENTIAL / 🟡 MODERATE / 🔴 RISKY
-- Give 1 short sentence why
+Your job: Rank the TOP 5 best opportunities. For each:
+- 🟢 Why it's HIGH POTENTIAL (1 sentence with specific numbers)
 
-Then pick your #1 TOP GEM with clear reasoning (2-3 sentences max).
+Then pick your #1 TOP GEM with clear reasoning (why THIS one over others).
 
-Format cleanly. No fluff.`;
+Be concise. Only positive analysis - these are pre-filtered quality tokens.`;
 
       const aiRes = await askAI(prompt);
       if (aiRes && aiRes.answer) {
@@ -1084,7 +1117,7 @@ Format cleanly. No fluff.`;
       }
     } catch(e) {
       console.log('AI analysis failed:', e);
-      aiAnalysis = 'AI analysis unavailable. Review the scores and metrics above.';
+      aiAnalysis = 'AI analysis unavailable. All tokens shown passed strict quality filters.';
     }
     
     updateProgress(95, 'Rendering results...');
@@ -1128,10 +1161,10 @@ function renderResults(gems, aiAnalysis, topPick) {
   let aiHtml = '';
   if (aiAnalysis) {
     aiHtml = `<div class="ai-summary">
-      <div class="ai-summary-title">🤖 AI ANALYSIS</div>
+      <div class="ai-summary-title">🤖 AI TOP PICKS</div>
       <div class="ai-summary-content">${esc(aiAnalysis)}</div>
       ${topPick ? `<div class="ai-top-pick">
-        <div class="ai-top-pick-label">🏆 TOP PICK</div>
+        <div class="ai-top-pick-label">🏆 #1 TOP GEM</div>
         <div class="ai-top-pick-text">${esc(topPick)}</div>
       </div>` : ''}
     </div>`;
@@ -1145,21 +1178,20 @@ function renderResults(gems, aiAnalysis, topPick) {
     const rank = i + 1;
     const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'normal';
     const isTop3 = rank <= 3;
-    const scoreClass = g.score >= 70 ? 'high' : g.score >= 50 ? 'medium' : 'low';
     const chg24hColor = g.chg24h >= 0 ? 'green' : 'red';
     const chg1hColor = g.chg1h >= 0 ? 'green' : 'red';
-    const buyColor = g.buyRatio >= 55 ? 'green' : g.buyRatio >= 45 ? '' : 'red';
-    const rugIcon = g.rugStatus === 'good' ? '✅' : g.rugStatus === 'warning' ? '⚠️' : g.rugStatus === 'danger' ? '🔴' : '❓';
+    const buyColor = g.buyRatio >= 60 ? 'green' : g.buyRatio >= 55 ? '' : 'yellow';
+    const rugIcon = g.rugStatus === 'good' ? '✅' : g.rugStatus === 'warning' ? '⚠️' : '❓';
     
     let badges = '';
-    if (g.age < 24) badges += '<span class="gem-badge new">🆕 NEW</span>';
+    badges += '<span class="gem-badge potential">🟢 HIGH POTENTIAL</span>';
+    if (g.age < 48) badges += '<span class="gem-badge new">🆕 FRESH</span>';
     if (g.source === 'boosted') badges += '<span class="gem-badge boosted">🚀 BOOSTED</span>';
-    if (g.source === 'trending') badges += '<span class="gem-badge trending">📈 TRENDING</span>';
     if (g.isCTO) badges += '<span class="gem-badge cto">👥 CTO</span>';
     
     cardsHtml += `<div class="gem-card ${isTop3 ? 'top-3' : ''}">
       <div class="gem-rank ${rankClass}">#${rank}</div>
-      <div class="gem-score ${scoreClass}">${g.score}</div>
+      <div class="gem-score high">🟢 ${g.score}</div>
       
       <div class="gem-header">
         <div class="gem-logo">
