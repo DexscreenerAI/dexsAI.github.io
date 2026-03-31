@@ -1182,9 +1182,9 @@ let currentLang = 'en';
 let savedSearches = JSON.parse(localStorage.getItem('oracleSearches') || '[]');
 
 // ═══════════════════════════════════════════
-// API CONFIG — Change this to your Railway bot URL
+// API CONFIG — Auto-detects: same server if served by bot, or set manually
 // ═══════════════════════════════════════════
-const API_URL = 'https://YOUR-BOT.up.railway.app'; // ← CHANGE THIS
+const API_URL = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
 
 // ═══════════════════════════════════════════
 // TRANSLATIONS
