@@ -3664,14 +3664,19 @@ function scrollToLastUserMessage() {
   }
 }
 
-function showLoading() {
+function showLoading(customMsg) {
+  // Remove existing loading if any
+  const existing = $('loadingEl');
+  if (existing) existing.remove();
+  
   const el = document.createElement('div');
   el.id = 'loadingEl';
   el.className = 'loading-dots';
+  const msg = customMsg || t('analyzing');
   el.innerHTML = `
     <span style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:1.5px">📊 DEX AI</span>
     <div class="ld-dot"></div><div class="ld-dot"></div><div class="ld-dot"></div>
-    <span class="ld-text">${t('analyzing')}</span>`;
+    <span class="ld-text">${msg}</span>`;
   $('msgContainer').appendChild(el);
   scrollToBottom();
 }
@@ -4813,6 +4818,158 @@ function hideAIOptions() {
   currentAIToken = null;
 }
 
+// ═══════════════════════════════════════════
+// 📰 FETCH TOKEN NEWS (for Why Pumping)
+// ═══════════════════════════════════════════
+async function fetchTokenNews(symbol) {
+  const news = [];
+  const cleanSymbol = symbol.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  
+  // Try multiple sources in parallel
+  const sources = await Promise.allSettled([
+    fetchCryptoPanicNews(cleanSymbol),
+    fetchDexScreenerBoosts(cleanSymbol),
+    fetchGoogleNewsProxy(symbol)
+  ]);
+  
+  // Combine results
+  sources.forEach(result => {
+    if (result.status === 'fulfilled' && result.value) {
+      news.push(...result.value);
+    }
+  });
+  
+  // Deduplicate and sort by time
+  const seen = new Set();
+  const unique = news.filter(n => {
+    const key = n.title.slice(0, 50).toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  
+  return unique.slice(0, 6); // Top 6 news
+}
+
+async function fetchCryptoPanicNews(symbol) {
+  try {
+    // CryptoPanic free API - filter by currency
+    const res = await fetch(`https://cryptopanic.com/api/v1/posts/?auth_token=17bebb1f69d4c67a0277b030796c54a2f9e9510a&currencies=${symbol}&filter=hot&public=true`, {
+      signal: AbortSignal.timeout(5000)
+    });
+    const data = await res.json();
+    
+    if (!data.results) return [];
+    
+    return data.results.slice(0, 4).map(post => ({
+      title: post.title,
+      source: post.source?.title || 'CryptoPanic',
+      time: timeAgo(new Date(post.published_at)),
+      url: post.url
+    }));
+  } catch (err) {
+    console.log('CryptoPanic fetch failed:', err);
+    return [];
+  }
+}
+
+async function fetchDexScreenerBoosts(symbol) {
+  try {
+    // Check if token has recent boosts/promotes on DexScreener
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${symbol}`, {
+      signal: AbortSignal.timeout(4000)
+    });
+    const data = await res.json();
+    
+    if (!data.pairs || data.pairs.length === 0) return [];
+    
+    const pair = data.pairs[0];
+    const news = [];
+    
+    // Check for recent listing
+    if (pair.pairCreatedAt) {
+      const createdHoursAgo = (Date.now() - pair.pairCreatedAt) / (1000 * 60 * 60);
+      if (createdHoursAgo < 24) {
+        news.push({
+          title: `$${symbol.toUpperCase()} newly listed on ${pair.dexId || 'DEX'}`,
+          source: 'DexScreener',
+          time: timeAgo(new Date(pair.pairCreatedAt))
+        });
+      }
+    }
+    
+    // Check boost status
+    if (pair.boosts?.active) {
+      news.push({
+        title: `$${symbol.toUpperCase()} is being promoted/boosted on DexScreener`,
+        source: 'DexScreener',
+        time: 'Active now'
+      });
+    }
+    
+    // Check for major price action
+    const chg24h = parseFloat(pair.priceChange?.h24) || 0;
+    if (Math.abs(chg24h) > 50) {
+      news.push({
+        title: `$${symbol.toUpperCase()} ${chg24h > 0 ? 'surged' : 'dropped'} ${Math.abs(chg24h).toFixed(0)}% in 24h`,
+        source: 'Market Data',
+        time: 'Last 24h'
+      });
+    }
+    
+    // Check volume spike
+    const vol24 = parseFloat(pair.volume?.h24) || 0;
+    const liq = parseFloat(pair.liquidity?.usd) || 1;
+    if (vol24 > liq * 3) {
+      news.push({
+        title: `$${symbol.toUpperCase()} volume spike: ${(vol24/liq).toFixed(1)}x liquidity traded`,
+        source: 'On-chain',
+        time: 'Last 24h'
+      });
+    }
+    
+    return news;
+  } catch (err) {
+    console.log('DexScreener boost check failed:', err);
+    return [];
+  }
+}
+
+async function fetchGoogleNewsProxy(symbol) {
+  try {
+    // Use a CORS proxy for Google News RSS
+    const query = encodeURIComponent(`${symbol} crypto`);
+    const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https://news.google.com/rss/search?q=${query}&hl=en-US&gl=US&ceid=US:en`, {
+      signal: AbortSignal.timeout(5000)
+    });
+    const data = await res.json();
+    
+    if (!data.items) return [];
+    
+    return data.items.slice(0, 3).map(item => ({
+      title: item.title.replace(/<[^>]*>/g, '').slice(0, 100),
+      source: item.author || 'Google News',
+      time: timeAgo(new Date(item.pubDate))
+    }));
+  } catch (err) {
+    console.log('Google News fetch failed:', err);
+    return [];
+  }
+}
+
+function timeAgo(date) {
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
+}
+
 async function handleAIOption(type) {
   if (!currentAIToken || isLoading) return;
   
@@ -4821,6 +4978,26 @@ async function handleAIOption(type) {
   
   const c = conversations.find(x => x.id === activeId);
   const isCTO = detectCTO(token.description);
+  
+  // For 'pumping', fetch news first
+  let newsContext = '';
+  if (type === 'pumping') {
+    c.messages.push({ role: 'user', content: `💡 Why Pumping? $${token.symbol}` });
+    c.title = `💡 $${token.symbol}`;
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+    showLoading('Searching news & social...');
+    
+    try {
+      const news = await fetchTokenNews(token.symbol);
+      if (news && news.length > 0) {
+        newsContext = '\n\n📰 RECENT NEWS & SOCIAL ACTIVITY:\n' + news.map((n, i) => `${i+1}. "${n.title}" (${n.source}, ${n.time})`).join('\n');
+      }
+    } catch (err) {
+      console.log('News fetch failed:', err);
+    }
+  }
   
   // Build context string with all token data
   let context = `Token: $${token.symbol}
@@ -4848,15 +5025,19 @@ Token Age: ${token.ageHours ? (token.ageHours < 24 ? token.ageHours + ' hours' :
   if (token.description) {
     context += `\n\nDescription: ${token.description.slice(0, 200)}`;
   }
+  
+  // Add news context for pumping
+  context += newsContext;
 
   // Build prompt based on type
   const prompts = {
-    pumping: `${context}\n\nExplain WHY this token is pumping or trending:
-- What narrative or sector is it part of?
-- Any recent catalysts?
-- Whale activity indicators?
-- Social media momentum?
-- Is the hype justified or suspicious?`,
+    pumping: `${context}\n\nBased on the data AND the recent news/social activity above, explain WHY this token is pumping:
+1. What is the main catalyst or reason for the pump? (cite specific news if relevant)
+2. What narrative or sector is driving interest?
+3. Is this organic growth or coordinated hype?
+4. Buy pressure vs volume analysis
+5. Is the pump justified or likely to dump soon?
+Be specific and reference the news if they explain the pump.`,
     
     strategy: `${context}\n\nProvide a specific trade strategy:
 1. Suggested entry zone (price range)
@@ -4884,13 +5065,17 @@ Be realistic, not hopeful.`
     target: '🔮 Target'
   };
   
-  // Show user message
-  c.messages.push({ role: 'user', content: `${typeLabels[type]} for $${token.symbol}` });
-  c.title = `${typeLabels[type].split(' ')[0]} $${token.symbol}`;
-  renderSidebar();
-  renderMessages();
-  updateTopbar();
-  showLoading();
+  // Show user message (skip for pumping, already shown)
+  if (type !== 'pumping') {
+    c.messages.push({ role: 'user', content: `${typeLabels[type]} for $${token.symbol}` });
+    c.title = `${typeLabels[type].split(' ')[0]} $${token.symbol}`;
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+    showLoading();
+  } else {
+    showLoading('Analyzing with AI...');
+  }
   
   try {
     // Call Haiku via Railway
