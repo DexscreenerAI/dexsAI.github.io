@@ -465,6 +465,11 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
 
 .gem-footer {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gem-footer-row {
+  display: flex;
   align-items: center;
   justify-content: space-between;
 }
@@ -475,9 +480,37 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
   font-size: 11px;
   color: var(--text2);
 }
+.gem-socials {
+  display: flex;
+  gap: 6px;
+}
+.gem-social {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 12px;
+  transition: all 0.15s;
+}
+.gem-social:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  transform: translateY(-1px);
+}
+.gem-social.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
 .gem-actions {
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
 }
 .gem-btn {
   padding: 6px 12px;
@@ -490,6 +523,10 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
   border: 1px solid var(--card-border);
   background: var(--bg3);
   color: var(--text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .gem-btn:hover {
   border-color: var(--cyan);
@@ -501,6 +538,14 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
   color: #000;
 }
 .gem-btn.primary:hover {
+  transform: scale(1.05);
+}
+.gem-btn.app {
+  background: linear-gradient(135deg, var(--gold), var(--yellow));
+  border: none;
+  color: #000;
+}
+.gem-btn.app:hover {
   transform: scale(1.05);
 }
 
@@ -1173,10 +1218,18 @@ function renderResults(gems, aiAnalysis, topPick) {
       </div>
       
       <div class="gem-footer">
-        <div class="gem-rug">${rugIcon} Rug: ${g.rugStatus}</div>
+        <div class="gem-footer-row">
+          <div class="gem-rug">${rugIcon} Rug: ${g.rugStatus}</div>
+          <div class="gem-socials">
+            <a href="${g.twitter || '#'}" target="_blank" class="gem-social ${!g.twitter ? 'disabled' : ''}" title="Twitter">𝕏</a>
+            <a href="${g.telegram || '#'}" target="_blank" class="gem-social ${!g.telegram ? 'disabled' : ''}" title="Telegram">✈️</a>
+            <a href="${g.website || '#'}" target="_blank" class="gem-social ${!g.website ? 'disabled' : ''}" title="Website">🌐</a>
+          </div>
+        </div>
         <div class="gem-actions">
-          <button class="gem-btn" onclick="window.open('https://dexscreener.com/${g.chain}/${g.pairAddress}', '_blank')">📊 Chart</button>
-          <button class="gem-btn primary" onclick="window.location.href='index.html?analyze=${g.address}'">🔍 Analyze</button>
+          <button class="gem-btn" onclick="goToAppChart('${g.symbol}', '${g.chain}', '${g.pairAddress}')">📊 Chart</button>
+          <button class="gem-btn primary" onclick="goToApp('${g.address}', '${g.chain}')">🔍 Analyze</button>
+          <button class="gem-btn app" onclick="goToApp('${g.address}', '${g.chain}')">🏠 Open in App</button>
         </div>
       </div>
     </div>`;
@@ -1193,6 +1246,18 @@ function resetHunt() {
   updateProgress(0, 'Ready');
   updateStats(0, 0, 0);
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goToApp(address, chain) {
+  // Store in localStorage for the app to pick up
+  localStorage.setItem('pendingAnalysis', JSON.stringify({ address, chain, from: 'gems', action: 'analyze' }));
+  window.location.href = 'index.html';
+}
+
+function goToAppChart(symbol, chain, pairAddress) {
+  // Store in localStorage for the app to show chart
+  localStorage.setItem('pendingAnalysis', JSON.stringify({ symbol, chain, pairAddress, from: 'gems', action: 'chart' }));
+  window.location.href = 'index.html';
 }
 </script>
 

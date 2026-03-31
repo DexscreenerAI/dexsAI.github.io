@@ -713,6 +713,75 @@ html, body { height:100%; background: var(--bg); color: var(--text); font-family
   font-size: 14px;
   font-weight: 600;
 }
+.token-detail-footer {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--card-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.token-detail-socials {
+  display: flex;
+  gap: 8px;
+}
+.token-social {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+.token-social:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.token-social.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+.token-detail-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.token-action-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--card-border);
+  background: var(--bg3);
+  color: var(--text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.token-action-btn:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.token-action-btn.primary {
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  border: none;
+  color: #000;
+}
+.token-action-btn.app {
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  border: none;
+  color: #000;
+}
 
 /* ── RESET BUTTON ── */
 .reset-btn {
@@ -1073,13 +1142,16 @@ async function runComparison() {
             chg24h: parseFloat(pair.priceChange?.h24) || 0,
             buys, sells, buyRatio,
             logo: pair.info?.imageUrl || t.logo,
-            pairAddress: pair.pairAddress || t.pairAddress
+            pairAddress: pair.pairAddress || t.pairAddress,
+            twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || '',
+            telegram: pair.info?.socials?.find(s => s.type === 'telegram')?.url || '',
+            website: pair.info?.websites?.[0]?.url || ''
           });
         } else {
-          enrichedTokens.push({ ...t, liq: 0, vol24h: 0, chg24h: 0, buyRatio: 50 });
+          enrichedTokens.push({ ...t, liq: 0, vol24h: 0, chg24h: 0, buyRatio: 50, twitter: '', telegram: '', website: '' });
         }
       } catch (e) {
-        enrichedTokens.push({ ...t, liq: 0, vol24h: 0, chg24h: 0, buyRatio: 50 });
+        enrichedTokens.push({ ...t, liq: 0, vol24h: 0, chg24h: 0, buyRatio: 50, twitter: '', telegram: '', website: '' });
       }
     }
     
@@ -1283,6 +1355,18 @@ function renderResults(tokens, aiAnalysis) {
           <div class="token-stat-value" style="color:${t.buyRatio >= 55 ? 'var(--green)' : t.buyRatio >= 45 ? 'var(--text)' : 'var(--red)'}">${t.buyRatio}%</div>
         </div>
       </div>
+      <div class="token-detail-footer">
+        <div class="token-detail-socials">
+          <a href="${t.twitter || '#'}" target="_blank" class="token-social ${!t.twitter ? 'disabled' : ''}" title="Twitter">𝕏</a>
+          <a href="${t.telegram || '#'}" target="_blank" class="token-social ${!t.telegram ? 'disabled' : ''}" title="Telegram">✈️</a>
+          <a href="${t.website || '#'}" target="_blank" class="token-social ${!t.website ? 'disabled' : ''}" title="Website">🌐</a>
+        </div>
+        <div class="token-detail-actions">
+          <button class="token-action-btn" onclick="goToAppChart('${esc(t.symbol)}', '${t.chain}', '${t.pairAddress}')">📊 Chart</button>
+          <button class="token-action-btn primary" onclick="goToApp('${t.address}', '${t.chain}')">🔍 Analyze</button>
+          <button class="token-action-btn app" onclick="goToApp('${t.address}', '${t.chain}')">🏠 App</button>
+        </div>
+      </div>
     </div>`;
   });
   
@@ -1306,6 +1390,18 @@ function resetComparison() {
   $('resultsContent').innerHTML = '';
   $('searchInput').value = '';
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goToApp(address, chain) {
+  // Store in localStorage for the app to pick up
+  localStorage.setItem('pendingAnalysis', JSON.stringify({ address, chain, from: 'compare', action: 'analyze' }));
+  window.location.href = 'index.html';
+}
+
+function goToAppChart(symbol, chain, pairAddress) {
+  // Store in localStorage for the app to show chart
+  localStorage.setItem('pendingAnalysis', JSON.stringify({ symbol, chain, pairAddress, from: 'compare', action: 'chart' }));
+  window.location.href = 'index.html';
 }
 
 // ═══════════════════════════════════════════
