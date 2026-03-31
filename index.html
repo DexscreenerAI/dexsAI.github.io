@@ -1773,6 +1773,7 @@ body {
     <!-- INPUT -->
     <div class="input-area">
       <div class="input-actions" id="inputActions">
+        <button class="ia-btn" onclick="handleChart()"><span>📊</span> Chart</button>
         <button class="ia-btn" onclick="handleSafeCheck()"><span>🛡️</span> Safe?</button>
         <button class="ia-btn" onclick="handleBuySell()"><span>📈</span> Buy/Sell?</button>
         <button class="ia-btn" onclick="handleTrending()"><span>🔥</span> Trending</button>
@@ -3877,12 +3878,15 @@ async function sendQuery(query) {
             });
           }
         } else {
-          // Check if we have a pending question (from Safe? or Buy/Sell? buttons)
+          // Check if we have a pending question (from Safe? or Buy/Sell? or Chart? buttons)
           if (pendingQuestion === 'safe') {
             c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
             pendingQuestion = null;
           } else if (pendingQuestion === 'buysell') {
             c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
+            pendingQuestion = null;
+          } else if (pendingQuestion === 'chart') {
+            c.messages.push({ role: 'assistant', html: renderChart(analysis.ticker, pair.chainId || 'solana', pair.pairAddress) });
             pendingQuestion = null;
           } else {
             // Just show the normal analysis
@@ -3966,12 +3970,15 @@ async function sendQuery(query) {
       // Run local analysis
       const analysis = analyzeToken(pair, rugData);
       
-      // Check if we have a pending question (from Safe? or Buy/Sell? buttons)
+      // Check if we have a pending question (from Safe? or Buy/Sell? or Chart? buttons)
       if (pendingQuestion === 'safe') {
         c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
         pendingQuestion = null;
       } else if (pendingQuestion === 'buysell') {
         c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
+        pendingQuestion = null;
+      } else if (pendingQuestion === 'chart') {
+        c.messages.push({ role: 'assistant', html: renderChart(analysis.ticker, pair.chainId || 'solana', pair.pairAddress) });
         pendingQuestion = null;
       } else {
         // Just show the normal analysis
@@ -3982,6 +3989,7 @@ async function sendQuery(query) {
       lastAnalyzedToken = {
         // Store original objects for Safe/BuySell buttons
         pair: pair,
+        pairAddress: pair.pairAddress,  // Store pair address for Chart button
         rugData: rugData,
         fullAnalysis: analysis,  // Renamed to avoid collision with simplified analysis below
         
@@ -4938,6 +4946,84 @@ Be direct and decisive. No fluff.`;
   isLoading = false;
   renderMessages();
   scrollToLastUserMessage();
+}
+
+// ═══════════════════════════════════════════
+// 📊 HANDLE CHART
+// ═══════════════════════════════════════════
+function handleChart() {
+  if (isLoading) return;
+  const c = conversations.find(x => x.id === activeId);
+  
+  if (lastAnalyzedToken) {
+    const symbol = lastAnalyzedToken.fullAnalysis?.ticker || lastAnalyzedToken.symbol || '???';
+    const chain = lastAnalyzedToken.chain || 'solana';
+    const pairAddress = lastAnalyzedToken.pairAddress || lastAnalyzedToken.pair?.pairAddress || '';
+    
+    if (!pairAddress) {
+      // Major crypto - no DexScreener chart, use TradingView link
+      const tvSymbol = symbol.toUpperCase();
+      c.messages.push({ role: 'user', content: `📊 Show chart for $${symbol}` });
+      c.messages.push({ role: 'assistant', html: `<div class="card" style="border-left:3px solid var(--cyan)">
+        <div class="sec-title"><span class="sec-icon">📊</span> CHART — $${symbol}</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Major cryptocurrency — use TradingView for charts</div>
+        <a href="https://www.tradingview.com/symbols/${tvSymbol}USD/" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--bg);border:1px solid var(--cyan);border-radius:10px;text-decoration:none;color:var(--cyan);font-family:var(--mono);font-size:13px;font-weight:600;transition:all .15s" onmouseover="this.style.background='var(--cyan)';this.style.color='#000'" onmouseout="this.style.background='var(--bg)';this.style.color='var(--cyan)'">
+          📈 Open TradingView Chart
+        </a>
+      </div>` });
+      c.title = `📊 Chart: $${symbol}`;
+    } else {
+      // DexScreener token - embed chart
+      c.messages.push({ role: 'user', content: `📊 Show chart for $${symbol}` });
+      c.messages.push({ role: 'assistant', html: renderChart(symbol, chain, pairAddress) });
+      c.title = `📊 Chart: $${symbol}`;
+    }
+    
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+    scrollToLastUserMessage();
+  } else {
+    // No token yet, ask for contract
+    pendingQuestion = 'chart';
+    c.messages.push({ role: 'user', content: '📊 Show me the chart' });
+    c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
+      <div style="font-size:13px;color:var(--text);margin-bottom:10px">📊 Sure! Paste the <strong>contract address</strong> below and I'll show you the chart.</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 12px;background:var(--bg);border-radius:6px">💡 Example: DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263</div>
+    </div>` });
+    c.title = '📊 Chart';
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+  }
+}
+
+function renderChart(symbol, chain, pairAddress) {
+  const embedUrl = `https://dexscreener.com/${chain}/${pairAddress}?embed=1&theme=dark&trades=0&info=0`;
+  const fullUrl = `https://dexscreener.com/${chain}/${pairAddress}`;
+  
+  return `<div class="card" style="border-left:3px solid var(--cyan);padding:0;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--card-border)">
+      <div>
+        <div class="sec-title" style="margin-bottom:0"><span class="sec-icon">📊</span> LIVE CHART</div>
+        <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan);margin-top:4px">$${symbol}</div>
+      </div>
+      <a href="${fullUrl}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg);border:1px solid var(--cyan);border-radius:8px;text-decoration:none;color:var(--cyan);font-family:var(--mono);font-size:11px;font-weight:600;transition:all .15s" onmouseover="this.style.background='var(--cyan)';this.style.color='#000'" onmouseout="this.style.background='var(--bg)';this.style.color='var(--cyan)'">
+        🔗 Open in DexScreener
+      </a>
+    </div>
+    <div style="position:relative;width:100%;height:400px;background:var(--bg)">
+      <iframe 
+        src="${embedUrl}" 
+        style="position:absolute;top:0;left:0;width:100%;height:100%;border:none"
+        loading="lazy"
+        allow="clipboard-write"
+      ></iframe>
+    </div>
+    <div style="padding:10px 16px;background:var(--bg);border-top:1px solid var(--card-border);font-size:11px;color:var(--text3);text-align:center">
+      Powered by DexScreener · ${chain.toUpperCase()}
+    </div>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════
