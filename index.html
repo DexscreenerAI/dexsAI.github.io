@@ -2528,17 +2528,19 @@ async function sendQuery(query) {
             <div style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap">${esc(aiData.answer)}</div>
           </div>` });
         } else {
-          // API failed, fallback to summary
+          const errText = await aiRes.text().catch(() => 'unknown');
+          console.error('AI API error:', aiRes.status, errText);
           c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
             <div style="font-size:13px;color:var(--text)">${analysis.summary}</div>
-            <div style="margin-top:8px;font-size:11px;color:var(--text3)">⚠️ AI unavailable. Use 🛡️ Safe? or 📈 Buy/Sell? for detailed analysis.</div>
+            <div style="margin-top:8px;font-size:11px;color:var(--red)">⚠️ AI error ${aiRes.status}: ${esc(errText.slice(0, 100))}</div>
           </div>` });
         }
       } catch(apiErr) {
+        console.error('AI fetch error:', apiErr);
         hideLoading();
         c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
           <div style="font-size:13px;color:var(--text)">${analysis.summary}</div>
-          <div style="margin-top:8px;font-size:11px;color:var(--text3)">⚠️ Could not reach AI server. Make sure your bot is running.</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--red)">⚠️ ${esc(apiErr.message || 'Could not reach AI server')}</div>
         </div>` });
       }
       
