@@ -6826,27 +6826,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  // Check URL params (legacy support)
+  // Check URL params
   const urlParams = new URLSearchParams(window.location.search);
   const ca = urlParams.get('ca') || urlParams.get('analyze');
+  const action = urlParams.get('action') || 'analyze';
   
   if (ca && ca.trim()) {
-    // Wait for DOM to be ready
+    const address = ca.trim();
+    
+    // Clean URL first
+    const cleanURL = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanURL);
+    
+    // Action: Chart - need to fetch pair data first
+    if (action === 'chart') {
+      setTimeout(async () => {
+        try {
+          showLoading('Loading chart...');
+          const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`, { signal: AbortSignal.timeout(8000) });
+          const data = await res.json();
+          hideLoading();
+          
+          if (data.pairs && data.pairs.length > 0) {
+            const pair = data.pairs.sort((a, b) => (parseFloat(b.liquidity?.usd) || 0) - (parseFloat(a.liquidity?.usd) || 0))[0];
+            const symbol = pair.baseToken?.symbol || 'TOKEN';
+            const chain = pair.chainId || 'solana';
+            renderChart(symbol, chain, pair.pairAddress);
+            addMessage(`📊 Chart loaded for $${symbol}`, 'bot');
+          } else {
+            addMessage('❌ Could not find token data for chart', 'bot');
+          }
+        } catch (e) {
+          hideLoading();
+          addMessage('❌ Error loading chart: ' + e.message, 'bot');
+        }
+      }, 500);
+      return;
+    }
+    
+    // Action: Analyze (default)
     setTimeout(() => {
       const input = document.getElementById('inputBox');
       if (input) {
-        input.value = ca.trim();
+        input.value = address;
         updateSendBtn();
-        // Small delay then trigger analysis
         setTimeout(() => {
           sendFromInput();
         }, 300);
       }
     }, 500);
-    
-    // Clean URL (remove ?ca= parameter)
-    const cleanURL = window.location.pathname;
-    window.history.replaceState({}, document.title, cleanURL);
   }
 })();
 </script>
