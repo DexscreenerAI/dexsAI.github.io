@@ -981,7 +981,7 @@ body {
   left: 0;
   right: 0;
   width: 400px;
-  background: var(--card-bg);
+  background: var(--bg);
   border: 1px solid var(--card-border);
   border-radius: 12px;
   max-height: 420px;
@@ -1395,10 +1395,16 @@ body {
     width: calc(100vw - 16px);
     left: -8px;
     max-height: 60vh;
+    background: #0a0f16;
+    border: 1px solid rgba(0,255,255,0.15);
   }
   .nav-result-item {
     padding: 8px 10px;
     gap: 8px;
+    background: #0a0f16;
+  }
+  .nav-result-item:hover, .nav-result-item:active {
+    background: #111a26;
   }
   .nav-result-logo {
     width: 32px;
@@ -6648,7 +6654,7 @@ async function searchNav(query) {
       const safeDesc = description.replace(/[\n\r]/g, ' ').replace(/'/g, "\\'").replace(/"/g, '&quot;').slice(0, 200);
       const pairAddr = pair.pairAddress || '';
       
-      html += `<div class="nav-result-item">
+      html += `<div class="nav-result-item" onclick="analyzeFromNav('${addr}','${chain}')">
         <div class="nav-result-logo">
           ${logo ? `<img src="${logo}" onerror="this.style.display='none'; this.parentElement.innerHTML='${symbol.charAt(0).toUpperCase()}'">` : symbol.charAt(0).toUpperCase()}
         </div>
