@@ -1362,9 +1362,8 @@ function renderResults(tokens, aiAnalysis) {
           <a href="${t.website || '#'}" target="_blank" class="token-social ${!t.website ? 'disabled' : ''}" title="Website">🌐</a>
         </div>
         <div class="token-detail-actions">
-          <button class="token-action-btn" onclick="goToAppChart('${esc(t.symbol)}', '${t.chain}', '${t.pairAddress}')">📊 Chart</button>
-          <button class="token-action-btn primary" onclick="goToApp('${t.address}', '${t.chain}')">🔍 Analyze</button>
-          <button class="token-action-btn app" onclick="goToApp('${t.address}', '${t.chain}')">🏠 App</button>
+          <button class="token-action-btn" onclick="openChartNewTab('${t.address}')">📊 Chart</button>
+          <button class="token-action-btn app" onclick="openAppNewTab('${t.address}')">🏠 Open in App</button>
         </div>
       </div>
     </div>`;
@@ -1392,16 +1391,14 @@ function resetComparison() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function goToApp(address, chain) {
-  // Store in localStorage for the app to pick up
-  localStorage.setItem('pendingAnalysis', JSON.stringify({ address, chain, from: 'compare', action: 'analyze' }));
-  window.location.href = 'index.html';
+function openAppNewTab(address) {
+  // Open app in new tab with analyze action
+  window.open(`index.html?ca=${address}&action=analyze`, '_blank');
 }
 
-function goToAppChart(symbol, chain, pairAddress) {
-  // Store in localStorage for the app to show chart
-  localStorage.setItem('pendingAnalysis', JSON.stringify({ symbol, chain, pairAddress, from: 'compare', action: 'chart' }));
-  window.location.href = 'index.html';
+function openChartNewTab(address) {
+  // Open app in new tab with chart action
+  window.open(`index.html?ca=${address}&action=chart`, '_blank');
 }
 
 // ═══════════════════════════════════════════
