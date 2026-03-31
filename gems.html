@@ -530,11 +530,11 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
   flex-wrap: wrap;
 }
 .gem-btn {
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: 8px;
   font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
   border: 1px solid var(--card-border);
@@ -543,19 +543,13 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  width: 100%;
+  justify-content: center;
 }
 .gem-btn:hover {
   border-color: var(--cyan);
   color: var(--cyan);
-}
-.gem-btn.primary {
-  background: linear-gradient(135deg, var(--purple), var(--cyan));
-  border: none;
-  color: #000;
-}
-.gem-btn.primary:hover {
-  transform: scale(1.05);
 }
 .gem-btn.app {
   background: linear-gradient(135deg, var(--gold), var(--yellow));
@@ -563,7 +557,8 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
   color: #000;
 }
 .gem-btn.app:hover {
-  transform: scale(1.05);
+  transform: scale(1.02);
+  box-shadow: 0 4px 15px rgba(255,215,0,0.3);
 }
 
 /* ── RESET ── */
@@ -721,7 +716,7 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
   <div class="results-section" id="resultsSection">
     <div class="results-header">
       <h2 class="results-title">🟢 HIGH POTENTIAL GEMS</h2>
-      <p class="results-subtitle">Sorted by confidence • AI Pick marked with 🤖</p>
+      <p class="results-subtitle">🤖 AI Pick first • Sorted by confidence</p>
     </div>
     
     <div class="gems-grid" id="gemsGrid"></div>
@@ -1112,7 +1107,18 @@ function renderResults(gems, aiAnalysis, topPick) {
   // AI analysis is done in background - topPick is just the symbol
   const aiTopPick = topPick ? topPick.toUpperCase() : null;
   
-  // Gem cards - sorted by score (confidence)
+  // Sort gems: AI pick first, then by score
+  if (aiTopPick) {
+    gems.sort((a, b) => {
+      const aIsAI = a.symbol.toUpperCase() === aiTopPick;
+      const bIsAI = b.symbol.toUpperCase() === aiTopPick;
+      if (aIsAI && !bIsAI) return -1;
+      if (!aIsAI && bIsAI) return 1;
+      return b.score - a.score;
+    });
+  }
+  
+  // Gem cards
   let cardsHtml = '';
   
   gems.forEach((g, i) => {
@@ -1206,7 +1212,6 @@ function renderResults(gems, aiAnalysis, topPick) {
           </div>
         </div>
         <div class="gem-actions">
-          <button class="gem-btn" onclick="openChartNewTab('${g.address}', '${g.chain}')">📊 Chart</button>
           <button class="gem-btn app" onclick="openAppNewTab('${g.address}', '${g.chain}')">🏠 Open in App</button>
         </div>
       </div>
@@ -1228,11 +1233,6 @@ function resetHunt() {
 function openAppNewTab(address, chain) {
   // Open app in new tab with analyze action
   window.open(`index.html?ca=${address}&action=analyze`, '_blank');
-}
-
-function openChartNewTab(address, chain) {
-  // Open app in new tab with chart action
-  window.open(`index.html?ca=${address}&action=chart`, '_blank');
 }
 </script>
 
