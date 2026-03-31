@@ -577,53 +577,6 @@ html, body { height:100%; background: var(--bg); color: var(--text); font-family
 .table-score.medium { background: var(--yellow); color: #000; }
 .table-score.low { background: var(--red); color: #fff; }
 
-/* ── AI ANALYSIS ── */
-.ai-card {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-left: 3px solid var(--purple);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 20px;
-}
-.ai-title {
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  color: var(--purple);
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.ai-content {
-  font-size: 14px;
-  line-height: 1.8;
-  color: var(--text);
-  white-space: pre-wrap;
-}
-.ai-verdict {
-  margin-top: 20px;
-  padding: 16px;
-  background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(0,212,255,0.1));
-  border: 1px solid rgba(168,85,247,0.3);
-  border-radius: 12px;
-}
-.ai-verdict-title {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  color: var(--cyan);
-  margin-bottom: 8px;
-}
-.ai-verdict-text {
-  font-size: 15px;
-  font-weight: 600;
-  color: #fff;
-}
-
 /* ── INDIVIDUAL CARDS ── */
 .token-cards {
   display: grid;
@@ -753,11 +706,11 @@ html, body { height:100%; background: var(--bg); color: var(--text); font-family
   flex-wrap: wrap;
 }
 .token-action-btn {
-  padding: 8px 14px;
+  padding: 10px 20px;
   border-radius: 8px;
   font-family: var(--mono);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
   border: 1px solid var(--card-border);
@@ -766,21 +719,22 @@ html, body { height:100%; background: var(--bg); color: var(--text); font-family
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
 }
 .token-action-btn:hover {
   border-color: var(--cyan);
   color: var(--cyan);
 }
-.token-action-btn.primary {
-  background: linear-gradient(135deg, var(--purple), var(--cyan));
-  border: none;
-  color: #000;
-}
 .token-action-btn.app {
   background: linear-gradient(135deg, #ffd700, #ffaa00);
   border: none;
   color: #000;
+}
+.token-action-btn.app:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 15px rgba(255,215,0,0.3);
 }
 
 /* ── RESET BUTTON ── */
@@ -819,7 +773,6 @@ html, body { height:100%; background: var(--bg); color: var(--text); font-family
   .comparison-table { font-size: 11px; }
   .comparison-table th, .comparison-table td { padding: 10px 8px; }
   .token-cards { grid-template-columns: 1fr; }
-  .ai-card { padding: 16px; }
 }
 </style>
 </head>
@@ -1301,13 +1254,7 @@ function renderResults(tokens, aiAnalysis) {
   
   html += `</tbody></table></div></div>`;
   
-  // AI Analysis card
-  html += `<div class="ai-card">
-    <div class="ai-title">🤖 AI ANALYSIS</div>
-    <div class="ai-content">${esc(aiAnalysis)}</div>
-  </div>`;
-  
-  // Token detail cards
+  // Token detail cards (no AI text)
   html += `<div class="token-cards">`;
   
   tokens.forEach((t, i) => {
@@ -1362,7 +1309,6 @@ function renderResults(tokens, aiAnalysis) {
           <a href="${t.website || '#'}" target="_blank" class="token-social ${!t.website ? 'disabled' : ''}" title="Website">🌐</a>
         </div>
         <div class="token-detail-actions">
-          <button class="token-action-btn" onclick="openChartNewTab('${t.address}')">📊 Chart</button>
           <button class="token-action-btn app" onclick="openAppNewTab('${t.address}')">🏠 Open in App</button>
         </div>
       </div>
@@ -1394,11 +1340,6 @@ function resetComparison() {
 function openAppNewTab(address) {
   // Open app in new tab with analyze action
   window.open(`index.html?ca=${address}&action=analyze`, '_blank');
-}
-
-function openChartNewTab(address) {
-  // Open app in new tab with chart action
-  window.open(`index.html?ca=${address}&action=chart`, '_blank');
 }
 
 // ═══════════════════════════════════════════
