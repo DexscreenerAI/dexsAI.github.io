@@ -920,7 +920,7 @@ body {
 /* Nav Search Bar */
 .nav-search-wrap {
   position: relative;
-  margin-left: 0;
+  margin-left: 80px;
   margin-right: auto;
   flex: 0 1 320px;
   max-width: 320px;
@@ -1076,6 +1076,16 @@ body {
   background: rgba(255,170,0,0.15);
   padding: 2px 5px;
   border-radius: 4px;
+}
+.nav-result-noupdate {
+  font-family: var(--mono);
+  font-size: 7px;
+  font-weight: 600;
+  color: var(--red);
+  background: rgba(255,59,79,0.15);
+  padding: 2px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
 }
 .nav-result-meta {
   display: flex;
@@ -5686,6 +5696,15 @@ async function searchNav(query) {
       const total = buys + sells;
       const buyRatio = total > 0 ? Math.round((buys / total) * 100) : 50;
       const chg24h = parseFloat(pair.priceChange?.h24) || 0;
+      
+      // Check if DexScreener profile is not updated
+      const hasLogo = !!pair.info?.imageUrl;
+      const hasWebsite = pair.info?.websites && pair.info.websites.length > 0;
+      const hasTwitter = pair.info?.socials?.some(s => s.type === 'twitter');
+      const hasTelegram = pair.info?.socials?.some(s => s.type === 'telegram');
+      const hasDescription = !!pair.info?.description;
+      const hasHeader = !!pair.info?.header;
+      const isNoUpdate = !hasLogo && !hasWebsite && !hasTwitter && !hasTelegram && !hasDescription && !hasHeader;
       
       // Escape for onclick
       const safeSymbol = symbol.replace(/'/g, "\\'").replace(/"/g, '&quot;');
