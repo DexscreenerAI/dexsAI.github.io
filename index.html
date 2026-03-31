@@ -181,6 +181,201 @@ body {
   color: var(--yellow);
 }
 
+/* Explore Search Bar */
+.explore-search-wrap {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--card-border);
+  position: relative;
+}
+.explore-search-input {
+  width: 100%;
+  padding: 10px 14px;
+  padding-left: 36px;
+  background: var(--bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s;
+}
+.explore-search-input::placeholder {
+  color: var(--text3);
+}
+.explore-search-input:focus {
+  border-color: var(--cyan);
+  background: var(--bg3);
+}
+.explore-search-icon {
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--text3);
+  pointer-events: none;
+}
+.explore-search-clear {
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  display: none;
+}
+.explore-search-clear.visible {
+  display: block;
+}
+.explore-search-clear:hover {
+  color: var(--text);
+}
+.explore-results {
+  position: absolute;
+  top: 100%;
+  left: 12px;
+  right: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  max-height: 350px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  display: none;
+}
+.explore-results.active {
+  display: block;
+}
+.explore-results-loading {
+  padding: 20px;
+  text-align: center;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.explore-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid var(--card-border);
+}
+.explore-result-item:last-child {
+  border-bottom: none;
+}
+.explore-result-item:hover {
+  background: var(--bg3);
+}
+.explore-result-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg);
+  flex-shrink: 0;
+}
+.explore-result-info {
+  flex: 1;
+  min-width: 0;
+}
+.explore-result-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.explore-result-symbol {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cyan);
+}
+.explore-result-name {
+  font-size: 12px;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.explore-result-chain {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text3);
+  background: var(--bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.explore-result-cto {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 600;
+  color: var(--yellow);
+  background: rgba(255,170,0,0.15);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+.explore-result-price {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  margin-top: 3px;
+}
+.explore-result-mc {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-left: 8px;
+}
+.explore-result-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.explore-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.explore-btn-analyze {
+  background: var(--cyan-dim);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.explore-btn-analyze:hover {
+  background: var(--cyan);
+  color: #000;
+}
+.explore-btn-ai {
+  background: var(--purple-dim);
+  border-color: var(--purple);
+  color: var(--purple);
+}
+.explore-btn-ai:hover {
+  background: var(--purple);
+  color: #000;
+}
+.explore-no-results {
+  padding: 24px;
+  text-align: center;
+  color: var(--text3);
+  font-size: 12px;
+}
+
 /* Responsive: hide right panel on smaller screens */
 @media (max-width: 1200px) {
   .right-panel { width: 260px; }
@@ -1566,6 +1761,14 @@ body {
 
   <!-- RIGHT PANEL -->
   <div class="right-panel" id="rightPanel">
+    <!-- Search Bar -->
+    <div class="explore-search-wrap">
+      <span class="explore-search-icon">🔍</span>
+      <input type="text" class="explore-search-input" id="exploreSearchInput" placeholder="Search token..." autocomplete="off">
+      <button class="explore-search-clear" id="exploreSearchClear" onclick="clearExploreSearch()">✕</button>
+      <div class="explore-results" id="exploreResults"></div>
+    </div>
+    
     <!-- Promoted Section -->
     <div class="rp-section rp-promoted">
       <div class="rp-title" style="color:var(--yellow)">⭐ Promoted <a href="./promote.html" style="margin-left:auto;font-size:9px;color:var(--cyan);text-decoration:none">+ Add yours</a></div>
@@ -5285,6 +5488,158 @@ function renderGemPicks(tokens) {
 }
 
 // ═══════════════════════════════════════════
+// 🔍 EXPLORE SEARCH (Right Panel)
+// ═══════════════════════════════════════════
+let exploreSearchTimeout = null;
+let exploreSearchResults = [];
+
+function initExploreSearch() {
+  const input = document.getElementById('exploreSearchInput');
+  const results = document.getElementById('exploreResults');
+  const clearBtn = document.getElementById('exploreSearchClear');
+  
+  if (!input) return;
+  
+  input.addEventListener('input', (e) => {
+    const query = e.target.value.trim();
+    
+    // Show/hide clear button
+    clearBtn.classList.toggle('visible', query.length > 0);
+    
+    // Debounce search
+    clearTimeout(exploreSearchTimeout);
+    
+    if (query.length < 2) {
+      results.classList.remove('active');
+      return;
+    }
+    
+    exploreSearchTimeout = setTimeout(() => {
+      searchExplore(query);
+    }, 300);
+  });
+  
+  input.addEventListener('focus', () => {
+    if (exploreSearchResults.length > 0) {
+      results.classList.add('active');
+    }
+  });
+  
+  // Close on click outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.explore-search-wrap')) {
+      results.classList.remove('active');
+    }
+  });
+}
+
+function clearExploreSearch() {
+  const input = document.getElementById('exploreSearchInput');
+  const results = document.getElementById('exploreResults');
+  const clearBtn = document.getElementById('exploreSearchClear');
+  
+  input.value = '';
+  clearBtn.classList.remove('visible');
+  results.classList.remove('active');
+  exploreSearchResults = [];
+}
+
+async function searchExplore(query) {
+  const results = document.getElementById('exploreResults');
+  
+  results.innerHTML = '<div class="explore-results-loading">🔍 Searching...</div>';
+  results.classList.add('active');
+  
+  try {
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`, {
+      signal: AbortSignal.timeout(8000)
+    });
+    const data = await res.json();
+    
+    if (!data.pairs || data.pairs.length === 0) {
+      results.innerHTML = '<div class="explore-no-results">No tokens found for "' + esc(query) + '"</div>';
+      exploreSearchResults = [];
+      return;
+    }
+    
+    // Deduplicate by token address, keep best pair
+    const tokenMap = new Map();
+    for (const pair of data.pairs) {
+      const addr = pair.baseToken?.address;
+      if (!addr) continue;
+      
+      const existing = tokenMap.get(addr);
+      const liq = parseFloat(pair.liquidity?.usd) || 0;
+      
+      if (!existing || liq > (parseFloat(existing.liquidity?.usd) || 0)) {
+        tokenMap.set(addr, pair);
+      }
+    }
+    
+    // Take top 8
+    const tokens = Array.from(tokenMap.values())
+      .sort((a, b) => (parseFloat(b.liquidity?.usd) || 0) - (parseFloat(a.liquidity?.usd) || 0))
+      .slice(0, 8);
+    
+    exploreSearchResults = tokens;
+    
+    let html = '';
+    for (const pair of tokens) {
+      const symbol = pair.baseToken?.symbol || '???';
+      const name = pair.baseToken?.name || '';
+      const chain = pair.chainId || 'unknown';
+      const price = parseFloat(pair.priceUsd) || 0;
+      const mc = parseFloat(pair.marketCap) || 0;
+      const logo = pair.info?.imageUrl || '';
+      const addr = pair.baseToken?.address || '';
+      const description = pair.info?.description || '';
+      const isCTO = detectCTO(description);
+      const liq = parseFloat(pair.liquidity?.usd) || 0;
+      const vol24h = parseFloat(pair.volume?.h24) || 0;
+      const buys = pair.txns?.h24?.buys || 0;
+      const sells = pair.txns?.h24?.sells || 0;
+      const total = buys + sells;
+      const buyRatio = total > 0 ? Math.round((buys / total) * 100) : 50;
+      const chg24h = parseFloat(pair.priceChange?.h24) || 0;
+      
+      html += `<div class="explore-result-item">
+        ${logo ? `<img src="${logo}" class="explore-result-logo" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 36 36%22><circle cx=%2218%22 cy=%2218%22 r=%2218%22 fill=%22%23333%22/><text x=%2218%22 y=%2223%22 text-anchor=%22middle%22 fill=%22%23888%22 font-size=%2214%22>${symbol.charAt(0)}</text></svg>'">` : `<div class="explore-result-logo" style="display:flex;align-items:center;justify-content:center;background:var(--bg3);font-size:14px;color:var(--text3)">${symbol.charAt(0)}</div>`}
+        <div class="explore-result-info">
+          <div class="explore-result-row">
+            <span class="explore-result-symbol">$${esc(symbol)}</span>
+            <span class="explore-result-chain">${chain}</span>
+            ${isCTO ? '<span class="explore-result-cto">👥 CTO</span>' : ''}
+          </div>
+          <div class="explore-result-name">${esc(name)}</div>
+          <div class="explore-result-price">${fP(price)} <span class="explore-result-mc">MC: $${fN(mc)}</span></div>
+        </div>
+        <div class="explore-result-btns">
+          <button class="explore-btn explore-btn-analyze" onclick="event.stopPropagation(); analyzeFromExplore('${addr}','${chain}')">🔍 Analyze</button>
+          <button class="explore-btn explore-btn-ai" onclick="event.stopPropagation(); aiFromExplore({symbol:'${symbol.replace(/'/g, "\\'")}',chain:'${chain}',address:'${addr}',logo:'${logo.replace(/'/g, "\\'")}',price:${price},mc:${mc},liq:${liq},vol24h:${vol24h},buyRatio:${buyRatio},chg24h:${chg24h},description:'${description.replace(/[\n\r]/g, ' ').replace(/'/g, "\\'").slice(0, 200)}'})">🤖 AI</button>
+        </div>
+      </div>`;
+    }
+    
+    results.innerHTML = html;
+    
+  } catch (err) {
+    results.innerHTML = '<div class="explore-no-results">Search failed. Try again.</div>';
+    exploreSearchResults = [];
+  }
+}
+
+function analyzeFromExplore(addr, chain) {
+  clearExploreSearch();
+  document.getElementById('inputBox').value = addr;
+  sendFromInput();
+}
+
+function aiFromExplore(tokenData) {
+  clearExploreSearch();
+  showAIOptions(tokenData);
+}
+
+// ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
 loadSavedLanguage();
@@ -5295,6 +5650,7 @@ updateUILanguage();
 renderSavedSearches();
 renderMobileSavedSearches();
 loadPromotedTokens();
+initExploreSearch();
 
 // Load panel data after page loads
 setTimeout(() => {
