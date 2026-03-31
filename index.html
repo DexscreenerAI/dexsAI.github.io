@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>DexScreener AI — Token Intelligence</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
@@ -33,17 +33,24 @@
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
-html, body { height:100%; overflow:hidden; }
+html, body { height:100%; overflow:hidden; touch-action: manipulation; }
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+
+/* Prevent zoom on input focus (iOS) */
+@media (max-width: 768px) {
+  input, textarea, select, button { font-size: 16px !important; }
+}
 
 /* ── LAYOUT ── */
 .app { display: flex; height: calc(100vh - 56px); margin-top: 56px; }
@@ -189,16 +196,22 @@ body {
 .mobile-panel {
   display: none;
   background: var(--sidebar);
-  border-bottom: 1px solid var(--card-border);
-  overflow: hidden;
+  position: fixed;
+  top: 56px; /* Below the navbar */
+  left: 0;
+  right: 0;
+  z-index: 90;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 .mobile-panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
-  background: var(--bg3);
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--bg3) 0%, var(--bg2) 100%);
   cursor: pointer;
+  border-bottom: 1px solid var(--card-border);
+  min-height: 44px; /* Easy to tap on mobile */
 }
 .mobile-panel-title {
   font-family: var(--mono);
@@ -211,27 +224,41 @@ body {
   gap: 8px;
 }
 .mobile-panel-toggle {
-  background: none;
+  background: var(--cyan);
   border: none;
-  color: var(--text2);
-  font-size: 16px;
+  color: #000;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
-  padding: 4px 8px;
-  transition: transform 0.2s;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: transform 0.2s, background 0.2s;
+}
+.mobile-panel-toggle:hover {
+  background: var(--green);
 }
 .mobile-panel.collapsed .mobile-panel-toggle {
   transform: rotate(180deg);
 }
 .mobile-panel-content {
-  max-height: 250px;
-  overflow: hidden;
-  transition: max-height 0.3s ease;
+  max-height: 300px;
+  overflow-y: auto;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  background: var(--sidebar);
+  border-bottom: 1px solid var(--card-border);
 }
 .mobile-panel.collapsed .mobile-panel-content {
   max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+.mobile-panel:not(.collapsed) .mobile-panel-content {
+  opacity: 1;
 }
 @media (max-width: 1000px) {
   .mobile-panel { display: block !important; }
+  /* Adjust welcome section when panel exists */
+  .welcome { padding-top: 20px; }
 }
 .mobile-tabs {
   display: flex;
@@ -312,8 +339,7 @@ body {
 
 /* ── TOP BAR ── */
 .topbar {
-  padding: 14px 20px; border-bottom: 1px solid var(--card-border);
-  display: flex; align-items: center; gap: 12px;
+  display: none !important; /* Hidden - we use top-nav instead */
 }
 .tb-toggle {
   background: none; border: none; color: var(--text2); cursor: pointer;
@@ -391,67 +417,11 @@ body {
 @keyframes ldPulse { 0%,100%{opacity:.25} 50%{opacity:1} }
 .ld-text { font-family: var(--sans); font-size: 13px; color: var(--text2); }
 
-/* ── ACTION BUTTONS ── */
-.action-btns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  max-width: 520px;
-  width: 100%;
-  margin-top: 28px;
-}
-.action-btn {
-  display: flex; align-items: center; gap: 10px;
-  padding: 14px 16px; background: var(--card);
-  border: 1px solid var(--card-border); border-radius: 12px;
-  color: var(--text); font-family: var(--sans); font-size: 13px;
-  font-weight: 500; cursor: pointer; transition: all .2s;
-  text-align: left; line-height: 1.3;
-}
-.action-btn:hover {
-  border-color: rgba(0,212,255,0.4);
-  background: var(--bg3);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-.action-btn .ab-icon {
-  font-size: 22px; flex-shrink: 0;
-  width: 40px; height: 40px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-}
-.action-btn .ab-icon.safe { background: var(--green-dim); }
-.action-btn .ab-icon.trade { background: var(--cyan-dim); }
-.action-btn .ab-icon.trend { background: var(--yellow-dim); }
-.action-btn .ab-icon.gem { background: var(--purple-dim); }
-.action-btn .ab-label { font-weight: 600; font-size: 13px; }
-.action-btn .ab-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
-@media (max-width: 600px) {
-  .action-btns { grid-template-columns: 1fr; max-width: 100%; gap: 8px; margin-top: 20px; }
-  .action-btn { padding: 12px 14px; }
-  .action-btn .ab-icon { width: 36px; height: 36px; font-size: 18px; }
-  .ia-btn { padding: 5px 10px; font-size: 11px; }
-  .ia-btn span { font-size: 12px; }
-  .input-actions { gap: 6px; }
-}
-
 /* ── INPUT AREA ── */
 .input-area {
-  padding: 10px 20px 20px;
+  padding: 10px 20px 50px; /* More padding at bottom for PC */
   display: flex; flex-direction: column; align-items: center;
 }
-.input-actions {
-  display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center;
-  max-width: 720px; width: 100%;
-}
-.ia-btn {
-  padding: 7px 14px; border-radius: 20px; background: var(--card);
-  border: 1px solid var(--card-border); color: var(--text2);
-  font-family: var(--mono); font-size: 12px; font-weight: 500; cursor: pointer;
-  display: flex; align-items: center; gap: 5px; transition: all .15s;
-  white-space: nowrap;
-}
-.ia-btn:hover { border-color: rgba(0,212,255,0.4); color: #fff; background: var(--bg3); }
-.ia-btn span { font-size: 14px; }
 .quick-btns { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; justify-content: center; }
 .quick-btn {
   padding: 7px 14px; border-radius: 20px; background: var(--card);
@@ -466,6 +436,51 @@ body {
   display: flex; align-items: flex-end; transition: border-color .2s;
 }
 .input-wrap:focus-within { border-color: rgba(0,212,255,0.3); box-shadow: 0 0 20px rgba(0,212,255,0.03); }
+
+/* ── ACTION BUTTONS ── */
+.input-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 720px;
+  width: 100%;
+}
+.ia-btn {
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.ia-btn:hover {
+  border-color: rgba(0,212,255,0.4);
+  color: #fff;
+  background: var(--bg3);
+  transform: translateY(-1px);
+}
+.ia-btn:active {
+  transform: translateY(0);
+}
+.ia-btn span {
+  font-size: 14px;
+}
+
+@media (max-width: 600px) {
+  .input-actions { gap: 6px; }
+  .ia-btn { padding: 6px 10px; font-size: 11px; }
+  .ia-btn span { font-size: 12px; }
+}
 .input-box {
   flex: 1; background: transparent; border: none; color: var(--text);
   font-family: var(--sans); font-size: 14px; resize: none; padding: 10px 0;
@@ -639,7 +654,7 @@ body {
   /* Adjust main layout */
   .main { width: 100%; }
   
-  .messages { padding: 12px 10px 140px; }
+  .messages { padding: 60px 10px 140px; } /* 60px top for fixed mobile-panel header */
   .msg-container { max-width: 100%; }
   .msg-user-bubble { max-width: 90%; font-size: 13px; padding: 10px 14px; }
   .msg-oracle-label { font-size: 9px; }
@@ -694,7 +709,7 @@ body {
     padding: 4px 4px 4px 14px;
     background: var(--bg3);
   }
-  .input-box { font-size: 15px; min-height: 20px; }
+  .input-box { font-size: 16px; min-height: 20px; } /* 16px minimum to prevent iOS zoom */
   .send-btn { width: 38px; height: 38px; border-radius: 10px; }
   
   .badge { font-size: 9px; padding: 3px 6px; }
@@ -725,7 +740,7 @@ body {
   
   .scenario-value { font-size: 16px; }
   .zone-val { font-size: 10px; }
-  .input-box { font-size: 14px; }
+  .input-box { font-size: 16px; } /* 16px minimum to prevent iOS zoom */
   
   .welcome-title { font-size: 20px; }
   .quick-tokens { gap: 6px; }
@@ -901,6 +916,109 @@ body {
   color: #fff;
   letter-spacing: 1px;
 }
+
+/* NEW Analysis button (mobile only) */
+.nav-new-btn {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--green) 100%);
+  border: none;
+  color: #000;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-left: auto;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.nav-new-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+}
+.nav-new-btn:active {
+  transform: scale(0.98);
+}
+
+/* Mobile Quick Dropdown (Trending/Promote) */
+.nav-quick-dropdown {
+  display: block;
+  position: relative;
+  margin-left: 12px;
+}
+.nav-quick-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.nav-quick-btn:hover {
+  background: var(--bg3);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.nav-quick-btn .arrow {
+  font-size: 8px;
+  transition: transform 0.2s;
+}
+.nav-quick-dropdown.open .nav-quick-btn .arrow {
+  transform: rotate(180deg);
+}
+.nav-quick-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  min-width: 160px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  z-index: 10000;
+  overflow: hidden;
+  padding: 6px;
+}
+.nav-quick-dropdown.open .nav-quick-menu {
+  display: block;
+  animation: dropdownFadeIn 0.15s ease;
+}
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.nav-quick-menu a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  text-decoration: none;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.nav-quick-menu a:hover {
+  background: var(--bg3);
+  color: var(--cyan);
+}
+.nav-quick-menu a:first-child {
+  border-bottom: none;
+}
+
 .top-nav-links {
   display: flex;
   align-items: center;
@@ -926,6 +1044,32 @@ body {
   font-size: 24px;
   cursor: pointer;
   padding: 4px;
+}
+
+/* Social icons (mobile) */
+.nav-social-icons {
+  display: none;
+  align-items: center;
+  gap: 12px;
+}
+.nav-social-icons a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text2);
+  transition: all 0.15s;
+}
+.nav-social-icons a:hover {
+  background: var(--cyan-dim);
+  color: var(--cyan);
+}
+.nav-social-icons svg {
+  width: 18px;
+  height: 18px;
 }
 
 /* Mobile dropdown menu */
@@ -988,16 +1132,85 @@ body {
 }
 
 @media (max-width: 768px) {
-  .top-nav { padding: 0 16px; }
+  .top-nav { padding: 0 12px; }
   .top-nav-links { display: none; }
   .nav-menu-btn { display: block; }
+  .nav-social-icons { display: flex; }
   .top-nav-logo span { display: none; }
-  .fab-new { display: flex; align-items: center; justify-content: center; }
+  .nav-new-btn { display: flex; }
+  .nav-quick-dropdown { display: none; } /* Hide dropdown on mobile - use hamburger menu instead */
+  .fab-new { display: none; }
 }
 @media (max-width: 400px) {
   .top-nav { height: 50px; }
   .nav-mobile-menu { top: 50px; }
-  .fab-new { bottom: 85px; right: 12px; width: 50px; height: 50px; font-size: 24px; }
+  .nav-new-btn { padding: 6px 10px; font-size: 10px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PROMO BANNER (PC + mobile - scrolling ticker)
+   ══════════════════════════════════════════════════════════════ */
+.promo-banner {
+  display: block;
+  background: linear-gradient(90deg, rgba(255,170,0,0.15) 0%, rgba(255,170,0,0.05) 50%, rgba(255,170,0,0.15) 100%);
+  border-bottom: 1px solid rgba(255,170,0,0.3);
+  overflow: hidden;
+  position: relative;
+}
+.promo-banner.hidden {
+  display: none !important;
+}
+.promo-banner-inner {
+  display: flex;
+  animation: scrollPromo 20s linear infinite;
+  width: max-content;
+}
+.promo-banner-inner:hover {
+  animation-play-state: paused;
+}
+@keyframes scrollPromo {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.promo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.promo-item:hover {
+  background: rgba(255,170,0,0.2);
+}
+.promo-item:active {
+  background: rgba(255,170,0,0.3);
+}
+.promo-item-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--card-border);
+}
+.promo-item-ticker {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--yellow);
+}
+.promo-item-badge {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 600;
+  color: var(--text3);
+  background: rgba(255,255,255,0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.promo-banner-empty {
+  display: none;
 }
 </style>
 </head>
@@ -1009,15 +1222,34 @@ body {
     <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="DexScreener AI">
     <span>DEXSCREENER AI</span>
   </a>
+  
+  <!-- Quick Dropdown (compact menu) -->
+  <div class="nav-quick-dropdown" id="navQuickDropdown">
+    <button class="nav-quick-btn" onclick="toggleQuickDropdown(event)">
+      <span>Explore</span>
+      <span class="arrow">▼</span>
+    </button>
+    <div class="nav-quick-menu">
+      <a href="./promote.html">⭐ Promote</a>
+      <a href="./og-detector.html">🎯 OG Detector</a>
+      <a href="./telegram-bot.html">🤖 Telegram Bot</a>
+      <a href="./extension.html">🧩 Extension</a>
+    </div>
+  </div>
+  
+  <button class="nav-new-btn" onclick="newConversation()">+ NEW</button>
   <div class="top-nav-links">
-    <a href="./index.html" class="active">App</a>
-    <a href="./portfolio.html">Portfolio</a>
-    <a href="./whale-tracker.html">Whales</a>
-    <a href="./og-detector.html">OG Detector</a>
-    <a href="./promote.html" style="color:var(--yellow)">⭐ Promote</a>
-    <a href="./extension.html">Extension</a>
     <a href="./litepaper.html">Litepaper</a>
+    <a href="https://t.me/dexscreeneraitoken" target="_blank">Telegram</a>
     <a href="https://x.com/dexscreenerai" target="_blank">Twitter</a>
+  </div>
+  <div class="nav-social-icons">
+    <a href="https://t.me/dexscreeneraitoken" target="_blank" title="Telegram">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+    </a>
+    <a href="https://x.com/dexscreenerai" target="_blank" title="Twitter">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    </a>
   </div>
   <button class="nav-menu-btn" onclick="toggleMobileMenu()">☰</button>
 </nav>
@@ -1025,18 +1257,24 @@ body {
 <!-- Mobile Menu -->
 <div class="nav-mobile-menu" id="mobileMenu">
   <a href="./index.html" class="active">🏠 App</a>
+  <a href="./promote.html">⭐ Promote</a>
+  <a href="./og-detector.html">🎯 OG Detector</a>
+  <a href="./telegram-bot.html">🤖 Telegram Bot</a>
   <a href="./extension.html">🧩 Extension</a>
-  <a href="./portfolio.html">💼 Portfolio</a>
-  <a href="./whale-tracker.html">🐋 Whale Tracker</a>
-  <a href="./og-detector.html">🔍 OG Detector</a>
-  <a href="./promote.html" style="color:var(--yellow)">⭐ Promote Your Token</a>
   <a href="./litepaper.html">📄 Litepaper</a>
-  <a href="./privacy.html">🔒 Privacy</a>
+  <a href="https://t.me/dexscreeneraitoken" target="_blank">💬 Telegram</a>
   <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
 </div>
 
 <!-- Floating New Chat Button (mobile) -->
 <button class="fab-new" onclick="newConversation(); closeMobileMenu();" title="New Analysis">+</button>
+
+<!-- PROMO BANNER (PC + mobile - scrolling ticker) -->
+<div class="promo-banner" id="promoBanner">
+  <div class="promo-banner-inner" id="promoBannerInner">
+    <!-- Filled by JS - hidden until loaded -->
+  </div>
+</div>
 
 <div class="app">
 
@@ -1049,33 +1287,13 @@ body {
       </div>
       <button class="sb-close" onclick="toggleSidebar()">✕</button>
     </div>
-    <button class="sb-new" onclick="newConversation()">
-      <span style="font-size:16px">+</span> New analysis
-    </button>
-    <div class="sb-section-label">Today</div>
+    <div class="sb-section-label">History</div>
     <div class="sb-list" id="sbList"></div>
   </aside>
 
   <!-- MAIN -->
   <div class="main">
     <!-- TOP BAR -->
-    <div class="topbar">
-      <button class="tb-toggle" id="tbToggle" onclick="toggleSidebar()">☰</button>
-      <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" style="width:24px;height:24px;border-radius:4px" alt="DexScreener AI">
-      <span class="tb-title">DEXSCREENER AI</span>
-      <span class="tb-sep" id="tbSep" style="display:none">/</span>
-      <span class="tb-sub" id="tbSub"></span>
-      <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
-        <button class="tb-chat" id="tbChat" onclick="toggleChat()" title="Community Chat">💬</button>
-        <a href="https://x.com/dexscreenerai?s=21" target="_blank" rel="noopener" class="tb-social" title="Twitter">𝕏</a>
-        <a href="./extension.html" class="tb-chrome" title="Chrome Extension">🧩</a>
-        <select id="langSelect" onchange="setLanguage(this.value)" style="background:var(--card);border:1px solid var(--card-border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer;outline:none">
-          <option value="en">🇬🇧 EN</option>
-          <option value="fr">🇫🇷 FR</option>
-        </select>
-      </div>
-    </div>
-
     <!-- CHAT PANEL -->
     <div id="chatPanel">
       <div id="chatHeader">
@@ -1097,16 +1315,20 @@ body {
     <!-- MOBILE PANEL (visible only on mobile) -->
     <div class="mobile-panel collapsed" id="mobilePanel">
       <div class="mobile-panel-header" onclick="toggleMobilePanel()">
-        <span class="mobile-panel-title">🔥 Trending & New Tokens</span>
+        <span class="mobile-panel-title">📊 Trending & Promoted</span>
         <button class="mobile-panel-toggle">▼</button>
       </div>
       <div class="mobile-panel-content">
         <div class="mobile-tabs">
-          <button class="mobile-tab active" onclick="event.stopPropagation(); switchMobileTab('trending')">🔥 Trending</button>
+          <button class="mobile-tab active" onclick="event.stopPropagation(); switchMobileTab('promoted')" style="color:var(--yellow)">⭐ Promo</button>
+          <button class="mobile-tab" onclick="event.stopPropagation(); switchMobileTab('trending')">🔥 Trending</button>
           <button class="mobile-tab" onclick="event.stopPropagation(); switchMobileTab('new')">🆕 New</button>
           <button class="mobile-tab" onclick="event.stopPropagation(); switchMobileTab('searches')">⭐ Searches</button>
         </div>
-        <div class="mobile-tab-content active" id="mobileTrending">
+        <div class="mobile-tab-content active" id="mobilePromoted">
+          <div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Loading...</div>
+        </div>
+        <div class="mobile-tab-content" id="mobileTrending">
           <div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Loading...</div>
         </div>
         <div class="mobile-tab-content" id="mobileNew">
@@ -1133,7 +1355,7 @@ body {
       </div>
       <div class="input-wrap">
         <textarea class="input-box" id="inputBox" rows="1"
-          placeholder="Ask about any crypto, stock, or paste a contract address..."
+          placeholder="Paste a contract address..."
           oninput="autoResize(this); updateSendBtn()"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendFromInput()}"></textarea>
         <button class="send-btn inactive" id="sendBtn" onclick="sendFromInput()">↑</button>
@@ -1176,17 +1398,115 @@ body {
 let conversations = [{ id: Date.now(), title: 'New analysis', messages: [] }];
 let activeId = conversations[0].id;
 let isLoading = false;
-let pendingQuestion = null; // Stores {question, mode} when token not found
-let lastAnalyzedToken = null; // Stores {pair, rugData, analysis} of last analyzed token
 let currentLang = 'en';
 let savedSearches = JSON.parse(localStorage.getItem('oracleSearches') || '[]');
+let lastAnalyzedToken = null; // Store last token for follow-up questions
+
+// Backend API URL
+const API_URL = 'https://dexscreener-telegram-bot-production.up.railway.app';
 
 // ═══════════════════════════════════════════
-// API CONFIG
+// AI CHAT (Haiku - cheap & fast, unlimited)
 // ═══════════════════════════════════════════
-const API_URL = window.location.hostname === 'dexscreener-telegram-bot-production.up.railway.app'
-  ? '' // Same server, no prefix needed
-  : 'https://dexscreener-telegram-bot-production.up.railway.app';
+async function askAI(message, tokenContext = null) {
+  try {
+    const response = await fetch(`${API_URL}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, tokenContext })
+    });
+    
+    if (!response.ok) {
+      return { error: true, message: 'AI service temporarily unavailable.' };
+    }
+    
+    const data = await response.json();
+    return { error: false, answer: data.answer };
+  } catch (err) {
+    console.error('AI Chat error:', err);
+    return { error: true, message: 'AI service temporarily unavailable. Please try again.' };
+  }
+}
+
+// Detect if query is a question (not a token search)
+function isQuestion(query) {
+  const lower = query.toLowerCase().trim();
+  // Contains question mark
+  if (query.includes('?')) return true;
+  // Starts with question words
+  const questionStarts = ['what', 'why', 'how', 'when', 'where', 'who', 'which', 'is ', 'are ', 'do ', 'does ', 'can ', 'could ', 'should ', 'will ', 'would ', 'tell me', 'explain', 'help me', 'i need', 'i want'];
+  if (questionStarts.some(q => lower.startsWith(q))) return true;
+  // Long text (probably not a token name)
+  if (query.split(' ').length > 4) return true;
+  return false;
+}
+
+// ═══════════════════════════════════════════
+// COINGECKO - MAJOR CRYPTOS
+// ═══════════════════════════════════════════
+const COINGECKO_IDS = {
+  'btc': 'bitcoin', 'bitcoin': 'bitcoin',
+  'eth': 'ethereum', 'ethereum': 'ethereum',
+  'sol': 'solana', 'solana': 'solana',
+  'bnb': 'binancecoin', 'binance': 'binancecoin',
+  'xrp': 'ripple', 'ripple': 'ripple',
+  'ada': 'cardano', 'cardano': 'cardano',
+  'doge': 'dogecoin', 'dogecoin': 'dogecoin',
+  'dot': 'polkadot', 'polkadot': 'polkadot',
+  'matic': 'matic-network', 'polygon': 'matic-network',
+  'shib': 'shiba-inu', 'shiba': 'shiba-inu',
+  'avax': 'avalanche-2', 'avalanche': 'avalanche-2',
+  'link': 'chainlink', 'chainlink': 'chainlink',
+  'atom': 'cosmos', 'cosmos': 'cosmos',
+  'ltc': 'litecoin', 'litecoin': 'litecoin',
+  'uni': 'uniswap', 'uniswap': 'uniswap',
+  'xlm': 'stellar', 'stellar': 'stellar',
+  'near': 'near', 
+  'apt': 'aptos', 'aptos': 'aptos',
+  'sui': 'sui',
+  'arb': 'arbitrum', 'arbitrum': 'arbitrum',
+  'op': 'optimism', 'optimism': 'optimism',
+  'inj': 'injective-protocol', 'injective': 'injective-protocol',
+  'sei': 'sei-network',
+  'pepe': 'pepe',
+  'wif': 'dogwifcoin', 'dogwifhat': 'dogwifcoin',
+  'bonk': 'bonk',
+  'floki': 'floki',
+  'render': 'render-token',
+  'fet': 'fetch-ai',
+  'grt': 'the-graph',
+  'aave': 'aave',
+  'mkr': 'maker', 'maker': 'maker',
+  'crv': 'curve-dao-token', 'curve': 'curve-dao-token',
+  'snx': 'synthetix-network-token', 'synthetix': 'synthetix-network-token',
+  'ldo': 'lido-dao', 'lido': 'lido-dao',
+  'ton': 'the-open-network', 'toncoin': 'the-open-network',
+  'trx': 'tron', 'tron': 'tron',
+  'hbar': 'hedera-hashgraph', 'hedera': 'hedera-hashgraph',
+  'kas': 'kaspa', 'kaspa': 'kaspa'
+};
+
+const COINGECKO_IMAGES = {
+  'bitcoin': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+  'ethereum': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+  'solana': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+  'binancecoin': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png',
+  'ripple': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+  'cardano': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+  'dogecoin': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+  'polkadot': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
+  'matic-network': 'https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png',
+  'shiba-inu': 'https://assets.coingecko.com/coins/images/11939/small/shiba.png',
+  'avalanche-2': 'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png',
+  'chainlink': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
+  'cosmos': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
+  'litecoin': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
+  'uniswap': 'https://assets.coingecko.com/coins/images/12504/small/uniswap-logo.png',
+  'pepe': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
+  'bonk': 'https://assets.coingecko.com/coins/images/28600/small/bonk.jpg',
+  'dogwifcoin': 'https://assets.coingecko.com/coins/images/33566/small/dogwifhat.jpg',
+  'the-open-network': 'https://assets.coingecko.com/coins/images/17980/small/ton_symbol.png'
+};
 
 // ═══════════════════════════════════════════
 // TRANSLATIONS
@@ -1195,7 +1515,7 @@ const TRANSLATIONS = {
   en: {
     newAnalysis: 'New analysis',
     today: 'Today',
-    placeholder: 'Ask about any crypto, stock, or paste a contract address...',
+    placeholder: 'Paste a contract address...',
     analyzing: 'Analyzing...',
     liveData: 'Live Data Market',
     tokenIntelligence: 'Token Intelligence',
@@ -1230,7 +1550,7 @@ const TRANSLATIONS = {
   fr: {
     newAnalysis: 'Nouvelle analyse',
     today: "Aujourd'hui",
-    placeholder: 'Posez une question sur un crypto, ou collez une adresse de contrat...',
+    placeholder: 'Coller une adresse de contrat...',
     analyzing: 'Analyse en cours...',
     liveData: 'Données Live',
     tokenIntelligence: 'Intelligence Token',
@@ -1307,7 +1627,26 @@ function loadSavedLanguage() {
 // ═══════════════════════════════════════════
 const $ = id => document.getElementById(id);
 const esc = s => { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
-const fP = p => p>=1?'$'+p.toFixed(2):p>=0.01?'$'+p.toFixed(4):p>=0.0001?'$'+p.toFixed(6):'$'+p.toFixed(10);
+// Format price with subscript zeros for very small numbers
+// e.g., 0.00000152 → $0.0₅152
+const fP = p => {
+  if (p === 0) return '$0';
+  if (p >= 1000) return '$' + p.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  if (p >= 1) return '$' + p.toFixed(2);
+  if (p >= 0.01) return '$' + p.toFixed(4);
+  if (p >= 0.0001) return '$' + p.toFixed(6);
+  
+  // For very small numbers, count leading zeros and show as subscript
+  const str = p.toFixed(20);
+  const match = str.match(/^0\.(0+)(\d{1,4})/);
+  if (match) {
+    const zeros = match[1].length;
+    const digits = match[2];
+    const subscript = String(zeros).split('').map(d => '₀₁₂₃₄₅₆₇₈₉'[d]).join('');
+    return `$0.0${subscript}${digits}`;
+  }
+  return '$' + p.toExponential(2);
+};
 const fN = n => n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toFixed(0);
 
 function autoResize(el) {
@@ -1341,9 +1680,31 @@ function closeMobileMenu() {
   const btn = document.querySelector('.nav-menu-btn');
   if (menu) {
     menu.classList.remove('open');
-    btn.textContent = '☰';
+    btn.textContent = '\u2630';
   }
 }
+
+// Quick dropdown (mobile - Trending/Promote)
+function toggleQuickDropdown(e) {
+  e.stopPropagation();
+  const dropdown = $('navQuickDropdown');
+  dropdown.classList.toggle('open');
+}
+
+function closeQuickDropdown() {
+  const dropdown = $('navQuickDropdown');
+  if (dropdown) dropdown.classList.remove('open');
+}
+
+// Close quick dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  const dropdown = $('navQuickDropdown');
+  if (dropdown && dropdown.classList.contains('open')) {
+    if (!dropdown.contains(e.target)) {
+      closeQuickDropdown();
+    }
+  }
+});
 
 // Close mobile menu when clicking outside
 document.addEventListener('click', function(e) {
@@ -1377,22 +1738,14 @@ function newConversation() {
   const c = { id: Date.now(), title: 'New analysis', messages: [] };
   conversations.unshift(c);
   activeId = c.id;
-  lastAnalyzedToken = null;
-  pendingQuestion = null;
+  lastAnalyzedToken = null; // Reset memory for follow-up questions
   renderSidebar();
   renderMessages();
   updateTopbar();
 }
 
 function updateTopbar() {
-  const c = conversations.find(x => x.id === activeId);
-  if (c && c.messages.length > 0) {
-    $('tbSep').style.display = '';
-    $('tbSub').textContent = c.title;
-  } else {
-    $('tbSep').style.display = 'none';
-    $('tbSub').textContent = '';
-  }
+  // Topbar removed - function kept for compatibility
 }
 
 // ═══════════════════════════════════════════
@@ -1400,9 +1753,24 @@ function updateTopbar() {
 // ═══════════════════════════════════════════
 function detectAddress(input) {
   const trimmed = input.trim();
+  
+  // Check if EXACT address
   if (/^0x[a-fA-F0-9]{40}$/.test(trimmed)) return { type: 'evm', addr: trimmed };
   if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(trimmed)) return { type: 'sol', addr: trimmed };
+  
+  // Try to EXTRACT address from text (e.g. "0x123... is this good?")
+  const evmMatch = trimmed.match(/0x[a-fA-F0-9]{40}/);
+  if (evmMatch) return { type: 'evm', addr: evmMatch[0], hasQuestion: trimmed.length > evmMatch[0].length };
+  
+  const solMatch = trimmed.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
+  if (solMatch && solMatch[0].length >= 32) return { type: 'sol', addr: solMatch[0], hasQuestion: trimmed.length > solMatch[0].length };
+  
   return null;
+}
+
+// Extract question part from a message containing an address
+function extractQuestion(input, address) {
+  return input.replace(address, '').trim().replace(/^[\s,\-:]+|[\s,\-:]+$/g, '');
 }
 
 // ═══════════════════════════════════════════
@@ -1445,8 +1813,294 @@ async function fetchRugcheck(addr) {
 }
 
 // ═══════════════════════════════════════════
+// COINGECKO API (Major cryptos) + CACHE + FALLBACK
+// ═══════════════════════════════════════════
+const cgCache = {}; // In-memory cache for CoinGecko data
+const CG_CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+
+function detectMajorCrypto(query) {
+  const lower = query.toLowerCase().trim();
+  const cgId = COINGECKO_IDS[lower];
+  return cgId || null;
+}
+
+async function fetchCoinGecko(coinId) {
+  // Check cache first
+  const cached = cgCache[coinId];
+  if (cached && (Date.now() - cached.timestamp < CG_CACHE_TTL)) {
+    console.log('\uD83D\uDCE6 Using cached data for', coinId);
+    return cached.data;
+  }
+  
+  try {
+    // USE BACKEND API (no CORS issues, server-side fetch)
+    console.log('\uD83C\uDF10 Fetching via backend:', coinId);
+    const r = await fetch(`${API_URL}/api/major/${coinId}`, { 
+      signal: AbortSignal.timeout(15000) 
+    });
+    
+    if (!r.ok) {
+      console.log('\u26A0\uFE0F Backend API failed for', coinId);
+      return null;
+    }
+    
+    const data = await r.json();
+    if (!data || data.error) {
+      console.log('\u26A0\uFE0F No data from backend for', coinId);
+      return null;
+    }
+    
+    // Add image fallback
+    if (!data.image) {
+      data.image = COINGECKO_IMAGES[coinId] || '';
+    }
+    
+    // Save to cache
+    cgCache[coinId] = { data, timestamp: Date.now() };
+    return data;
+    
+  } catch(e) { 
+    console.error('Backend API error:', e);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════
+// COINCAP FALLBACK (100% free, no API key)
+// ═══════════════════════════════════════════
+const COINCAP_IDS = {
+  'bitcoin': 'bitcoin',
+  'ethereum': 'ethereum',
+  'solana': 'solana',
+  'binancecoin': 'binance-coin',
+  'ripple': 'xrp',
+  'cardano': 'cardano',
+  'dogecoin': 'dogecoin',
+  'polkadot': 'polkadot',
+  'matic-network': 'polygon',
+  'shiba-inu': 'shiba-inu',
+  'avalanche-2': 'avalanche',
+  'chainlink': 'chainlink',
+  'litecoin': 'litecoin',
+  'uniswap': 'uniswap',
+  'pepe': 'pepe',
+  'bonk': 'bonk',
+  'the-open-network': 'toncoin',
+  'cosmos': 'cosmos',
+  'stellar': 'stellar',
+  'near': 'near-protocol',
+  'aptos': 'aptos',
+  'sui': 'sui',
+  'arbitrum': 'arbitrum',
+  'optimism': 'optimism',
+  'injective-protocol': 'injective-protocol',
+  'render-token': 'render-token',
+  'fetch-ai': 'fetch-ai',
+  'the-graph': 'the-graph',
+  'aave': 'aave',
+  'maker': 'maker',
+  'curve-dao-token': 'curve-dao-token',
+  'lido-dao': 'lido-dao'
+};
+
+async function fetchCoinCapFallback(coinGeckoId) {
+  const coinCapId = COINCAP_IDS[coinGeckoId] || coinGeckoId;
+  
+  try {
+    console.log('🔄 Trying CoinCap fallback:', coinCapId);
+    const r = await fetch(`https://api.coincap.io/v2/assets/${coinCapId}`, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return null;
+    
+    const json = await r.json();
+    const data = json.data;
+    if (!data) return null;
+    
+    return {
+      id: data.id,
+      symbol: data.symbol?.toUpperCase() || '???',
+      name: data.name || coinCapId,
+      image: COINGECKO_IMAGES[coinGeckoId] || '',
+      price: parseFloat(data.priceUsd) || 0,
+      marketCap: parseFloat(data.marketCapUsd) || 0,
+      volume24h: parseFloat(data.volumeUsd24Hr) || 0,
+      change24h: parseFloat(data.changePercent24Hr) || 0,
+      change7d: 0, // CoinCap doesn't have 7d change
+      change30d: 0, // CoinCap doesn't have 30d change
+      ath: 0, // CoinCap doesn't have ATH
+      athChange: 0,
+      athDate: null,
+      atl: 0,
+      atlChange: 0,
+      high24h: 0,
+      low24h: 0,
+      circulatingSupply: parseFloat(data.supply) || 0,
+      totalSupply: parseFloat(data.maxSupply) || 0,
+      maxSupply: parseFloat(data.maxSupply) || null,
+      rank: parseInt(data.rank) || 0,
+      categories: [],
+      description: '',
+      links: { website: data.explorer || '', twitter: '', telegram: '', reddit: '' },
+      source: 'coincap'
+    };
+  } catch(e) {
+    console.error('CoinCap fallback error:', e);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════
+// ANALYZE COINGECKO DATA (Major cryptos)
+// ═══════════════════════════════════════════
+function analyzeCoinGecko(data) {
+  const price = data.price;
+  const mc = data.marketCap;
+  const vol = data.volume24h;
+  const chg24h = data.change24h;
+  const chg7d = data.change7d;
+  const chg30d = data.change30d;
+  const athChange = data.athChange;
+  const rank = data.rank;
+  
+  // Calculate bias
+  let bias = 'NEUTRAL';
+  let biasScore = 50;
+  
+  // Short term momentum
+  if (chg24h > 5) biasScore += 15;
+  else if (chg24h > 2) biasScore += 8;
+  else if (chg24h < -5) biasScore -= 15;
+  else if (chg24h < -2) biasScore -= 8;
+  
+  // Medium term trend
+  if (chg7d > 10) biasScore += 12;
+  else if (chg7d > 5) biasScore += 6;
+  else if (chg7d < -10) biasScore -= 12;
+  else if (chg7d < -5) biasScore -= 6;
+  
+  // Long term trend
+  if (chg30d > 20) biasScore += 10;
+  else if (chg30d < -20) biasScore -= 10;
+  
+  // ATH proximity (closer = more bullish sentiment)
+  if (athChange > -10) biasScore += 8;
+  else if (athChange > -25) biasScore += 4;
+  else if (athChange < -50) biasScore -= 5;
+  
+  // Volume strength
+  const vmr = mc > 0 ? vol / mc : 0;
+  if (vmr > 0.1) biasScore += 5;
+  else if (vmr < 0.02) biasScore -= 5;
+  
+  biasScore = Math.max(10, Math.min(90, biasScore));
+  
+  if (biasScore >= 65) bias = 'BULLISH';
+  else if (biasScore <= 35) bias = 'BEARISH';
+  
+  // Calculate confidence (higher for major cryptos with lots of data)
+  let confidence = 60;
+  if (rank <= 10) confidence += 15;
+  else if (rank <= 50) confidence += 10;
+  else if (rank <= 100) confidence += 5;
+  
+  if (vol > 1000000000) confidence += 10;
+  else if (vol > 100000000) confidence += 5;
+  
+  confidence = Math.min(92, confidence);
+  
+  // Price levels
+  const support1 = price * 0.95;
+  const support2 = price * 0.88;
+  const resistance1 = price * 1.05;
+  const resistance2 = price * 1.12;
+  
+  // Trade setup
+  const entry1 = price * 0.97;
+  const entry2 = price * 0.93;
+  const sl = price * 0.88;
+  const t1 = price * 1.10;
+  const t2 = price * 1.25;
+  const t3 = price * 1.50;
+  
+  // Scenarios
+  const bullPct = biasScore >= 60 ? 40 : biasScore >= 50 ? 30 : 20;
+  const basePct = 45;
+  const bearPct = 100 - bullPct - basePct;
+  
+  // Generate summary
+  let summary = `${data.name} (${data.symbol}) is ranked #${rank} with a market cap of $${fN(mc)}. `;
+  
+  if (chg24h > 5) summary += `Strong momentum with +${chg24h.toFixed(1)}% in 24h. `;
+  else if (chg24h < -5) summary += `Selling pressure with ${chg24h.toFixed(1)}% in 24h. `;
+  else summary += `Consolidating with ${chg24h > 0 ? '+' : ''}${chg24h.toFixed(1)}% in 24h. `;
+  
+  if (athChange > -15) summary += `Trading near ATH (${athChange.toFixed(1)}% from peak). `;
+  else if (athChange < -50) summary += `Significant discount from ATH (${athChange.toFixed(1)}%). `;
+  
+  if (chg7d > 10) summary += `Weekly trend is strongly bullish (+${chg7d.toFixed(1)}%). `;
+  else if (chg7d < -10) summary += `Weekly trend shows weakness (${chg7d.toFixed(1)}%). `;
+  
+  summary += `Volume at $${fN(vol)} indicates ${vmr > 0.05 ? 'healthy' : 'low'} market activity.`;
+  
+  return {
+    type: 'coingecko',
+    source: data.source || 'coingecko',
+    symbol: data.symbol,
+    name: data.name,
+    image: data.image,
+    chain: 'multi-chain',
+    rank: rank,
+    price: price,
+    marketCap: mc,
+    volume24h: vol,
+    change24h: chg24h,
+    change7d: chg7d,
+    change30d: chg30d,
+    high24h: data.high24h,
+    low24h: data.low24h,
+    ath: data.ath,
+    athChange: athChange,
+    athDate: data.athDate,
+    atl: data.atl,
+    atlChange: data.atlChange,
+    circulatingSupply: data.circulatingSupply,
+    totalSupply: data.totalSupply,
+    maxSupply: data.maxSupply,
+    bias: bias,
+    biasScore: biasScore,
+    confidence: confidence,
+    summary: summary,
+    support: [support1, support2],
+    resistance: [resistance1, resistance2],
+    tradeSetup: {
+      entry: `DCA zone: ${fP(entry1)} - ${fP(entry2)}`,
+      stopLoss: `Below ${fP(sl)} (-${((1 - sl/price) * 100).toFixed(0)}%)`,
+      targets: [
+        { timeframe: '1-2 weeks', price: fP(t1), probability: 45, gain: Math.round((t1/price - 1) * 100) },
+        { timeframe: '1-2 months', price: fP(t2), probability: 25, gain: Math.round((t2/price - 1) * 100) },
+        { timeframe: 'cycle top', price: fP(t3), probability: 12, gain: Math.round((t3/price - 1) * 100) }
+      ]
+    },
+    scenarios: {
+      bull: { pct: bullPct, target: fP(data.ath > 0 ? data.ath * 1.2 : price * 1.5), trigger: 'Break above resistance with volume' },
+      base: { pct: basePct, target: `${fP(support1)} - ${fP(resistance1)}`, trigger: 'Range-bound consolidation' },
+      bear: { pct: bearPct, target: fP(support2), trigger: 'Break below support on macro weakness' }
+    },
+    links: data.links
+  };
+}
+
+// ═══════════════════════════════════════════
 // TRENDING TOKENS (Boosted)
 // ═══════════════════════════════════════════
+// Show trending (from mobile dropdown)
+function showTrending() {
+  closeMobileMenu();
+  newConversation();
+  setTimeout(() => {
+    fetchTrending();
+  }, 100);
+}
+
 async function fetchTrending() {
   if (isLoading) return;
   isLoading = true;
@@ -1582,7 +2236,7 @@ async function fetchTrending() {
       html += `</div>`;
       html += `<div style="display:flex;align-items:center;gap:8px;margin-top:2px">`;
       html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${chain.toUpperCase()}</span>`;
-      if (token.priceUsd > 0) html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text2)">$${token.priceUsd < 0.0001 ? token.priceUsd.toExponential(2) : token.priceUsd.toFixed(token.priceUsd < 1 ? 6 : 2)}</span>`;
+      if (token.priceUsd > 0) html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text2)">${fP(token.priceUsd)}</span>`;
       if (token.priceChange24h !== 0) {
         const changeColor = token.priceChange24h >= 0 ? 'var(--green)' : 'var(--red)';
         html += `<span style="font-family:var(--mono);font-size:10px;color:${changeColor}">${token.priceChange24h >= 0 ? '+' : ''}${token.priceChange24h.toFixed(1)}%</span>`;
@@ -1748,7 +2402,7 @@ async function fetchNewProfiles() {
       html += `</div>`;
       html += `<div style="display:flex;align-items:center;gap:8px;margin-top:2px">`;
       html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${chain.toUpperCase()}</span>`;
-      if (token.priceUsd > 0) html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text2)">$${token.priceUsd < 0.0001 ? token.priceUsd.toExponential(2) : token.priceUsd.toFixed(token.priceUsd < 1 ? 6 : 2)}</span>`;
+      if (token.priceUsd > 0) html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text2)">${fP(token.priceUsd)}</span>`;
       if (token.liquidity > 0) html += `<span style="font-family:var(--mono);font-size:10px;color:var(--text3)">Liq: $${token.liquidity >= 1000 ? (token.liquidity/1000).toFixed(0)+'K' : token.liquidity.toFixed(0)}</span>`;
       html += `</div>`;
       html += `</div>`;
@@ -2057,9 +2711,186 @@ function badgeHTML(text, colorClass) {
 }
 
 // ═══════════════════════════════════════════
+// RENDER COINGECKO ANALYSIS (Major Cryptos)
+// ═══════════════════════════════════════════
+function renderCoinGeckoAnalysis(data) {
+  const biasColor = data.bias==='BULLISH'?'green':data.bias==='BEARISH'?'red':'yellow';
+  const biasArrow = data.bias==='BULLISH'?'↗':data.bias==='BEARISH'?'↘':'—';
+  const sourceLabel = data.source === 'coincap' ? '🔄 CoinCap' : '🦎 CoinGecko';
+  const hasATH = data.ath > 0;
+  const has7d30d = data.change7d !== 0 || data.change30d !== 0;
+  
+  let html = '';
+  
+  // ── TOKEN HEADER
+  html += `<div class="card">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+      ${data.image ? `<img src="${data.image}" style="width:52px;height:52px;border-radius:12px;object-fit:cover;background:var(--card-border)" onerror="this.style.display='none'">` : `<div style="width:52px;height:52px;border-radius:12px;background:var(--card-border);display:flex;align-items:center;justify-content:center;font-size:28px">🪙</div>`}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--cyan)">\$${esc(data.symbol)}</span>
+          <span style="padding:4px 10px;background:linear-gradient(135deg,var(--cyan-dim),var(--purple-dim,rgba(179,136,255,0.15)));border:1px solid var(--cyan);border-radius:6px;font-family:var(--mono);font-size:10px;color:var(--cyan);font-weight:700">RANK #${data.rank}</span>
+          ${data.links?.twitter ? `<a href="https://twitter.com/${data.links.twitter}" target="_blank" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--bg);border-radius:6px;text-decoration:none;color:var(--text);font-size:13px;transition:all .15s" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--text)'">𝕏</a>` : ''}
+          ${data.links?.website ? `<a href="${data.links.website}" target="_blank" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--bg);border-radius:6px;text-decoration:none;color:var(--text);font-size:13px;transition:all .15s" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--text)'">🌐</a>` : ''}
+        </div>
+        <div style="font-family:var(--sans);font-size:13px;color:var(--text3);margin-top:4px">${esc(data.name)} · Multi-Chain · <span style="color:var(--text2)">${sourceLabel}</span></div>
+      </div>
+    </div>
+    <div class="flex-between">
+      <div style="flex:1">
+        <div class="mb-10">${badgeHTML(biasArrow+' '+data.bias+' BIAS','badge-'+biasColor)}</div>
+        <p style="font-family:var(--sans);font-size:14px;line-height:1.65;color:var(--text);margin:0">${esc(data.summary)}</p>
+      </div>
+      <div style="margin-left:20px">${gaugeHTML(data.confidence)}</div>
+    </div>
+  </div>`;
+
+  // ── LIVE DATA (adapt based on available data)
+  const liveDataItems = [
+    {l:'PRICE',v:fP(data.price),c:'#fff'},
+    {l:'MARKET CAP',v:'$'+fN(data.marketCap),c:'var(--purple)'},
+    {l:'VOLUME 24H',v:'$'+fN(data.volume24h),c:'var(--cyan)'},
+    {l:'RANK',v:'#'+data.rank,c:'var(--yellow)'}
+  ];
+  
+  if (hasATH) {
+    liveDataItems.push({l:'ATH',v:fP(data.ath),c:'var(--green)'});
+    liveDataItems.push({l:'FROM ATH',v:(data.athChange>0?'+':'')+data.athChange.toFixed(1)+'%',c:data.athChange>-20?'var(--green)':'var(--red)'});
+  }
+  
+  html += `<div class="card">
+    <div class="sec-title"><span class="sec-icon">📊</span> LIVE MARKET DATA</div>
+    <div class="grid-3" style="gap:8px">
+      ${liveDataItems.map(m => `
+        <div style="background:var(--bg);border-radius:6px;padding:10px;border-left:2px solid ${m.c}">
+          <div style="font-family:var(--mono);font-size:7px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:4px">${m.l}</div>
+          <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${m.c}">${m.v}</div>
+        </div>`).join('')}
+    </div>
+    <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+      ${[
+        {l:'24H',v:data.change24h},
+        ...(has7d30d ? [{l:'7D',v:data.change7d}, {l:'30D',v:data.change30d}] : [])
+      ].map(p => {
+        const v = parseFloat(p.v)||0;
+        const c = v>=0?'var(--green)':'var(--red)';
+        return `<div style="background:var(--bg);border-radius:6px;padding:10px 14px;flex:1;min-width:70px;text-align:center">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">${p.l}</div>
+          <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:${c}">${v>=0?'+':''}${v.toFixed(1)}%</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+      <a href="https://www.coingecko.com/en/coins/${data.symbol.toLowerCase()}" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--green);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600">🦎 COINGECKO</a>
+      <a href="https://www.tradingview.com/symbols/${data.symbol}USD/" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--cyan);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600">📈 TRADINGVIEW</a>
+      <a href="https://coinmarketcap.com/currencies/${data.name.toLowerCase().replace(/\s+/g,'-')}/" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--purple);text-decoration:none;font-family:var(--mono);font-size:10px;font-weight:600">📊 CMC</a>
+    </div>
+  </div>`;
+
+  // ── SUPPLY INFO
+  html += `<div class="card">
+    <div class="sec-title"><span class="sec-icon">💎</span> SUPPLY METRICS</div>
+    <div class="grid-3" style="gap:8px">
+      ${[
+        {l:'CIRCULATING',v:fN(data.circulatingSupply),c:'var(--cyan)'},
+        {l:'TOTAL SUPPLY',v:fN(data.totalSupply),c:'var(--purple)'},
+        {l:'MAX SUPPLY',v:data.maxSupply ? fN(data.maxSupply) : '∞',c:'var(--yellow)'},
+      ].map(m => `
+        <div style="background:var(--bg);border-radius:6px;padding:10px;border-left:2px solid ${m.c}">
+          <div style="font-family:var(--mono);font-size:7px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:4px">${m.l}</div>
+          <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${m.c}">${m.v}</div>
+        </div>`).join('')}
+    </div>
+    ${data.maxSupply && data.circulatingSupply ? `
+    <div style="margin-top:12px;background:var(--bg);border-radius:8px;padding:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">SUPPLY PROGRESS</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--cyan)">${((data.circulatingSupply/data.maxSupply)*100).toFixed(1)}%</span>
+      </div>
+      <div style="height:8px;background:var(--card-border);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${Math.min(100,(data.circulatingSupply/data.maxSupply)*100)}%;background:linear-gradient(90deg,var(--cyan),var(--green))"></div>
+      </div>
+    </div>` : ''}
+  </div>`;
+
+  // ── TRADE SETUP
+  if (data.tradeSetup) {
+    html += `<div class="card">
+      <div class="sec-title"><span class="sec-icon">🎯</span> ${t('tradeSetup')}</div>
+      <div class="grid-2" style="gap:10px;margin-bottom:12px">
+        <div class="zone-box zone-green">
+          <div class="zone-label" style="color:var(--green)">${t('entryPrice')}</div>
+          <div class="zone-val">${data.tradeSetup.entry}</div>
+        </div>
+        <div class="zone-box zone-red">
+          <div class="zone-label" style="color:var(--red)">${t('stopLoss')}</div>
+          <div class="zone-val">${data.tradeSetup.stopLoss}</div>
+        </div>
+      </div>
+      <div class="sec-title" style="margin-top:16px;margin-bottom:10px"><span class="sec-icon">🎯</span> ${t('priceTargets')}</div>
+      ${data.tradeSetup.targets.map(tg => `
+        <div class="target-row">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase">${tg.timeframe}</span>
+          <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green)">${tg.price}</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--cyan)">+${tg.gain}%</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${tg.probability}%</span>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  // ── SCENARIOS
+  if (data.scenarios) {
+    html += `<div class="card">
+      <div class="sec-title"><span class="sec-icon">📊</span> ${t('scenarioProb')}</div>
+      <div class="grid-3" style="gap:10px">
+        <div class="scenario-box" style="border-color:var(--green)">
+          <div class="scenario-label">${t('bullCase')}</div>
+          <div class="scenario-value" style="color:var(--green)">${data.scenarios.bull.pct}%</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px">→ ${data.scenarios.bull.target}</div>
+        </div>
+        <div class="scenario-box" style="border-color:var(--yellow)">
+          <div class="scenario-label">${t('baseCase')}</div>
+          <div class="scenario-value" style="color:var(--yellow)">${data.scenarios.base.pct}%</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px">→ ${data.scenarios.base.target}</div>
+        </div>
+        <div class="scenario-box" style="border-color:var(--red)">
+          <div class="scenario-label">${t('bearCase')}</div>
+          <div class="scenario-value" style="color:var(--red)">${data.scenarios.bear.pct}%</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px">→ ${data.scenarios.bear.target}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ── SUPPORT/RESISTANCE
+  if (data.support?.length && data.resistance?.length) {
+    html += `<div class="card">
+      <div class="sec-title"><span class="sec-icon">📏</span> KEY LEVELS</div>
+      <div class="grid-2" style="gap:12px">
+        <div class="sr-box sr-green">
+          <div class="sr-label" style="color:var(--green)">${t('support')}</div>
+          ${data.support.map(s => `<div class="sr-item"><span style="color:var(--green);margin-right:6px">▸</span>${fP(s)}</div>`).join('')}
+        </div>
+        <div class="sr-box sr-red">
+          <div class="sr-label" style="color:var(--red)">${t('resistance')}</div>
+          ${data.resistance.map(r => `<div class="sr-item"><span style="color:var(--red);margin-right:6px">▸</span>${fP(r)}</div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  return html;
+}
+
+// ═══════════════════════════════════════════
 // RENDER FULL ANALYSIS CARD
 // ═══════════════════════════════════════════
 function renderAnalysis(data) {
+  // ═══ COINGECKO RENDER (Major Cryptos) ═══
+  if (data.type === 'coingecko') {
+    return renderCoinGeckoAnalysis(data);
+  }
+  
   const biasColor = data.bias==='BULLISH'?'green':data.bias==='BEARISH'?'red':'yellow';
   const biasArrow = data.bias==='BULLISH'?'↗':data.bias==='BEARISH'?'↘':'—';
   const legScore = data.legitimacyScore;
@@ -2296,24 +3127,6 @@ function renderMessages() {
         <img class="welcome-icon" src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="DexScreener AI">
         <div class="welcome-title">DEXSCREENER AI</div>
         <div class="welcome-sub">${t('tokenIntelligence')}</div>
-        <div class="action-btns">
-          <button class="action-btn" onclick="handleSafeCheck()">
-            <div class="ab-icon safe">🛡️</div>
-            <div><div class="ab-label">Is this token safe?</div><div class="ab-desc">Rugcheck & security scan</div></div>
-          </button>
-          <button class="action-btn" onclick="handleBuySell()">
-            <div class="ab-icon trade">📈</div>
-            <div><div class="ab-label">Should I buy or sell?</div><div class="ab-desc">AI signal & trade setup</div></div>
-          </button>
-          <button class="action-btn" onclick="handleTrending()">
-            <div class="ab-icon trend">🔥</div>
-            <div><div class="ab-label">AI Trending Picks</div><div class="ab-desc">Top tokens ranked by potential</div></div>
-          </button>
-          <button class="action-btn" onclick="handleGems()">
-            <div class="ab-icon gem">💎</div>
-            <div><div class="ab-label">Find hidden gems</div><div class="ab-desc">New tokens with high potential</div></div>
-          </button>
-        </div>
         <div class="quick-tokens">
           <button class="quick-btn" onclick="quickAnalyze('BTC')"><img src="https://assets.coingecko.com/coins/images/1/small/bitcoin.png" onerror="this.style.display='none'"><span>BTC</span></button>
           <button class="quick-btn" onclick="quickAnalyze('ETH')"><img src="https://assets.coingecko.com/coins/images/279/small/ethereum.png" onerror="this.style.display='none'"><span>ETH</span></button>
@@ -2411,52 +3224,10 @@ async function sendQuery(query) {
   try {
     const lower = query.toLowerCase().trim();
     
-    // Check if user is providing a contract for a pending question
-    const addrInfo = detectAddress(query);
-    if (pendingQuestion && addrInfo) {
-      const pq = pendingQuestion;
-      pendingQuestion = null;
-      
-      let pair = await fetchDexScreener(addrInfo.addr);
-      let rugData = null;
-      if (pair && addrInfo.type === 'sol') {
-        rugData = await fetchRugcheck(addrInfo.addr);
-      }
-      
-      hideLoading();
-      
-      if (!pair) {
-        c.messages.push({ role: 'assistant', html: `<div class="card card-accent"><div style="font-size:13px;color:var(--text)">❌ Token not found for this address either. Double-check the contract address and try again.</div></div>` });
-      } else {
-        const analysis = analyzeToken(pair, rugData);
-        lastAnalyzedToken = { pair, rugData, analysis };
-        
-        if (pq.mode === 'safe') {
-          c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
-        } else if (pq.mode === 'buysell') {
-          c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
-        } else {
-          c.messages.push({ role: 'assistant', analysis });
-        }
-        
-        saveSearch({
-          address: pair.baseToken?.address || '',
-          chain: pair.chainId || 'unknown',
-          symbol: pair.baseToken?.symbol || '???',
-          icon: pair.info?.imageUrl || '',
-          confidence: analysis.confidence || 50
-        });
-      }
-      
-      isLoading = false;
-      renderMessages();
-      return;
-    }
-    
-    // Check for general questions first
+    // Check for general questions first (static responses)
     const genKey = Object.keys(GENERAL).find(k => lower.includes(k));
-    if (genKey && !addrInfo) {
-      await new Promise(r => setTimeout(r, 800));
+    if (genKey && !detectAddress(query)) {
+      await new Promise(r => setTimeout(r, 800)); // Small delay for UX
       hideLoading();
       c.messages.push({ role: 'assistant', text: GENERAL[genKey] });
       isLoading = false;
@@ -2464,84 +3235,261 @@ async function sendQuery(query) {
       return;
     }
 
-    // If we have a last analyzed token AND the query is NOT a contract address,
-    // answer the question about the current token instead of searching
-    if (lastAnalyzedToken && !addrInfo) {
-      const { pair, rugData, analysis } = lastAnalyzedToken;
-      const sym = analysis.ticker;
-      
-      // Detect question type for buttons
-      const isSafeQ = /safe|scam|rug|risk|legit|trust|secure|danger|fraud/i.test(lower);
-      const isBuyQ = /buy|sell|entry|trade|signal|long|short|invest|hold|position/i.test(lower);
-      
-      if (isSafeQ) {
+    // ═══ CHECK IF IT'S A MAJOR CRYPTO (CoinGecko) ═══
+    const cgId = detectMajorCrypto(query);
+    if (cgId && !detectAddress(query)) {
+      const cgData = await fetchCoinGecko(cgId);
+      if (cgData) {
         hideLoading();
-        c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
+        const analysis = analyzeCoinGecko(cgData);
+        c.messages.push({ role: 'assistant', analysis });
+        
+        // Known social links for major cryptos
+        const MAJOR_SOCIALS = {
+          'bitcoin': { website: 'https://bitcoin.org', twitter: 'https://twitter.com/Bitcoin', telegram: null },
+          'ethereum': { website: 'https://ethereum.org', twitter: 'https://twitter.com/ethereum', telegram: null },
+          'solana': { website: 'https://solana.com', twitter: 'https://twitter.com/solana', telegram: 'https://t.me/solana' },
+          'binancecoin': { website: 'https://bnbchain.org', twitter: 'https://twitter.com/bnbchain', telegram: 'https://t.me/bnbchain' },
+          'dogecoin': { website: 'https://dogecoin.com', twitter: 'https://twitter.com/dogecoin', telegram: null },
+          'pepe': { website: 'https://pepe.vip', twitter: 'https://twitter.com/pepecoineth', telegram: 'https://t.me/pepecoineth' },
+          'ripple': { website: 'https://ripple.com', twitter: 'https://twitter.com/Ripple', telegram: null },
+          'cardano': { website: 'https://cardano.org', twitter: 'https://twitter.com/Cardano', telegram: 'https://t.me/Cardano' },
+          'polkadot': { website: 'https://polkadot.network', twitter: 'https://twitter.com/Polkadot', telegram: 'https://t.me/polkadotofficial' },
+          'chainlink': { website: 'https://chain.link', twitter: 'https://twitter.com/chainlink', telegram: 'https://t.me/chainlinkofficial' },
+          'avalanche-2': { website: 'https://avax.network', twitter: 'https://twitter.com/avaboriz', telegram: 'https://t.me/avalancheavax' },
+          'uniswap': { website: 'https://uniswap.org', twitter: 'https://twitter.com/Uniswap', telegram: null },
+          'litecoin': { website: 'https://litecoin.org', twitter: 'https://twitter.com/litecoin', telegram: 'https://t.me/litecoin' },
+          'shiba-inu': { website: 'https://shibatoken.com', twitter: 'https://twitter.com/Shibtoken', telegram: 'https://t.me/shibainuthedogecoinkiller' },
+          'matic-network': { website: 'https://polygon.technology', twitter: 'https://twitter.com/0xPolygon', telegram: 'https://t.me/polygonofficial' },
+          'the-open-network': { website: 'https://ton.org', twitter: 'https://twitter.com/ton_blockchain', telegram: 'https://t.me/toncoin' },
+          'bonk': { website: 'https://bonkcoin.com', twitter: 'https://twitter.com/bonaboriz', telegram: 'https://t.me/official_bonk' },
+          'dogwifcoin': { website: 'https://dogwifcoin.org', twitter: 'https://twitter.com/dogwifcoin', telegram: 'https://t.me/dogwifcoin' }
+        };
+        
+        const socials = MAJOR_SOCIALS[cgId] || {};
+        
+        // Save FULL data for follow-up questions
+        lastAnalyzedToken = {
+          symbol: cgData.symbol,
+          name: cgData.name,
+          chain: 'multi-chain',
+          address: cgId,
+          
+          // Price data
+          price: cgData.price,
+          priceChange1h: 0,
+          priceChange6h: 0,
+          priceChange24h: cgData.change24h,
+          priceChange7d: cgData.change7d,
+          priceChange30d: cgData.change30d,
+          
+          // Market data
+          marketCap: cgData.marketCap,
+          fdv: cgData.marketCap,
+          liquidity: cgData.volume24h * 0.1, // Estimate
+          volume24h: cgData.volume24h,
+          volume6h: 0,
+          volume1h: 0,
+          
+          // ATH data
+          ath: cgData.ath,
+          athChange: cgData.athChange,
+          atl: cgData.atl,
+          
+          // Supply
+          circulatingSupply: cgData.circulatingSupply,
+          totalSupply: cgData.totalSupply,
+          maxSupply: cgData.maxSupply,
+          rank: cgData.rank,
+          
+          // Socials (from CoinGecko + known)
+          website: cgData.links?.website || socials.website || null,
+          twitter: cgData.links?.twitter ? `https://twitter.com/${cgData.links.twitter}` : socials.twitter || null,
+          telegram: cgData.links?.telegram ? `https://t.me/${cgData.links.telegram}` : socials.telegram || null,
+          
+          // Links for display
+          coingeckoUrl: `https://www.coingecko.com/en/coins/${cgId}`,
+          tradingviewUrl: `https://www.tradingview.com/symbols/${cgData.symbol}USD/`,
+          cmcUrl: `https://coinmarketcap.com/currencies/${cgData.name?.toLowerCase().replace(/\s+/g, '-')}/`,
+          
+          // Source
+          source: cgData.source || 'coingecko',
+          
+          // No rugcheck for majors
+          rugcheck: null,
+          
+          // Analysis results
+          analysis: {
+            bias: analysis.bias,
+            confidence: analysis.confidence,
+            liquidityScore: 90, // Majors have good liquidity
+            volumeScore: 85,
+            safetyScore: 95 // Majors are safe
+          }
+        };
+        
         isLoading = false;
         renderMessages();
         return;
-      } else if (isBuyQ) {
+      } else {
+        // Both CoinGecko and CoinCap failed
         hideLoading();
-        c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
+        c.messages.push({ 
+          role: 'assistant', 
+          text: `\u26A0\uFE0F Could not fetch data for ${query.toUpperCase()}.\n\nBoth CoinGecko and CoinCap APIs are unavailable. This might be a temporary issue.\n\nPlease try again in a few seconds.`
+        });
         isLoading = false;
         renderMessages();
         return;
       }
+    }
+
+    // ═══ CHECK IF MESSAGE CONTAINS A CONTRACT ADDRESS ═══
+    const addrInfo = detectAddress(query);
+    let pair = null;
+    let rugData = null;
+    let questionPart = null;
+
+    if (addrInfo) {
+      // Extract question part if exists (e.g. "0x123... is this good?")
+      if (addrInfo.hasQuestion) {
+        questionPart = extractQuestion(query, addrInfo.addr);
+      }
       
-      // For any other question, call Haiku API with token context
-      try {
-        const tokenContext = {
-          symbol: sym,
-          name: analysis.tokenName,
-          price: analysis.currentPrice,
-          marketCap: parseFloat(pair.marketCap) || 0,
+      // Fetch token data from DexScreener
+      pair = await fetchDexScreener(addrInfo.addr);
+      if (pair && addrInfo.type === 'sol') {
+        rugData = await fetchRugcheck(addrInfo.addr);
+      }
+      
+      if (pair) {
+        // Run local analysis
+        const analysis = analyzeToken(pair, rugData);
+        
+        // Save FULL token data for AI follow-up questions
+        lastAnalyzedToken = {
+          // Basic info
+          symbol: pair.baseToken?.symbol || '???',
+          name: pair.baseToken?.name || '',
+          chain: pair.chainId || 'unknown',
+          address: pair.baseToken?.address || '',
+          pairAddress: pair.pairAddress || '',
+          
+          // Price data
+          price: parseFloat(pair.priceUsd) || 0,
+          priceChange1h: parseFloat(pair.priceChange?.h1) || 0,
+          priceChange6h: parseFloat(pair.priceChange?.h6) || 0,
+          priceChange24h: parseFloat(pair.priceChange?.h24) || 0,
+          
+          // Market data
+          marketCap: parseFloat(pair.marketCap) || parseFloat(pair.fdv) || 0,
+          fdv: parseFloat(pair.fdv) || 0,
           liquidity: parseFloat(pair.liquidity?.usd) || 0,
           volume24h: parseFloat(pair.volume?.h24) || 0,
-          priceChange24h: parseFloat(pair.priceChange?.h24) || 0,
-          priceChange1h: parseFloat(pair.priceChange?.h1) || 0,
-          buys: pair.txns?.h24?.buys || 0,
-          sells: pair.txns?.h24?.sells || 0,
-          chain: analysis.chain,
-          address: pair.baseToken?.address || '',
-          bias: analysis.bias,
-          confidence: analysis.confidence,
-          risk: analysis.risk
+          volume6h: parseFloat(pair.volume?.h6) || 0,
+          volume1h: parseFloat(pair.volume?.h1) || 0,
+          
+          // Transaction data
+          buys24h: pair.txns?.h24?.buys || 0,
+          sells24h: pair.txns?.h24?.sells || 0,
+          buys6h: pair.txns?.h6?.buys || 0,
+          sells6h: pair.txns?.h6?.sells || 0,
+          buys1h: pair.txns?.h1?.buys || 0,
+          sells1h: pair.txns?.h1?.sells || 0,
+          
+          // Age
+          pairCreatedAt: pair.pairCreatedAt || null,
+          ageHours: pair.pairCreatedAt ? Math.floor((Date.now() - pair.pairCreatedAt) / 3600000) : null,
+          
+          // Socials
+          website: pair.info?.websites?.[0]?.url || null,
+          twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || null,
+          telegram: pair.info?.socials?.find(s => s.type === 'telegram')?.url || null,
+          
+          // Rugcheck data (if available)
+          rugcheck: rugData ? {
+            score: rugData.score || null,
+            risks: rugData.risks || [],
+            topHolders: rugData.topHolders?.slice(0, 5) || [],
+            mintAuthority: rugData.tokenMeta?.mutable !== false,
+            freezeAuthority: rugData.markets?.[0]?.freezeAuthority !== null,
+            lpBurned: rugData.markets?.[0]?.lp?.lpBurned || false
+          } : null,
+          
+          // Our analysis results
+          analysis: {
+            bias: analysis.bias,
+            confidence: analysis.confidence,
+            liquidityScore: analysis.liquidityScore,
+            volumeScore: analysis.volumeScore,
+            safetyScore: analysis.safetyScore
+          }
         };
         
-        const aiRes = await fetch(`${API_URL}/api/ask`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: query, tokenContext }),
-          signal: AbortSignal.timeout(15000)
+        // If there was a question with the address, answer it with AI using full context
+        if (questionPart && questionPart.length > 3) {
+          // Show analysis first
+          c.messages.push({ role: 'assistant', analysis });
+          renderMessages();
+          
+          // Then answer the question with AI
+          showLoading();
+          const aiResponse = await askAI(questionPart, lastAnalyzedToken);
+          hideLoading();
+          
+          if (!aiResponse.error) {
+            c.messages.push({ 
+              role: 'assistant', 
+              text: `\uD83E\uDD16 **AI Answer about ${lastAnalyzedToken.symbol}**\n\n${aiResponse.answer}` 
+            });
+          }
+        } else {
+          // Just show the analysis
+          c.messages.push({ role: 'assistant', analysis });
+        }
+        
+        // Save search to right panel
+        saveSearch({
+          address: pair.baseToken?.address || '',
+          chain: pair.chainId || 'unknown',
+          symbol: pair.baseToken?.symbol || '???',
+          icon: pair.info?.imageUrl || '',
+          confidence: analysis.confidence || 50
         });
         
         hideLoading();
-        
-        if (aiRes.ok) {
-          const aiData = await aiRes.json();
-          c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-              ${analysis.logo ? `<img src="${analysis.logo}" style="width:24px;height:24px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : ''}
-              <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--cyan)">$${sym}</span>
-              <span class="badge badge-${analysis.bias === 'BULLISH' ? 'green' : analysis.bias === 'BEARISH' ? 'red' : 'yellow'}" style="font-size:9px">${analysis.bias}</span>
-            </div>
-            <div style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap">${esc(aiData.answer)}</div>
-          </div>` });
-        } else {
-          const errText = await aiRes.text().catch(() => 'unknown');
-          console.error('AI API error:', aiRes.status, errText);
-          c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
-            <div style="font-size:13px;color:var(--text)">${analysis.summary}</div>
-            <div style="margin-top:8px;font-size:11px;color:var(--red)">⚠️ AI error ${aiRes.status}: ${esc(errText.slice(0, 100))}</div>
-          </div>` });
-        }
-      } catch(apiErr) {
-        console.error('AI fetch error:', apiErr);
+        isLoading = false;
+        renderMessages();
+        return;
+      } else {
+        // Contract not found on DexScreener
         hideLoading();
-        c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
-          <div style="font-size:13px;color:var(--text)">${analysis.summary}</div>
-          <div style="margin-top:8px;font-size:11px;color:var(--red)">⚠️ ${esc(apiErr.message || 'Could not reach AI server')}</div>
-        </div>` });
+        c.messages.push({ 
+          role: 'assistant', 
+          text: `\u274C Contract \`${addrInfo.addr.slice(0, 8)}...${addrInfo.addr.slice(-6)}\` not found on DexScreener.\n\n${t('tryAgain')}\n\u2022 Make sure it's a valid token contract\n\u2022 Check if the token has liquidity` 
+        });
+        isLoading = false;
+        renderMessages();
+        return;
+      }
+    }
+
+    // ═══ CHECK IF IT'S A QUESTION (no address - use AI Chat) ═══
+    if (isQuestion(query)) {
+      const aiResponse = await askAI(query, lastAnalyzedToken);
+      hideLoading();
+      
+      if (aiResponse.error) {
+        c.messages.push({ 
+          role: 'assistant', 
+          text: `\u26A0\uFE0F ${aiResponse.message}` 
+        });
+      } else {
+        const contextNote = lastAnalyzedToken ? `\n\n_Context: ${lastAnalyzedToken.symbol}_` : '';
+        c.messages.push({ 
+          role: 'assistant', 
+          text: `\uD83E\uDD16 **AI Answer**\n\n${aiResponse.answer}${contextNote}` 
+        });
       }
       
       isLoading = false;
@@ -2549,41 +3497,95 @@ async function sendQuery(query) {
       return;
     }
 
-    // Check if it's a contract address
-    let pair = null;
-    let rugData = null;
-
-    if (addrInfo) {
-      pair = await fetchDexScreener(addrInfo.addr);
-      if (pair && addrInfo.type === 'sol') {
-        rugData = await fetchRugcheck(addrInfo.addr);
-      }
-    } else {
-      pair = await searchDexScreener(query);
-      if (pair && pair.chainId === 'solana') {
-        rugData = await fetchRugcheck(pair.baseToken?.address);
-      }
+    // ═══ SEARCH BY NAME ON DEXSCREENER ═══
+    pair = await searchDexScreener(query);
+    if (pair && pair.chainId === 'solana') {
+      rugData = await fetchRugcheck(pair.baseToken?.address);
     }
 
     hideLoading();
 
     if (!pair) {
-      // Save as pending question and ask for contract
-      pendingQuestion = { question: query, mode: 'general' };
-      c.messages.push({ 
-        role: 'assistant', 
-        html: `<div class="card card-accent">
-          <div style="font-size:13px;color:var(--text);margin-bottom:10px">🔍 I couldn't find <strong>"${esc(query)}"</strong> on DexScreener.</div>
-          <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Paste the contract address below and I'll analyze it for you:</div>
-          <div style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 12px;background:var(--bg);border-radius:6px">💡 Tip: Copy the contract address from DexScreener, CoinGecko, or the project's official page</div>
-        </div>` 
-      });
+      // Token not found - try AI chat as fallback
+      const aiResponse = await askAI(`I searched for "${query}" but couldn't find it on DexScreener. Can you help me understand what this might be or suggest alternatives?`, lastAnalyzedToken);
+      
+      if (aiResponse.error) {
+        c.messages.push({ 
+          role: 'assistant', 
+          text: `${t('notFound')} "${query}" on DexScreener.\n\n${t('tryAgain')}\n\u2022 ${t('pasteContract')}\n\u2022 ${t('searchToken')}` 
+        });
+      } else {
+        c.messages.push({ 
+          role: 'assistant', 
+          text: `\uD83D\uDD0D **"${query}" not found on DexScreener**\n\n\uD83E\uDD16 *AI Assistant:*\n${aiResponse.answer}` 
+        });
+      }
     } else {
-      pendingQuestion = null;
+      // Run local analysis
       const analysis = analyzeToken(pair, rugData);
-      lastAnalyzedToken = { pair, rugData, analysis };
       c.messages.push({ role: 'assistant', analysis });
       
+      // Save FULL token data for AI follow-up questions
+      lastAnalyzedToken = {
+        // Basic info
+        symbol: pair.baseToken?.symbol || '???',
+        name: pair.baseToken?.name || '',
+        chain: pair.chainId || 'unknown',
+        address: pair.baseToken?.address || '',
+        pairAddress: pair.pairAddress || '',
+        
+        // Price data
+        price: parseFloat(pair.priceUsd) || 0,
+        priceChange1h: parseFloat(pair.priceChange?.h1) || 0,
+        priceChange6h: parseFloat(pair.priceChange?.h6) || 0,
+        priceChange24h: parseFloat(pair.priceChange?.h24) || 0,
+        
+        // Market data
+        marketCap: parseFloat(pair.marketCap) || parseFloat(pair.fdv) || 0,
+        fdv: parseFloat(pair.fdv) || 0,
+        liquidity: parseFloat(pair.liquidity?.usd) || 0,
+        volume24h: parseFloat(pair.volume?.h24) || 0,
+        volume6h: parseFloat(pair.volume?.h6) || 0,
+        volume1h: parseFloat(pair.volume?.h1) || 0,
+        
+        // Transaction data
+        buys24h: pair.txns?.h24?.buys || 0,
+        sells24h: pair.txns?.h24?.sells || 0,
+        buys6h: pair.txns?.h6?.buys || 0,
+        sells6h: pair.txns?.h6?.sells || 0,
+        buys1h: pair.txns?.h1?.buys || 0,
+        sells1h: pair.txns?.h1?.sells || 0,
+        
+        // Age
+        pairCreatedAt: pair.pairCreatedAt || null,
+        ageHours: pair.pairCreatedAt ? Math.floor((Date.now() - pair.pairCreatedAt) / 3600000) : null,
+        
+        // Socials
+        website: pair.info?.websites?.[0]?.url || null,
+        twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || null,
+        telegram: pair.info?.socials?.find(s => s.type === 'telegram')?.url || null,
+        
+        // Rugcheck data (if available)
+        rugcheck: rugData ? {
+          score: rugData.score || null,
+          risks: rugData.risks || [],
+          topHolders: rugData.topHolders?.slice(0, 5) || [],
+          mintAuthority: rugData.tokenMeta?.mutable !== false,
+          freezeAuthority: rugData.markets?.[0]?.freezeAuthority !== null,
+          lpBurned: rugData.markets?.[0]?.lp?.lpBurned || false
+        } : null,
+        
+        // Our analysis results
+        analysis: {
+          bias: analysis.bias,
+          confidence: analysis.confidence,
+          liquidityScore: analysis.liquidityScore,
+          volumeScore: analysis.volumeScore,
+          safetyScore: analysis.safetyScore
+        }
+      };
+      
+      // Save search to right panel
       saveSearch({
         address: pair.baseToken?.address || '',
         chain: pair.chainId || 'unknown',
@@ -2612,522 +3614,19 @@ async function quickAnalyze(symbol) {
 }
 
 // ═══════════════════════════════════════════
-// 4 ACTION BUTTONS
-// ═══════════════════════════════════════════
-
-// 🛡️ IS THIS TOKEN SAFE?
-function handleSafeCheck() {
-  if (isLoading) return;
-  const c = conversations.find(x => x.id === activeId);
-  
-  if (lastAnalyzedToken) {
-    // Use last analyzed token directly
-    const { pair, rugData, analysis } = lastAnalyzedToken;
-    c.messages.push({ role: 'user', content: `🛡️ Is $${analysis.ticker} safe?` });
-    c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
-    c.title = `🛡️ Safety: $${analysis.ticker}`;
-    renderSidebar();
-    renderMessages();
-    updateTopbar();
-    scrollToLastUserMessage();
-  } else {
-    // No token yet, ask for contract
-    pendingQuestion = { question: 'Is this token safe?', mode: 'safe' };
-    c.messages.push({ role: 'user', content: '🛡️ Is this token safe?' });
-    c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
-      <div style="font-size:13px;color:var(--text);margin-bottom:10px">🛡️ Sure! Paste the <strong>contract address</strong> below and I'll run a full safety check.</div>
-      <div style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 12px;background:var(--bg);border-radius:6px">💡 Example: DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263</div>
-    </div>` });
-    c.title = '🛡️ Safety Check';
-    renderSidebar();
-    renderMessages();
-    updateTopbar();
-  }
-}
-
-// 📈 SHOULD I BUY OR SELL?
-function handleBuySell() {
-  if (isLoading) return;
-  const c = conversations.find(x => x.id === activeId);
-  
-  if (lastAnalyzedToken) {
-    // Use last analyzed token directly
-    const { pair, rugData, analysis } = lastAnalyzedToken;
-    c.messages.push({ role: 'user', content: `📈 Should I buy or sell $${analysis.ticker}?` });
-    c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
-    c.title = `📈 Signal: $${analysis.ticker}`;
-    renderSidebar();
-    renderMessages();
-    updateTopbar();
-    scrollToLastUserMessage();
-  } else {
-    // No token yet, ask for contract
-    pendingQuestion = { question: 'Should I buy or sell?', mode: 'buysell' };
-    c.messages.push({ role: 'user', content: '📈 Should I buy or sell?' });
-    c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
-      <div style="font-size:13px;color:var(--text);margin-bottom:10px">📈 Sure! Paste the <strong>contract address</strong> below and I'll give you a trade signal.</div>
-      <div style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 12px;background:var(--bg);border-radius:6px">💡 Example: DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263</div>
-    </div>` });
-    c.title = '📈 Trade Signal';
-    renderSidebar();
-    renderMessages();
-    updateTopbar();
-  }
-}
-
-// Now handled directly in sendQuery via pendingQuestion
-
-// Render SAFETY REPORT
-function renderSafeReport(data, rugData) {
-  const safeScore = Math.max(0, Math.min(100, 100 - data.risk));
-  const safeColor = safeScore >= 70 ? 'var(--green)' : safeScore >= 40 ? 'var(--yellow)' : 'var(--red)';
-  const safeLabel = safeScore >= 70 ? '✅ LOW RISK' : safeScore >= 40 ? '⚠️ MEDIUM RISK' : '🔴 HIGH RISK';
-  const safeBadge = safeScore >= 70 ? 'badge-green' : safeScore >= 40 ? 'badge-yellow' : 'badge-red';
-  
-  const liq = data._dex?.liquidity?.usd || 0;
-  const mc = data._dex?.marketCap || 0;
-  const chain = data.chain || 'unknown';
-  
-  let checksHtml = '';
-  
-  // Rugcheck items
-  const mintAuth = rugData?.mintAuthority !== null && rugData?.mintAuthority !== undefined;
-  const freezeAuth = rugData?.freezeAuthority !== null && rugData?.freezeAuthority !== undefined;
-  const lpBurned = rugData?.markets?.[0]?.lp?.lpLockedPct > 50;
-  const rugRisks = rugData?.risks || [];
-  
-  const checks = [
-    { label: 'Mint Authority', ok: !mintAuth, desc: mintAuth ? 'Enabled — supply can be inflated' : 'Disabled — supply is fixed' },
-    { label: 'Freeze Authority', ok: !freezeAuth, desc: freezeAuth ? 'Enabled — tokens can be frozen' : 'Disabled — tokens are safe' },
-    { label: 'Liquidity', ok: liq > 10000, desc: `$${fN(liq)} ${liq > 50000 ? '— strong' : liq > 10000 ? '— adequate' : '— dangerously low'}` },
-    { label: 'Token Age', ok: data._dex?.pairCreatedAt && (Date.now() - new Date(data._dex.pairCreatedAt).getTime()) > 86400000 * 7, desc: data._dex?.pairCreatedAt ? `Created ${Math.round((Date.now() - new Date(data._dex.pairCreatedAt).getTime()) / 86400000)} days ago` : 'Unknown' },
-    { label: 'Website', ok: !!(data.websiteLink), desc: data.websiteLink ? 'Found in metadata' : 'Not found' },
-    { label: 'Socials', ok: !!(data.twitterLink), desc: data.twitterLink ? 'Twitter linked' : 'No social media found' },
-  ];
-  
-  checks.forEach(ck => {
-    const icon = ck.ok ? '✅' : '⚠️';
-    const color = ck.ok ? 'var(--green)' : 'var(--red)';
-    checksHtml += `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:6px">
-      <span style="font-size:16px">${icon}</span>
-      <div style="flex:1">
-        <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:${color}">${ck.label}</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">${ck.desc}</div>
-      </div>
-    </div>`;
-  });
-  
-  // Rugcheck risks
-  let risksHtml = '';
-  if (rugRisks.length > 0) {
-    risksHtml = `<div style="margin-top:12px;padding:12px;background:var(--red-dim);border:1px solid rgba(255,59,79,0.2);border-radius:8px">
-      <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--red);margin-bottom:8px">⚠️ RUGCHECK WARNINGS</div>
-      ${rugRisks.slice(0, 5).map(r => `<div style="font-size:12px;color:var(--text);padding:3px 0">• ${r.name || r.description || r}</div>`).join('')}
-    </div>`;
-  }
-  
-  return `<div class="card" style="border-left:3px solid ${safeColor}">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div>
-        <div class="sec-title" style="margin-bottom:4px"><span class="sec-icon">🛡️</span> SAFETY REPORT</div>
-        <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan)">$${data.ticker} <span style="font-size:12px;color:var(--text3)">${chain.toUpperCase()}</span></div>
-      </div>
-      <div style="text-align:center">
-        <div style="font-family:var(--mono);font-size:32px;font-weight:700;color:${safeColor}">${safeScore}</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text2)">/100</div>
-      </div>
-    </div>
-    <div style="margin-bottom:12px"><span class="badge ${safeBadge}">${safeLabel}</span></div>
-    ${checksHtml}
-    ${risksHtml}
-    <div style="margin-top:14px;font-size:12px;color:var(--text3);font-style:italic">⚠️ Not financial advice. Always DYOR.</div>
-  </div>`;
-}
-
-// Render BUY/SELL SIGNAL
-function renderBuySellSignal(data) {
-  const biasColor = data.bias === 'BULLISH' ? 'var(--green)' : data.bias === 'BEARISH' ? 'var(--red)' : 'var(--yellow)';
-  const biasIcon = data.bias === 'BULLISH' ? '🟢' : data.bias === 'BEARISH' ? '🔴' : '🟡';
-  const biasAction = data.bias === 'BULLISH' ? 'BUY SIGNAL' : data.bias === 'BEARISH' ? 'SELL / AVOID' : 'HOLD / WAIT';
-  const badgeClass = data.bias === 'BULLISH' ? 'badge-green' : data.bias === 'BEARISH' ? 'badge-red' : 'badge-yellow';
-  
-  const price = data.currentPrice;
-  const buys = data._dex?.txns?.h24?.buys || 0;
-  const sells = data._dex?.txns?.h24?.sells || 0;
-  const total = buys + sells;
-  const buyRatio = total > 0 ? Math.round((buys / total) * 100) : 50;
-  const chg1h = parseFloat(data._dex?.priceChange?.h1) || 0;
-  const chg6h = parseFloat(data._dex?.priceChange?.h6) || 0;
-  const chg24h = parseFloat(data._dex?.priceChange?.h24) || 0;
-  const vol = parseFloat(data._dex?.volume?.h24) || 0;
-  
-  // Momentum analysis
-  let momentum = '';
-  if (chg1h > 5 && chg6h > 10) momentum = '🚀 Strong upward momentum — buyers in control';
-  else if (chg1h > 0 && buyRatio > 55) momentum = '📈 Positive momentum — buy pressure dominant';
-  else if (chg1h < -5 && chg6h < -10) momentum = '📉 Strong downward pressure — consider waiting';
-  else if (buyRatio < 40) momentum = '🔻 Sell pressure dominant — not ideal entry';
-  else momentum = '➡️ Sideways action — wait for clear direction';
-  
-  return `<div class="card" style="border-left:3px solid ${biasColor}">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div>
-        <div class="sec-title" style="margin-bottom:4px"><span class="sec-icon">📈</span> TRADE SIGNAL</div>
-        <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan)">$${data.ticker}</div>
-      </div>
-      <div style="text-align:center">
-        <div style="font-size:28px">${biasIcon}</div>
-        <span class="badge ${badgeClass}">${biasAction}</span>
-      </div>
-    </div>
-    
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-      <div style="background:var(--bg);border-radius:8px;padding:12px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px">CONFIDENCE</div>
-        <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:${biasColor}">${data.confidence}%</div>
-      </div>
-      <div style="background:var(--bg);border-radius:8px;padding:12px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px">BUY PRESSURE</div>
-        <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:${buyRatio >= 55 ? 'var(--green)' : buyRatio >= 45 ? 'var(--yellow)' : 'var(--red)'}">${buyRatio}%</div>
-      </div>
-    </div>
-    
-    <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:12px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">MOMENTUM</div>
-      <div style="display:flex;gap:16px;margin-bottom:8px">
-        <div style="font-family:var(--mono);font-size:12px"><span style="color:var(--text3)">1h:</span> <span style="color:${chg1h >= 0 ? 'var(--green)' : 'var(--red)'}">${chg1h > 0 ? '+' : ''}${chg1h.toFixed(1)}%</span></div>
-        <div style="font-family:var(--mono);font-size:12px"><span style="color:var(--text3)">6h:</span> <span style="color:${chg6h >= 0 ? 'var(--green)' : 'var(--red)'}">${chg6h > 0 ? '+' : ''}${chg6h.toFixed(1)}%</span></div>
-        <div style="font-family:var(--mono);font-size:12px"><span style="color:var(--text3)">24h:</span> <span style="color:${chg24h >= 0 ? 'var(--green)' : 'var(--red)'}">${chg24h > 0 ? '+' : ''}${chg24h.toFixed(1)}%</span></div>
-      </div>
-      <div style="font-size:12px;color:var(--text)">${momentum}</div>
-    </div>
-    
-    <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:12px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">🎯 TRADE SETUP</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-        <div style="background:var(--green-dim);border-radius:6px;padding:8px;text-align:center">
-          <div style="font-family:var(--mono);font-size:9px;color:var(--green)">ENTRY</div>
-          <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text)">${fP(price * 0.92)}–${fP(price * 0.97)}</div>
-        </div>
-        <div style="background:var(--red-dim);border-radius:6px;padding:8px;text-align:center">
-          <div style="font-family:var(--mono);font-size:9px;color:var(--red)">STOP LOSS</div>
-          <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text)">${fP(price * 0.75)}</div>
-        </div>
-        <div style="background:var(--cyan-dim);border-radius:6px;padding:8px;text-align:center">
-          <div style="font-family:var(--mono);font-size:9px;color:var(--cyan)">TARGET</div>
-          <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text)">${fP(price * 1.6)}</div>
-        </div>
-      </div>
-    </div>
-
-    <div style="font-size:12px;color:var(--text2);line-height:1.6">${data.summary}</div>
-    <div style="margin-top:12px;font-size:11px;color:var(--text3);font-style:italic">⚠️ Not financial advice. Always DYOR.</div>
-  </div>`;
-}
-
-// 🔥 AI TRENDING PICKS
-async function handleTrending() {
-  if (isLoading) return;
-  isLoading = true;
-  
-  const c = conversations.find(x => x.id === activeId);
-  c.title = '🔥 AI Trending Picks';
-  c.messages.push({ role: 'user', content: '🔥 What\'s trending right now?' });
-  
-  renderSidebar();
-  renderMessages();
-  updateTopbar();
-  showLoading();
-  
-  try {
-    const r = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(15000) });
-    const tokens = await r.json();
-    
-    if (!tokens || tokens.length === 0) {
-      hideLoading();
-      c.messages.push({ role: 'assistant', text: 'No trending tokens found right now. Try again later.' });
-      isLoading = false;
-      renderMessages();
-      return;
-    }
-    
-    // Get unique addresses
-    const seen = new Set();
-    const unique = tokens.filter(t => {
-      const addr = t.tokenAddress;
-      if (seen.has(addr)) return false;
-      seen.add(addr);
-      return true;
-    }).slice(0, 8);
-    
-    // Enrich with DexScreener data
-    const enriched = [];
-    for (const token of unique) {
-      try {
-        const addr = token.tokenAddress;
-        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(5000) });
-        const dexData = await dexRes.json();
-        if (dexData.pairs && dexData.pairs.length > 0) {
-          const pair = dexData.pairs[0];
-          const buys = pair.txns?.h24?.buys || 0;
-          const sells = pair.txns?.h24?.sells || 0;
-          const total = buys + sells;
-          const buyRatio = total > 0 ? buys / total : 0.5;
-          const liq = parseFloat(pair.liquidity?.usd) || 0;
-          const vol = parseFloat(pair.volume?.h24) || 0;
-          const chg24h = parseFloat(pair.priceChange?.h24) || 0;
-          const chg1h = parseFloat(pair.priceChange?.h1) || 0;
-          const mc = parseFloat(pair.marketCap) || 0;
-          
-          // Score: buy ratio + momentum + liquidity
-          let score = 0;
-          score += buyRatio * 40; // max 40
-          if (chg1h > 0) score += Math.min(chg1h, 20); // max 20
-          if (liq > 50000) score += 15;
-          else if (liq > 10000) score += 8;
-          if (vol > 100000) score += 15;
-          else if (vol > 20000) score += 8;
-          if (chg24h > 0 && chg24h < 100) score += 10; // positive but not insane
-          
-          enriched.push({
-            symbol: pair.baseToken?.symbol || '???',
-            name: pair.baseToken?.name || '',
-            chain: pair.chainId || 'unknown',
-            price: parseFloat(pair.priceUsd) || 0,
-            mc, liq, vol, chg1h, chg24h,
-            buyRatio: Math.round(buyRatio * 100),
-            buys, sells,
-            score: Math.round(score),
-            logo: pair.info?.imageUrl || token.icon || '',
-            address: pair.baseToken?.address || addr
-          });
-        }
-      } catch(e) { /* skip */ }
-    }
-    
-    // Sort by score
-    enriched.sort((a, b) => b.score - a.score);
-    const top5 = enriched.slice(0, 5);
-    
-    hideLoading();
-    
-    if (top5.length === 0) {
-      c.messages.push({ role: 'assistant', text: 'Could not fetch trending data. Try again.' });
-    } else {
-      c.messages.push({ role: 'assistant', html: renderTrendingPicks(top5) });
-    }
-    
-  } catch (err) {
-    hideLoading();
-    c.messages.push({ role: 'assistant', text: 'Error fetching trending: ' + err.message });
-  }
-  
-  isLoading = false;
-  renderMessages();
-}
-
-function renderTrendingPicks(tokens) {
-  const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-  const ratings = ['BEST POTENTIAL', 'STRONG', 'INTERESTING', 'WATCH', 'MONITOR'];
-  
-  let html = `<div class="card" style="border-left:3px solid var(--yellow)">
-    <div class="sec-title"><span class="sec-icon">🔥</span> AI TRENDING PICKS</div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:16px">Top tokens ranked by AI potential score</div>`;
-  
-  tokens.forEach((t, i) => {
-    const ratingColor = i === 0 ? 'var(--green)' : i < 3 ? 'var(--cyan)' : 'var(--text2)';
-    const bgColor = i === 0 ? 'rgba(0,255,136,0.04)' : 'var(--bg)';
-    const borderColor = i === 0 ? 'rgba(0,255,136,0.15)' : 'var(--card-border)';
-    
-    html += `<div style="background:${bgColor};border:1px solid ${borderColor};border-radius:10px;padding:14px;margin-bottom:8px;cursor:pointer" onclick="analyzeFromAddress('${t.address}','${t.chain}')">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-        <span style="font-size:20px">${medals[i]}</span>
-        ${t.logo ? `<img src="${t.logo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : ''}
-        <div style="flex:1">
-          <span style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan)">$${t.symbol}</span>
-          <span style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-left:8px">${t.chain.toUpperCase()}</span>
-        </div>
-        <span style="font-family:var(--mono);font-size:10px;font-weight:600;color:${ratingColor}">${ratings[i]}</span>
-      </div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:11px">
-        <span style="color:var(--text2)">MC <span style="color:var(--text)">$${fN(t.mc)}</span></span>
-        <span style="color:var(--text2)">Vol <span style="color:var(--text)">$${fN(t.vol)}</span></span>
-        <span style="color:var(--text2)">Buy <span style="color:${t.buyRatio >= 55 ? 'var(--green)' : t.buyRatio >= 45 ? 'var(--yellow)' : 'var(--red)'}">${t.buyRatio}%</span></span>
-        <span style="color:${t.chg24h >= 0 ? 'var(--green)' : 'var(--red)'}">${t.chg24h > 0 ? '+' : ''}${t.chg24h.toFixed(1)}%</span>
-      </div>
-    </div>`;
-  });
-  
-  html += `<div style="font-size:11px;color:var(--text3);font-style:italic;margin-top:8px">Click a token for full analysis • Not financial advice. DYOR.</div></div>`;
-  return html;
-}
-
-// 💎 FIND HIDDEN GEMS
-async function handleGems() {
-  if (isLoading) return;
-  isLoading = true;
-  
-  const c = conversations.find(x => x.id === activeId);
-  c.title = '💎 Hidden Gems';
-  c.messages.push({ role: 'user', content: '💎 Find me hidden gems' });
-  
-  renderSidebar();
-  renderMessages();
-  updateTopbar();
-  showLoading();
-  
-  try {
-    const r = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(15000) });
-    const tokens = await r.json();
-    
-    if (!tokens || tokens.length === 0) {
-      hideLoading();
-      c.messages.push({ role: 'assistant', text: 'No new tokens found right now.' });
-      isLoading = false;
-      renderMessages();
-      return;
-    }
-    
-    // Get unique, filter for Solana/Ethereum/Base
-    const seen = new Set();
-    const candidates = tokens.filter(t => {
-      const addr = t.tokenAddress;
-      if (seen.has(addr)) return false;
-      seen.add(addr);
-      return ['solana', 'ethereum', 'base', 'bsc'].includes(t.chainId);
-    }).slice(0, 15);
-    
-    const enriched = [];
-    for (const token of candidates) {
-      try {
-        const addr = token.tokenAddress;
-        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(5000) });
-        const dexData = await dexRes.json();
-        if (dexData.pairs && dexData.pairs.length > 0) {
-          const pair = dexData.pairs[0];
-          const buys = pair.txns?.h24?.buys || 0;
-          const sells = pair.txns?.h24?.sells || 0;
-          const total = buys + sells;
-          const buyRatio = total > 0 ? buys / total : 0.5;
-          const liq = parseFloat(pair.liquidity?.usd) || 0;
-          const vol = parseFloat(pair.volume?.h24) || 0;
-          const mc = parseFloat(pair.marketCap) || 0;
-          const chg24h = parseFloat(pair.priceChange?.h24) || 0;
-          const chg1h = parseFloat(pair.priceChange?.h1) || 0;
-          const age = pair.pairCreatedAt ? (Date.now() - new Date(pair.pairCreatedAt).getTime()) / 3600000 : 999;
-          
-          // GEM FILTERS: small cap, decent liquidity, positive buy pressure
-          if (mc > 5000000) continue; // skip > $5M MC (not a gem)
-          if (liq < 5000) continue; // skip too low liquidity
-          if (buyRatio < 0.45) continue; // skip heavy selling
-          
-          // Gem score
-          let gemScore = 0;
-          gemScore += buyRatio * 35; // buy pressure
-          if (mc < 500000 && mc > 10000) gemScore += 20; // sweet spot
-          else if (mc < 2000000) gemScore += 10;
-          if (liq > 20000) gemScore += 15;
-          else if (liq > 10000) gemScore += 8;
-          if (chg24h > 0 && chg24h < 200) gemScore += 10;
-          if (age < 48) gemScore += 10; // fresh
-          if (total > 100) gemScore += 5; // some activity
-          
-          // Rugcheck for Solana
-          let rugOk = true;
-          if (pair.chainId === 'solana') {
-            try {
-              const rugRes = await fetch(`https://api.rugcheck.xyz/v1/tokens/${addr}/report/summary`, { signal: AbortSignal.timeout(3000) });
-              const rug = await rugRes.json();
-              if (rug.mintAuthority) { rugOk = false; gemScore -= 20; }
-              if (rug.freezeAuthority) { rugOk = false; gemScore -= 15; }
-            } catch(e) {}
-          }
-          
-          enriched.push({
-            symbol: pair.baseToken?.symbol || '???',
-            name: pair.baseToken?.name || '',
-            chain: pair.chainId || 'unknown',
-            price: parseFloat(pair.priceUsd) || 0,
-            mc, liq, vol, chg24h, chg1h,
-            buyRatio: Math.round(buyRatio * 100),
-            age: Math.round(age),
-            gemScore: Math.round(gemScore),
-            rugOk,
-            logo: pair.info?.imageUrl || token.icon || '',
-            address: pair.baseToken?.address || addr
-          });
-        }
-      } catch(e) { /* skip */ }
-    }
-    
-    enriched.sort((a, b) => b.gemScore - a.gemScore);
-    const topGems = enriched.slice(0, 5);
-    
-    hideLoading();
-    
-    if (topGems.length === 0) {
-      c.messages.push({ role: 'assistant', text: '💎 No hidden gems found matching our criteria right now.\n\nCriteria: MC < $5M, Liquidity > $5K, Buy ratio > 45%\n\nTry again later — new tokens launch constantly.' });
-    } else {
-      c.messages.push({ role: 'assistant', html: renderGemPicks(topGems) });
-    }
-    
-  } catch (err) {
-    hideLoading();
-    c.messages.push({ role: 'assistant', text: 'Error searching for gems: ' + err.message });
-  }
-  
-  isLoading = false;
-  renderMessages();
-}
-
-function renderGemPicks(tokens) {
-  let html = `<div class="card" style="border-left:3px solid var(--purple)">
-    <div class="sec-title"><span class="sec-icon">💎</span> HIDDEN GEMS</div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:4px">New tokens with high potential — MC &lt; $5M</div>
-    <div style="font-size:10px;color:var(--red);margin-bottom:16px">⚠️ HIGH RISK — Small cap tokens. Never invest more than you can afford to lose.</div>`;
-  
-  tokens.forEach((t, i) => {
-    const gemEmoji = t.gemScore > 60 ? '💎' : t.gemScore > 40 ? '✨' : '👀';
-    const riskLabel = t.rugOk ? '✅ Safe' : '⚠️ Caution';
-    const riskColor = t.rugOk ? 'var(--green)' : 'var(--red)';
-    const ageLabel = t.age < 24 ? '🔥 New' : t.age < 72 ? '🆕 Fresh' : `${Math.round(t.age / 24)}d`;
-    
-    html += `<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:14px;margin-bottom:8px;cursor:pointer" onclick="analyzeFromAddress('${t.address}','${t.chain}')">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <span style="font-size:18px">${gemEmoji}</span>
-        ${t.logo ? `<img src="${t.logo}" style="width:24px;height:24px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : ''}
-        <div style="flex:1">
-          <span style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan)">$${t.symbol}</span>
-          <span style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-left:6px">${t.chain.toUpperCase()}</span>
-        </div>
-        <span style="font-family:var(--mono);font-size:10px;color:${riskColor}">${riskLabel}</span>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:11px">
-        <span style="color:var(--text2)">MC <span style="color:var(--text)">$${fN(t.mc)}</span></span>
-        <span style="color:var(--text2)">Liq <span style="color:var(--text)">$${fN(t.liq)}</span></span>
-        <span style="color:var(--text2)">Buy <span style="color:${t.buyRatio >= 55 ? 'var(--green)' : 'var(--yellow)'}">${t.buyRatio}%</span></span>
-        <span style="color:${t.chg24h >= 0 ? 'var(--green)' : 'var(--red)'}">${t.chg24h > 0 ? '+' : ''}${t.chg24h.toFixed(1)}%</span>
-        <span style="color:var(--text3)">${ageLabel}</span>
-      </div>
-    </div>`;
-  });
-  
-  html += `<div style="font-size:11px;color:var(--text3);font-style:italic;margin-top:8px">Click a token for full analysis • Not financial advice. DYOR.</div></div>`;
-  return html;
-}
-
-// ═══════════════════════════════════════════
 // RIGHT PANEL FUNCTIONS
 // ═══════════════════════════════════════════
 
 // Save a search result
 function saveSearch(token) {
+  // Check if already exists
   const exists = savedSearches.findIndex(s => s.address === token.address);
   if (exists >= 0) {
-    savedSearches[exists] = token;
+    savedSearches[exists] = token; // Update
   } else {
     savedSearches.push(token);
   }
+  // Keep max 50
   if (savedSearches.length > 50) savedSearches = savedSearches.slice(-50);
   localStorage.setItem('oracleSearches', JSON.stringify(savedSearches));
   renderSavedSearches();
@@ -3387,16 +3886,18 @@ function switchMobileTab(tab) {
   
   // Activate selected tab
   const tabs = document.querySelectorAll('.mobile-tab');
-  const contents = document.querySelectorAll('.mobile-tab-content');
   
-  if (tab === 'trending') {
+  if (tab === 'promoted') {
     tabs[0].classList.add('active');
+    document.getElementById('mobilePromoted').classList.add('active');
+  } else if (tab === 'trending') {
+    tabs[1].classList.add('active');
     document.getElementById('mobileTrending').classList.add('active');
   } else if (tab === 'new') {
-    tabs[1].classList.add('active');
+    tabs[2].classList.add('active');
     document.getElementById('mobileNew').classList.add('active');
   } else if (tab === 'searches') {
-    tabs[2].classList.add('active');
+    tabs[3].classList.add('active');
     document.getElementById('mobileSearches').classList.add('active');
   }
 }
@@ -3425,6 +3926,70 @@ function renderMobileTokenRow(token) {
   html += `<div class="mobile-token-badge ${badgeClass}">${badgeLabel}</div>`;
   html += `</div>`;
   return html;
+}
+
+// Load mobile promoted tokens
+async function loadMobilePromoted() {
+  const container = document.getElementById('mobilePromoted');
+  if (!container) return;
+  
+  // Check if Supabase is configured
+  if (SUPABASE_URL.includes('YOUR_PROJECT')) {
+    const promoted = JSON.parse(localStorage.getItem('promotedTokens') || '[]');
+    renderMobilePromoted(container, promoted);
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/active_promotions?select=*`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch');
+    
+    const promoted = await response.json();
+    renderMobilePromoted(container, promoted.map(p => ({
+      address: p.contract_address,
+      ticker: p.ticker,
+      logo: p.logo_url,
+      chain: p.chain
+    })));
+    
+  } catch (err) {
+    console.error('Error loading mobile promoted:', err);
+    const promoted = JSON.parse(localStorage.getItem('promotedTokens') || '[]');
+    renderMobilePromoted(container, promoted);
+  }
+}
+
+function renderMobilePromoted(container, promoted) {
+  if (promoted.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">
+      No promoted tokens yet<br>
+      <a href="./promote.html" style="color:var(--yellow);font-size:11px;margin-top:8px;display:inline-block">⭐ Promote your token →</a>
+    </div>`;
+    return;
+  }
+  
+  let html = '';
+  for (const token of promoted.slice(0, 10)) {
+    html += `<div class="mobile-token-row" onclick="analyzeFromAddress('${token.address}','${token.chain}')" style="border-left:2px solid var(--yellow)">`;
+    if (token.logo) {
+      html += `<img class="mobile-token-icon" src="${token.logo}" onerror="this.onerror=null;this.outerHTML='<div class=\\'mobile-token-icon\\' style=\\'background:var(--yellow-dim)\\'>⭐</div>'">`;
+    } else {
+      html += `<div class="mobile-token-icon" style="background:var(--yellow-dim)">⭐</div>`;
+    }
+    html += `<div class="mobile-token-info">`;
+    html += `<div class="mobile-token-ticker" style="color:var(--yellow)">$${token.ticker}</div>`;
+    html += `<div class="mobile-token-chain">${token.chain.toUpperCase()}</div>`;
+    html += `</div>`;
+    html += `<div class="mobile-token-badge" style="background:var(--yellow-dim);color:var(--yellow)">AD</div>`;
+    html += `</div>`;
+  }
+  container.innerHTML = html;
 }
 
 // Load mobile trending
@@ -3621,8 +4186,12 @@ async function loadPromotedTokens() {
 }
 
 function renderPromotedTokens(container, promoted) {
+  // Render right panel (desktop)
   if (promoted.length === 0) {
     container.innerHTML = '<div class="rp-empty">No promoted tokens yet<br><a href="./promote.html" style="color:var(--cyan);font-size:11px">Be the first! →</a></div>';
+    // Hide mobile banner
+    const banner = document.getElementById('promoBanner');
+    if (banner) banner.classList.add('hidden');
     return;
   }
   
@@ -3642,6 +4211,570 @@ function renderPromotedTokens(container, promoted) {
     html += `</div>`;
   }
   container.innerHTML = html;
+  
+  // Render mobile banner (scrolling ticker)
+  renderPromoBanner(promoted);
+}
+
+function renderPromoBanner(promoted) {
+  const banner = document.getElementById('promoBanner');
+  const inner = document.getElementById('promoBannerInner');
+  if (!banner || !inner) return;
+  
+  if (promoted.length === 0) {
+    banner.classList.add('hidden');
+    return;
+  }
+  
+  // Show banner on mobile (CSS handles desktop hiding)
+  banner.classList.remove('hidden');
+  
+  // Create items (duplicate for infinite scroll effect)
+  let html = '';
+  const items = promoted.slice(0, 5);
+  
+  // Double the items for seamless loop
+  for (let i = 0; i < 2; i++) {
+    for (const token of items) {
+      html += `<div class="promo-item" onclick="analyzeFromAddress('${token.address}','${token.chain}')">`;
+      if (token.logo) {
+        html += `<img class="promo-item-logo" src="${token.logo}" onerror="this.src='https://via.placeholder.com/24'">`;
+      } else {
+        html += `<div class="promo-item-logo" style="display:flex;align-items:center;justify-content:center;font-size:12px">⭐</div>`;
+      }
+      html += `<span class="promo-item-ticker">$${token.ticker}</span>`;
+      html += `<span class="promo-item-badge">AD</span>`;
+      html += `</div>`;
+    }
+  }
+  
+  inner.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
+// 🛡️ HANDLE SAFE CHECK
+// ═══════════════════════════════════════════
+function handleSafeCheck() {
+  if (isLoading) return;
+  const c = conversations.find(x => x.id === activeId);
+  
+  if (lastAnalyzedToken) {
+    // Use last analyzed token directly
+    const { pair, rugData, analysis } = lastAnalyzedToken;
+    c.messages.push({ role: 'user', content: `🛡️ Is $${analysis.ticker} safe?` });
+    c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
+    c.title = `🛡️ Safety: $${analysis.ticker}`;
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+    scrollToLastUserMessage();
+  } else {
+    // No token yet, ask for contract
+    c.messages.push({ role: 'user', content: '🛡️ Is this token safe?' });
+    c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
+      <div style="font-size:13px;color:var(--text);margin-bottom:10px">🛡️ Sure! Paste the <strong>contract address</strong> below and I'll run a full safety check.</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 12px;background:var(--bg);border-radius:6px">💡 Example: DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263</div>
+    </div>` });
+    c.title = '🛡️ Safety Check';
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+  }
+}
+
+// ═══════════════════════════════════════════
+// 📈 HANDLE BUY/SELL
+// ═══════════════════════════════════════════
+function handleBuySell() {
+  if (isLoading) return;
+  const c = conversations.find(x => x.id === activeId);
+  
+  if (lastAnalyzedToken) {
+    // Use last analyzed token directly
+    const { pair, rugData, analysis } = lastAnalyzedToken;
+    c.messages.push({ role: 'user', content: `📈 Should I buy or sell $${analysis.ticker}?` });
+    c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
+    c.title = `📈 Signal: $${analysis.ticker}`;
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+    scrollToLastUserMessage();
+  } else {
+    // No token yet, ask for contract
+    c.messages.push({ role: 'user', content: '📈 Should I buy or sell?' });
+    c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
+      <div style="font-size:13px;color:var(--text);margin-bottom:10px">📈 Sure! Paste the <strong>contract address</strong> below and I'll give you a trade signal.</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:8px 12px;background:var(--bg);border-radius:6px">💡 Example: DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263</div>
+    </div>` });
+    c.title = '📈 Trade Signal';
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+  }
+}
+
+// ═══════════════════════════════════════════
+// 🔥 HANDLE TRENDING (AI PICKS)
+// ═══════════════════════════════════════════
+async function handleTrending() {
+  if (isLoading) return;
+  isLoading = true;
+  
+  const c = conversations.find(x => x.id === activeId);
+  c.title = '🔥 AI Trending Picks';
+  c.messages.push({ role: 'user', content: '🔥 What\'s trending right now?' });
+  
+  renderSidebar();
+  renderMessages();
+  updateTopbar();
+  showLoading();
+  
+  try {
+    const r = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(15000) });
+    const tokens = await r.json();
+    
+    if (!tokens || tokens.length === 0) {
+      hideLoading();
+      c.messages.push({ role: 'assistant', text: 'No trending tokens found right now. Try again later.' });
+      isLoading = false;
+      renderMessages();
+      return;
+    }
+    
+    // Get unique addresses
+    const seen = new Set();
+    const unique = tokens.filter(t => {
+      const addr = t.tokenAddress;
+      if (seen.has(addr)) return false;
+      seen.add(addr);
+      return true;
+    }).slice(0, 8);
+    
+    // Enrich with DexScreener data
+    const enriched = [];
+    for (const token of unique) {
+      try {
+        const addr = token.tokenAddress;
+        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(5000) });
+        const dexData = await dexRes.json();
+        if (dexData.pairs && dexData.pairs.length > 0) {
+          const pair = dexData.pairs[0];
+          const buys = pair.txns?.h24?.buys || 0;
+          const sells = pair.txns?.h24?.sells || 0;
+          const total = buys + sells;
+          const buyRatio = total > 0 ? buys / total : 0.5;
+          const liq = parseFloat(pair.liquidity?.usd) || 0;
+          const vol = parseFloat(pair.volume?.h24) || 0;
+          const chg24h = parseFloat(pair.priceChange?.h24) || 0;
+          const chg1h = parseFloat(pair.priceChange?.h1) || 0;
+          const mc = parseFloat(pair.marketCap) || 0;
+          
+          // Score: buy ratio + momentum + liquidity
+          let score = 0;
+          score += buyRatio * 40;
+          if (chg1h > 0) score += Math.min(chg1h, 20);
+          if (liq > 50000) score += 15;
+          else if (liq > 10000) score += 8;
+          if (vol > 100000) score += 15;
+          else if (vol > 20000) score += 8;
+          if (chg24h > 0 && chg24h < 100) score += 10;
+          
+          enriched.push({
+            symbol: pair.baseToken?.symbol || '???',
+            name: pair.baseToken?.name || '',
+            chain: pair.chainId || 'unknown',
+            price: parseFloat(pair.priceUsd) || 0,
+            mc, liq, vol, chg1h, chg24h,
+            buyRatio: Math.round(buyRatio * 100),
+            buys, sells,
+            score: Math.round(score),
+            logo: pair.info?.imageUrl || token.icon || '',
+            address: pair.baseToken?.address || addr,
+            twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || '',
+            website: pair.info?.websites?.[0]?.url || ''
+          });
+        }
+      } catch(e) { /* skip */ }
+    }
+    
+    // Sort by score
+    enriched.sort((a, b) => b.score - a.score);
+    const top5 = enriched.slice(0, 5);
+    
+    hideLoading();
+    
+    if (top5.length === 0) {
+      c.messages.push({ role: 'assistant', text: 'Could not fetch trending data. Try again.' });
+    } else {
+      c.messages.push({ role: 'assistant', html: renderTrendingPicks(top5) });
+    }
+    
+  } catch (err) {
+    hideLoading();
+    c.messages.push({ role: 'assistant', text: 'Error fetching trending: ' + err.message });
+  }
+  
+  isLoading = false;
+  renderMessages();
+}
+
+// ═══════════════════════════════════════════
+// 💎 HANDLE GEMS (HIDDEN GEMS)
+// ═══════════════════════════════════════════
+async function handleGems() {
+  if (isLoading) return;
+  isLoading = true;
+  
+  const c = conversations.find(x => x.id === activeId);
+  c.title = '💎 Hidden Gems';
+  c.messages.push({ role: 'user', content: '💎 Find me hidden gems' });
+  
+  renderSidebar();
+  renderMessages();
+  updateTopbar();
+  showLoading();
+  
+  try {
+    const r = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(15000) });
+    const tokens = await r.json();
+    
+    if (!tokens || tokens.length === 0) {
+      hideLoading();
+      c.messages.push({ role: 'assistant', text: 'No new tokens found right now.' });
+      isLoading = false;
+      renderMessages();
+      return;
+    }
+    
+    // Get unique, filter for main chains
+    const seen = new Set();
+    const candidates = tokens.filter(t => {
+      const addr = t.tokenAddress;
+      if (seen.has(addr)) return false;
+      seen.add(addr);
+      return ['solana', 'ethereum', 'base', 'bsc'].includes(t.chainId);
+    }).slice(0, 15);
+    
+    const enriched = [];
+    for (const token of candidates) {
+      try {
+        const addr = token.tokenAddress;
+        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(5000) });
+        const dexData = await dexRes.json();
+        if (dexData.pairs && dexData.pairs.length > 0) {
+          const pair = dexData.pairs[0];
+          const buys = pair.txns?.h24?.buys || 0;
+          const sells = pair.txns?.h24?.sells || 0;
+          const total = buys + sells;
+          const buyRatio = total > 0 ? buys / total : 0.5;
+          const liq = parseFloat(pair.liquidity?.usd) || 0;
+          const vol = parseFloat(pair.volume?.h24) || 0;
+          const mc = parseFloat(pair.marketCap) || 0;
+          const chg24h = parseFloat(pair.priceChange?.h24) || 0;
+          const chg1h = parseFloat(pair.priceChange?.h1) || 0;
+          const age = pair.pairCreatedAt ? (Date.now() - new Date(pair.pairCreatedAt).getTime()) / 3600000 : 999;
+          
+          // GEM FILTERS: small cap, decent liquidity, positive buy pressure
+          if (mc > 5000000) continue;
+          if (liq < 5000) continue;
+          if (buyRatio < 0.45) continue;
+          
+          // Gem score
+          let gemScore = 0;
+          gemScore += buyRatio * 35;
+          if (mc < 500000 && mc > 10000) gemScore += 20;
+          else if (mc < 2000000) gemScore += 10;
+          if (liq > 20000) gemScore += 15;
+          else if (liq > 10000) gemScore += 8;
+          if (chg24h > 0 && chg24h < 200) gemScore += 10;
+          if (age < 48) gemScore += 10;
+          if (total > 100) gemScore += 5;
+          
+          // Rugcheck for Solana
+          let rugOk = true;
+          if (pair.chainId === 'solana') {
+            try {
+              const rugRes = await fetch(`https://api.rugcheck.xyz/v1/tokens/${addr}/report/summary`, { signal: AbortSignal.timeout(3000) });
+              const rug = await rugRes.json();
+              if (rug.mintAuthority) { rugOk = false; gemScore -= 20; }
+              if (rug.freezeAuthority) { rugOk = false; gemScore -= 15; }
+            } catch(e) {}
+          }
+          
+          enriched.push({
+            symbol: pair.baseToken?.symbol || '???',
+            name: pair.baseToken?.name || '',
+            chain: pair.chainId || 'unknown',
+            price: parseFloat(pair.priceUsd) || 0,
+            mc, liq, vol, chg24h, chg1h,
+            buyRatio: Math.round(buyRatio * 100),
+            age: Math.round(age),
+            gemScore: Math.round(gemScore),
+            rugOk,
+            logo: pair.info?.imageUrl || token.icon || '',
+            address: pair.baseToken?.address || addr,
+            twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || '',
+            website: pair.info?.websites?.[0]?.url || ''
+          });
+        }
+      } catch(e) { /* skip */ }
+    }
+    
+    enriched.sort((a, b) => b.gemScore - a.gemScore);
+    const topGems = enriched.slice(0, 5);
+    
+    hideLoading();
+    
+    if (topGems.length === 0) {
+      c.messages.push({ role: 'assistant', text: '💎 No hidden gems found matching our criteria right now.\n\nCriteria: MC < $5M, Liquidity > $5K, Buy ratio > 45%\n\nTry again later — new tokens launch constantly.' });
+    } else {
+      c.messages.push({ role: 'assistant', html: renderGemPicks(topGems) });
+    }
+    
+  } catch (err) {
+    hideLoading();
+    c.messages.push({ role: 'assistant', text: 'Error searching for gems: ' + err.message });
+  }
+  
+  isLoading = false;
+  renderMessages();
+}
+
+// ═══════════════════════════════════════════
+// RENDER SAFETY REPORT
+// ═══════════════════════════════════════════
+function renderSafeReport(data, rugData) {
+  const safeScore = Math.max(0, Math.min(100, 100 - data.risk));
+  const safeColor = safeScore >= 70 ? 'var(--green)' : safeScore >= 40 ? 'var(--yellow)' : 'var(--red)';
+  const safeLabel = safeScore >= 70 ? '✅ LOW RISK' : safeScore >= 40 ? '⚠️ MEDIUM RISK' : '🔴 HIGH RISK';
+  const safeBadge = safeScore >= 70 ? 'badge-green' : safeScore >= 40 ? 'badge-yellow' : 'badge-red';
+  
+  const liq = data._dex?.liquidity?.usd || 0;
+  const mc = data._dex?.marketCap || 0;
+  const chain = data.chain || 'unknown';
+  
+  let checksHtml = '';
+  
+  // Rugcheck items
+  const mintAuth = rugData?.mintAuthority !== null && rugData?.mintAuthority !== undefined;
+  const freezeAuth = rugData?.freezeAuthority !== null && rugData?.freezeAuthority !== undefined;
+  const lpBurned = rugData?.markets?.[0]?.lp?.lpLockedPct > 50;
+  const rugRisks = rugData?.risks || [];
+  
+  const checks = [
+    { label: 'Mint Authority', ok: !mintAuth, desc: mintAuth ? 'Enabled — supply can be inflated' : 'Disabled — supply is fixed' },
+    { label: 'Freeze Authority', ok: !freezeAuth, desc: freezeAuth ? 'Enabled — tokens can be frozen' : 'Disabled — tokens are safe' },
+    { label: 'Liquidity', ok: liq > 10000, desc: `$${fN(liq)} ${liq > 50000 ? '— strong' : liq > 10000 ? '— adequate' : '— dangerously low'}` },
+    { label: 'Token Age', ok: data._dex?.pairCreatedAt && (Date.now() - new Date(data._dex.pairCreatedAt).getTime()) > 86400000 * 7, desc: data._dex?.pairCreatedAt ? `Created ${Math.round((Date.now() - new Date(data._dex.pairCreatedAt).getTime()) / 86400000)} days ago` : 'Unknown' },
+    { label: 'Website', ok: !!(data.websiteLink), desc: data.websiteLink ? 'Found in metadata' : 'Not found' },
+    { label: 'Socials', ok: !!(data.twitterLink), desc: data.twitterLink ? 'Twitter linked' : 'No social media found' },
+  ];
+  
+  checks.forEach(ck => {
+    const icon = ck.ok ? '✅' : '⚠️';
+    const color = ck.ok ? 'var(--green)' : 'var(--red)';
+    checksHtml += `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:6px">
+      <span style="font-size:16px">${icon}</span>
+      <div style="flex:1">
+        <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:${color}">${ck.label}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${ck.desc}</div>
+      </div>
+    </div>`;
+  });
+  
+  // Rugcheck risks
+  let risksHtml = '';
+  if (rugRisks.length > 0) {
+    risksHtml = `<div style="margin-top:12px;padding:12px;background:var(--red-dim);border:1px solid rgba(255,59,79,0.2);border-radius:8px">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--red);margin-bottom:8px">⚠️ RUGCHECK WARNINGS</div>
+      ${rugRisks.slice(0, 5).map(r => `<div style="font-size:12px;color:var(--text);padding:3px 0">• ${r.name || r.description || r}</div>`).join('')}
+    </div>`;
+  }
+  
+  return `<div class="card" style="border-left:3px solid ${safeColor}">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div class="sec-title" style="margin-bottom:4px"><span class="sec-icon">🛡️</span> SAFETY REPORT</div>
+        <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan)">$${data.ticker} <span style="font-size:12px;color:var(--text3)">${chain.toUpperCase()}</span></div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:var(--mono);font-size:32px;font-weight:700;color:${safeColor}">${safeScore}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text2)">/100</div>
+      </div>
+    </div>
+    <div style="margin-bottom:12px"><span class="badge ${safeBadge}">${safeLabel}</span></div>
+    ${checksHtml}
+    ${risksHtml}
+    <div style="margin-top:14px;font-size:12px;color:var(--text3);font-style:italic">⚠️ Not financial advice. Always DYOR.</div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// RENDER BUY/SELL SIGNAL
+// ═══════════════════════════════════════════
+function renderBuySellSignal(data) {
+  const biasColor = data.bias === 'BULLISH' ? 'var(--green)' : data.bias === 'BEARISH' ? 'var(--red)' : 'var(--yellow)';
+  const biasIcon = data.bias === 'BULLISH' ? '🟢' : data.bias === 'BEARISH' ? '🔴' : '🟡';
+  const biasAction = data.bias === 'BULLISH' ? 'BUY SIGNAL' : data.bias === 'BEARISH' ? 'SELL / AVOID' : 'HOLD / WAIT';
+  const badgeClass = data.bias === 'BULLISH' ? 'badge-green' : data.bias === 'BEARISH' ? 'badge-red' : 'badge-yellow';
+  
+  const price = data.currentPrice;
+  const buys = data._dex?.txns?.h24?.buys || 0;
+  const sells = data._dex?.txns?.h24?.sells || 0;
+  const total = buys + sells;
+  const buyRatio = total > 0 ? Math.round((buys / total) * 100) : 50;
+  const chg1h = parseFloat(data._dex?.priceChange?.h1) || 0;
+  const chg6h = parseFloat(data._dex?.priceChange?.h6) || 0;
+  const chg24h = parseFloat(data._dex?.priceChange?.h24) || 0;
+  const vol = parseFloat(data._dex?.volume?.h24) || 0;
+  
+  // Momentum analysis
+  let momentum = '';
+  if (chg1h > 5 && chg6h > 10) momentum = '🚀 Strong upward momentum — buyers in control';
+  else if (chg1h > 0 && buyRatio > 55) momentum = '📈 Positive momentum — buy pressure dominant';
+  else if (chg1h < -5 && chg6h < -10) momentum = '📉 Strong downward pressure — consider waiting';
+  else if (buyRatio < 40) momentum = '🔻 Sell pressure dominant — not ideal entry';
+  else momentum = '➡️ Sideways action — wait for clear direction';
+  
+  return `<div class="card" style="border-left:3px solid ${biasColor}">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div class="sec-title" style="margin-bottom:4px"><span class="sec-icon">📈</span> TRADE SIGNAL</div>
+        <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan)">$${data.ticker}</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:28px">${biasIcon}</div>
+        <span class="badge ${badgeClass}">${biasAction}</span>
+      </div>
+    </div>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:var(--bg);border-radius:8px;padding:12px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px">CONFIDENCE</div>
+        <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:${biasColor}">${data.confidence}%</div>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:12px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px">BUY PRESSURE</div>
+        <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:${buyRatio >= 55 ? 'var(--green)' : buyRatio >= 45 ? 'var(--yellow)' : 'var(--red)'}">${buyRatio}%</div>
+      </div>
+    </div>
+    
+    <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:12px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">MOMENTUM</div>
+      <div style="display:flex;gap:16px;margin-bottom:8px">
+        <div style="font-family:var(--mono);font-size:12px"><span style="color:var(--text3)">1h:</span> <span style="color:${chg1h >= 0 ? 'var(--green)' : 'var(--red)'}">${chg1h > 0 ? '+' : ''}${chg1h.toFixed(1)}%</span></div>
+        <div style="font-family:var(--mono);font-size:12px"><span style="color:var(--text3)">6h:</span> <span style="color:${chg6h >= 0 ? 'var(--green)' : 'var(--red)'}">${chg6h > 0 ? '+' : ''}${chg6h.toFixed(1)}%</span></div>
+        <div style="font-family:var(--mono);font-size:12px"><span style="color:var(--text3)">24h:</span> <span style="color:${chg24h >= 0 ? 'var(--green)' : 'var(--red)'}">${chg24h > 0 ? '+' : ''}${chg24h.toFixed(1)}%</span></div>
+      </div>
+      <div style="font-size:12px;color:var(--text)">${momentum}</div>
+    </div>
+    
+    <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:12px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">🎯 TRADE SETUP</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div style="background:var(--green-dim);border-radius:6px;padding:8px;text-align:center">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--green)">ENTRY</div>
+          <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text)">${fP(price * 0.92)}–${fP(price * 0.97)}</div>
+        </div>
+        <div style="background:var(--red-dim);border-radius:6px;padding:8px;text-align:center">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--red)">STOP LOSS</div>
+          <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text)">${fP(price * 0.75)}</div>
+        </div>
+        <div style="background:var(--cyan-dim);border-radius:6px;padding:8px;text-align:center">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--cyan)">TARGET</div>
+          <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text)">${fP(price * 1.6)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:12px;color:var(--text2);line-height:1.6">${data.summary}</div>
+    <div style="margin-top:12px;font-size:11px;color:var(--text3);font-style:italic">⚠️ Not financial advice. Always DYOR.</div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// RENDER TRENDING PICKS
+// ═══════════════════════════════════════════
+function renderTrendingPicks(tokens) {
+  const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+  const ratings = ['BEST POTENTIAL', 'STRONG', 'INTERESTING', 'WATCH', 'MONITOR'];
+  
+  let html = `<div class="card" style="border-left:3px solid var(--yellow)">
+    <div class="sec-title"><span class="sec-icon">🔥</span> AI TRENDING PICKS</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:16px">Top tokens ranked by AI potential score</div>`;
+  
+  tokens.forEach((t, i) => {
+    const ratingColor = i === 0 ? 'var(--green)' : i < 3 ? 'var(--cyan)' : 'var(--text2)';
+    const bgColor = i === 0 ? 'rgba(0,255,136,0.04)' : 'var(--bg)';
+    const borderColor = i === 0 ? 'rgba(0,255,136,0.15)' : 'var(--card-border)';
+    
+    html += `<div style="background:${bgColor};border:1px solid ${borderColor};border-radius:10px;padding:14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <span style="font-size:20px">${medals[i]}</span>
+        ${t.logo ? `<img src="${t.logo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : ''}
+        <div style="flex:1">
+          <span style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan)">$${t.symbol}</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-left:8px">${t.chain.toUpperCase()}</span>
+        </div>
+        ${t.twitter ? `<a href="${t.twitter}" target="_blank" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;background:var(--bg3);border-radius:4px;text-decoration:none;color:var(--text);font-size:11px">𝕏</a>` : ''}
+        ${t.website ? `<a href="${t.website}" target="_blank" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;background:var(--bg3);border-radius:4px;text-decoration:none;color:var(--text);font-size:11px">🌐</a>` : ''}
+        <span style="font-family:var(--mono);font-size:10px;font-weight:600;color:${ratingColor}">${ratings[i]}</span>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;margin-bottom:10px">
+        <span style="color:var(--text2)">MC <span style="color:var(--text)">$${fN(t.mc)}</span></span>
+        <span style="color:var(--text2)">Vol <span style="color:var(--text)">$${fN(t.vol)}</span></span>
+        <span style="color:var(--text2)">Liq <span style="color:var(--text)">$${fN(t.liq)}</span></span>
+        <span style="color:var(--text2)">Buy <span style="color:${t.buyRatio >= 55 ? 'var(--green)' : t.buyRatio >= 45 ? 'var(--yellow)' : 'var(--red)'}">${t.buyRatio}%</span></span>
+        <span style="color:${t.chg24h >= 0 ? 'var(--green)' : 'var(--red)'}">${t.chg24h > 0 ? '+' : ''}${t.chg24h.toFixed(1)}%</span>
+      </div>
+      <button onclick="analyzeFromAddress('${t.address}','${t.chain}')" style="width:100%;padding:8px;background:var(--cyan-dim);border:1px solid var(--cyan);border-radius:6px;color:var(--cyan);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='var(--cyan)';this.style.color='#000'" onmouseout="this.style.background='var(--cyan-dim)';this.style.color='var(--cyan)'">🔍 ANALYZE</button>
+    </div>`;
+  });
+  
+  html += `<div style="font-size:11px;color:var(--text3);font-style:italic;margin-top:8px">Not financial advice. DYOR.</div></div>`;
+  return html;
+}
+
+// ═══════════════════════════════════════════
+// RENDER GEM PICKS
+// ═══════════════════════════════════════════
+function renderGemPicks(tokens) {
+  let html = `<div class="card" style="border-left:3px solid var(--purple)">
+    <div class="sec-title"><span class="sec-icon">💎</span> HIDDEN GEMS</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:4px">New tokens with high potential — MC &lt; $5M</div>
+    <div style="font-size:10px;color:var(--red);margin-bottom:16px">⚠️ HIGH RISK — Small cap tokens. Never invest more than you can afford to lose.</div>`;
+  
+  tokens.forEach((t, i) => {
+    const gemEmoji = t.gemScore > 60 ? '💎' : t.gemScore > 40 ? '✨' : '👀';
+    const riskLabel = t.rugOk ? '✅ Safe' : '⚠️ Caution';
+    const riskColor = t.rugOk ? 'var(--green)' : 'var(--red)';
+    const ageLabel = t.age < 24 ? '🔥 New' : t.age < 72 ? '🆕 Fresh' : `${Math.round(t.age / 24)}d`;
+    
+    html += `<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="font-size:18px">${gemEmoji}</span>
+        ${t.logo ? `<img src="${t.logo}" style="width:24px;height:24px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : ''}
+        <div style="flex:1">
+          <span style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan)">$${t.symbol}</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-left:6px">${t.chain.toUpperCase()}</span>
+        </div>
+        ${t.twitter ? `<a href="${t.twitter}" target="_blank" style="display:flex;align-items:center;justify-content:center;width:22px;height:22px;background:var(--bg3);border-radius:4px;text-decoration:none;color:var(--text);font-size:10px">𝕏</a>` : ''}
+        ${t.website ? `<a href="${t.website}" target="_blank" style="display:flex;align-items:center;justify-content:center;width:22px;height:22px;background:var(--bg3);border-radius:4px;text-decoration:none;color:var(--text);font-size:10px">🌐</a>` : ''}
+        <span style="font-family:var(--mono);font-size:10px;color:${riskColor}">${riskLabel}</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;margin-bottom:10px">
+        <span style="color:var(--text2)">MC <span style="color:var(--text)">$${fN(t.mc)}</span></span>
+        <span style="color:var(--text2)">Liq <span style="color:var(--text)">$${fN(t.liq)}</span></span>
+        <span style="color:var(--text2)">Buy <span style="color:${t.buyRatio >= 55 ? 'var(--green)' : 'var(--yellow)'}">${t.buyRatio}%</span></span>
+        <span style="color:${t.chg24h >= 0 ? 'var(--green)' : 'var(--red)'}">${t.chg24h > 0 ? '+' : ''}${t.chg24h.toFixed(1)}%</span>
+        <span style="color:var(--text3)">${ageLabel}</span>
+      </div>
+      <button onclick="analyzeFromAddress('${t.address}','${t.chain}')" style="width:100%;padding:8px;background:var(--purple-dim);border:1px solid var(--purple);border-radius:6px;color:var(--purple);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='var(--purple)';this.style.color='#000'" onmouseout="this.style.background='var(--purple-dim)';this.style.color='var(--purple)'">🔍 ANALYZE</button>
+    </div>`;
+  });
+  
+  html += `<div style="font-size:11px;color:var(--text3);font-style:italic;margin-top:8px">Not financial advice. DYOR.</div></div>`;
+  return html;
 }
 
 // ═══════════════════════════════════════════
@@ -3655,13 +4788,12 @@ updateUILanguage();
 renderSavedSearches();
 renderMobileSavedSearches();
 loadPromotedTokens();
-$('tbToggle').classList.add('show');
-$('tbToggle').classList.remove('show');
 
 // Load panel data after page loads
 setTimeout(() => {
   loadPanelTrending();
   loadPanelNewListings();
+  loadMobilePromoted();
   loadMobileTrending();
   loadMobileNewListings();
 }, 500);
@@ -3759,6 +4891,33 @@ document.addEventListener('DOMContentLoaded', () => {
     panel.style.transition = 'height 0.25s ease, width 0.25s ease';
   });
 });
+
+// ═══════════════════════════════════════════
+// AUTO-ANALYZE FROM URL PARAMETER
+// ═══════════════════════════════════════════
+(function checkURLParams() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const ca = urlParams.get('ca');
+  
+  if (ca && ca.trim()) {
+    // Wait for DOM to be ready
+    setTimeout(() => {
+      const input = document.getElementById('inputBox');
+      if (input) {
+        input.value = ca.trim();
+        updateSendBtn();
+        // Small delay then trigger analysis
+        setTimeout(() => {
+          sendFromInput();
+        }, 300);
+      }
+    }, 500);
+    
+    // Clean URL (remove ?ca= parameter)
+    const cleanURL = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanURL);
+  }
+})();
 </script>
 </body>
 </html>
