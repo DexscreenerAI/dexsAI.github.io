@@ -1401,6 +1401,7 @@ let isLoading = false;
 let currentLang = 'en';
 let savedSearches = JSON.parse(localStorage.getItem('oracleSearches') || '[]');
 let lastAnalyzedToken = null; // Store last token for follow-up questions
+let pendingQuestion = null; // Store pending question type ('safe', 'buysell') when waiting for contract
 
 // Backend API URL
 const API_URL = 'https://dexscreener-telegram-bot-production.up.railway.app';
@@ -3368,6 +3369,11 @@ async function sendQuery(query) {
         
         // Save FULL token data for AI follow-up questions
         lastAnalyzedToken = {
+          // Store original objects for Safe/BuySell buttons
+          pair: pair,
+          rugData: rugData,
+          analysis: analysis,
+          
           // Basic info
           symbol: pair.baseToken?.symbol || '???',
           name: pair.baseToken?.name || '',
@@ -3444,8 +3450,17 @@ async function sendQuery(query) {
             });
           }
         } else {
-          // Just show the analysis
-          c.messages.push({ role: 'assistant', analysis });
+          // Check if we have a pending question (from Safe? or Buy/Sell? buttons)
+          if (pendingQuestion === 'safe') {
+            c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
+            pendingQuestion = null;
+          } else if (pendingQuestion === 'buysell') {
+            c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
+            pendingQuestion = null;
+          } else {
+            // Just show the normal analysis
+            c.messages.push({ role: 'assistant', analysis });
+          }
         }
         
         // Save search to right panel
@@ -3523,10 +3538,26 @@ async function sendQuery(query) {
     } else {
       // Run local analysis
       const analysis = analyzeToken(pair, rugData);
-      c.messages.push({ role: 'assistant', analysis });
+      
+      // Check if we have a pending question (from Safe? or Buy/Sell? buttons)
+      if (pendingQuestion === 'safe') {
+        c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
+        pendingQuestion = null;
+      } else if (pendingQuestion === 'buysell') {
+        c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
+        pendingQuestion = null;
+      } else {
+        // Just show the normal analysis
+        c.messages.push({ role: 'assistant', analysis });
+      }
       
       // Save FULL token data for AI follow-up questions
       lastAnalyzedToken = {
+        // Store original objects for Safe/BuySell buttons
+        pair: pair,
+        rugData: rugData,
+        analysis: analysis,
+        
         // Basic info
         symbol: pair.baseToken?.symbol || '???',
         name: pair.baseToken?.name || '',
@@ -4259,17 +4290,49 @@ function handleSafeCheck() {
   const c = conversations.find(x => x.id === activeId);
   
   if (lastAnalyzedToken) {
-    // Use last analyzed token directly
-    const { pair, rugData, analysis } = lastAnalyzedToken;
-    c.messages.push({ role: 'user', content: `🛡️ Is $${analysis.ticker} safe?` });
-    c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
-    c.title = `🛡️ Safety: $${analysis.ticker}`;
+    // Check if it's a DexScreener token (has pair) or a major crypto (CoinGecko)
+    if (lastAnalyzedToken.pair && lastAnalyzedToken.analysis) {
+      // DexScreener token - use full safety report
+      const { pair, rugData, analysis } = lastAnalyzedToken;
+      c.messages.push({ role: 'user', content: `🛡️ Is $${analysis.ticker} safe?` });
+      c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
+      c.title = `🛡️ Safety: $${analysis.ticker}`;
+    } else {
+      // Major crypto (BTC, ETH, etc.) - simplified safe message
+      const symbol = lastAnalyzedToken.symbol?.toUpperCase() || '???';
+      c.messages.push({ role: 'user', content: `🛡️ Is $${symbol} safe?` });
+      c.messages.push({ role: 'assistant', html: `<div class="card" style="border-left:3px solid var(--green)">
+        <div class="sec-title"><span class="sec-icon">🛡️</span> SAFETY REPORT</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="font-family:var(--mono);font-size:32px;font-weight:700;color:var(--green)">95</div>
+          <div>
+            <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan)">$${symbol}</div>
+            <span class="badge badge-green">✅ VERY SAFE</span>
+          </div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">✅</span><span style="color:var(--green);font-weight:600">Major Cryptocurrency</span></div>
+          <div style="font-size:11px;color:var(--text2);margin-top:4px">Rank #${lastAnalyzedToken.rank || '?'} by market cap</div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">✅</span><span style="color:var(--green);font-weight:600">High Liquidity</span></div>
+          <div style="font-size:11px;color:var(--text2);margin-top:4px">24h Volume: $${fN(lastAnalyzedToken.volume24h || 0)}</div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">✅</span><span style="color:var(--green);font-weight:600">Established Project</span></div>
+          <div style="font-size:11px;color:var(--text2);margin-top:4px">Years of track record, listed on all major exchanges</div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-top:12px;line-height:1.5">$${symbol} is a major cryptocurrency with proven track record. No rugcheck needed — focus on market timing rather than safety concerns.</div>
+      </div>` });
+      c.title = `🛡️ Safe: $${symbol}`;
+    }
     renderSidebar();
     renderMessages();
     updateTopbar();
     scrollToLastUserMessage();
   } else {
-    // No token yet, ask for contract
+    // No token yet, ask for contract and remember we want safety check
+    pendingQuestion = 'safe';
     c.messages.push({ role: 'user', content: '🛡️ Is this token safe?' });
     c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
       <div style="font-size:13px;color:var(--text);margin-bottom:10px">🛡️ Sure! Paste the <strong>contract address</strong> below and I'll run a full safety check.</div>
@@ -4290,17 +4353,80 @@ function handleBuySell() {
   const c = conversations.find(x => x.id === activeId);
   
   if (lastAnalyzedToken) {
-    // Use last analyzed token directly
-    const { pair, rugData, analysis } = lastAnalyzedToken;
-    c.messages.push({ role: 'user', content: `📈 Should I buy or sell $${analysis.ticker}?` });
-    c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
-    c.title = `📈 Signal: $${analysis.ticker}`;
+    // Check if it's a DexScreener token (has pair) or a major crypto (CoinGecko)
+    if (lastAnalyzedToken.pair && lastAnalyzedToken.analysis) {
+      // DexScreener token - use full trade signal
+      const { pair, rugData, analysis } = lastAnalyzedToken;
+      c.messages.push({ role: 'user', content: `📈 Should I buy or sell $${analysis.ticker}?` });
+      c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
+      c.title = `📈 Signal: $${analysis.ticker}`;
+    } else {
+      // Major crypto (BTC, ETH, etc.) - simplified signal
+      const symbol = lastAnalyzedToken.symbol?.toUpperCase() || '???';
+      const price = lastAnalyzedToken.price || 0;
+      const chg24h = lastAnalyzedToken.priceChange24h || 0;
+      const chg7d = lastAnalyzedToken.priceChange7d || 0;
+      const bias = chg24h > 5 ? 'BULLISH' : chg24h < -5 ? 'BEARISH' : 'NEUTRAL';
+      const biasColor = bias === 'BULLISH' ? 'var(--green)' : bias === 'BEARISH' ? 'var(--red)' : 'var(--yellow)';
+      const biasIcon = bias === 'BULLISH' ? '🟢' : bias === 'BEARISH' ? '🔴' : '🟡';
+      const action = bias === 'BULLISH' ? 'ACCUMULATE' : bias === 'BEARISH' ? 'WAIT FOR DIP' : 'HOLD';
+      const badgeClass = bias === 'BULLISH' ? 'badge-green' : bias === 'BEARISH' ? 'badge-red' : 'badge-yellow';
+      
+      c.messages.push({ role: 'user', content: `📈 Should I buy or sell $${symbol}?` });
+      c.messages.push({ role: 'assistant', html: `<div class="card" style="border-left:3px solid ${biasColor}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <div class="sec-title" style="margin-bottom:4px"><span class="sec-icon">📈</span> TRADE SIGNAL</div>
+            <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan)">$${symbol}</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:28px">${biasIcon}</div>
+            <span class="badge ${badgeClass}">${action}</span>
+          </div>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+          <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px">PRICE</div>
+            <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--text)">${fP(price)}</div>
+          </div>
+          <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px">24H</div>
+            <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:${chg24h >= 0 ? 'var(--green)' : 'var(--red)'}">${chg24h > 0 ? '+' : ''}${chg24h.toFixed(1)}%</div>
+          </div>
+          <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px">7D</div>
+            <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:${chg7d >= 0 ? 'var(--green)' : 'var(--red)'}">${chg7d > 0 ? '+' : ''}${chg7d.toFixed(1)}%</div>
+          </div>
+        </div>
+        
+        <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px">
+          ${bias === 'BULLISH' ? `$${symbol} is showing positive momentum. Consider dollar-cost averaging or adding to existing positions on minor dips.` : 
+            bias === 'BEARISH' ? `$${symbol} is in a correction phase. Consider waiting for support levels or accumulating in smaller tranches.` :
+            `$${symbol} is consolidating. Hold existing positions and wait for clearer directional signals.`}
+        </div>
+        
+        <div style="background:var(--bg);border-radius:8px;padding:12px">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">💡 STRATEGY FOR MAJORS</div>
+          <div style="font-size:11px;color:var(--text);line-height:1.5">
+            • DCA (Dollar Cost Average) over time<br>
+            • Use limit orders on dips<br>
+            • Don't try to time the market perfectly<br>
+            • Consider as long-term holdings
+          </div>
+        </div>
+        
+        <div style="margin-top:12px;font-size:11px;color:var(--text3);font-style:italic">⚠️ Not financial advice. Always DYOR.</div>
+      </div>` });
+      c.title = `📈 Signal: $${symbol}`;
+    }
     renderSidebar();
     renderMessages();
     updateTopbar();
     scrollToLastUserMessage();
   } else {
-    // No token yet, ask for contract
+    // No token yet, ask for contract and remember we want trade signal
+    pendingQuestion = 'buysell';
     c.messages.push({ role: 'user', content: '📈 Should I buy or sell?' });
     c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
       <div style="font-size:13px;color:var(--text);margin-bottom:10px">📈 Sure! Paste the <strong>contract address</strong> below and I'll give you a trade signal.</div>
