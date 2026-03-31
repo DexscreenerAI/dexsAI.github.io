@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=0.80, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=0.80, minimum-scale=0.80, maximum-scale=0.80, user-scalable=no">
 <title>DexScreener AI — Token Intelligence</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
@@ -33,7 +33,7 @@
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
-html, body { height:100%; overflow:hidden; touch-action: manipulation; }
+html, body { height:100%; overflow:hidden; touch-action: pan-x pan-y; }
 body {
   background: var(--bg);
   color: var(--text);
@@ -41,6 +41,14 @@ body {
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
+  -ms-touch-action: pan-x pan-y;
+  touch-action: pan-x pan-y;
+}
+
+/* Prevent ALL zoom behaviors */
+* {
+  -ms-touch-action: pan-x pan-y;
+  touch-action: pan-x pan-y;
 }
 
 ::-webkit-scrollbar { width: 4px; }
