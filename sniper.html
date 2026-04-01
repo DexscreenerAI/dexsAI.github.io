@@ -142,20 +142,65 @@ body {
   color: #fff;
 }
 
-/* ── SETTINGS ── */
-.settings {
-  max-width: 1200px;
-  margin: 0 auto 20px;
-  padding: 0 20px;
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
 }
-.settings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
+.modal-overlay.active {
+  display: flex;
+}
+.modal {
   background: var(--bg2);
-  border: 1px solid var(--border);
-  padding: 16px;
-  border-radius: 8px;
+  border: 2px solid var(--green);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  animation: modalIn 0.2s;
+}
+@keyframes modalIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--green);
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+}
+.modal-close:hover {
+  color: var(--red);
+}
+.modal-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
 }
 .setting {
   display: flex;
@@ -163,18 +208,18 @@ body {
   gap: 6px;
 }
 .setting label {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text2);
   letter-spacing: 1px;
 }
 .setting input, .setting select {
-  padding: 10px;
+  padding: 12px;
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text);
   font-family: inherit;
   font-size: 14px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 .setting input:focus, .setting select:focus {
   outline: none;
@@ -431,7 +476,7 @@ body {
 <!-- HEADER -->
 <header class="header">
   <h1>⚡ AUTO SNIPER</h1>
-  <p>100% Automated Paper Trading • Real DexScreener Prices • Memecoins Only</p>
+  <p>4 Sources • New Tokens + Boosted + Gainers + Search • Real Prices</p>
   <div class="mode-badge" id="modeBadge">🔴 STOPPED</div>
 </header>
 
@@ -468,39 +513,49 @@ body {
 <!-- CONTROLS -->
 <div class="controls">
   <button class="ctrl-btn" id="startBtn" onclick="toggleBot()">▶ START BOT</button>
+  <button class="ctrl-btn" onclick="openSettings()">⚙️ SETTINGS</button>
   <button class="ctrl-btn danger" onclick="resetAll()">🔄 RESET</button>
 </div>
 
-<!-- SETTINGS -->
-<div class="settings">
-  <div class="settings-grid">
-    <div class="setting">
-      <label>💰 POSITION SIZE ($)</label>
-      <input type="number" id="positionSize" value="100" min="10" max="1000">
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal" onclick="closeSettings(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span>⚙️ SNIPER SETTINGS</span>
+      <button class="modal-close" onclick="closeSettings()">&times;</button>
     </div>
-    <div class="setting">
-      <label>🎯 TAKE PROFIT (%)</label>
-      <input type="number" id="takeProfit" value="25" min="5" max="200">
+    <div class="modal-content">
+      <div class="setting">
+        <label>💰 POSITION SIZE ($)</label>
+        <input type="number" id="positionSize" value="100" min="10" max="1000">
+      </div>
+      <div class="setting">
+        <label>🎯 TAKE PROFIT (%)</label>
+        <input type="number" id="takeProfit" value="25" min="5" max="200">
+      </div>
+      <div class="setting">
+        <label>🛑 STOP LOSS (%)</label>
+        <input type="number" id="stopLoss" value="12" min="5" max="50">
+      </div>
+      <div class="setting">
+        <label>⏱️ MAX HOLD (min)</label>
+        <input type="number" id="maxHold" value="15" min="1" max="60">
+      </div>
+      <div class="setting">
+        <label>📊 MIN SCORE</label>
+        <input type="number" id="minScore" value="60" min="30" max="90">
+      </div>
+      <div class="setting">
+        <label>🔗 CHAINS</label>
+        <select id="chains">
+          <option value="all">Solana + Ethereum</option>
+          <option value="solana">Solana Only</option>
+          <option value="ethereum">Ethereum Only</option>
+        </select>
+      </div>
     </div>
-    <div class="setting">
-      <label>🛑 STOP LOSS (%)</label>
-      <input type="number" id="stopLoss" value="12" min="5" max="50">
-    </div>
-    <div class="setting">
-      <label>⏱️ MAX HOLD (min)</label>
-      <input type="number" id="maxHold" value="15" min="1" max="60">
-    </div>
-    <div class="setting">
-      <label>📊 MIN SCORE</label>
-      <input type="number" id="minScore" value="60" min="30" max="90">
-    </div>
-    <div class="setting">
-      <label>🔗 CHAINS</label>
-      <select id="chains">
-        <option value="all">Solana + Ethereum</option>
-        <option value="solana">Solana Only</option>
-        <option value="ethereum">Ethereum Only</option>
-      </select>
+    <div class="modal-footer">
+      <button class="ctrl-btn" onclick="closeSettings()">✓ SAVE</button>
     </div>
   </div>
 </div>
@@ -583,6 +638,19 @@ let oppsCount = 0;
 const $ = id => document.getElementById(id);
 
 // ═══════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════
+function openSettings() {
+  $('settingsModal').classList.add('active');
+}
+
+function closeSettings(e) {
+  if (!e || e.target === $('settingsModal')) {
+    $('settingsModal').classList.remove('active');
+  }
+}
+
+// ═══════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════
 function fN(n) {
@@ -649,10 +717,10 @@ function startBot() {
   $('modeBadge').style.borderColor = 'var(--green)';
   $('scannerDot').classList.add('active');
   
-  addLog('🚀', 'Bot started — Hunting for memecoins...');
+  addLog('🚀', 'Bot started — Hunting memecoins from 4 sources...');
   
   scan();
-  scanInterval = setInterval(scan, 20000);
+  scanInterval = setInterval(scan, 25000); // Every 25s (more sources to scan)
   updateInterval = setInterval(updatePositions, 8000);
 }
 
@@ -706,17 +774,114 @@ async function scan() {
   if (!isRunning) return;
   
   const settings = getSettings();
-  $('scannerText').textContent = 'Scanning...';
+  $('scannerText').textContent = 'Scanning multiple sources...';
   
   const chains = settings.chains === 'all' ? ['solana', 'ethereum'] : [settings.chains];
-  const queries = ['pepe', 'doge', 'meme', 'ai', 'cat', 'dog', 'moon', 'pump', 'wojak', 'frog', 'trump', 'elon', 'shib', 'bonk', 'wif', 'inu'];
-  const shuffled = queries.sort(() => Math.random() - 0.5).slice(0, 5);
-  
   let allPairs = [];
+  
+  // ═══ SOURCE 1: Latest token profiles ═══
+  try {
+    $('scannerText').textContent = 'Scanning new tokens...';
+    const res = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      for (const t of data.slice(0, 30)) {
+        if (t.tokenAddress && chains.includes(t.chainId)) {
+          try {
+            const pRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${t.tokenAddress}`, { signal: AbortSignal.timeout(5000) });
+            const pData = await pRes.json();
+            if (pData.pairs && pData.pairs[0]) {
+              const p = pData.pairs[0];
+              const mc = parseFloat(p.marketCap) || 0;
+              const liq = parseFloat(p.liquidity?.usd) || 0;
+              if (mc > 5000 && mc < 5000000 && liq > 2000) {
+                p._source = 'new';
+                p._boost = 10;
+                allPairs.push(p);
+              }
+            }
+          } catch(e) {}
+        }
+      }
+    }
+  } catch(e) { console.log('Source 1 failed'); }
+  
+  // ═══ SOURCE 2: Boosted tokens ═══
+  try {
+    $('scannerText').textContent = 'Scanning boosted tokens...';
+    const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      for (const t of data.slice(0, 25)) {
+        if (t.tokenAddress && chains.includes(t.chainId)) {
+          try {
+            const pRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${t.tokenAddress}`, { signal: AbortSignal.timeout(5000) });
+            const pData = await pRes.json();
+            if (pData.pairs && pData.pairs[0]) {
+              const p = pData.pairs[0];
+              const mc = parseFloat(p.marketCap) || 0;
+              const liq = parseFloat(p.liquidity?.usd) || 0;
+              if (mc > 5000 && mc < 5000000 && liq > 2000) {
+                p._source = 'boosted';
+                p._boost = 15;
+                allPairs.push(p);
+              }
+            }
+          } catch(e) {}
+        }
+      }
+    }
+  } catch(e) { console.log('Source 2 failed'); }
+  
+  // ═══ SOURCE 3: Top gainers per chain ═══
+  try {
+    $('scannerText').textContent = 'Scanning top gainers...';
+    for (const chain of chains) {
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${chain}`, { signal: AbortSignal.timeout(6000) });
+      const data = await res.json();
+      if (data.pairs) {
+        const gainers = data.pairs
+          .filter(p => p.chainId === chain && parseFloat(p.priceChange?.h1) > 5)
+          .sort((a, b) => (parseFloat(b.priceChange?.h1) || 0) - (parseFloat(a.priceChange?.h1) || 0))
+          .slice(0, 20);
+        
+        for (const p of gainers) {
+          const mc = parseFloat(p.marketCap) || 0;
+          const liq = parseFloat(p.liquidity?.usd) || 0;
+          if (mc > 5000 && mc < 5000000 && liq > 2000) {
+            p._source = 'gainer';
+            p._boost = 12;
+            allPairs.push(p);
+          }
+        }
+      }
+    }
+  } catch(e) { console.log('Source 3 failed'); }
+  
+  // ═══ SOURCE 4: Massive keyword search ═══
+  const queries = [
+    // Hot crypto terms
+    'moon', 'pump', 'gem', 'degen', 'pepe', 'ai', 'meme', 'inu', 'wojak', 'based',
+    'trump', 'elon', 'cat', 'dog', 'frog', 'baby', 'doge', 'shib', 'bonk', 'wif',
+    'lambo', 'rich', 'gold', 'diamond', '100x', 'rocket', 'bull', 'ape', 'chad',
+    'giga', 'mega', 'super', 'king', 'god', 'devil', 'angel', 'safe', 'fair',
+    // Animals
+    'cat', 'dog', 'frog', 'bear', 'fish', 'bird', 'lion', 'wolf', 'fox', 'dragon',
+    // Meme culture
+    'pepe', 'wojak', 'cope', 'kek', 'rekt', 'wagmi', 'ngmi', 'ser', 'fren', 'anon',
+    // Letters (catches many tokens)
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
+    // Numbers
+    '69', '420', '1000', '100x', '777', '999'
+  ];
+  
+  // Shuffle and take random queries
+  const shuffled = queries.sort(() => Math.random() - 0.5).slice(0, 12);
   
   for (const q of shuffled) {
     try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${q}`, { signal: AbortSignal.timeout(8000) });
+      $('scannerText').textContent = `Searching "${q}"...`;
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${q}`, { signal: AbortSignal.timeout(6000) });
       const data = await res.json();
       
       if (data.pairs) {
@@ -725,13 +890,21 @@ async function scan() {
           const mc = parseFloat(p.marketCap) || 0;
           const liq = parseFloat(p.liquidity?.usd) || 0;
           return mc > 5000 && mc < 5000000 && liq > 2000;
-        });
-        allPairs.push(...valid);
+        }).slice(0, 30);
+        
+        for (const p of valid) {
+          p._source = 'search';
+          p._boost = 0;
+          allPairs.push(p);
+        }
       }
     } catch (e) {}
+    
+    // Small delay
+    await new Promise(r => setTimeout(r, 100));
   }
   
-  // Dedupe
+  // Dedupe by pairAddress
   const seen = new Set();
   allPairs = allPairs.filter(p => {
     if (seen.has(p.pairAddress)) return false;
@@ -754,9 +927,10 @@ async function scan() {
   oppsCount = opportunities.length;
   $('oppsCount').textContent = oppsCount;
   
-  $('scannerText').textContent = `Found ${opportunities.length} opportunities`;
+  $('scannerText').textContent = `Found ${opportunities.length} opportunities from ${scannedCount} tokens`;
+  addLog('🔍', `Scanned <span class="cyan">${scannedCount}</span> tokens — <span class="yellow">${oppsCount}</span> opportunities`);
   
-  // Auto-execute
+  // Auto-execute top opportunities
   const maxPositions = 5;
   
   for (const opp of opportunities) {
@@ -780,41 +954,53 @@ function analyzeOpportunity(pair) {
   const sells = pair.txns?.h24?.sells || 0;
   const total = buys + sells;
   const buyRatio = total > 0 ? (buys / total) * 100 : 50;
+  const sourceBoost = pair._boost || 0;
   
   let score = 0;
   
-  // Low MC (max 25)
+  // Source boost (new, boosted, gainer tokens are prioritized)
+  score += sourceBoost;
+  
+  // Low MC = moonshot potential (max 25)
   if (mc < 20000) score += 25;
   else if (mc < 50000) score += 22;
   else if (mc < 100000) score += 18;
   else if (mc < 500000) score += 12;
   else if (mc < 1000000) score += 6;
   
-  // Thin liquidity (max 20)
+  // Thin liquidity = volatile (max 20)
   const liqRatio = mc > 0 ? (liq / mc) * 100 : 0;
   if (liqRatio < 3) score += 20;
   else if (liqRatio < 5) score += 15;
   else if (liqRatio < 8) score += 10;
   
-  // Momentum (max 25)
-  if (chg5m > 15) score += 20;
+  // Positive momentum (max 25)
+  if (chg5m > 20) score += 25;
+  else if (chg5m > 15) score += 20;
   else if (chg5m > 8) score += 15;
   else if (chg5m > 3) score += 10;
   else if (chg5m > 0) score += 5;
   
-  if (chg1h > 20) score += 5;
+  if (chg1h > 30) score += 8;
+  else if (chg1h > 20) score += 5;
   else if (chg1h > 10) score += 3;
   
-  // Buy pressure (max 20)
-  if (buyRatio > 65) score += 20;
-  else if (buyRatio > 58) score += 15;
-  else if (buyRatio > 52) score += 10;
+  // High buy pressure (max 20)
+  if (buyRatio > 70) score += 20;
+  else if (buyRatio > 65) score += 17;
+  else if (buyRatio > 58) score += 12;
+  else if (buyRatio > 52) score += 8;
   
-  // Volume (max 10)
+  // Volume activity (max 15)
   const volRatio = mc > 0 ? (vol / mc) : 0;
-  if (volRatio > 1) score += 10;
-  else if (volRatio > 0.5) score += 7;
+  if (volRatio > 2) score += 15;
+  else if (volRatio > 1) score += 12;
+  else if (volRatio > 0.5) score += 8;
   else if (volRatio > 0.2) score += 4;
+  
+  // Recent transactions bonus
+  if (total > 500) score += 5;
+  else if (total > 200) score += 3;
   
   return Math.min(100, Math.max(0, score));
 }
@@ -848,6 +1034,7 @@ async function executeTrade(pair, score) {
     currentPrice: entryPrice,
     size,
     score,
+    source: pair._source || 'search',
     pnl: 0,
     pnlPct: 0,
     entryTime: Date.now()
@@ -856,7 +1043,7 @@ async function executeTrade(pair, score) {
   positions.push(position);
   balance -= size;
   
-  addLog('🎯', `<span class="cyan">BUY</span> $${esc(symbol)} @ $${fP(entryPrice)} — $${size} — Score: ${score}`);
+  addLog('🎯', `<span class="cyan">BUY</span> $${esc(symbol)} @ $${fP(entryPrice)} — $${size} — ${pair._source || 'search'} — Score: ${score}`);
   
   updateUI();
   renderPositions();
@@ -979,7 +1166,7 @@ function renderPositions() {
           <div class="pos-logo">${pos.logo ? `<img src="${pos.logo}" onerror="this.style.display='none';this.parentElement.textContent='${pos.symbol.charAt(0)}'">` : pos.symbol.charAt(0)}</div>
           <div>
             <div class="pos-symbol">$${esc(pos.symbol)}</div>
-            <div class="pos-chain">${pos.chain} • Score: ${pos.score}</div>
+            <div class="pos-chain">${pos.chain} • ${pos.source || 'search'} • Score: ${pos.score}</div>
           </div>
         </div>
         <div class="pos-pnl">
