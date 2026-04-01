@@ -2003,57 +2003,104 @@ let pendingQuestion = null; // Store pending question type ('safe', 'buysell') w
 const API_URL = 'https://dexscreener-telegram-bot-production.up.railway.app';
 
 // ═══════════════════════════════════════════
-// CORS PROXY - Multiple fallbacks
+// CORS PROXY - Use Railway backend first
 // ═══════════════════════════════════════════
-const CORS_PROXIES = [
-  url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-  url => 'https://corsproxy.io/?' + encodeURIComponent(url),
-  url => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url)
-];
-let workingProxyIndex = 0;
-
 async function fetchDexScreener(url, options = {}) {
   // En localhost, fetch direct
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    return fetch(url, options);
-  }
-  
-  // Remove any existing signal from options to avoid conflicts
-  const { signal, ...restOptions } = options;
-  
-  // En production, essayer les proxies
-  const startIndex = workingProxyIndex;
-  
-  for (let i = 0; i < CORS_PROXIES.length; i++) {
-    const proxyIndex = (startIndex + i) % CORS_PROXIES.length;
-    const proxyFn = CORS_PROXIES[proxyIndex];
-    const proxyUrl = proxyFn(url);
-    
     try {
-      const response = await fetch(proxyUrl, { 
-        ...restOptions, 
-        signal: AbortSignal.timeout(15000),
-        headers: {
-          'Accept': 'application/json',
-          ...restOptions.headers
-        }
-      });
-      
-      if (response && response.ok) {
-        workingProxyIndex = proxyIndex;
-        return response;
-      }
-    } catch (err) {
-      console.warn(`Proxy ${proxyIndex} failed:`, err.message);
+      return await fetch(url, options);
+    } catch (e) {
+      console.error('Direct fetch failed:', e);
+      return createErrorResponse('Direct fetch failed');
     }
   }
   
-  // All proxies failed - return a fake error response instead of null
-  console.error('All CORS proxies failed for:', url);
-  return new Response(JSON.stringify({ error: 'All proxies failed' }), {
+  // En production, utiliser le backend Railway comme proxy
+  try {
+    const proxyUrl = convertToBackendProxy(url);
+    if (proxyUrl) {
+      const response = await fetch(proxyUrl, { 
+        signal: AbortSignal.timeout(15000),
+        headers: { 'Accept': 'application/json' }
+      });
+      if (response && response.ok) {
+        return response;
+      }
+    }
+  } catch (e) {
+    console.warn('Backend proxy failed:', e.message);
+  }
+  
+  // Fallback: public CORS proxies
+  const publicProxies = [
+    'https://api.allorigins.win/raw?url=',
+    'https://corsproxy.io/?'
+  ];
+  
+  for (const proxy of publicProxies) {
+    try {
+      const proxyUrl = proxy + encodeURIComponent(url);
+      const response = await fetch(proxyUrl, { 
+        signal: AbortSignal.timeout(12000),
+        headers: { 'Accept': 'application/json' }
+      });
+      if (response && response.ok) {
+        return response;
+      }
+    } catch (e) {
+      console.warn('Public proxy failed:', proxy);
+    }
+  }
+  
+  // All failed
+  console.error('All proxies failed for:', url);
+  return createErrorResponse('All proxies failed');
+}
+
+function createErrorResponse(message) {
+  return new Response(JSON.stringify({ error: message, pairs: [] }), {
     status: 503,
     headers: { 'Content-Type': 'application/json' }
   });
+}
+
+function convertToBackendProxy(url) {
+  const base = API_URL;
+  
+  // token-boosts/top
+  if (url.includes('token-boosts/top')) {
+    return `${base}/api/proxy/boosts`;
+  }
+  // token-boosts/latest
+  if (url.includes('token-boosts/latest')) {
+    return `${base}/api/proxy/boosts/latest`;
+  }
+  // token-profiles/latest
+  if (url.includes('token-profiles/latest')) {
+    return `${base}/api/proxy/profiles`;
+  }
+  // search
+  if (url.includes('/dex/search')) {
+    try {
+      const q = new URL(url).searchParams.get('q') || '';
+      return `${base}/api/proxy/search?q=${encodeURIComponent(q)}`;
+    } catch (e) {
+      return null;
+    }
+  }
+  // tokens/:address
+  const tokensMatch = url.match(/\/dex\/tokens\/([^\/\?]+)/);
+  if (tokensMatch) {
+    return `${base}/api/proxy/tokens/${tokensMatch[1]}`;
+  }
+  // pairs/:chain/:pair
+  const pairsMatch = url.match(/\/dex\/pairs\/([^\/]+)\/([^\/\?]+)/);
+  if (pairsMatch) {
+    return `${base}/api/proxy/pairs/${pairsMatch[1]}/${pairsMatch[2]}`;
+  }
+  
+  return null; // Not a known endpoint
 }
 
 // ═══════════════════════════════════════════
