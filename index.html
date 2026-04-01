@@ -4187,80 +4187,120 @@ function renderMessages() {
 
 function formatAIResponse(text) {
   if (!text || text.length < 20) return esc(text);
-  let html = text;
 
-  // Escape HTML but keep markdown
-  html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // Escape HTML
+  let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-  // Detect verdict words and style them
-  html = html.replace(/\b(BUY)\b(?!\s*ratio)/gi, '<span class="ai-verdict buy">BUY</span>');
-  html = html.replace(/\b(SELL)\b/gi, '<span class="ai-verdict sell">SELL</span>');
-  html = html.replace(/\b(WAIT)\b/gi, '<span class="ai-verdict wait">WAIT</span>');
-  html = html.replace(/\b(AVOID)\b/gi, '<span class="ai-verdict avoid">AVOID</span>');
-
-  // Tables: | col | col |
+  // Tables: | col | col | (process first before other transforms)
   html = html.replace(/((?:\|[^\n]+\|\n?)+)/g, (match) => {
     const rows = match.trim().split('\n').filter(r => r.trim());
     if (rows.length < 2) return match;
     let table = '<table>';
     rows.forEach((row, i) => {
-      // Skip separator row (|---|---|)
       if (/^\|[\s\-:]+\|$/.test(row.trim())) return;
       const cells = row.split('|').filter(c => c.trim() !== '');
       const tag = i === 0 ? 'th' : 'td';
-      const wrap = i === 0 ? 'thead' : '';
-      if (wrap) table += `<${wrap}>`;
+      if (i === 0) table += '<thead>';
       table += '<tr>' + cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('') + '</tr>';
-      if (wrap) table += `</${wrap}>`;
+      if (i === 0) table += '</thead>';
     });
-    table += '</table>';
-    return table;
+    return table + '</table>';
   });
 
-  // Headings
+  // ASCII tables (--- separators with text)
+  html = html.replace(/^(.+)\t(.+)$/gm, (m, a, b) => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--card-border)"><span>${a.trim()}</span><span style="color:var(--text2)">${b.trim()}</span></div>`);
+  html = html.replace(/^-{5,}$/gm, '<hr>');
+
+  // Markdown headings
   html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## \d+\.\s*(.+)$/gm, '<h2>$1</h2>');
   html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
   html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+  // Detect ALL-CAPS section headers (like "RUG RISK ASSESSMENT: MEDIUM-HIGH ⚠️")
+  html = html.replace(/^([A-Z][A-Z\s\/\-&]{4,}(?:[:：].*)?)$/gm, (m, title) => {
+    const t = title.toLowerCase();
+    let cls = '';
+    if (/entry|entr[ée]|buy|accum|position|2x|5x|10x/.test(t)) cls = 'entry';
+    else if (/stop.?loss|invalidat|sl\b/.test(t)) cls = 'stoploss';
+    else if (/target|take.?profit|tp\d|objectif|scenario|best case|possibility/.test(t)) cls = 'target';
+    else if (/risk|warning|danger|rug|worst|red.?flag|honeypot/.test(t)) cls = 'warning';
+    else cls = '';
+    if (cls) return `</div><div class="ai-section ${cls}"><div class="ai-section-title">${title}</div>`;
+    return `<h2>${title}</h2>`;
+  });
+
+  // Detect "Section Name:" or "**Section Name**" on its own line
+  html = html.replace(/^\*\*([^*]+)\*\*\s*$/gm, (m, title) => {
+    const t = title.toLowerCase();
+    let cls = '';
+    if (/entry|entr[ée]|buy zone|position siz/.test(t)) cls = 'entry';
+    else if (/stop.?loss|invalidat/.test(t)) cls = 'stoploss';
+    else if (/target|take.?profit|price target|scenario|best case|timeframe/.test(t)) cls = 'target';
+    else if (/risk|warning|danger|rug|worst|red.?flag|signal/.test(t)) cls = 'warning';
+    if (cls) return `</div><div class="ai-section ${cls}"><div class="ai-section-title">${title}</div>`;
+    return `<h2>${title}</h2>`;
+  });
+
+  // h2 section detection (from markdown ##)
+  html = html.replace(/<h2>(.*(?:entry|entr[ée]|zone d'entr|buy zone|position).*)<\/h2>/gi, '</div><div class="ai-section entry"><div class="ai-section-title">$1</div>');
+  html = html.replace(/<h2>(.*(?:stop.?loss|SL|invalidat).*)<\/h2>/gi, '</div><div class="ai-section stoploss"><div class="ai-section-title">$1</div>');
+  html = html.replace(/<h2>(.*(?:take.?profit|target|TP\d|objectif|scenario|timeframe).*)<\/h2>/gi, '</div><div class="ai-section target"><div class="ai-section-title">$1</div>');
+  html = html.replace(/<h2>(.*(?:warning|risk|invalidation|danger|⚠|❌|red.?flag|rug).*)<\/h2>/gi, '</div><div class="ai-section warning"><div class="ai-section-title">$1</div>');
 
   // Bold and italic
   html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-  html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+  html = html.replace(/_([^_\n]+?)_/g, '<em>$1</em>');
 
-  // Horizontal rule
+  // Horizontal rules
   html = html.replace(/^---+$/gm, '<hr>');
+  html = html.replace(/^===+$/gm, '<hr>');
 
-  // Section detection - Entry/Stop Loss/Target/Warning blocks
-  html = html.replace(/<h2>(.*(?:entry|entr[ée]|zone d'entr).*)<\/h2>/gi, '</div><div class="ai-section entry"><div class="ai-section-title">$1</div>');
-  html = html.replace(/<h2>(.*(?:stop.?loss|SL|invalidat).*)<\/h2>/gi, '</div><div class="ai-section stoploss"><div class="ai-section-title">$1</div>');
-  html = html.replace(/<h2>(.*(?:take.?profit|target|TP|objectif).*)<\/h2>/gi, '</div><div class="ai-section target"><div class="ai-section-title">$1</div>');
-  html = html.replace(/<h2>(.*(?:warning|risk|invalidation|danger|⚠|❌).*)<\/h2>/gi, '</div><div class="ai-section warning"><div class="ai-section-title">$1</div>');
+  // Checkmarks and X marks
+  html = html.replace(/^✓\s*(.+)$/gm, '<div style="color:var(--green);padding:3px 0">✅ $1</div>');
+  html = html.replace(/^✗\s*(.+)$/gm, '<div style="color:var(--red);padding:3px 0">❌ $1</div>');
+
+  // Verdict badges
+  html = html.replace(/\b(BUY)\b(?!\s*(?:ratio|pressure|sell))/g, '<span class="ai-verdict buy">BUY</span>');
+  html = html.replace(/\b(SELL)\b(?!\s*(?:ratio|pressure))/g, '<span class="ai-verdict sell">SELL</span>');
+  html = html.replace(/\b(WAIT)\b/g, '<span class="ai-verdict wait">WAIT</span>');
+  html = html.replace(/\b(AVOID)\b/g, '<span class="ai-verdict avoid">AVOID</span>');
+  html = html.replace(/\b(SPECULATION)\b/g, '<span class="ai-verdict wait">SPECULATION</span>');
+
+  // Risk indicators inline
+  html = html.replace(/🔴\s*(Critical|High|Danger)/gi, '<span style="color:var(--red);font-weight:600">🔴 $1</span>');
+  html = html.replace(/🟠\s*(High|Moderate|Medium)/gi, '<span style="color:var(--yellow);font-weight:600">🟠 $1</span>');
+  html = html.replace(/🟢\s*(Low|Good|Safe)/gi, '<span style="color:var(--green);font-weight:600">🟢 $1</span>');
 
   // Lists
   html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-  html = html.replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>');
+  html = html.replace(/^• (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/^\d+[\.\)]\s*(.+)$/gm, '<li>$1</li>');
   html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
 
-  // Paragraphs - wrap loose text in <p>
-  html = html.replace(/^(?!<[hultdos]|<\/)(.+)$/gm, (match) => {
+  // Paragraphs
+  html = html.replace(/^(?!<[hultdos\/<]|<span|<div)(.+)$/gm, (match) => {
     if (match.trim() === '') return '';
     return `<p>${match}</p>`;
   });
 
-  // Close any open ai-section divs
-  // Count opens vs closes
+  // Final Verdict / Bottom line detection
+  html = html.replace(/<p>(Final Verdict|Bottom Line|Conclusion|TLDR|TL;DR)(.*)$/gim, '<div class="ai-section warning"><div class="ai-section-title">$1</div><p>$2');
+
+  // Close open ai-section divs
   const opens = (html.match(/<div class="ai-section/g) || []).length;
-  const closes = (html.match(/<\/div>/g) || []).length - opens;
+  const closeCount = (html.match(/<\/div>/g) || []).length;
+  const sectionDivCloses = closeCount - opens;
   if (opens > 0) {
-    html += '</div>'.repeat(Math.max(0, opens - closes));
-    // Remove the first stray </div> at the beginning
+    html += '</div>'.repeat(Math.max(0, opens * 2 - closeCount));
     html = html.replace(/^<\/div>/, '');
   }
 
-  // Clean up empty paragraphs
+  // Clean up
   html = html.replace(/<p>\s*<\/p>/g, '');
   html = html.replace(/<p><hr><\/p>/g, '<hr>');
+  html = html.replace(/<ul>\s*<\/ul>/g, '');
 
   return html;
 }
