@@ -863,7 +863,7 @@ body {
 <header class="header">
   <h1>⚡ AI SNIPER PRO</h1>
   <p>🎯 Smart Trailing • DCA Out • Momentum Exit • Whale Detection • Moon Bags</p>
-  <span class="version-badge">v6.6 DATA-DRIVEN</span>
+  <span class="version-badge">v6.7 DATA-DRIVEN</span>
   <span class="mode-badge" id="modeBadge">🔴 STOPPED</span>
 </header>
 
@@ -922,6 +922,7 @@ body {
   <button class="ctrl-btn" id="startBtn" onclick="startBot()">▶ START</button>
   <button class="ctrl-btn secondary" onclick="openSettings()">⚙️ SETTINGS</button>
   <button class="ctrl-btn secondary" onclick="openStats()">📊 STATS</button>
+  <button class="ctrl-btn secondary" onclick="clearCache()">🔄 CLEAR CACHE</button>
   <button class="ctrl-btn secondary" onclick="exportData()">📤 EXPORT</button>
   <button class="ctrl-btn secondary" onclick="document.getElementById('importFile').click()">📥 IMPORT</button>
   <input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display:none">
@@ -1628,7 +1629,7 @@ function logSkipped(symbol, address, reason, score = null) {
 function exportData() {
   const exportObj = {
     exportDate: new Date().toISOString(),
-    version: 'v6.6',
+    version: 'v6.7',
     
     // Current state
     state: {
@@ -2223,12 +2224,23 @@ function importData(event) {
 }
 
 // ══════════════════════════════════════
-// CACHE SYSTEM - 1 HOUR
+// CACHE SYSTEM - 20 MIN (was 1h - too long!)
 // ══════════════════════════════════════
 const analyzedCache = new Map();
-const CACHE_DURATION = 60 * 60 * 1000;
+const CACHE_DURATION = 20 * 60 * 1000; // 20 minutes
+let lastCacheClear = Date.now();
 
 function getCachedAnalysis(address) {
+  // Auto-clear cache every 30 minutes to allow re-trading
+  if (Date.now() - lastCacheClear > 30 * 60 * 1000) {
+    const oldSize = analyzedCache.size;
+    analyzedCache.clear();
+    lastCacheClear = Date.now();
+    addLog('🔄', `Cache auto-cleared (was ${oldSize} entries)`);
+    $('cacheCount').textContent = '0';
+    return null;
+  }
+  
   const cached = analyzedCache.get(address);
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
     return cached.result;
@@ -2238,14 +2250,22 @@ function getCachedAnalysis(address) {
 
 function setCachedAnalysis(address, result) {
   analyzedCache.set(address, { result, timestamp: Date.now() });
-  // Cleanup old entries
-  if (analyzedCache.size > 2000) {
+  // Cleanup old entries (keep max 1500)
+  if (analyzedCache.size > 1500) {
     const entries = [...analyzedCache.entries()]
       .sort((a, b) => a[1].timestamp - b[1].timestamp)
-      .slice(0, 500);
+      .slice(0, 400);
     entries.forEach(([k]) => analyzedCache.delete(k));
   }
   $('cacheCount').textContent = analyzedCache.size;
+}
+
+function clearCache() {
+  const oldSize = analyzedCache.size;
+  analyzedCache.clear();
+  lastCacheClear = Date.now();
+  $('cacheCount').textContent = '0';
+  addLog('🗑️', `Cache cleared manually (${oldSize} entries removed)`);
 }
 
 // ══════════════════════════════════════
@@ -3963,7 +3983,7 @@ async function scan() {
   const tradingNow = new Set();
   const existingAddresses = new Set(positions.map(p => p.address));
   const existingSymbols = new Set(positions.map(p => p.symbol));
-  const historyAddresses = new Set(history.slice(0, 200).map(h => h.address));
+  const historyAddresses = new Set(history.slice(0, 50).map(h => h.address));
   
   for (const opp of topOpps) {
     if (balance < settings.positionSize) break;
@@ -4121,20 +4141,27 @@ function calculateScore(pair, settings) {
   if (/[^\w\s]/.test(symbol)) score -= 10;   // Special chars
   
   // ═══════════════════════════════════════════════════════════════
-  // MARKET CAP (data: 200k-1M = 34.7% WR, +$0.63 avg = BEST)
+  // MARKET CAP (UPDATED with latest data)
+  // 200k-1M: +$97, 35.3% WR = BEST
+  // 10k-50k: +$98, 36.8% WR = GOOD (surprise!)
+  // 50k-200k: -$160, 37.8% WR = BAD (good WR but bigger losses)
   // ═══════════════════════════════════════════════════════════════
   if (mc >= 200000 && mc <= 1000000) {
     score += 25;  // 🏆 BEST RANGE (data proven!)
-  } else if (mc >= 100000 && mc < 200000) {
-    score += 15;  // Good
+  } else if (mc >= 30000 && mc < 50000) {
+    score += 12;  // NEW: Actually performs well!
   } else if (mc >= 50000 && mc < 100000) {
-    score += 8;   // OK
+    score -= 5;   // REDUCED: Part of bad 50k-200k range
+  } else if (mc >= 100000 && mc < 200000) {
+    score -= 3;   // REDUCED: Part of bad 50k-200k range
   } else if (mc > 1000000 && mc <= 2000000) {
-    score += 5;   // Getting big
+    score += 5;   // OK
   } else if (mc > 2000000) {
-    score -= 5;   // Too big, less upside
-  } else if (mc < 50000) {
-    score -= 15;  // data: 10k-50k = -$3.33 avg = BAD
+    score -= 5;   // Too big
+  } else if (mc >= 10000 && mc < 30000) {
+    score += 8;   // Small but OK
+  } else if (mc < 10000) {
+    score -= 20;  // Too micro, risky
   }
   
   // ═══════════════════════════════════════════════════════════════
@@ -4486,7 +4513,7 @@ loadFromStorage();
 updateUI();
 renderPositions();
 renderHistory();
-addLog('💡', 'AI Sniper Pro v6.6 — DATA-DRIVEN: MC 200k-1M, Anti-FOMO scoring, SL off');
+addLog('💡', 'AI Sniper Pro v6.7 — Cache 20min + auto-clear, MC optimized, history 50');
 </script>
 </body>
-</html>
+</html>v
