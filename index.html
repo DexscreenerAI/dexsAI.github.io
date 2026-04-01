@@ -2031,7 +2031,20 @@ async function fetchDexScreener(url, options = {}) {
     }
   }
 
-  // 1) Try backend Railway proxy
+  // 1) Try direct DexScreener API
+  try {
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'Accept': 'application/json' }
+    });
+    if (response && response.ok) {
+      return response;
+    }
+  } catch (e) {
+    console.warn('Direct DexScreener fetch failed:', e.message);
+  }
+
+  // 2) Try backend Railway proxy
   try {
     const proxyUrl = convertToBackendProxy(url);
     if (proxyUrl) {
@@ -2047,7 +2060,7 @@ async function fetchDexScreener(url, options = {}) {
     console.warn('Backend proxy failed:', e.message);
   }
 
-  // 2) Fallback: public CORS proxies
+  // 3) Fallback: public CORS proxies
   const publicProxies = [
     'https://api.allorigins.win/raw?url=',
     'https://corsproxy.io/?'
