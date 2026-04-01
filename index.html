@@ -1760,6 +1760,7 @@ body {
   }
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -4139,6 +4140,7 @@ function renderMessages() {
         <div class="msg-oracle-label"><span style="font-size:12px">📊</span> DEX AI</div>`;
       if (msg.analysis) {
         html += renderAnalysis(msg.analysis);
+        html += `<button onclick="downloadAnalysis(this)" style="width:100%;padding:12px;margin-top:8px;background:linear-gradient(135deg,var(--purple),var(--cyan));border:none;border-radius:8px;color:#000;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">📸 DOWNLOAD & SHARE</button>`;
       } else if (msg.html) {
         html += msg.html;
       } else if (msg.text) {
@@ -4149,6 +4151,45 @@ function renderMessages() {
   }
   $('msgContainer').innerHTML = html;
   scrollToLastUserMessage();
+}
+
+async function downloadAnalysis(btn) {
+  const oracle = btn.closest('.msg-oracle');
+  if (!oracle) return;
+  btn.textContent = '⏳ Generating...';
+  btn.disabled = true;
+  try {
+    // Hide the share button during capture
+    btn.style.display = 'none';
+
+    // Add watermark
+    const watermark = document.createElement('div');
+    watermark.style.cssText = 'text-align:center;padding:10px;font-family:var(--mono);font-size:11px;color:var(--cyan);letter-spacing:1.5px';
+    watermark.textContent = '🔍 dexscreenerai.com';
+    oracle.appendChild(watermark);
+
+    const canvas = await html2canvas(oracle, {
+      backgroundColor: '#060a10',
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      scrollY: -window.scrollY
+    });
+
+    oracle.removeChild(watermark);
+    btn.style.display = 'flex';
+
+    const link = document.createElement('a');
+    const symbol = oracle.querySelector('.msg-oracle-label')?.nextElementSibling?.querySelector('[style*="font-size:20px"], [style*="font-size:18px"]')?.textContent?.trim() || 'analysis';
+    link.download = `DexAI_${symbol.replace(/[^a-zA-Z0-9$]/g,'')}_${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch(e) {
+    console.error('Screenshot failed:', e);
+    btn.style.display = 'flex';
+  }
+  btn.innerHTML = '📸 DOWNLOAD & SHARE';
+  btn.disabled = false;
 }
 
 function scrollToBottom() {

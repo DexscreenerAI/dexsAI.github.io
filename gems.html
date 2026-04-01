@@ -612,6 +612,7 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
   .progress-stat-num { font-size: 20px; }
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -1038,34 +1039,48 @@ async function startHunt() {
                       (pair.info?.description || '').toLowerCase().includes('cto');
         if (isCTO) score += 5;
         
-        // Rugcheck for Solana
+        // Rugcheck (all chains)
         let rugStatus = 'unknown';
         let rugRisks = [];
-        if (pair.chainId === 'solana') {
-          try {
-            const rugRes = await fetch(`https://api.rugcheck.xyz/v1/tokens/${cand.address}/report/summary`, { signal: AbortSignal.timeout(2500) });
+        try {
+          const rugRes = await fetch(`https://api.rugcheck.xyz/v1/tokens/${cand.address}/report/summary`, { signal: AbortSignal.timeout(3000) });
+          if (rugRes.ok) {
             const rug = await rugRes.json();
-            rugRisks = rug.risks || [];
-            if (rug.mintAuthority) { 
-              continue; // SKIP - too risky
+            rugRisks = (rug.risks || []).map(r => r.name || r.description || 'Unknown');
+            const risksLower = rugRisks.map(r => r.toLowerCase());
+
+            // Honeypot or mint = SKIP
+            if (risksLower.some(r => r.includes('honeypot') || r.includes('honey pot'))) continue;
+            if (rug.mintAuthority || risksLower.some(r => r.includes('mint') && r.includes('enabl'))) continue;
+
+            // Freeze = heavy penalty
+            if (rug.freezeAuthority || risksLower.some(r => r.includes('freeze') && r.includes('enabl'))) {
+              score -= 15;
+              rugStatus = 'warning';
             }
-            if (rug.freezeAuthority) { 
-              score -= 15; 
-              rugStatus = 'warning'; 
+            // Rug/scam flag
+            else if (risksLower.some(r => r.includes('rug') || r.includes('scam'))) {
+              continue; // SKIP
             }
-            else if (rugRisks.length === 0) { 
-              score += 15; // Bonus for clean rug check
-              rugStatus = 'good'; 
+            // Clean
+            else if (rugRisks.length === 0) {
+              score += 15;
+              rugStatus = 'good';
             }
-            else if (rugRisks.length <= 2) { 
-              rugStatus = 'warning'; 
+            // Few risks
+            else if (rugRisks.length <= 2) {
+              rugStatus = 'warning';
               score -= 5;
             }
-            else { 
-              continue; // SKIP - too many risks
+            // Too many risks
+            else {
+              continue; // SKIP
             }
-          } catch(e) {}
-        }
+
+            // Concentrated holders penalty
+            if (risksLower.some(r => r.includes('top 10') || r.includes('concentrated'))) score -= 10;
+          }
+        } catch(e) {}
         
         enriched.push({
           symbol: pair.baseToken?.symbol || '???',
@@ -1316,6 +1331,7 @@ function renderResults(gems, aiRanking) {
         </div>
         <div class="gem-actions">
           <button class="gem-btn app" onclick="openAppNewTab('${g.address}', '${g.chain}')">🏠 Open in App</button>
+          <button class="gem-btn" onclick="downloadGemCard(this)" style="background:var(--purple);color:#fff;border-color:var(--purple)">📸 Share</button>
         </div>
       </div>
     </div>`;
@@ -1334,8 +1350,41 @@ function resetHunt() {
 }
 
 function openAppNewTab(address, chain) {
-  // Open app in new tab with analyze action
   window.open(`index.html?ca=${address}&action=analyze`, '_blank');
+}
+
+async function downloadGemCard(btn) {
+  const card = btn.closest('.gem-card');
+  if (!card) return;
+  btn.textContent = '⏳...';
+  btn.disabled = true;
+  try {
+    // Add watermark temporarily
+    const watermark = document.createElement('div');
+    watermark.style.cssText = 'text-align:center;padding:8px;font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:1px;border-top:1px solid var(--card-border);margin-top:8px';
+    watermark.textContent = '🔍 dexscreenerai.com';
+    card.appendChild(watermark);
+
+    const canvas = await html2canvas(card, {
+      backgroundColor: '#060a10',
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+
+    card.removeChild(watermark);
+
+    const link = document.createElement('a');
+    const symbol = card.querySelector('.gem-symbol')?.textContent?.trim() || 'gem';
+    link.download = `DexAI_Gem_${symbol.replace('$','')}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch(e) {
+    console.error('Screenshot failed:', e);
+    alert('Screenshot failed. Try again.');
+  }
+  btn.textContent = '📸 Share';
+  btn.disabled = false;
 }
 </script>
 
