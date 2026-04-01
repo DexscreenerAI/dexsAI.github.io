@@ -493,8 +493,8 @@ body {
 
 <!-- HEADER -->
 <header class="header">
-  <h1>⚡ AI AUTO SNIPER v4</h1>
-  <p>🤖 Smart Cache • ⚡ Quick + 🌙 Long • Aggressive Mode • 40 Keywords</p>
+  <h1>⚡ AI SNIPER v5</h1>
+  <p>💾 1h Cache • 70 Keywords • Max 6 Quick + 4 Long • Aggressive</p>
   <div class="mode-badge" id="modeBadge">🔴 STOPPED</div>
 </header>
 
@@ -561,7 +561,15 @@ body {
       </div>
       <div class="setting">
         <label>📊 MIN SCORE</label>
-        <input type="number" id="minScore" value="55" min="30" max="90">
+        <input type="number" id="minScore" value="45" min="20" max="90">
+      </div>
+      <div class="setting">
+        <label>⚡ MAX QUICK</label>
+        <input type="number" id="maxQuick" value="6" min="1" max="15">
+      </div>
+      <div class="setting">
+        <label>🌙 MAX LONG</label>
+        <input type="number" id="maxLong" value="4" min="1" max="10">
       </div>
       <div class="setting">
         <label>🔗 CHAINS</label>
@@ -658,10 +666,10 @@ const $ = id => document.getElementById(id);
 const AI_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/chat';
 
 // ═══════════════════════════════════════════
-// CACHE - Remember analyzed tokens
+// CACHE - Remember analyzed tokens for 1 HOUR
 // ═══════════════════════════════════════════
 const analyzedCache = new Map(); // { address: { result, timestamp } }
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+const CACHE_DURATION = 60 * 60 * 1000; // 1 HOUR
 
 function getCachedAnalysis(address) {
   const cached = analyzedCache.get(address);
@@ -673,11 +681,11 @@ function getCachedAnalysis(address) {
 
 function setCachedAnalysis(address, result) {
   analyzedCache.set(address, { result, timestamp: Date.now() });
-  // Clean old entries
-  if (analyzedCache.size > 500) {
+  // Clean old entries if too many
+  if (analyzedCache.size > 1000) {
     const oldest = [...analyzedCache.entries()]
       .sort((a, b) => a[1].timestamp - b[1].timestamp)
-      .slice(0, 100);
+      .slice(0, 200);
     oldest.forEach(([k]) => analyzedCache.delete(k));
   }
 }
@@ -708,13 +716,13 @@ function isOverextended(pair) {
   const chg6h = parseFloat(pair.priceChange?.h6) || 0;
   
   // Only skip EXTREME cases
-  if (chg1h > 150) return { skip: true, reason: 'Pumped +150% in 1h' };
-  if (chg5m > 80) return { skip: true, reason: 'Spiked +80% in 5min' };
-  if (chg6h > 300) return { skip: true, reason: 'Already 4x in 6h' };
+  if (chg1h > 200) return { skip: true, reason: '+200% in 1h' };
+  if (chg5m > 100) return { skip: true, reason: '+100% in 5min' };
+  if (chg6h > 400) return { skip: true, reason: '+400% in 6h' };
   
   // Only skip severe dumps
-  if (chg5m < -30) return { skip: true, reason: 'Dumping -30% in 5min' };
-  if (chg1h < -40) return { skip: true, reason: 'Crashing -40% in 1h' };
+  if (chg5m < -40) return { skip: true, reason: '-40% in 5min' };
+  if (chg1h < -50) return { skip: true, reason: '-50% in 1h' };
   
   return { skip: false };
 }
@@ -723,25 +731,19 @@ function isOverextended(pair) {
 function getMomentumScore(pair) {
   const buys5m = pair.txns?.m5?.buys || 0;
   const sells5m = pair.txns?.m5?.sells || 0;
-  const buys1h = pair.txns?.h1?.buys || 0;
-  const sells1h = pair.txns?.h1?.sells || 0;
-  
   const total5m = buys5m + sells5m;
-  const total1h = buys1h + sells1h;
   
-  // If no recent transactions, allow it (new token)
-  if (total5m < 3) return { good: true, strength: 'new', reason: 'New/quiet token' };
+  // If no/few recent transactions, allow it (new token)
+  if (total5m < 5) return { good: true, strength: 'new', reason: 'New token' };
   
-  const ratio5m = total5m > 0 ? buys5m / total5m : 0.5;
-  const ratio1h = total1h > 0 ? buys1h / total1h : 0.5;
+  const ratio5m = buys5m / total5m;
   
-  // Only skip if HEAVY selling
-  if (ratio5m < 0.30) return { good: false, reason: 'Heavy selling in 5min' };
-  if (ratio1h < 0.30) return { good: false, reason: 'Heavy selling in 1h' };
+  // Only skip if VERY heavy selling
+  if (ratio5m < 0.25) return { good: false, reason: 'Heavy dump' };
   
   // Determine strength
-  if (ratio5m > 0.60 && ratio1h > 0.55) return { good: true, strength: 'strong' };
-  if (ratio5m > 0.50) return { good: true, strength: 'moderate' };
+  if (ratio5m > 0.60) return { good: true, strength: 'strong' };
+  if (ratio5m > 0.45) return { good: true, strength: 'moderate' };
   
   return { good: true, strength: 'weak' };
 }
@@ -750,11 +752,10 @@ async function analyzeForEntry(pair) {
   const symbol = pair.baseToken?.symbol || 'UNKNOWN';
   const address = pair.baseToken?.address;
   
-  // Check cache first
+  // Check cache first - if QUICK or LONG, return immediately (no AI call)
   const cached = getCachedAnalysis(address);
   if (cached) {
-    addLog('💾', `Cache hit for $${esc(symbol)}`);
-    return cached;
+    return cached; // Return cached result, no AI call needed
   }
   
   const mc = parseFloat(pair.marketCap) || 0;
@@ -763,32 +764,22 @@ async function analyzeForEntry(pair) {
   const chg5m = parseFloat(pair.priceChange?.m5) || 0;
   const chg1h = parseFloat(pair.priceChange?.h1) || 0;
   const chg6h = parseFloat(pair.priceChange?.h6) || 0;
-  const chg24h = parseFloat(pair.priceChange?.h24) || 0;
-  const buys = pair.txns?.h24?.buys || 0;
-  const sells = pair.txns?.h24?.sells || 0;
   const buys5m = pair.txns?.m5?.buys || 0;
   const sells5m = pair.txns?.m5?.sells || 0;
-  const buyRatio = (buys + sells) > 0 ? ((buys / (buys + sells)) * 100).toFixed(0) : 50;
   const buyRatio5m = (buys5m + sells5m) > 0 ? ((buys5m / (buys5m + sells5m)) * 100).toFixed(0) : 50;
   
-  const prompt = `Crypto trader. Analyze this memecoin - be AGGRESSIVE, we want to trade:
+  const prompt = `Crypto sniper. Quick analysis:
 
-$${symbol}
-- MC: $${fN(mc)} | Liq: $${fN(liq)} | Vol24h: $${fN(vol)}
-- 5m: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(1)}% | 1h: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(1)}% | 6h: ${chg6h > 0 ? '+' : ''}${chg6h.toFixed(1)}%
-- 5min txns: ${buys5m}B/${sells5m}S (${buyRatio5m}%) | 24h: ${buys}B/${sells}S (${buyRatio}%)
+$${symbol} | MC: $${fN(mc)} | Liq: $${fN(liq)}
+5m: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(0)}% | 1h: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(0)}% | 6h: ${chg6h > 0 ? '+' : ''}${chg6h.toFixed(0)}%
+Buys 5m: ${buyRatio5m}%
 
-DECIDE (be aggressive, we WANT trades):
-- QUICK = Active pump, take 15-20% fast
-- LONG = Low MC gem, hold for 50%+
-- SKIP = Only if clearly dumping hard
-
-Reply: QUICK, LONG, or SKIP + 8 words max`;
+Reply ONLY: QUICK, LONG, or SKIP`;
 
   const response = await askAI(prompt);
   const result = response.toUpperCase();
   
-  // Cache the result
+  // Cache the result for 1 hour
   setCachedAnalysis(address, result);
   
   return result;
@@ -796,19 +787,14 @@ Reply: QUICK, LONG, or SKIP + 8 words max`;
 
 async function analyzeForPump(pair) {
   const symbol = pair.baseToken?.symbol || 'UNKNOWN';
-  const mc = parseFloat(pair.marketCap) || 0;
-  const liq = parseFloat(pair.liquidity?.usd) || 0;
   const chg5m = parseFloat(pair.priceChange?.m5) || 0;
   const chg1h = parseFloat(pair.priceChange?.h1) || 0;
   const buys5m = pair.txns?.m5?.buys || 0;
   const sells5m = pair.txns?.m5?.sells || 0;
   const buyRatio5m = (buys5m + sells5m) > 0 ? ((buys5m / (buys5m + sells5m)) * 100).toFixed(0) : 50;
   
-  const prompt = `$${symbol} position check:
-MC: $${fN(mc)} | 5m: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(1)}% | 1h: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(1)}%
-5min: ${buys5m}B/${sells5m}S (${buyRatio5m}%)
-
-PUMP (hold), HOLD (uncertain), or DUMP (sell)? 5 words max`;
+  const prompt = `$${symbol} | 5m: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(0)}% | 1h: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(0)}% | Buys: ${buyRatio5m}%
+PUMP, HOLD, or DUMP?`;
 
   const response = await askAI(prompt);
   return response.toUpperCase();
@@ -895,7 +881,9 @@ function getSettings() {
     takeProfit: parseInt($('takeProfit').value) || 25,
     stopLoss: parseInt($('stopLoss').value) || 12,
     maxHold: parseInt($('maxHold').value) || 15,
-    minScore: parseInt($('minScore').value) || 55,
+    minScore: parseInt($('minScore').value) || 45,
+    maxQuick: parseInt($('maxQuick').value) || 6,
+    maxLong: parseInt($('maxLong').value) || 4,
     chains: $('chains').value
   };
 }
@@ -973,6 +961,19 @@ async function scan() {
   if (!isRunning) return;
   
   const settings = getSettings();
+  const maxQuick = parseInt($('maxQuick').value) || 6;
+  const maxLong = parseInt($('maxLong').value) || 4;
+  
+  // CHECK IF POSITIONS ARE FULL - SKIP ENTIRE SCAN
+  const quickCount = positions.filter(p => p.tradeType === 'QUICK').length;
+  const longCount = positions.filter(p => p.tradeType === 'LONG').length;
+  
+  if (quickCount >= maxQuick && longCount >= maxLong) {
+    $('scannerText').textContent = `⏸️ Full: ${quickCount}⚡ + ${longCount}🌙 — Waiting...`;
+    addLog('⏸️', `Positions full (${quickCount}⚡/${maxQuick} + ${longCount}🌙/${maxLong}) — Skipping scan`);
+    return;
+  }
+  
   const chains = settings.chains === 'all' ? ['solana', 'ethereum'] : [settings.chains];
   const allPairs = new Map();
   let sourcesScanned = 0;
@@ -983,7 +984,7 @@ async function scan() {
     const res = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      for (const t of data.slice(0, 80)) {
+      for (const t of data.slice(0, 100)) {
         if (t.tokenAddress && chains.includes(t.chainId)) {
           allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'new', boost: 12 });
         }
@@ -994,11 +995,11 @@ async function scan() {
   
   // ═══ SOURCE 2: Top boosted ═══
   try {
-    $('scannerText').textContent = '🚀 Boosted tokens...';
+    $('scannerText').textContent = '🚀 Boosted...';
     const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      for (const t of data.slice(0, 80)) {
+      for (const t of data.slice(0, 100)) {
         if (t.tokenAddress && chains.includes(t.chainId) && !allPairs.has(t.tokenAddress)) {
           allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'boosted', boost: 18 });
         }
@@ -1013,7 +1014,7 @@ async function scan() {
     const res = await fetch('https://api.dexscreener.com/token-boosts/latest/v1', { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      for (const t of data.slice(0, 60)) {
+      for (const t of data.slice(0, 80)) {
         if (t.tokenAddress && chains.includes(t.chainId) && !allPairs.has(t.tokenAddress)) {
           allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'boost-new', boost: 15 });
         }
@@ -1030,9 +1031,9 @@ async function scan() {
       const data = await res.json();
       if (data.pairs) {
         const gainers = data.pairs
-          .filter(p => p.chainId === chain && parseFloat(p.priceChange?.h1) > 3)
+          .filter(p => p.chainId === chain && parseFloat(p.priceChange?.h1) > 0)
           .sort((a, b) => (parseFloat(b.priceChange?.h1) || 0) - (parseFloat(a.priceChange?.h1) || 0))
-          .slice(0, 40);
+          .slice(0, 60);
         
         for (const p of gainers) {
           const addr = p.baseToken?.address;
@@ -1045,47 +1046,39 @@ async function scan() {
     }
   } catch(e) {}
   
-  // ═══ SOURCE 5: MASSIVE keyword search (more keywords) ═══
+  // ═══ SOURCE 5: MASSIVE keyword search (70 keywords) ═══
   const searchQueries = [
-    // Hot meme terms
+    // Meme culture
     'moon', 'pump', 'gem', 'degen', 'pepe', 'ai', 'meme', 'inu', 'wojak', 'based',
     'trump', 'elon', 'cat', 'dog', 'frog', 'baby', 'doge', 'shib', 'bonk', 'wif',
-    'lambo', 'rich', 'gold', 'diamond', '100x', 'rocket', 'bull', 'bear', 'ape',
-    'chad', 'giga', 'mega', 'super', 'king', 'queen', 'god', 'devil', 'angel',
+    'lambo', 'rich', 'gold', 'diamond', 'rocket', 'bull', 'ape', 'chad', 'giga',
+    'king', 'god', 'sol', 'eth', 'btc', 'nft', 'web3', 'pixel', 'punk', 'rare',
+    'epic', 'legend', 'alpha', 'sigma', 'safe', 'new', 'hot', 'fire', 'burn',
+    'cope', 'kek', 'wagmi', 'ser', 'fren', 'anon', 'whale', 'dragon', 'panda',
+    'monkey', 'lion', 'wolf', 'fox', 'bear', 'bird', 'fish', 'pig', 'rat',
     // Letters
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-    // Numbers
-    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-    '69', '420', '1000', '100', '777', '666', '999',
-    // Crypto
-    'sol', 'eth', 'btc', 'nft', 'defi', 'web3', 'meta', 'verse', 'pixel', 'punk',
-    'rare', 'epic', 'legend', 'titan', 'alpha', 'beta', 'omega', 'sigma',
-    'safe', 'fair', 'new', 'next', 'hot', 'fire', 'burn', 'stake',
-    // Meme culture
-    'cope', 'seethe', 'kek', 'lol', 'lmao', 'rekt', 'wagmi', 'ngmi',
-    'wen', 'ser', 'fren', 'anon', 'noob', 'whale', 'shrimp', 'crab',
-    // Animals
-    'bear', 'fish', 'bird', 'lion', 'tiger', 'wolf', 'fox', 'rat', 'bat', 
-    'pig', 'cow', 'duck', 'goat', 'snake', 'dragon', 'panda', 'monkey',
+    // Numbers  
+    '1', '2', '3', '4', '5', '69', '420', '100', '777', '999', '1000',
     // Extra
-    'coin', 'token', 'cash', 'money', 'win', 'bet', 'play', 'game',
-    'cute', 'funny', 'musk', 'joe', 'biden', 'usa', 'china', 'japan'
+    'coin', 'token', 'cash', 'win', 'play', 'game', 'cute', 'musk', 'usa', 'japan',
+    'fair', 'mega', 'super', 'hyper', 'turbo', 'fast', 'speed', 'power', 'max'
   ];
   
-  // Shuffle and take 40 random queries
-  const shuffled = searchQueries.sort(() => Math.random() - 0.5).slice(0, 40);
+  // Take 70 random keywords
+  const shuffled = searchQueries.sort(() => Math.random() - 0.5).slice(0, 70);
   
   for (let i = 0; i < shuffled.length; i++) {
     const q = shuffled[i];
-    $('scannerText').textContent = `🔍 "${q}" (${i+1}/${shuffled.length})...`;
+    $('scannerText').textContent = `🔍 "${q}" (${i+1}/70)...`;
     
     try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${q}`, { signal: AbortSignal.timeout(5000) });
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${q}`, { signal: AbortSignal.timeout(4000) });
       const data = await res.json();
       
       if (data.pairs) {
-        for (const p of data.pairs.slice(0, 50)) {
+        for (const p of data.pairs.slice(0, 60)) {
           const addr = p.baseToken?.address;
           if (addr && chains.includes(p.chainId) && !allPairs.has(addr)) {
             allPairs.set(addr, { address: addr, chain: p.chainId, source: 'search', boost: 0, pair: p });
@@ -1095,8 +1088,8 @@ async function scan() {
       sourcesScanned++;
     } catch(e) {}
     
-    // Small delay every 8 queries
-    if (i % 8 === 7) await new Promise(r => setTimeout(r, 80));
+    // Faster scanning
+    if (i % 15 === 14) await new Promise(r => setTimeout(r, 30));
   }
   
   $('scannerText').textContent = `⚙️ Enriching ${allPairs.size} tokens...`;
@@ -1127,8 +1120,8 @@ async function scan() {
         const mc = parseFloat(pair.marketCap) || 0;
         const liq = parseFloat(pair.liquidity?.usd) || 0;
         
-        // LESS STRICT filters - allow more tokens
-        if (mc > 3000 && mc < 10000000 && liq > 1000) {
+        // Very lenient filters - allow almost everything
+        if (mc > 500 && mc < 50000000 && liq > 200) {
           pair._source = cand.source;
           pair._boost = cand.boost;
           enriched.push(pair);
@@ -1136,7 +1129,7 @@ async function scan() {
       }
     } catch(e) {}
     
-    if (processed % 15 === 0) await new Promise(r => setTimeout(r, 30));
+    if (processed % 20 === 0) await new Promise(r => setTimeout(r, 15));
   }
   
   scannedCount = enriched.length;
@@ -1154,18 +1147,15 @@ async function scan() {
   oppsCount = opportunities.length;
   $('oppsCount').textContent = oppsCount;
   
-  $('scannerText').textContent = `✅ ${oppsCount} opps from ${scannedCount} tokens`;
-  addLog('🔍', `<span class="cyan">${sourcesScanned}</span> sources — <span class="yellow">${scannedCount}</span> tokens — <span class="green">${oppsCount}</span> opps`);
+  $('scannerText').textContent = `✅ ${oppsCount} opps / ${scannedCount} | Cache: ${analyzedCache.size}`;
+  addLog('🔍', `<span class="cyan">${sourcesScanned}</span> src — <span class="yellow">${scannedCount}</span> tokens — <span class="green">${oppsCount}</span> opps — 💾 ${analyzedCache.size}`);
   
-  // TRADE SELECTION - less strict, more trades
-  const maxPositions = 6;
-  const maxQuick = 3;
-  const maxLong = 3;
+  // TRADE SELECTION - use maxQuick/maxLong from start of function
+  const maxPositions = maxQuick + maxLong;
+  const topOpps = opportunities.slice(0, 30);
   
-  const topOpps = opportunities.slice(0, 20); // Check more
-  
-  let quickCount = positions.filter(p => p.tradeType === 'QUICK').length;
-  let longCount = positions.filter(p => p.tradeType === 'LONG').length;
+  let qCount = positions.filter(p => p.tradeType === 'QUICK').length;
+  let lCount = positions.filter(p => p.tradeType === 'LONG').length;
   
   for (const opp of topOpps) {
     if (positions.length >= maxPositions) break;
@@ -1173,68 +1163,76 @@ async function scan() {
     
     const addr = opp.pair.baseToken?.address;
     if (positions.find(p => p.address === addr)) continue;
-    
-    // Skip if already analyzed and cached as SKIP recently
-    const cached = getCachedAnalysis(addr);
-    if (cached && cached.includes('SKIP')) {
-      continue; // Don't re-analyze, just skip
-    }
+    if (history.find(h => h.address === addr)) continue; // Don't re-buy sold tokens
     
     const symbol = opp.pair.baseToken?.symbol || 'UNKNOWN';
     
-    // STEP 1: Overextended check (very lenient now)
+    // CHECK CACHE FIRST - instant trade if cached as QUICK or LONG (no AI call!)
+    const cached = getCachedAnalysis(addr);
+    if (cached) {
+      if (cached.includes('QUICK') && qCount < maxQuick) {
+        addLog('💾', `Cache → QUICK $${esc(symbol)}`);
+        await executeTrade(opp.pair, opp.score, 'QUICK');
+        qCount++;
+        continue;
+      } else if (cached.includes('LONG') && lCount < maxLong) {
+        addLog('💾', `Cache → LONG $${esc(symbol)}`);
+        await executeTrade(opp.pair, opp.score, 'LONG');
+        lCount++;
+        continue;
+      } else if (cached.includes('SKIP')) {
+        continue; // Skip silently
+      }
+    }
+    
+    // Quick pre-checks (no AI)
     const overCheck = isOverextended(opp.pair);
     if (overCheck.skip) {
-      addLog('⚠️', `<span class="yellow">SKIP</span> $${esc(symbol)} — ${overCheck.reason}`);
       setCachedAnalysis(addr, 'SKIP');
       continue;
     }
     
-    // STEP 2: Momentum (very lenient)
     const momentumCheck = getMomentumScore(opp.pair);
     if (!momentumCheck.good) {
-      addLog('📉', `<span class="yellow">SKIP</span> $${esc(symbol)} — ${momentumCheck.reason}`);
       setCachedAnalysis(addr, 'SKIP');
       continue;
     }
     
-    // STEP 3: AI Analysis
+    // AI Analysis (only for NEW tokens not in cache)
     try {
-      addLog('🤖', `Analyzing $${esc(symbol)}...`);
+      addLog('🤖', `AI: $${esc(symbol)}...`);
       const analysis = await analyzeForEntry(opp.pair);
       
-      if (analysis.includes('QUICK') && quickCount < maxQuick) {
+      if (analysis.includes('QUICK') && qCount < maxQuick) {
         addLog('⚡', `<span class="cyan">QUICK</span> $${esc(symbol)}`);
         await executeTrade(opp.pair, opp.score, 'QUICK');
-        quickCount++;
-      } else if (analysis.includes('LONG') && longCount < maxLong) {
+        qCount++;
+      } else if (analysis.includes('LONG') && lCount < maxLong) {
         addLog('🌙', `<span class="purple">LONG</span> $${esc(symbol)}`);
         await executeTrade(opp.pair, opp.score, 'LONG');
-        longCount++;
-      } else if (!analysis.includes('SKIP') && !analysis.includes('WAIT')) {
-        // If AI returns something else, default to QUICK if score high
-        if (opp.score >= 70 && quickCount < maxQuick) {
-          addLog('🎯', `Score high — QUICK $${esc(symbol)}`);
+        lCount++;
+      } else if (!analysis.includes('SKIP')) {
+        // Default to QUICK if AI unclear and score good
+        if (opp.score >= 55 && qCount < maxQuick) {
+          addLog('🎯', `Score → QUICK $${esc(symbol)}`);
           await executeTrade(opp.pair, opp.score, 'QUICK');
-          quickCount++;
+          qCount++;
         }
-      } else {
-        addLog('⏭️', `AI: SKIP $${esc(symbol)}`);
       }
     } catch (e) {
-      // Fallback if AI fails
-      if (opp.score >= 65) {
+      // Fallback if AI fails - trade anyway if score good
+      if (opp.score >= 50) {
         const mc = parseFloat(opp.pair.marketCap) || 0;
         const tradeType = mc < 100000 ? 'LONG' : 'QUICK';
-        if ((tradeType === 'QUICK' && quickCount < maxQuick) || (tradeType === 'LONG' && longCount < maxLong)) {
+        if ((tradeType === 'QUICK' && qCount < maxQuick) || (tradeType === 'LONG' && lCount < maxLong)) {
           addLog('🎯', `Fallback: ${tradeType} $${esc(symbol)}`);
           await executeTrade(opp.pair, opp.score, tradeType);
-          if (tradeType === 'QUICK') quickCount++; else longCount++;
+          if (tradeType === 'QUICK') qCount++; else lCount++;
         }
       }
     }
     
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise(r => setTimeout(r, 200));
   }
 }
 
