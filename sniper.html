@@ -1705,6 +1705,168 @@ function calculateStats() {
     byScoreRange,
     byMarketCapRange: byMCRange,
     
+    // NEW: By Chain
+    byChain: (() => {
+      const chains = {};
+      closedTrades.forEach(t => {
+        const c = t.chain || 'unknown';
+        if (!chains[c]) chains[c] = { count: 0, totalPnl: 0, wins: 0 };
+        chains[c].count++;
+        chains[c].totalPnl += t.pnl;
+        if (t.pnl > 0) chains[c].wins++;
+      });
+      Object.keys(chains).forEach(k => {
+        chains[k].winRate = (chains[k].wins / chains[k].count * 100).toFixed(1) + '%';
+        chains[k].avgPnl = (chains[k].totalPnl / chains[k].count).toFixed(2);
+      });
+      return chains;
+    })(),
+    
+    // NEW: By Entry Buy Ratio
+    byEntryBuyRatio: (() => {
+      const ranges = {
+        'weak_0-40%': { count: 0, totalPnl: 0, wins: 0 },
+        'neutral_40-60%': { count: 0, totalPnl: 0, wins: 0 },
+        'strong_60-80%': { count: 0, totalPnl: 0, wins: 0 },
+        'verystrong_80-100%': { count: 0, totalPnl: 0, wins: 0 }
+      };
+      closedTrades.forEach(t => {
+        const br = t.entryBuyRatio5m || 50;
+        let range;
+        if (br < 40) range = 'weak_0-40%';
+        else if (br < 60) range = 'neutral_40-60%';
+        else if (br < 80) range = 'strong_60-80%';
+        else range = 'verystrong_80-100%';
+        ranges[range].count++;
+        ranges[range].totalPnl += t.pnl;
+        if (t.pnl > 0) ranges[range].wins++;
+      });
+      Object.keys(ranges).forEach(k => {
+        ranges[k].winRate = ranges[k].count > 0 ? (ranges[k].wins / ranges[k].count * 100).toFixed(1) + '%' : '0%';
+        ranges[k].avgPnl = ranges[k].count > 0 ? (ranges[k].totalPnl / ranges[k].count).toFixed(2) : '0';
+      });
+      return ranges;
+    })(),
+    
+    // NEW: By Token Age
+    byTokenAge: (() => {
+      const ranges = {
+        'fresh_0-30min': { count: 0, totalPnl: 0, wins: 0 },
+        'young_30-60min': { count: 0, totalPnl: 0, wins: 0 },
+        'medium_1-6h': { count: 0, totalPnl: 0, wins: 0 },
+        'old_6h+': { count: 0, totalPnl: 0, wins: 0 }
+      };
+      closedTrades.forEach(t => {
+        const age = t.tokenAge || 999;
+        let range;
+        if (age < 30) range = 'fresh_0-30min';
+        else if (age < 60) range = 'young_30-60min';
+        else if (age < 360) range = 'medium_1-6h';
+        else range = 'old_6h+';
+        ranges[range].count++;
+        ranges[range].totalPnl += t.pnl;
+        if (t.pnl > 0) ranges[range].wins++;
+      });
+      Object.keys(ranges).forEach(k => {
+        ranges[k].winRate = ranges[k].count > 0 ? (ranges[k].wins / ranges[k].count * 100).toFixed(1) + '%' : '0%';
+        ranges[k].avgPnl = ranges[k].count > 0 ? (ranges[k].totalPnl / ranges[k].count).toFixed(2) : '0';
+      });
+      return ranges;
+    })(),
+    
+    // NEW: By Entry Momentum (5m change)
+    byEntryMomentum5m: (() => {
+      const ranges = {
+        'dumping_<-10%': { count: 0, totalPnl: 0, wins: 0 },
+        'falling_-10-0%': { count: 0, totalPnl: 0, wins: 0 },
+        'flat_0-10%': { count: 0, totalPnl: 0, wins: 0 },
+        'rising_10-30%': { count: 0, totalPnl: 0, wins: 0 },
+        'pumping_30%+': { count: 0, totalPnl: 0, wins: 0 }
+      };
+      closedTrades.forEach(t => {
+        const chg = t.entryChg5m || 0;
+        let range;
+        if (chg < -10) range = 'dumping_<-10%';
+        else if (chg < 0) range = 'falling_-10-0%';
+        else if (chg < 10) range = 'flat_0-10%';
+        else if (chg < 30) range = 'rising_10-30%';
+        else range = 'pumping_30%+';
+        ranges[range].count++;
+        ranges[range].totalPnl += t.pnl;
+        if (t.pnl > 0) ranges[range].wins++;
+      });
+      Object.keys(ranges).forEach(k => {
+        ranges[k].winRate = ranges[k].count > 0 ? (ranges[k].wins / ranges[k].count * 100).toFixed(1) + '%' : '0%';
+        ranges[k].avgPnl = ranges[k].count > 0 ? (ranges[k].totalPnl / ranges[k].count).toFixed(2) : '0';
+      });
+      return ranges;
+    })(),
+    
+    // NEW: By Liquidity Ratio
+    byLiqRatio: (() => {
+      const ranges = {
+        'low_0-5%': { count: 0, totalPnl: 0, wins: 0 },
+        'medium_5-15%': { count: 0, totalPnl: 0, wins: 0 },
+        'high_15-30%': { count: 0, totalPnl: 0, wins: 0 },
+        'veryhigh_30%+': { count: 0, totalPnl: 0, wins: 0 }
+      };
+      closedTrades.forEach(t => {
+        const lr = t.entryLiqRatio || 0;
+        let range;
+        if (lr < 5) range = 'low_0-5%';
+        else if (lr < 15) range = 'medium_5-15%';
+        else if (lr < 30) range = 'high_15-30%';
+        else range = 'veryhigh_30%+';
+        ranges[range].count++;
+        ranges[range].totalPnl += t.pnl;
+        if (t.pnl > 0) ranges[range].wins++;
+      });
+      Object.keys(ranges).forEach(k => {
+        ranges[k].winRate = ranges[k].count > 0 ? (ranges[k].wins / ranges[k].count * 100).toFixed(1) + '%' : '0%';
+        ranges[k].avgPnl = ranges[k].count > 0 ? (ranges[k].totalPnl / ranges[k].count).toFixed(2) : '0';
+      });
+      return ranges;
+    })(),
+    
+    // NEW: Time to profit analysis
+    timingAnalysis: (() => {
+      const withProfit = closedTrades.filter(t => t.timeToFirstProfit !== null && t.timeToFirstProfit > 0);
+      const withPeak = closedTrades.filter(t => t.timeToPeak !== null && t.timeToPeak > 0);
+      return {
+        tradesReachedProfit: withProfit.length,
+        avgTimeToProfit: withProfit.length > 0 ? Math.round(withProfit.reduce((sum, t) => sum + t.timeToFirstProfit, 0) / withProfit.length) + 's' : 'N/A',
+        avgTimeToPeak: withPeak.length > 0 ? Math.round(withPeak.reduce((sum, t) => sum + t.timeToPeak, 0) / withPeak.length) + 's' : 'N/A',
+        neverProfitable: closedTrades.filter(t => t.highestPnlPct <= 0).length,
+        neverProfitablePct: (closedTrades.filter(t => t.highestPnlPct <= 0).length / closedTrades.length * 100).toFixed(1) + '%'
+      };
+    })(),
+    
+    // NEW: Entry volume analysis
+    byEntryVolume5m: (() => {
+      const ranges = {
+        'dead_0-100': { count: 0, totalPnl: 0, wins: 0 },
+        'low_100-1k': { count: 0, totalPnl: 0, wins: 0 },
+        'medium_1k-10k': { count: 0, totalPnl: 0, wins: 0 },
+        'high_10k+': { count: 0, totalPnl: 0, wins: 0 }
+      };
+      closedTrades.forEach(t => {
+        const vol = t.entryVolume5m || 0;
+        let range;
+        if (vol < 100) range = 'dead_0-100';
+        else if (vol < 1000) range = 'low_100-1k';
+        else if (vol < 10000) range = 'medium_1k-10k';
+        else range = 'high_10k+';
+        ranges[range].count++;
+        ranges[range].totalPnl += t.pnl;
+        if (t.pnl > 0) ranges[range].wins++;
+      });
+      Object.keys(ranges).forEach(k => {
+        ranges[k].winRate = ranges[k].count > 0 ? (ranges[k].wins / ranges[k].count * 100).toFixed(1) + '%' : '0%';
+        ranges[k].avgPnl = ranges[k].count > 0 ? (ranges[k].totalPnl / ranges[k].count).toFixed(2) : '0';
+      });
+      return ranges;
+    })(),
+    
     dcaAnalysis: {
       tradesWithDCA: dcaTrades.length,
       tradesWithoutDCA: noDcaTrades.length,
@@ -1764,7 +1926,94 @@ function calculateStats() {
     bestTrades: best5,
     worstTrades: worst5,
     
-    byHourOfDay: byHour
+    byHourOfDay: byHour,
+    
+    // NEW: Correlations & insights
+    correlations: (() => {
+      // High score + low MC
+      const highScoreLowMC = closedTrades.filter(t => t.score >= 85 && t.entryMarketCap < 200000);
+      const highScoreHighMC = closedTrades.filter(t => t.score >= 85 && t.entryMarketCap >= 200000);
+      
+      // Fresh token + high buy ratio
+      const freshHighBuy = closedTrades.filter(t => (t.tokenAge || 999) < 60 && (t.entryBuyRatio5m || 0) >= 60);
+      const freshLowBuy = closedTrades.filter(t => (t.tokenAge || 999) < 60 && (t.entryBuyRatio5m || 0) < 60);
+      
+      // Pumping entry
+      const pumpingEntry = closedTrades.filter(t => (t.entryChg5m || 0) > 20);
+      const calmEntry = closedTrades.filter(t => Math.abs(t.entryChg5m || 0) < 10);
+      
+      return {
+        highScoreLowMC: {
+          count: highScoreLowMC.length,
+          winRate: highScoreLowMC.length > 0 ? (highScoreLowMC.filter(t => t.pnl > 0).length / highScoreLowMC.length * 100).toFixed(1) + '%' : '0%',
+          avgPnl: highScoreLowMC.length > 0 ? (highScoreLowMC.reduce((s,t) => s + t.pnl, 0) / highScoreLowMC.length).toFixed(2) : '0'
+        },
+        highScoreHighMC: {
+          count: highScoreHighMC.length,
+          winRate: highScoreHighMC.length > 0 ? (highScoreHighMC.filter(t => t.pnl > 0).length / highScoreHighMC.length * 100).toFixed(1) + '%' : '0%',
+          avgPnl: highScoreHighMC.length > 0 ? (highScoreHighMC.reduce((s,t) => s + t.pnl, 0) / highScoreHighMC.length).toFixed(2) : '0'
+        },
+        freshTokenHighBuy: {
+          count: freshHighBuy.length,
+          winRate: freshHighBuy.length > 0 ? (freshHighBuy.filter(t => t.pnl > 0).length / freshHighBuy.length * 100).toFixed(1) + '%' : '0%',
+          avgPnl: freshHighBuy.length > 0 ? (freshHighBuy.reduce((s,t) => s + t.pnl, 0) / freshHighBuy.length).toFixed(2) : '0'
+        },
+        freshTokenLowBuy: {
+          count: freshLowBuy.length,
+          winRate: freshLowBuy.length > 0 ? (freshLowBuy.filter(t => t.pnl > 0).length / freshLowBuy.length * 100).toFixed(1) + '%' : '0%',
+          avgPnl: freshLowBuy.length > 0 ? (freshLowBuy.reduce((s,t) => s + t.pnl, 0) / freshLowBuy.length).toFixed(2) : '0'
+        },
+        pumpingEntry: {
+          count: pumpingEntry.length,
+          winRate: pumpingEntry.length > 0 ? (pumpingEntry.filter(t => t.pnl > 0).length / pumpingEntry.length * 100).toFixed(1) + '%' : '0%',
+          avgPnl: pumpingEntry.length > 0 ? (pumpingEntry.reduce((s,t) => s + t.pnl, 0) / pumpingEntry.length).toFixed(2) : '0',
+          note: 'Entered when 5m change > 20%'
+        },
+        calmEntry: {
+          count: calmEntry.length,
+          winRate: calmEntry.length > 0 ? (calmEntry.filter(t => t.pnl > 0).length / calmEntry.length * 100).toFixed(1) + '%' : '0%',
+          avgPnl: calmEntry.length > 0 ? (calmEntry.reduce((s,t) => s + t.pnl, 0) / calmEntry.length).toFixed(2) : '0',
+          note: 'Entered when |5m change| < 10%'
+        }
+      };
+    })(),
+    
+    // NEW: Optimal conditions (best performing combos)
+    optimalConditions: (() => {
+      // Find best MC range
+      const mcRanges = ['micro_0-10k', 'tiny_10k-50k', 'small_50k-200k', 'medium_200k-1M', 'large_1M+'];
+      let bestMC = null;
+      let bestMCAvg = -999;
+      
+      // Find best score range
+      const scoreRanges = ['45-55', '56-65', '66-75', '76-85', '86-100'];
+      let bestScore = null;
+      let bestScoreAvg = -999;
+      
+      return {
+        recommendation: 'Analyze byMarketCapRange, byEntryBuyRatio, byTokenAge to find optimal entry conditions',
+        sampleSize: closedTrades.length
+      };
+    })(),
+    
+    // NEW: Raw trade data for deep analysis
+    rawTradesSummary: closedTrades.slice(0, 100).map(t => ({
+      symbol: t.symbol,
+      chain: t.chain,
+      score: t.score,
+      pnl: t.pnl?.toFixed(2),
+      pnlPct: t.pnlPct?.toFixed(1),
+      highestPct: t.highestPnlPct?.toFixed(1),
+      entryMC: t.entryMarketCap,
+      entryLiq: t.entryLiquidity,
+      entryBuyRatio: t.entryBuyRatio5m?.toFixed(1),
+      entryChg5m: t.entryChg5m?.toFixed(1),
+      tokenAge: t.tokenAge,
+      holdMin: t.holdMin,
+      reason: t.reason,
+      dcaLevel: t.dcaLevel,
+      trailing: t.trailingActivated
+    }))
   };
 }
 
@@ -2741,7 +2990,15 @@ async function executeTrade(pair, score, tradeType = 'QUICK') {
     entryMarketCap: parseFloat(pair.marketCap) || 0,
     entryLiquidity: parseFloat(pair.liquidity?.usd) || 0,
     entryVolume24h: parseFloat(pair.volume?.h24) || 0,
+    entryVolume5m: parseFloat(pair.volume?.m5) || 0,
     entryBuyRatio5m: pair.txns?.m5 ? (pair.txns.m5.buys / (pair.txns.m5.buys + pair.txns.m5.sells) * 100) : 50,
+    entryBuyRatio1h: pair.txns?.h1 ? (pair.txns.h1.buys / (pair.txns.h1.buys + pair.txns.h1.sells) * 100) : 50,
+    entryChg5m: parseFloat(pair.priceChange?.m5) || 0,
+    entryChg1h: parseFloat(pair.priceChange?.h1) || 0,
+    entryChg24h: parseFloat(pair.priceChange?.h24) || 0,
+    entryTxns5m: (pair.txns?.m5?.buys || 0) + (pair.txns?.m5?.sells || 0),
+    entryLiqRatio: parseFloat(pair.marketCap) > 0 ? (parseFloat(pair.liquidity?.usd) / parseFloat(pair.marketCap) * 100) : 0,
+    tokenAge: pair.pairCreatedAt ? Math.floor((Date.now() - pair.pairCreatedAt) / 60000) : null, // in minutes
     
     // Size tracking
     initialSize: size,
@@ -2752,6 +3009,8 @@ async function executeTrade(pair, score, tradeType = 'QUICK') {
     pnl: 0,
     pnlPct: 0,
     highestPnlPct: 0,
+    peakTime: null, // When peak was reached
+    firstProfitTime: null, // When first went green
     entryTime: Date.now(),
     extended: 0,
     
@@ -2853,6 +3112,8 @@ function closeTrade(pos, reason, pair = null) {
   
   const holdTime = Date.now() - pos.entryTime;
   const holdMin = Math.floor(holdTime / 60000);
+  const timeToFirstProfit = pos.firstProfitTime ? (pos.firstProfitTime - pos.entryTime) / 1000 : null;
+  const timeToPeak = pos.peakTime ? (pos.peakTime - pos.entryTime) / 1000 : null;
   
   history.unshift({
     symbol: pos.symbol,
@@ -2867,12 +3128,27 @@ function closeTrade(pos, reason, pair = null) {
     entryPrice: pos.entryPrice,
     entryMarketCap: pos.entryMarketCap,
     entryLiquidity: pos.entryLiquidity,
+    entryVolume24h: pos.entryVolume24h,
+    entryVolume5m: pos.entryVolume5m,
+    entryBuyRatio5m: pos.entryBuyRatio5m,
+    entryBuyRatio1h: pos.entryBuyRatio1h,
+    entryChg5m: pos.entryChg5m,
+    entryChg1h: pos.entryChg1h,
+    entryChg24h: pos.entryChg24h,
+    entryTxns5m: pos.entryTxns5m,
+    entryLiqRatio: pos.entryLiqRatio,
+    tokenAge: pos.tokenAge,
     
     // Exit data
     exitPrice: pos.currentPrice,
+    exitBuyRatio: pos.lastBuyRatio,
     pnl: finalPnl,
     pnlPct: pos.pnlPct,
     highestPnlPct: pos.highestPnlPct,
+    
+    // Timing
+    timeToFirstProfit, // seconds to first go green
+    timeToPeak, // seconds to reach peak
     
     // DCA
     dcaSecured: pos.dcaSecured,
@@ -2884,8 +3160,10 @@ function closeTrade(pos, reason, pair = null) {
     
     reason,
     closeTime: Date.now(),
+    closeTimeISO: new Date().toISOString(),
     holdTime,
-    holdMin
+    holdMin,
+    holdTimeMin: holdMin // Alias for compatibility
   });
   
   const icon = finalPnl >= 0 ? '✅' : '❌';
@@ -3005,8 +3283,15 @@ async function updatePositions() {
       pos.pnlPct = change * 100;
       pos.pnl = pos.currentSize * change + pos.dcaSecured;
       
+      // Track first time in profit
+      if (pos.pnlPct > 0 && !pos.firstProfitTime) {
+        pos.firstProfitTime = Date.now();
+      }
+      
+      // Track peak time
       if (pos.pnlPct > pos.highestPnlPct) {
         pos.highestPnlPct = pos.pnlPct;
+        pos.peakTime = Date.now();
       }
       
       // Update momentum data
