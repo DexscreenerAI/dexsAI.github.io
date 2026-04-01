@@ -6196,75 +6196,8 @@ async function handleTrending() {
 // ═══════════════════════════════════════════
 // 💎 HANDLE GEMS (IS THIS TOKEN A GEM?)
 // ═══════════════════════════════════════════
-async function handleGems() {
-  if (isLoading) return;
-  
-  const c = conversations.find(x => x.id === activeId);
-  
-  // Check if we have a token in memory
-  if (!lastAnalyzedToken || !lastAnalyzedToken.symbol) {
-    c.messages.push({ role: 'user', content: '💎 Is this a gem?' });
-    c.messages.push({ role: 'assistant', content: '💎 **No token in memory**\n\nSend me a contract address first, then I\'ll tell you if it\'s a potential gem!' });
-    renderMessages();
-    return;
-  }
-  
-  isLoading = true;
-  
-  const t = lastAnalyzedToken;
-  c.messages.push({ role: 'user', content: `💎 Is $${t.symbol} a gem?` });
-  renderMessages();
-  showLoading('Analyzing gem potential...');
-  
-  try {
-    const tokenContext = `
-Token: $${t.symbol} (${t.chain})
-Price: ${fP(t.price)}
-Market Cap: $${fN(t.marketCap || 0)}
-Liquidity: $${fN(t.liquidity || 0)}
-Volume 24h: $${fN(t.volume24h || 0)}
-Price Change 1h: ${t.priceChange1h > 0 ? '+' : ''}${(t.priceChange1h || 0).toFixed(1)}%
-Price Change 24h: ${t.priceChange24h > 0 ? '+' : ''}${(t.priceChange24h || 0).toFixed(1)}%
-Buys 24h: ${t.buys24h || 0}
-Sells 24h: ${t.sells24h || 0}
-Buy Ratio: ${t.buys24h && t.sells24h ? Math.round((t.buys24h / (t.buys24h + t.sells24h)) * 100) : 50}%
-Rug Status: ${t.rugData?.status || 'unknown'}
-${t.rugData?.risks?.length ? 'Risks: ' + t.rugData.risks.map(r => r.name).join(', ') : ''}`;
-
-    const prompt = `You are a crypto gem hunter. Analyze this token and tell me if it's a potential GEM or not.
-
-${tokenContext}
-
-GEM CRITERIA:
-- Market Cap: Sweet spot $30K-$500K (early), acceptable up to $5M
-- Liquidity: At least $3K, ratio to MC > 5% is good
-- Buy Pressure: > 50% is bullish, > 60% is very bullish
-- Momentum: Positive 1h and 24h changes
-- Safety: No major rug risks
-
-Give your verdict:
-🟢 POTENTIAL GEM - if it meets most criteria
-🟡 MAYBE - if mixed signals
-🔴 NOT A GEM - if too risky or doesn't fit
-
-Be DIRECT and SHORT (3-4 sentences max). Explain WHY with specific numbers.`;
-
-    const aiRes = await askAI(prompt);
-    hideLoading();
-    
-    if (aiRes && aiRes.answer) {
-      c.messages.push({ role: 'assistant', content: `💎 **GEM ANALYSIS: $${t.symbol}**\n\n${aiRes.answer}` });
-    } else {
-      c.messages.push({ role: 'assistant', content: `💎 Could not analyze gem potential. Try again!` });
-    }
-    
-  } catch (err) {
-    hideLoading();
-    c.messages.push({ role: 'assistant', content: `❌ Error analyzing gem potential: ${err.message}` });
-  }
-  
-  isLoading = false;
-  renderMessages();
+function handleGems() {
+  window.location.href = './gems.html';
 }
 
 // ═══════════════════════════════════════════
