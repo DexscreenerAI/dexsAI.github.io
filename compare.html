@@ -1083,6 +1083,20 @@ async function runComparison() {
           const total = buys + sells;
           const buyRatio = total > 0 ? Math.round((buys / total) * 100) : 50;
           
+          // Fetch Rugcheck data
+          let rugStatus = 'unknown', rugRisks = [], rugScore = 100;
+          try {
+            const rugRes = await fetch(`https://api.rugcheck.xyz/v1/tokens/${t.address}/report/summary`, {
+              signal: AbortSignal.timeout(6000)
+            });
+            if (rugRes.ok) {
+              const rugData = await rugRes.json();
+              rugStatus = (rugData.status || 'unknown').toLowerCase();
+              rugRisks = (rugData.risks || []).map(r => r.name || r.description || 'Unknown risk');
+              rugScore = rugData.score != null ? rugData.score : 100;
+            }
+          } catch (e) { console.warn('Rugcheck failed for', t.symbol); }
+
           enrichedTokens.push({
             ...t,
             price: parseFloat(pair.priceUsd) || 0,
@@ -1098,7 +1112,8 @@ async function runComparison() {
             pairAddress: pair.pairAddress || t.pairAddress,
             twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || '',
             telegram: pair.info?.socials?.find(s => s.type === 'telegram')?.url || '',
-            website: pair.info?.websites?.[0]?.url || ''
+            website: pair.info?.websites?.[0]?.url || '',
+            rugStatus, rugRisks, rugScore
           });
         } else {
           enrichedTokens.push({ ...t, liq: 0, vol24h: 0, chg24h: 0, buyRatio: 50, twitter: '', telegram: '', website: '' });
@@ -1113,23 +1128,48 @@ async function runComparison() {
     
     for (const t of enrichedTokens) {
       let score = 50; // Base score
-      
+
       // Buy pressure (0-25)
       score += Math.min(25, (t.buyRatio - 50) * 0.5);
-      
+
       // Momentum (0-20)
       if (t.chg24h > 0) score += Math.min(10, t.chg24h / 5);
       if (t.chg1h > 0) score += Math.min(10, t.chg1h / 2);
-      
+
       // Liquidity strength (0-15)
       if (t.liq > 100000) score += 15;
       else if (t.liq > 50000) score += 10;
       else if (t.liq > 20000) score += 5;
-      
+      else if (t.liq < 5000) score -= 15;
+      else if (t.liq < 10000) score -= 5;
+
       // Volume activity (0-10)
       if (t.vol24h > t.liq * 2) score += 10;
       else if (t.vol24h > t.liq) score += 5;
-      
+
+      // Safety from Rugcheck (-40 to +10)
+      if (t.rugStatus === 'good') score += 10;
+      else if (t.rugStatus === 'warn') score -= 10;
+      else if (t.rugStatus === 'danger' || t.rugStatus === 'high') score -= 30;
+
+      // Penalize specific risks heavily
+      const risksLower = (t.rugRisks || []).map(r => r.toLowerCase());
+      if (risksLower.some(r => r.includes('honeypot') || r.includes('honey pot'))) score -= 40;
+      if (risksLower.some(r => r.includes('mint') && r.includes('enabl'))) score -= 20;
+      if (risksLower.some(r => r.includes('freeze') && r.includes('enabl'))) score -= 15;
+      if (risksLower.some(r => r.includes('rug') || r.includes('scam'))) score -= 25;
+      if (risksLower.some(r => r.includes('top 10 holders') || r.includes('concentrated'))) score -= 10;
+
+      // Low liquidity = danger
+      if (t.liq < 3000 && t.mc > 50000) score -= 20;
+
+      // Determine safety label
+      const riskCount = (t.rugRisks || []).length;
+      t.safetyLabel = t.rugStatus === 'good' ? '✅ SAFE' :
+                      t.rugStatus === 'warn' ? '⚠️ CAUTION' :
+                      (t.rugStatus === 'danger' || riskCount >= 3) ? '🔴 DANGER' :
+                      riskCount > 0 ? '⚠️ CAUTION' : '❓ UNKNOWN';
+
       t.score = Math.max(0, Math.min(100, Math.round(score)));
     }
     
@@ -1146,16 +1186,19 @@ ${i+1}. $${t.symbol} (${t.chain})
    Price: ${fP(t.price)} | MC: $${fN(t.mc)} | Liq: $${fN(t.liq)}
    Vol24h: $${fN(t.vol24h)} | Buy Ratio: ${t.buyRatio}%
    1h: ${t.chg1h > 0 ? '+' : ''}${t.chg1h.toFixed(1)}% | 24h: ${t.chg24h > 0 ? '+' : ''}${t.chg24h.toFixed(1)}%
+   Safety: ${t.safetyLabel} | Rugcheck: ${t.rugStatus}${t.rugRisks?.length ? ' | Risks: ' + t.rugRisks.join(', ') : ''}
    Score: ${t.score}/100`).join('\n');
       
       const prompt = `Compare these ${enrichedTokens.length} tokens and rank them. Be specific about WHY each ranks where it does.
 
 ${context}
 
+IMPORTANT: Safety is critical. Tokens with honeypot risks, mint authority enabled, or freeze authority should NEVER be ranked #1 regardless of other metrics.
+
 Provide:
-1. A brief verdict for each token (1 sentence)
-2. Your TOP PICK with clear reasoning
-3. Any warnings or red flags
+1. A brief verdict for each token (1 sentence) including safety assessment
+2. Your TOP PICK with clear reasoning (must be safe)
+3. Any warnings or red flags (especially rug/honeypot risks)
 
 Be direct and helpful. Format cleanly.`;
       
@@ -1215,6 +1258,7 @@ function renderResults(tokens, aiAnalysis) {
             <th>1H</th>
             <th>24H</th>
             <th>BUYERS</th>
+            <th>SAFETY</th>
             <th>SCORE</th>
           </tr>
         </thead>
@@ -1248,6 +1292,7 @@ function renderResults(tokens, aiAnalysis) {
       <td class="${chg1hColor}">${t.chg1h > 0 ? '+' : ''}${t.chg1h.toFixed(1)}%</td>
       <td class="${chg24hColor}">${t.chg24h > 0 ? '+' : ''}${t.chg24h.toFixed(1)}%</td>
       <td class="${buyColor}">${t.buyRatio}%</td>
+      <td style="font-size:11px">${t.safetyLabel}</td>
       <td><span class="table-score ${scoreClass}">${t.score}</span></td>
     </tr>`;
   });
@@ -1301,7 +1346,15 @@ function renderResults(tokens, aiAnalysis) {
           <div class="token-stat-label">BUY RATIO</div>
           <div class="token-stat-value" style="color:${t.buyRatio >= 55 ? 'var(--green)' : t.buyRatio >= 45 ? 'var(--text)' : 'var(--red)'}">${t.buyRatio}%</div>
         </div>
+        <div class="token-stat">
+          <div class="token-stat-label">SAFETY</div>
+          <div class="token-stat-value">${t.safetyLabel}</div>
+        </div>
       </div>
+      ${t.rugRisks && t.rugRisks.length > 0 ? `<div style="margin-top:8px;padding:8px 10px;background:rgba(255,59,79,0.08);border:1px solid rgba(255,59,79,0.2);border-radius:6px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--red);letter-spacing:1px;margin-bottom:4px">⚠️ RISKS DETECTED</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.5">${t.rugRisks.join(' • ')}</div>
+      </div>` : ''}
       <div class="token-detail-footer">
         <div class="token-detail-socials">
           <a href="${t.twitter || '#'}" target="_blank" class="token-social ${!t.twitter ? 'disabled' : ''}" title="Twitter">𝕏</a>
