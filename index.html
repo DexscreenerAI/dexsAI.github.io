@@ -4031,22 +4031,6 @@ function renderAnalysis(data) {
     return html;
   }
 
-  // ── PROJECT LEGITIMACY (only for non-major tokens)
-  const legLabelText = legScore<=30?t('suspicious'):legScore<=60?t('caution'):t('verified');
-  html += `<div class="card">
-    <div class="sec-title" style="justify-content:space-between">
-      <span><span class="sec-icon">⊙</span> ${t('projectLegitimacy')}</span>
-      ${badgeHTML(legLabelText, 'badge-'+legColor)}
-    </div>
-    <div class="flex-center gap-12 mb-16">
-      ${progressHTML(legScore, 'var(--'+legColor+')')}
-      <span style="font-family:var(--mono);font-size:13px;color:var(--text2);white-space:nowrap">${legScore} <span style="font-size:10px">/100</span></span>
-    </div>
-    <ul class="note-list">
-      ${(data.legitimacyNotes||[]).map(n => `<li class="note-item"><span class="note-icon">${n.type==='positive'?'+':n.type==='negative'?'−':'~'}</span>${esc(n.text)}</li>`).join('')}
-    </ul>
-  </div>`;
-
   // ── SCENARIO PROBABILITIES
   if (data.scenarios) {
     const s = data.scenarios;
