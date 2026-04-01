@@ -2003,6 +2003,26 @@ let pendingQuestion = null; // Store pending question type ('safe', 'buysell') w
 const API_URL = 'https://dexscreener-telegram-bot-production.up.railway.app';
 
 // ═══════════════════════════════════════════
+// CORS PROXY HELPER
+// ═══════════════════════════════════════════
+const CORS_PROXY = 'https://corsproxy.io/?';
+
+function needsCorsProxy() {
+  // Only need proxy in production (not localhost)
+  return location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
+}
+
+async function fetchDexScreener(url, options = {}) {
+  // In production, always use proxy to avoid CORS issues
+  if (needsCorsProxy()) {
+    const proxyUrl = CORS_PROXY + encodeURIComponent(url);
+    return fetch(proxyUrl, options);
+  }
+  // In localhost, direct fetch works
+  return fetch(url, options);
+}
+
+// ═══════════════════════════════════════════
 // AI CHAT (Haiku - cheap & fast, unlimited)
 // ═══════════════════════════════════════════
 async function askAI(message, tokenContext = null) {
@@ -2570,7 +2590,7 @@ async function handleChartRequest(query, chartRequest) {
 
 async function fetchTokenBySymbol(symbol) {
   try {
-    const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(symbol)}`, {
+    const res = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(symbol)}`, {
       signal: AbortSignal.timeout(6000)
     });
     const data = await res.json();
@@ -2729,7 +2749,7 @@ The user is asking a general crypto question. No specific token is being analyze
 // ═══════════════════════════════════════════
 async function fetchDexScreener(addr) {
   try {
-    const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(10000) });
+    const r = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(10000) });
     if (!r.ok) return null;
     const d = await r.json();
     if (!d.pairs || !d.pairs.length) return null;
@@ -2743,7 +2763,7 @@ async function fetchDexScreener(addr) {
 // ═══════════════════════════════════════════
 async function searchDexScreener(query) {
   try {
-    const r = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`, { signal: AbortSignal.timeout(10000) });
+    const r = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`, { signal: AbortSignal.timeout(10000) });
     if (!r.ok) return null;
     const d = await r.json();
     if (!d.pairs || !d.pairs.length) return null;
@@ -3066,7 +3086,7 @@ async function fetchTrending() {
   showLoading();
   
   try {
-    const r = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(10000) });
+    const r = await fetchDexScreener('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(10000) });
     if (!r.ok) throw new Error('API error');
     const data = await r.json();
     
@@ -3097,7 +3117,7 @@ async function fetchTrending() {
       let dexIcon = '';
       
       try {
-        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(5000) });
+        const dexRes = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(5000) });
         if (dexRes.ok) {
           const dexData = await dexRes.json();
           if (dexData.pairs && dexData.pairs.length > 0) {
@@ -3235,7 +3255,7 @@ async function fetchNewProfiles() {
   showLoading();
   
   try {
-    const r = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(10000) });
+    const r = await fetchDexScreener('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(10000) });
     if (!r.ok) throw new Error('API error');
     const data = await r.json();
     
@@ -3266,7 +3286,7 @@ async function fetchNewProfiles() {
       let dexIcon = '';
       
       try {
-        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(5000) });
+        const dexRes = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(5000) });
         if (dexRes.ok) {
           const dexData = await dexRes.json();
           if (dexData.pairs && dexData.pairs.length > 0) {
@@ -4683,7 +4703,7 @@ async function loadPanelTrending() {
   if (!container) return;
   
   try {
-    const r = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(15000) });
+    const r = await fetchDexScreener('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(15000) });
     if (!r.ok) throw new Error('API error');
     const data = await r.json();
     
@@ -4703,7 +4723,7 @@ async function loadPanelTrending() {
       
       let symbol = '???', liquidity = 0, volume24h = 0, dexIcon = '';
       try {
-        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(4000) });
+        const dexRes = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(4000) });
         if (dexRes.ok) {
           const dexData = await dexRes.json();
           if (dexData.pairs && dexData.pairs.length > 0) {
@@ -4788,7 +4808,7 @@ async function loadPanelNewListings() {
   if (!container) return;
   
   try {
-    const r = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(15000) });
+    const r = await fetchDexScreener('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(15000) });
     if (!r.ok) throw new Error('API error');
     const data = await r.json();
     
@@ -4808,7 +4828,7 @@ async function loadPanelNewListings() {
       
       let symbol = '???', liquidity = 0, volume24h = 0, dexIcon = '';
       try {
-        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(4000) });
+        const dexRes = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(4000) });
         if (dexRes.ok) {
           const dexData = await dexRes.json();
           if (dexData.pairs && dexData.pairs.length > 0) {
@@ -5008,7 +5028,7 @@ async function loadMobileTrending() {
   if (!container) return;
   
   try {
-    const r = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(15000) });
+    const r = await fetchDexScreener('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(15000) });
     if (!r.ok) throw new Error('API error');
     const data = await r.json();
     
@@ -5027,7 +5047,7 @@ async function loadMobileTrending() {
       
       let symbol = '???', liquidity = 0, volume24h = 0, dexIcon = '';
       try {
-        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(4000) });
+        const dexRes = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(4000) });
         if (dexRes.ok) {
           const dexData = await dexRes.json();
           if (dexData.pairs && dexData.pairs.length > 0) {
@@ -5073,7 +5093,7 @@ async function loadMobileNewListings() {
   if (!container) return;
   
   try {
-    const r = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(15000) });
+    const r = await fetchDexScreener('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(15000) });
     if (!r.ok) throw new Error('API error');
     const data = await r.json();
     
@@ -5092,7 +5112,7 @@ async function loadMobileNewListings() {
       
       let symbol = '???', liquidity = 0, volume24h = 0, dexIcon = '';
       try {
-        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(4000) });
+        const dexRes = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(4000) });
         if (dexRes.ok) {
           const dexData = await dexRes.json();
           if (dexData.pairs && dexData.pairs.length > 0) {
@@ -5359,7 +5379,7 @@ async function fetchCryptoPanicNews(symbol) {
 async function fetchDexScreenerBoosts(symbol) {
   try {
     // Check if token has recent boosts/promotes on DexScreener
-    const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${symbol}`, {
+    const res = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/search?q=${symbol}`, {
       signal: AbortSignal.timeout(4000)
     });
     const data = await res.json();
@@ -5767,7 +5787,7 @@ async function analyzeChartAI(symbol, chain, pairAddress) {
   
   try {
     // Fetch fresh data from DexScreener
-    const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${chain}/${pairAddress}`, {
+    const res = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/pairs/${chain}/${pairAddress}`, {
       signal: AbortSignal.timeout(8000)
     });
     const data = await res.json();
@@ -6066,7 +6086,7 @@ async function handleTrending() {
   showLoading();
   
   try {
-    const r = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(15000) });
+    const r = await fetchDexScreener('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(15000) });
     const tokens = await r.json();
     
     if (!tokens || tokens.length === 0) {
@@ -6091,7 +6111,7 @@ async function handleTrending() {
     for (const token of unique) {
       try {
         const addr = token.tokenAddress;
-        const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(5000) });
+        const dexRes = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(5000) });
         const dexData = await dexRes.json();
         if (dexData.pairs && dexData.pairs.length > 0) {
           const pair = dexData.pairs[0];
@@ -6549,7 +6569,7 @@ async function searchNav(query) {
   results.classList.add('active');
   
   try {
-    const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`, {
+    const res = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`, {
       signal: AbortSignal.timeout(8000)
     });
     const data = await res.json();
@@ -6843,7 +6863,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(async () => {
         try {
           showLoading('Loading chart...');
-          const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`, { signal: AbortSignal.timeout(8000) });
+          const res = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/tokens/${address}`, { signal: AbortSignal.timeout(8000) });
           const data = await res.json();
           hideLoading();
           
