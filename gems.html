@@ -716,8 +716,8 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
   <!-- RESULTS SECTION -->
   <div class="results-section" id="resultsSection">
     <div class="results-header">
-      <h2 class="results-title">🟢 HIGH POTENTIAL GEMS</h2>
-      <p class="results-subtitle">🤖 Ranked by AI • Best opportunities first</p>
+      <h2 class="results-title">🚀 POTENTIAL MULTIPLIERS</h2>
+      <p class="results-subtitle">🤖 AI ranked by x2-x100 potential • Best buys first</p>
     </div>
     
     <div class="gems-grid" id="gemsGrid"></div>
@@ -824,26 +824,29 @@ async function startHunt() {
       updateStats(sourcesScanned, totalTokensFound, 0);
     } catch(e) { console.log('Source 2 failed'); }
     
-    updateProgress(12, 'Searching trending keywords...');
+    updateProgress(10, 'Scanning top gainers per chain...');
     
-    // Source 3-12: Multiple search queries (10 different keywords)
-    const searchQueries = ['moon', 'pump', 'gem', 'degen', 'pepe', 'ai', 'meme', 'inu', 'wojak', 'based', 'sol', 'eth'];
-    
-    for (let i = 0; i < searchQueries.length; i++) {
-      const query = searchQueries[i];
-      updateProgress(12 + (i * 2.5), `Searching "${query}" tokens...`);
-      
+    // Source 3: Top gainers per chain (get trending/pumping tokens)
+    const chainSlugs = ['solana', 'ethereum', 'bsc', 'base', 'arbitrum'];
+    for (const chain of chainSlugs) {
       try {
-        const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${query}`, { signal: AbortSignal.timeout(6000) });
+        // Search for trending pairs on each chain
+        const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${chain}`, { signal: AbortSignal.timeout(6000) });
         const data = await res.json();
         if (data.pairs) {
-          for (const p of data.pairs.slice(0, 30)) {
+          // Sort by 1h change to get gainers
+          const gainers = data.pairs
+            .filter(p => p.chainId === chain && parseFloat(p.priceChange?.h1) > 5)
+            .sort((a, b) => (parseFloat(b.priceChange?.h1) || 0) - (parseFloat(a.priceChange?.h1) || 0))
+            .slice(0, 30);
+          
+          for (const p of gainers) {
             const addr = p.baseToken?.address;
-            if (addr && validChains.includes(p.chainId) && !allCandidates.has(addr)) {
+            if (addr && !allCandidates.has(addr)) {
               allCandidates.set(addr, { 
                 address: addr, 
                 chain: p.chainId, 
-                source: 'trending', 
+                source: 'gainer', 
                 pair: p,
                 icon: p.info?.imageUrl 
               });
@@ -852,8 +855,77 @@ async function startHunt() {
           }
         }
         sourcesScanned++;
-        updateStats(sourcesScanned, totalTokensFound, 0);
-      } catch(e) { console.log(`Search ${query} failed`); }
+      } catch(e) { /* Skip */ }
+    }
+    updateStats(sourcesScanned, totalTokensFound, 0);
+    
+    updateProgress(15, 'Searching trending keywords...');
+    
+    // Source 3+: MASSIVE search queries (letters, numbers, crypto terms)
+    const searchQueries = [
+      // Hot crypto terms
+      'moon', 'pump', 'gem', 'degen', 'pepe', 'ai', 'meme', 'inu', 'wojak', 'based',
+      'trump', 'elon', 'cat', 'dog', 'frog', 'baby', 'doge', 'shib', 'bonk', 'wif',
+      'lambo', 'rich', 'gold', 'diamond', '100x', 'rocket', 'bull', 'bear', 'ape',
+      'chad', 'giga', 'mega', 'super', 'king', 'queen', 'god', 'devil', 'angel',
+      // ALL letters (catches most tokens)
+      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+      // Numbers and combos
+      '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+      '69', '420', '1000', '100', '10', '777', '666', '999',
+      // Crypto culture
+      'sol', 'eth', 'btc', 'nft', 'defi', 'web3', 'meta', 'verse', 'pixel', 'punk',
+      'rare', 'epic', 'legend', 'titan', 'alpha', 'beta', 'omega', 'sigma',
+      'safe', 'fair', 'new', 'next', 'hot', 'fire', 'burn', 'stake',
+      // Meme culture
+      'pepe', 'wojak', 'cope', 'seethe', 'kek', 'lol', 'lmao', 'rekt', 'wagmi', 'ngmi',
+      'wen', 'ser', 'fren', 'anon', 'noob', 'whale', 'shrimp', 'crab',
+      // Animals
+      'cat', 'dog', 'frog', 'ape', 'bear', 'bull', 'fish', 'bird', 'lion', 'tiger',
+      'wolf', 'fox', 'rat', 'bat', 'pig', 'cow', 'duck', 'goat', 'snake', 'dragon',
+      // Colors
+      'red', 'blue', 'green', 'gold', 'pink', 'black', 'white', 'purple',
+      // Emotions
+      'happy', 'sad', 'angry', 'love', 'hate', 'fear', 'hope', 'dream',
+      // Actions
+      'buy', 'sell', 'hold', 'pump', 'dump', 'send', 'moon', 'rug', 'flip'
+    ];
+    
+    // Shuffle to get variety each time
+    const shuffled = searchQueries.sort(() => Math.random() - 0.5);
+    // Take 70 queries for more coverage
+    const queriesToRun = shuffled.slice(0, 70);
+    
+    for (let i = 0; i < queriesToRun.length; i++) {
+      const query = queriesToRun[i];
+      updateProgress(15 + (i * 0.4), `Searching "${query}"...`);
+      
+      try {
+        const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${query}`, { signal: AbortSignal.timeout(5000) });
+        const data = await res.json();
+        if (data.pairs) {
+          // Take more results per query
+          for (const p of data.pairs.slice(0, 60)) {
+            const addr = p.baseToken?.address;
+            if (addr && validChains.includes(p.chainId) && !allCandidates.has(addr)) {
+              allCandidates.set(addr, { 
+                address: addr, 
+                chain: p.chainId, 
+                source: 'search', 
+                pair: p,
+                icon: p.info?.imageUrl 
+              });
+              totalTokensFound++;
+            }
+          }
+        }
+        sourcesScanned++;
+        if (i % 5 === 0) updateStats(sourcesScanned, totalTokensFound, 0);
+      } catch(e) { /* Skip failed */ }
+      
+      // Small delay to avoid rate limiting
+      if (i % 8 === 7) await new Promise(r => setTimeout(r, 150));
     }
     
     updateProgress(42, `Enriching ${allCandidates.size} candidates...`);
@@ -862,12 +934,13 @@ async function startHunt() {
     const enriched = [];
     const candidates = Array.from(allCandidates.values());
     let processed = 0;
+    const maxToProcess = 350; // Process many more tokens for better gem hunting
     
-    for (const cand of candidates.slice(0, 120)) {
+    for (const cand of candidates.slice(0, maxToProcess)) {
       processed++;
-      if (processed % 10 === 0) {
-        updateProgress(42 + Math.floor((processed / Math.min(120, candidates.length)) * 30), 
-          `Analyzing token ${processed}/${Math.min(120, candidates.length)}...`);
+      if (processed % 15 === 0) {
+        updateProgress(42 + Math.floor((processed / Math.min(maxToProcess, candidates.length)) * 30), 
+          `Analyzing token ${processed}/${Math.min(maxToProcess, candidates.length)}...`);
       }
       
       try {
@@ -896,13 +969,13 @@ async function startHunt() {
         const chg24h = parseFloat(pair.priceChange?.h24) || 0;
         const age = pair.pairCreatedAt ? (Date.now() - new Date(pair.pairCreatedAt).getTime()) / 3600000 : 999;
         
-        // ═══ STRICT FILTERS FOR HIGH POTENTIAL ONLY ═══
+        // ═══ FILTERS FOR MULTIPLIER POTENTIAL ═══
         if (mc > 10000000) continue; // Max 10M
-        if (mc < 10000) continue; // Min 10K (filter dead tokens)
-        if (liq < 5000) continue; // Min 5K liq (more strict)
-        if (buyRatio < 0.50) continue; // Min 50% buyers (strict)
-        if (chg1h < -30) continue; // Skip tokens dumping hard
-        if (total < 50) continue; // Min 50 txns (some activity)
+        if (mc < 5000) continue; // Min 5K (allow micro caps)
+        if (liq < 3000) continue; // Min 3K liq
+        if (buyRatio < 0.48) continue; // Min 48% buyers
+        if (chg1h < -30) continue; // Skip hard dumps
+        if (total < 30) continue; // Min 30 txns
         
         // ═══ GEM SCORE CALCULATION ═══
         let score = 0;
@@ -910,11 +983,15 @@ async function startHunt() {
         // Buy pressure (max 25)
         score += Math.min(25, (buyRatio - 0.5) * 50);
         
-        // MC sweet spot (max 20)
-        if (mc >= 30000 && mc <= 300000) score += 20;
-        else if (mc >= 300000 && mc <= 1000000) score += 15;
-        else if (mc >= 10000 && mc < 30000) score += 12;
-        else if (mc >= 1000000 && mc <= 5000000) score += 8;
+        // Market cap - PRIORITIZE LOW CAP for multiplier potential (max 25)
+        // Lower MC = more room to grow = higher multiplier potential
+        if (mc >= 5000 && mc < 20000) score += 25;       // 5K-20K = ULTRA moonshot
+        else if (mc >= 20000 && mc < 50000) score += 23; // 20K-50K = moonshot
+        else if (mc >= 50000 && mc < 100000) score += 20; // 50K-100K = excellent
+        else if (mc >= 100000 && mc < 200000) score += 16; // 100K-200K = great
+        else if (mc >= 200000 && mc < 500000) score += 12; // 200K-500K = good
+        else if (mc >= 500000 && mc <= 1000000) score += 8; // 500K-1M = decent
+        else if (mc > 1000000 && mc <= 5000000) score += 4;  // 1M-5M = limited
         
         // Liquidity ratio (max 15)
         const liqRatio = mc > 0 ? (liq / mc) : 0;
@@ -923,34 +1000,38 @@ async function startHunt() {
         else if (liqRatio > 0.02) score += 5;
         
         // Momentum - reward positive, penalize negative (max 20)
-        if (chg1h > 5 && chg1h < 100) score += 10;
-        else if (chg1h > 0) score += 5;
+        if (chg1h > 10 && chg1h < 100) score += 12;
+        else if (chg1h > 5) score += 8;
+        else if (chg1h > 0) score += 4;
         else if (chg1h < -10) score -= 5;
         
-        if (chg24h > 10 && chg24h < 500) score += 10;
-        else if (chg24h > 0) score += 5;
+        if (chg24h > 20 && chg24h < 500) score += 8;
+        else if (chg24h > 0) score += 4;
         else if (chg24h < -20) score -= 5;
         
-        // Age bonus - prefer established tokens (max 15)
-        if (age >= 48 && age < 500) score += 15; // Sweet spot: 2-20 days
-        else if (age >= 24 && age < 48) score += 10;
-        else if (age >= 500) score += 8; // Proven survivors
-        else if (age < 12) score += 3; // Very new = risky
+        // Age - prefer newer tokens for multiplier (max 15)
+        if (age >= 6 && age < 24) score += 15;   // 6-24h = moonshot
+        else if (age >= 24 && age < 72) score += 12; // 1-3 days
+        else if (age >= 72 && age < 168) score += 8; // 3-7 days
+        else if (age >= 168 && age < 720) score += 5; // 1-4 weeks
+        else if (age < 6) score += 5; // Ultra new
         
         // Activity (max 10)
         if (total > 1000) score += 10;
         else if (total > 500) score += 8;
         else if (total > 200) score += 5;
+        else if (total > 100) score += 3;
         
-        // Volume to liq ratio (max 10)
+        // Volume to liq ratio = trading interest (max 10)
         const volLiqRatio = liq > 0 ? (vol / liq) : 0;
-        if (volLiqRatio > 3) score += 10;
-        else if (volLiqRatio > 1.5) score += 6;
-        else if (volLiqRatio > 0.5) score += 3;
+        if (volLiqRatio > 5) score += 10;
+        else if (volLiqRatio > 2) score += 7;
+        else if (volLiqRatio > 1) score += 4;
         
-        // Source bonus (max 5)
-        if (cand.source === 'boosted') score += 5;
-        else if (cand.source === 'new') score += 3;
+        // Source bonus (max 8)
+        if (cand.source === 'boosted') score += 8;
+        else if (cand.source === 'gainer') score += 6;
+        else if (cand.source === 'new') score += 4;
         
         // Check for CTO (community takeover)
         const isCTO = pair.info?.socials?.some(s => s.type === 'twitter' && s.url?.includes('/community')) ||
@@ -1020,19 +1101,19 @@ async function startHunt() {
     // Sort by score and filter HIGH POTENTIAL only (score >= 55)
     enriched.sort((a, b) => b.score - a.score);
     const highPotentialGems = enriched.filter(g => {
-      // Must have high score
-      if (g.score < 55) return false;
-      // Must not be dumping
-      if (g.chg1h < -15) return false;
+      // Must have decent score
+      if (g.score < 50) return false;
+      // Must not be dumping hard
+      if (g.chg1h < -20) return false;
       // Must have good rug status (not danger)
       if (g.rugStatus === 'danger') return false;
       // Must have decent buy ratio
-      if (g.buyRatio < 52) return false;
+      if (g.buyRatio < 48) return false;
       return true;
     });
     
-    // Take more gems for display
-    const topGems = highPotentialGems.slice(0, 30);
+    // Display many gems
+    const topGems = highPotentialGems.slice(0, 60);
     
     if (topGems.length === 0) {
       $('progressSection').classList.remove('active');
@@ -1042,22 +1123,29 @@ async function startHunt() {
       return;
     }
     
-    // ═══ PHASE 3: AI RANKING ═══
-    updateProgress(80, 'AI ranking gems...');
+    // ═══ PHASE 3: AI RANKING FOR MULTIPLIER POTENTIAL ═══
+    updateProgress(80, 'AI ranking by multiplier potential...');
     
     let aiRanking = [];
     
     try {
-      // Send top 20 to AI for ranking
-      const gemsForAI = topGems.slice(0, 20);
-      const gemsContext = gemsForAI.map((g, i) => `${g.symbol}: Score=${g.score} MC=$${fN(g.mc)} Liq=$${fN(g.liq)} Buy=${g.buyRatio}% 1h=${g.chg1h > 0 ? '+' : ''}${g.chg1h.toFixed(0)}% 24h=${g.chg24h > 0 ? '+' : ''}${g.chg24h.toFixed(0)}%`).join('\n');
+      // Send top 30 to AI for ranking
+      const gemsForAI = topGems.slice(0, 30);
+      const gemsContext = gemsForAI.map((g, i) => `${g.symbol}: MC=$${fN(g.mc)} Liq=$${fN(g.liq)} Buy=${g.buyRatio}% 1h=${g.chg1h > 0 ? '+' : ''}${g.chg1h.toFixed(0)}% 24h=${g.chg24h > 0 ? '+' : ''}${g.chg24h.toFixed(0)}%`).join('\n');
       
-      const prompt = `Rank these crypto gems from BEST to WORST opportunity. Consider: buy pressure, momentum, liquidity ratio, market cap sweet spot.
+      const prompt = `You are a crypto gem hunter expert. Rank these tokens by MULTIPLIER POTENTIAL (best chance to 2x, 5x, 10x, 100x NOW).
+
+PRIORITIZE:
+1. LOW MC ($10K-$300K) = Maximum room to grow
+2. HIGH BUY PRESSURE (>55%) = Whales accumulating
+3. POSITIVE 1H MOMENTUM = Trend starting NOW
+4. GOOD LIQUIDITY (>5% of MC) = Can sustain pump
 
 ${gemsContext}
 
-Reply with ONLY the symbols in order, separated by commas. Example: PEPE,BONK,WIF,DOGE
-No explanations, just the ranked list of symbols.`;
+Rank from HIGHEST multiplier potential to LOWEST.
+Reply with ONLY symbols separated by commas. Example: PEPE,BONK,WIF
+No explanations, just symbols.`;
 
       const aiRes = await askAI(prompt);
       if (aiRes && aiRes.answer) {
