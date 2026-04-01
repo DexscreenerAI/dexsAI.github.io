@@ -833,8 +833,24 @@ body {
 <div class="controls">
   <button class="ctrl-btn" id="startBtn" onclick="startBot()">▶ START</button>
   <button class="ctrl-btn secondary" onclick="openSettings()">⚙️ SETTINGS</button>
+  <button class="ctrl-btn secondary" onclick="openStats()">📊 STATS</button>
+  <button class="ctrl-btn secondary" onclick="exportData()">📤 EXPORT</button>
+  <button class="ctrl-btn secondary" onclick="document.getElementById('importFile').click()">📥 IMPORT</button>
+  <input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display:none">
   <button class="ctrl-btn warning" onclick="closeAllPositions()">⚠️ CLOSE ALL</button>
   <button class="ctrl-btn danger" onclick="resetBot()">🔄 RESET</button>
+</div>
+
+<!-- STATS MODAL -->
+<div class="modal" id="statsModal">
+  <div class="modal-content" style="max-width:900px">
+    <div class="modal-title">📊 PERFORMANCE ANALYTICS</div>
+    <div id="statsContent" style="font-size:12px;line-height:1.6"></div>
+    <div class="modal-footer">
+      <button class="ctrl-btn secondary" onclick="refreshStats()">🔄 REFRESH</button>
+      <button class="ctrl-btn" onclick="closeStats()">✕ CLOSE</button>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════
@@ -850,6 +866,7 @@ body {
       <div class="settings-tab" onclick="showSettingsTab('dca')">💎 DCA Out</div>
       <div class="settings-tab" onclick="showSettingsTab('exit')">🚪 Exit Rules</div>
       <div class="settings-tab" onclick="showSettingsTab('filters')">🔍 Filters</div>
+      <div class="settings-tab" onclick="showSettingsTab('alerts')">🔔 Alerts</div>
     </div>
     
     <!-- BASIC TAB -->
@@ -1095,6 +1112,52 @@ body {
       </div>
     </div>
     
+    <!-- ALERTS TAB -->
+    <div class="settings-panel" id="panel-alerts">
+      <div class="setting-group">
+        <div class="setting-group-title">🔔 SOUND NOTIFICATIONS</div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="soundEnabled" checked>
+          <label>Enable sound alerts</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="soundOnTrade" checked>
+          <label>🎯 Sound on new trade</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="soundOnDCA" checked>
+          <label>💰 Sound on DCA (profit secured)</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="soundOnClose" checked>
+          <label>✅ Sound on trade close</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="soundOnBigWin">
+          <label>🏆 Special sound on big win (+$50)</label>
+        </div>
+      </div>
+      
+      <div class="setting-group">
+        <div class="setting-group-title">📱 BROWSER NOTIFICATIONS</div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="browserNotifications">
+          <label>Enable browser notifications</label>
+        </div>
+        <button class="ctrl-btn secondary" onclick="requestNotificationPermission()" style="margin-top:10px;font-size:10px;padding:8px 16px">
+          🔔 Request Permission
+        </button>
+      </div>
+      
+      <div class="setting-group">
+        <div class="setting-group-title">🎚️ VOLUME</div>
+        <div class="setting">
+          <label>Sound Volume</label>
+          <input type="range" id="soundVolume" min="0" max="100" value="50" style="width:100%">
+        </div>
+      </div>
+    </div>
+    
     <div class="modal-footer">
       <button class="ctrl-btn secondary" onclick="resetSettings()">↺ DEFAULT</button>
       <button class="ctrl-btn" onclick="closeSettings()">✓ SAVE</button>
@@ -1112,6 +1175,7 @@ body {
       <div class="scanner-text" id="scannerText">Click START to begin</div>
     </div>
     <div class="scanner-stats">
+      <div class="scanner-stat">Uptime: <span id="uptimeDisplay">--:--</span></div>
       <div class="scanner-stat">Scanned: <span id="scannedCount">0</span></div>
       <div class="scanner-stat">Opportunities: <span id="oppsCount">0</span></div>
       <div class="scanner-stat">Cache: <span id="cacheCount">0</span></div>
@@ -1197,10 +1261,545 @@ let isRunning = false;
 let scanInterval = null;
 let updateInterval = null;
 let momentumInterval = null;
+let sessionStartTime = null;
 
 // Stats
 let scannedTotal = 0;
 let oppsTotal = 0;
+let sessionTrades = 0;
+let sessionPnL = 0;
+
+// ══════════════════════════════════════
+// ANALYTICS LOG SYSTEM
+// ══════════════════════════════════════
+let analyticsLog = [];
+
+function logAnalytics(type, data) {
+  const entry = {
+    timestamp: Date.now(),
+    time: new Date().toISOString(),
+    type,
+    ...data
+  };
+  analyticsLog.push(entry);
+  
+  // Keep last 5000 entries
+  if (analyticsLog.length > 5000) {
+    analyticsLog = analyticsLog.slice(-5000);
+  }
+}
+
+// Log when we open a trade
+function logTradeOpen(pos, pair) {
+  logAnalytics('TRADE_OPEN', {
+    tradeId: pos.id,
+    symbol: pos.symbol,
+    chain: pos.chain,
+    address: pos.address,
+    tradeType: pos.tradeType,
+    score: pos.score,
+    entryPrice: pos.entryPrice,
+    positionSize: pos.initialSize,
+    stopLoss: pos.stopLoss,
+    
+    // Market data at entry
+    marketCap: parseFloat(pair.marketCap) || 0,
+    liquidity: parseFloat(pair.liquidity?.usd) || 0,
+    volume24h: parseFloat(pair.volume?.h24) || 0,
+    volume5m: parseFloat(pair.volume?.m5) || 0,
+    
+    // Price changes at entry
+    priceChange5m: parseFloat(pair.priceChange?.m5) || 0,
+    priceChange1h: parseFloat(pair.priceChange?.h1) || 0,
+    priceChange6h: parseFloat(pair.priceChange?.h6) || 0,
+    priceChange24h: parseFloat(pair.priceChange?.h24) || 0,
+    
+    // Transaction data at entry
+    buys5m: pair.txns?.m5?.buys || 0,
+    sells5m: pair.txns?.m5?.sells || 0,
+    buys1h: pair.txns?.h1?.buys || 0,
+    sells1h: pair.txns?.h1?.sells || 0,
+    buys24h: pair.txns?.h24?.buys || 0,
+    sells24h: pair.txns?.h24?.sells || 0,
+    
+    // Calculated metrics
+    buyRatio5m: pair.txns?.m5 ? (pair.txns.m5.buys / (pair.txns.m5.buys + pair.txns.m5.sells) * 100) : 50,
+    liqRatio: parseFloat(pair.marketCap) > 0 ? (parseFloat(pair.liquidity?.usd) / parseFloat(pair.marketCap) * 100) : 0,
+    volRatio: parseFloat(pair.marketCap) > 0 ? (parseFloat(pair.volume?.h24) / parseFloat(pair.marketCap)) : 0,
+    
+    // Source info
+    source: pair._source || 'unknown',
+    boost: pair._boost || 0,
+    
+    // Balance state
+    balanceAfter: balance
+  });
+}
+
+// Log when we close a trade
+function logTradeClose(pos, reason, pair = null) {
+  const holdTime = Date.now() - pos.entryTime;
+  
+  logAnalytics('TRADE_CLOSE', {
+    tradeId: pos.id,
+    symbol: pos.symbol,
+    chain: pos.chain,
+    address: pos.address,
+    tradeType: pos.tradeType,
+    
+    // Entry data
+    entryPrice: pos.entryPrice,
+    initialSize: pos.initialSize,
+    score: pos.score,
+    stopLoss: pos.stopLoss,
+    entryMarketCap: pos.entryMarketCap,
+    entryLiquidity: pos.entryLiquidity,
+    entryVolume24h: pos.entryVolume24h,
+    entryBuyRatio5m: pos.entryBuyRatio5m,
+    
+    // Exit data
+    exitPrice: pos.currentPrice,
+    currentSize: pos.currentSize,
+    reason,
+    
+    // Performance
+    pnl: pos.currentSize * (pos.pnlPct / 100) + pos.dcaSecured,
+    pnlPct: pos.pnlPct,
+    highestPnlPct: pos.highestPnlPct,
+    
+    // DCA info
+    dcaLevel: pos.dcaLevel,
+    dcaSecured: pos.dcaSecured,
+    isMoonBag: pos.isMoonBag,
+    
+    // Trailing info
+    trailingActivated: pos.trailingActivated,
+    trailingHigh: pos.trailingHigh,
+    trailDistance: pos.currentTrailDistance,
+    
+    // Time
+    holdTimeMs: holdTime,
+    holdTimeMin: Math.floor(holdTime / 60000),
+    extended: pos.extended,
+    
+    // Momentum at exit
+    lastBuyRatio: pos.lastBuyRatio,
+    consecutiveBadMomentum: pos.consecutiveBadMomentum,
+    
+    // Market data at exit (if available)
+    exitMarketCap: pair ? parseFloat(pair.marketCap) || 0 : null,
+    exitVolume5m: pair ? parseFloat(pair.volume?.m5) || 0 : null,
+    exitPriceChange5m: pair ? parseFloat(pair.priceChange?.m5) || 0 : null,
+    exitPriceChange1h: pair ? parseFloat(pair.priceChange?.h1) || 0 : null,
+    exitBuyRatio5m: pair?.txns?.m5 ? (pair.txns.m5.buys / (pair.txns.m5.buys + pair.txns.m5.sells) * 100) : null,
+    
+    // Balance state
+    balanceAfter: balance,
+    totalPnlAfter: totalPnL
+  });
+}
+
+// Log DCA events
+function logDCA(pos, level, sellPercent, secured) {
+  logAnalytics('DCA', {
+    tradeId: pos.id,
+    symbol: pos.symbol,
+    tradeType: pos.tradeType,
+    dcaLevel: level,
+    sellPercent,
+    pnlPctAtDCA: pos.pnlPct,
+    amountSecured: secured,
+    remainingSize: pos.currentSize,
+    totalSecured: pos.dcaSecured
+  });
+}
+
+// Log trailing activation
+function logTrailingActivated(pos) {
+  logAnalytics('TRAILING_ACTIVATED', {
+    tradeId: pos.id,
+    symbol: pos.symbol,
+    tradeType: pos.tradeType,
+    activationPnlPct: pos.pnlPct,
+    trailDistance: pos.currentTrailDistance,
+    holdTimeMin: Math.floor((Date.now() - pos.entryTime) / 60000)
+  });
+}
+
+// Log scan results
+function logScan(scanned, opportunities, tradesOpened) {
+  logAnalytics('SCAN', {
+    tokensScanned: scanned,
+    opportunitiesFound: opportunities,
+    tradesOpened,
+    activePositions: positions.length,
+    cacheSize: analyzedCache.size,
+    balance
+  });
+}
+
+// Log AI decisions
+function logAIDecision(symbol, address, score, decision, marketData) {
+  logAnalytics('AI_DECISION', {
+    symbol,
+    address,
+    score,
+    decision,
+    marketCap: marketData.mc,
+    liquidity: marketData.liq,
+    priceChange5m: marketData.chg5m,
+    priceChange1h: marketData.chg1h,
+    buyRatio5m: marketData.buyRatio5m
+  });
+}
+
+// Log skipped tokens
+function logSkipped(symbol, address, reason, score = null) {
+  logAnalytics('SKIPPED', {
+    symbol,
+    address,
+    reason,
+    score
+  });
+}
+
+// Export all data
+function exportData() {
+  const exportObj = {
+    exportDate: new Date().toISOString(),
+    version: 'v6.1',
+    
+    // Current state
+    state: {
+      balance,
+      totalPnL,
+      securedPnL,
+      totalTrades,
+      wins,
+      losses: totalTrades - wins,
+      winRate: totalTrades > 0 ? (wins / totalTrades * 100) : 0,
+      bestTrade,
+      worstTrade,
+      avgPnl: totalTrades > 0 ? totalPnL / totalTrades : 0
+    },
+    
+    // Settings used
+    settings: getSettings(),
+    
+    // All trades history
+    history: history.map(h => ({
+      ...h,
+      closeTimeISO: new Date(h.closeTime).toISOString()
+    })),
+    
+    // Current positions
+    positions: positions.map(p => ({
+      ...p,
+      entryTimeISO: new Date(p.entryTime).toISOString(),
+      currentHoldMin: Math.floor((Date.now() - p.entryTime) / 60000)
+    })),
+    
+    // Detailed analytics log
+    analyticsLog,
+    
+    // Summary stats
+    stats: calculateStats()
+  };
+  
+  const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sniper_analytics_${new Date().toISOString().slice(0,10)}_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  addLog('📤', `<span class="green">Exported</span> ${history.length} trades + ${analyticsLog.length} events`);
+}
+
+// Calculate summary stats for export
+function calculateStats() {
+  const closedTrades = analyticsLog.filter(e => e.type === 'TRADE_CLOSE');
+  const aiDecisions = analyticsLog.filter(e => e.type === 'AI_DECISION');
+  const skippedTokens = analyticsLog.filter(e => e.type === 'SKIPPED');
+  const dcaEvents = analyticsLog.filter(e => e.type === 'DCA');
+  const scans = analyticsLog.filter(e => e.type === 'SCAN');
+  
+  if (closedTrades.length === 0) return { message: 'No trades yet' };
+  
+  // By trade type
+  const quickTrades = closedTrades.filter(t => t.tradeType === 'QUICK');
+  const longTrades = closedTrades.filter(t => t.tradeType === 'LONG');
+  const moonTrades = closedTrades.filter(t => t.tradeType === 'MOON');
+  
+  // By exit reason
+  const byReason = {};
+  closedTrades.forEach(t => {
+    if (!byReason[t.reason]) byReason[t.reason] = { count: 0, totalPnl: 0, wins: 0, avgHoldTime: 0 };
+    byReason[t.reason].count++;
+    byReason[t.reason].totalPnl += t.pnl;
+    byReason[t.reason].avgHoldTime += t.holdTimeMin;
+    if (t.pnl > 0) byReason[t.reason].wins++;
+  });
+  // Calculate averages
+  Object.keys(byReason).forEach(k => {
+    byReason[k].avgHoldTime = Math.round(byReason[k].avgHoldTime / byReason[k].count);
+    byReason[k].winRate = (byReason[k].wins / byReason[k].count * 100).toFixed(1) + '%';
+    byReason[k].avgPnl = (byReason[k].totalPnl / byReason[k].count).toFixed(2);
+  });
+  
+  // By score range
+  const byScoreRange = {
+    '45-55': { count: 0, totalPnl: 0, wins: 0 },
+    '56-65': { count: 0, totalPnl: 0, wins: 0 },
+    '66-75': { count: 0, totalPnl: 0, wins: 0 },
+    '76-85': { count: 0, totalPnl: 0, wins: 0 },
+    '86-100': { count: 0, totalPnl: 0, wins: 0 }
+  };
+  closedTrades.forEach(t => {
+    let range;
+    if (t.score <= 55) range = '45-55';
+    else if (t.score <= 65) range = '56-65';
+    else if (t.score <= 75) range = '66-75';
+    else if (t.score <= 85) range = '76-85';
+    else range = '86-100';
+    
+    byScoreRange[range].count++;
+    byScoreRange[range].totalPnl += t.pnl;
+    if (t.pnl > 0) byScoreRange[range].wins++;
+  });
+  // Add win rates
+  Object.keys(byScoreRange).forEach(k => {
+    const r = byScoreRange[k];
+    r.winRate = r.count > 0 ? (r.wins / r.count * 100).toFixed(1) + '%' : '0%';
+    r.avgPnl = r.count > 0 ? (r.totalPnl / r.count).toFixed(2) : '0';
+  });
+  
+  // By market cap range at entry
+  const byMCRange = {
+    'micro_0-10k': { count: 0, totalPnl: 0, wins: 0 },
+    'tiny_10k-50k': { count: 0, totalPnl: 0, wins: 0 },
+    'small_50k-200k': { count: 0, totalPnl: 0, wins: 0 },
+    'medium_200k-1M': { count: 0, totalPnl: 0, wins: 0 },
+    'large_1M+': { count: 0, totalPnl: 0, wins: 0 }
+  };
+  closedTrades.forEach(t => {
+    const mc = t.entryMarketCap || t.marketCap || 0;
+    let range;
+    if (mc < 10000) range = 'micro_0-10k';
+    else if (mc < 50000) range = 'tiny_10k-50k';
+    else if (mc < 200000) range = 'small_50k-200k';
+    else if (mc < 1000000) range = 'medium_200k-1M';
+    else range = 'large_1M+';
+    
+    byMCRange[range].count++;
+    byMCRange[range].totalPnl += t.pnl;
+    if (t.pnl > 0) byMCRange[range].wins++;
+  });
+  Object.keys(byMCRange).forEach(k => {
+    const r = byMCRange[k];
+    r.winRate = r.count > 0 ? (r.wins / r.count * 100).toFixed(1) + '%' : '0%';
+    r.avgPnl = r.count > 0 ? (r.totalPnl / r.count).toFixed(2) : '0';
+  });
+  
+  // DCA stats
+  const dcaTrades = closedTrades.filter(t => t.dcaLevel > 0);
+  const noDcaTrades = closedTrades.filter(t => t.dcaLevel === 0);
+  
+  // Hold time analysis
+  const winningTrades = closedTrades.filter(t => t.pnl > 0);
+  const losingTrades = closedTrades.filter(t => t.pnl <= 0);
+  const avgHoldTimeWins = winningTrades.length > 0 ? winningTrades.reduce((sum, t) => sum + t.holdTimeMin, 0) / winningTrades.length : 0;
+  const avgHoldTimeLosses = losingTrades.length > 0 ? losingTrades.reduce((sum, t) => sum + t.holdTimeMin, 0) / losingTrades.length : 0;
+  
+  // Trailing stats
+  const trailingTrades = closedTrades.filter(t => t.trailingActivated);
+  const noTrailingTrades = closedTrades.filter(t => !t.trailingActivated);
+  
+  // Peak analysis (how much profit did we leave on the table?)
+  const avgPeakVsExit = closedTrades.reduce((sum, t) => sum + (t.highestPnlPct - t.pnlPct), 0) / closedTrades.length;
+  
+  // AI decision analysis
+  const aiQuick = aiDecisions.filter(d => d.decision.includes('QUICK')).length;
+  const aiLong = aiDecisions.filter(d => d.decision.includes('LONG')).length;
+  const aiSkip = aiDecisions.filter(d => d.decision.includes('SKIP')).length;
+  
+  // Skip reasons analysis
+  const skipReasons = {};
+  skippedTokens.forEach(s => {
+    const reason = s.reason.split(':')[0];
+    if (!skipReasons[reason]) skipReasons[reason] = 0;
+    skipReasons[reason]++;
+  });
+  
+  // Best and worst trades
+  const sortedByPnl = [...closedTrades].sort((a, b) => b.pnl - a.pnl);
+  const best5 = sortedByPnl.slice(0, 5).map(t => ({
+    symbol: t.symbol,
+    pnl: t.pnl.toFixed(2),
+    pnlPct: t.pnlPct.toFixed(1) + '%',
+    score: t.score,
+    holdTime: t.holdTimeMin + 'min',
+    reason: t.reason
+  }));
+  const worst5 = sortedByPnl.slice(-5).reverse().map(t => ({
+    symbol: t.symbol,
+    pnl: t.pnl.toFixed(2),
+    pnlPct: t.pnlPct.toFixed(1) + '%',
+    score: t.score,
+    holdTime: t.holdTimeMin + 'min',
+    reason: t.reason
+  }));
+  
+  // Hourly performance
+  const byHour = {};
+  closedTrades.forEach(t => {
+    const hour = new Date(t.timestamp).getHours();
+    if (!byHour[hour]) byHour[hour] = { count: 0, totalPnl: 0, wins: 0 };
+    byHour[hour].count++;
+    byHour[hour].totalPnl += t.pnl;
+    if (t.pnl > 0) byHour[hour].wins++;
+  });
+  
+  return {
+    overview: {
+      totalTrades: closedTrades.length,
+      totalPnL: closedTrades.reduce((sum, t) => sum + t.pnl, 0).toFixed(2),
+      winRate: (winningTrades.length / closedTrades.length * 100).toFixed(1) + '%',
+      avgPnlPerTrade: (closedTrades.reduce((sum, t) => sum + t.pnl, 0) / closedTrades.length).toFixed(2),
+      avgWin: winningTrades.length > 0 ? (winningTrades.reduce((sum, t) => sum + t.pnl, 0) / winningTrades.length).toFixed(2) : 0,
+      avgLoss: losingTrades.length > 0 ? (losingTrades.reduce((sum, t) => sum + t.pnl, 0) / losingTrades.length).toFixed(2) : 0,
+      profitFactor: losingTrades.length > 0 ? Math.abs(winningTrades.reduce((sum, t) => sum + t.pnl, 0) / losingTrades.reduce((sum, t) => sum + t.pnl, 0)).toFixed(2) : 'N/A'
+    },
+    
+    byTradeType: {
+      QUICK: {
+        count: quickTrades.length,
+        wins: quickTrades.filter(t => t.pnl > 0).length,
+        totalPnl: quickTrades.reduce((sum, t) => sum + t.pnl, 0).toFixed(2),
+        avgPnl: quickTrades.length > 0 ? (quickTrades.reduce((sum, t) => sum + t.pnl, 0) / quickTrades.length).toFixed(2) : 0,
+        winRate: quickTrades.length > 0 ? (quickTrades.filter(t => t.pnl > 0).length / quickTrades.length * 100).toFixed(1) + '%' : '0%'
+      },
+      LONG: {
+        count: longTrades.length,
+        wins: longTrades.filter(t => t.pnl > 0).length,
+        totalPnl: longTrades.reduce((sum, t) => sum + t.pnl, 0).toFixed(2),
+        avgPnl: longTrades.length > 0 ? (longTrades.reduce((sum, t) => sum + t.pnl, 0) / longTrades.length).toFixed(2) : 0,
+        winRate: longTrades.length > 0 ? (longTrades.filter(t => t.pnl > 0).length / longTrades.length * 100).toFixed(1) + '%' : '0%'
+      },
+      MOON: {
+        count: moonTrades.length,
+        wins: moonTrades.filter(t => t.pnl > 0).length,
+        totalPnl: moonTrades.reduce((sum, t) => sum + t.pnl, 0).toFixed(2)
+      }
+    },
+    
+    byExitReason: byReason,
+    byScoreRange,
+    byMarketCapRange: byMCRange,
+    
+    dcaAnalysis: {
+      tradesWithDCA: dcaTrades.length,
+      tradesWithoutDCA: noDcaTrades.length,
+      dcaWinRate: dcaTrades.length > 0 ? (dcaTrades.filter(t => t.pnl > 0).length / dcaTrades.length * 100).toFixed(1) + '%' : '0%',
+      noDcaWinRate: noDcaTrades.length > 0 ? (noDcaTrades.filter(t => t.pnl > 0).length / noDcaTrades.length * 100).toFixed(1) + '%' : '0%',
+      avgPnlWithDCA: dcaTrades.length > 0 ? (dcaTrades.reduce((sum, t) => sum + t.pnl, 0) / dcaTrades.length).toFixed(2) : 0,
+      avgPnlWithoutDCA: noDcaTrades.length > 0 ? (noDcaTrades.reduce((sum, t) => sum + t.pnl, 0) / noDcaTrades.length).toFixed(2) : 0,
+      totalSecuredByDCA: dcaTrades.reduce((sum, t) => sum + t.dcaSecured, 0).toFixed(2),
+      dcaEvents: dcaEvents.length
+    },
+    
+    trailingAnalysis: {
+      tradesWithTrailing: trailingTrades.length,
+      tradesWithoutTrailing: noTrailingTrades.length,
+      trailingWinRate: trailingTrades.length > 0 ? (trailingTrades.filter(t => t.pnl > 0).length / trailingTrades.length * 100).toFixed(1) + '%' : '0%',
+      avgPeakBeforeExit: trailingTrades.length > 0 ? (trailingTrades.reduce((sum, t) => sum + t.trailingHigh, 0) / trailingTrades.length).toFixed(1) + '%' : '0%',
+      avgFinalPnl: trailingTrades.length > 0 ? (trailingTrades.reduce((sum, t) => sum + t.pnlPct, 0) / trailingTrades.length).toFixed(1) + '%' : '0%',
+      avgDropFromPeak: trailingTrades.length > 0 ? (trailingTrades.reduce((sum, t) => sum + (t.trailingHigh - t.pnlPct), 0) / trailingTrades.length).toFixed(1) + '%' : '0%'
+    },
+    
+    holdTimeAnalysis: {
+      avgHoldTimeAll: Math.round(closedTrades.reduce((sum, t) => sum + t.holdTimeMin, 0) / closedTrades.length) + ' min',
+      avgHoldTimeWins: Math.round(avgHoldTimeWins) + ' min',
+      avgHoldTimeLosses: Math.round(avgHoldTimeLosses) + ' min'
+    },
+    
+    peakAnalysis: {
+      avgPeakVsExit: avgPeakVsExit.toFixed(1) + '% left on table',
+      avgHighestPnlPct: (closedTrades.reduce((sum, t) => sum + t.highestPnlPct, 0) / closedTrades.length).toFixed(1) + '%'
+    },
+    
+    aiDecisionAnalysis: {
+      totalDecisions: aiDecisions.length,
+      quickDecisions: aiQuick,
+      longDecisions: aiLong,
+      skipDecisions: aiSkip,
+      quickRate: aiDecisions.length > 0 ? (aiQuick / aiDecisions.length * 100).toFixed(1) + '%' : '0%'
+    },
+    
+    skipAnalysis: {
+      totalSkipped: skippedTokens.length,
+      byReason: skipReasons
+    },
+    
+    scanAnalysis: {
+      totalScans: scans.length,
+      avgTokensPerScan: scans.length > 0 ? Math.round(scans.reduce((sum, s) => sum + s.tokensScanned, 0) / scans.length) : 0,
+      avgOpportunitiesPerScan: scans.length > 0 ? Math.round(scans.reduce((sum, s) => sum + s.opportunitiesFound, 0) / scans.length) : 0,
+      avgTradesPerScan: scans.length > 0 ? (scans.reduce((sum, s) => sum + s.tradesOpened, 0) / scans.length).toFixed(2) : 0
+    },
+    
+    bestTrades: best5,
+    worstTrades: worst5,
+    
+    byHourOfDay: byHour
+  };
+}
+
+// Import data
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      
+      // Restore state
+      if (data.state) {
+        balance = data.state.balance || INITIAL_BALANCE;
+        totalPnL = data.state.totalPnL || 0;
+        securedPnL = data.state.securedPnL || 0;
+        totalTrades = data.state.totalTrades || 0;
+        wins = data.state.wins || 0;
+        bestTrade = data.state.bestTrade || 0;
+        worstTrade = data.state.worstTrade || 0;
+      }
+      
+      // Restore history
+      if (data.history) {
+        history = data.history;
+      }
+      
+      // Restore analytics log
+      if (data.analyticsLog) {
+        analyticsLog = data.analyticsLog;
+      }
+      
+      updateUI();
+      renderHistory();
+      renderPositions();
+      
+      addLog('📥', `<span class="green">Imported</span> ${history.length} trades + ${analyticsLog.length} events`);
+      
+    } catch (err) {
+      addLog('❌', `<span class="red">Import failed:</span> ${err.message}`);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
 
 // ══════════════════════════════════════
 // CACHE SYSTEM - 1 HOUR
@@ -1236,6 +1835,134 @@ const fN = n => n >= 1e9 ? (n/1e9).toFixed(2)+'B' : n >= 1e6 ? (n/1e6).toFixed(2
 const fP = p => p < 0.0001 ? p.toFixed(8) : p < 0.01 ? p.toFixed(6) : p < 1 ? p.toFixed(4) : p.toFixed(2);
 const getTime = () => new Date().toLocaleTimeString('en-US', { hour12: false });
 const getShortTime = () => new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+// ══════════════════════════════════════
+// SOUND SYSTEM
+// ══════════════════════════════════════
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type = 'trade') {
+  if (!$('soundEnabled')?.checked) return;
+  
+  const volume = ($('soundVolume')?.value || 50) / 100;
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  
+  gainNode.gain.value = volume * 0.3;
+  
+  switch(type) {
+    case 'trade':
+      if (!$('soundOnTrade')?.checked) return;
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.2);
+      break;
+      
+    case 'dca':
+      if (!$('soundOnDCA')?.checked) return;
+      oscillator.frequency.value = 1000;
+      oscillator.type = 'sine';
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+      oscillator.start();
+      setTimeout(() => {
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.frequency.value = 1200;
+        gain2.gain.value = volume * 0.3;
+        gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc2.start();
+        osc2.stop(audioCtx.currentTime + 0.15);
+      }, 150);
+      oscillator.stop(audioCtx.currentTime + 0.15);
+      break;
+      
+    case 'win':
+      if (!$('soundOnClose')?.checked) return;
+      oscillator.frequency.value = 600;
+      oscillator.type = 'sine';
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      oscillator.start();
+      setTimeout(() => {
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.frequency.value = 800;
+        gain2.gain.value = volume * 0.3;
+        gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc2.start();
+        osc2.stop(audioCtx.currentTime + 0.2);
+      }, 100);
+      setTimeout(() => {
+        const osc3 = audioCtx.createOscillator();
+        const gain3 = audioCtx.createGain();
+        osc3.connect(gain3);
+        gain3.connect(audioCtx.destination);
+        osc3.frequency.value = 1000;
+        gain3.gain.value = volume * 0.3;
+        gain3.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc3.start();
+        osc3.stop(audioCtx.currentTime + 0.2);
+      }, 200);
+      oscillator.stop(audioCtx.currentTime + 0.1);
+      break;
+      
+    case 'loss':
+      if (!$('soundOnClose')?.checked) return;
+      oscillator.frequency.value = 300;
+      oscillator.type = 'sawtooth';
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.3);
+      break;
+      
+    case 'bigwin':
+      if (!$('soundOnBigWin')?.checked) return;
+      // Play victory fanfare
+      const notes = [523, 659, 784, 1047];
+      notes.forEach((freq, i) => {
+        setTimeout(() => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.value = freq;
+          osc.type = 'sine';
+          gain.gain.value = volume * 0.3;
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.3);
+        }, i * 150);
+      });
+      return;
+  }
+}
+
+function sendBrowserNotification(title, body) {
+  if (!$('browserNotifications')?.checked) return;
+  if (Notification.permission !== 'granted') return;
+  
+  new Notification(title, {
+    body,
+    icon: '⚡',
+    silent: true
+  });
+}
+
+function requestNotificationPermission() {
+  Notification.requestPermission().then(permission => {
+    if (permission === 'granted') {
+      addLog('🔔', '<span class="green">Browser notifications enabled!</span>');
+    }
+  });
+}
 
 function addLog(icon, text) {
   logs.unshift({ time: getTime(), icon, text });
@@ -1312,6 +2039,283 @@ function getSettings() {
 function openSettings() { $('settingsModal').classList.add('show'); }
 function closeSettings() { $('settingsModal').classList.remove('show'); }
 
+function openStats() { 
+  $('statsModal').classList.add('show'); 
+  refreshStats();
+}
+function closeStats() { $('statsModal').classList.remove('show'); }
+
+// Generate AI-like recommendations based on stats
+function generateRecommendations(stats) {
+  const recs = [];
+  const settings = getSettings();
+  
+  // Win rate analysis
+  const winRate = parseFloat(stats.overview.winRate);
+  if (winRate < 40) {
+    recs.push(`⚠️ Win rate is low (${stats.overview.winRate}). Consider <b>increasing MIN SCORE</b> to ${settings.minScore + 10} to be more selective.`);
+  }
+  
+  // Profit factor
+  const pf = parseFloat(stats.overview.profitFactor);
+  if (pf < 1 && !isNaN(pf)) {
+    recs.push(`⚠️ Profit factor < 1 means losses exceed wins. Consider <b>tightening stop loss</b> or <b>enabling DCA</b> if not already.`);
+  }
+  
+  // Score range analysis
+  const scoreRanges = stats.byScoreRange;
+  const lowScoreData = scoreRanges['45-55'];
+  if (lowScoreData && lowScoreData.count > 5) {
+    const lowScoreWinRate = parseFloat(lowScoreData.winRate);
+    if (lowScoreWinRate < 40) {
+      recs.push(`📊 Low score trades (45-55) have ${lowScoreData.winRate} win rate. Consider <b>raising MIN SCORE to 56+</b>.`);
+    }
+  }
+  
+  // High score performs better?
+  const highScoreData = scoreRanges['76-85'];
+  const veryHighData = scoreRanges['86-100'];
+  if (highScoreData && veryHighData) {
+    const highWinRate = parseFloat(highScoreData.winRate) || 0;
+    const veryHighWinRate = parseFloat(veryHighData.winRate) || 0;
+    if (highWinRate > 60 || veryHighWinRate > 60) {
+      recs.push(`🎯 High score trades (76+) have better performance. The scoring system is working well!`);
+    }
+  }
+  
+  // Market cap analysis
+  const mcRanges = stats.byMarketCapRange;
+  let bestMCRange = null;
+  let bestMCWinRate = 0;
+  Object.entries(mcRanges).forEach(([range, data]) => {
+    if (data.count >= 3) {
+      const wr = parseFloat(data.winRate) || 0;
+      if (wr > bestMCWinRate) {
+        bestMCWinRate = wr;
+        bestMCRange = range;
+      }
+    }
+  });
+  if (bestMCRange && bestMCWinRate > 55) {
+    recs.push(`💰 Best performing MC range: <b>${bestMCRange.replace('_', ' ')}</b> (${bestMCWinRate.toFixed(0)}% win rate). Consider focusing on this range.`);
+  }
+  
+  // DCA analysis
+  const dcaWinRate = parseFloat(stats.dcaAnalysis.dcaWinRate) || 0;
+  const noDcaWinRate = parseFloat(stats.dcaAnalysis.noDcaWinRate) || 0;
+  if (dcaWinRate > noDcaWinRate + 10) {
+    recs.push(`💎 DCA trades have ${(dcaWinRate - noDcaWinRate).toFixed(0)}% better win rate! DCA is helping significantly.`);
+  }
+  if (!settings.dcaEnabled && noDcaWinRate < 50) {
+    recs.push(`💎 Consider <b>enabling DCA Out</b> to lock in profits earlier.`);
+  }
+  
+  // Trailing analysis
+  const trailDropAvg = parseFloat(stats.trailingAnalysis.avgDropFromPeak) || 0;
+  if (trailDropAvg > 20) {
+    recs.push(`📈 Average drop from peak is ${trailDropAvg.toFixed(0)}%. Consider <b>tightening trailing distance</b> to ${Math.max(10, settings.trailDistance - 5)}%.`);
+  }
+  
+  // Hold time analysis
+  const avgWinHold = parseInt(stats.holdTimeAnalysis.avgHoldTimeWins) || 0;
+  const avgLossHold = parseInt(stats.holdTimeAnalysis.avgHoldTimeLosses) || 0;
+  if (avgLossHold > avgWinHold * 1.5) {
+    recs.push(`⏱️ Losses are held ${avgLossHold}min vs wins ${avgWinHold}min. Consider <b>reducing max hold time</b> or <b>tighter stop loss</b>.`);
+  }
+  
+  // Exit reason analysis
+  const byReason = stats.byExitReason;
+  if (byReason['SL'] && byReason['SL'].count > stats.overview.totalTrades * 0.4) {
+    recs.push(`🛑 ${byReason['SL'].count} trades hit stop loss (${(byReason['SL'].count / stats.overview.totalTrades * 100).toFixed(0)}%). Consider <b>widening SL</b> or <b>improving entry filters</b>.`);
+  }
+  if (byReason['TRAIL'] && byReason['TRAIL'].count > 5) {
+    const trailWinRate = parseFloat(byReason['TRAIL'].winRate) || 0;
+    if (trailWinRate > 80) {
+      recs.push(`📈 Trailing stop exits have ${byReason['TRAIL'].winRate} win rate — excellent! Trailing is protecting profits well.`);
+    }
+  }
+  if (byReason['MOMENTUM'] && byReason['MOMENTUM'].count > 3) {
+    const momWinRate = parseFloat(byReason['MOMENTUM'].winRate) || 0;
+    if (momWinRate > 70) {
+      recs.push(`📉 Momentum exit is performing well (${byReason['MOMENTUM'].winRate} win rate). Good at catching dumps early.`);
+    }
+  }
+  
+  // Trade type analysis
+  const quickWinRate = parseFloat(stats.byTradeType.QUICK.winRate) || 0;
+  const longWinRate = parseFloat(stats.byTradeType.LONG.winRate) || 0;
+  if (quickWinRate > longWinRate + 15 && stats.byTradeType.LONG.count >= 5) {
+    recs.push(`⚡ QUICK trades outperform LONG by ${(quickWinRate - longWinRate).toFixed(0)}%. Consider focusing more on QUICK scalps.`);
+  } else if (longWinRate > quickWinRate + 15 && stats.byTradeType.QUICK.count >= 5) {
+    recs.push(`🌙 LONG trades outperform QUICK by ${(longWinRate - quickWinRate).toFixed(0)}%. Consider focusing more on gem hunting.`);
+  }
+  
+  // If doing well
+  if (pf > 1.5 && winRate > 55) {
+    recs.push(`🏆 Great performance! Profit factor ${pf.toFixed(2)} and ${stats.overview.winRate} win rate. Keep current settings.`);
+  }
+  
+  return recs.slice(0, 6); // Max 6 recommendations
+}
+
+function refreshStats() {
+  const stats = calculateStats();
+  
+  if (stats.message) {
+    $('statsContent').innerHTML = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">${stats.message}</div></div>`;
+    return;
+  }
+  
+  // Generate recommendations
+  const recommendations = generateRecommendations(stats);
+  
+  let html = `
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;">
+    
+    <!-- RECOMMENDATIONS -->
+    ${recommendations.length > 0 ? `
+    <div class="setting-group" style="grid-column:1/-1;border:1px solid var(--yellow)">
+      <div class="setting-group-title" style="color:var(--yellow)">💡 RECOMMENDATIONS</div>
+      <ul style="font-size:11px;line-height:1.8;padding-left:20px;color:var(--text)">
+        ${recommendations.map(r => `<li>${r}</li>`).join('')}
+      </ul>
+    </div>
+    ` : ''}
+    
+    <!-- OVERVIEW -->
+    <div class="setting-group">
+      <div class="setting-group-title">📈 OVERVIEW</div>
+      <table style="width:100%;font-size:11px">
+        <tr><td>Total Trades:</td><td style="text-align:right;color:var(--cyan)">${stats.overview.totalTrades}</td></tr>
+        <tr><td>Total P&L:</td><td style="text-align:right;color:${parseFloat(stats.overview.totalPnL) >= 0 ? 'var(--green)' : 'var(--red)'}">$${stats.overview.totalPnL}</td></tr>
+        <tr><td>Win Rate:</td><td style="text-align:right;color:var(--yellow)">${stats.overview.winRate}</td></tr>
+        <tr><td>Avg P&L/Trade:</td><td style="text-align:right">$${stats.overview.avgPnlPerTrade}</td></tr>
+        <tr><td>Avg Win:</td><td style="text-align:right;color:var(--green)">$${stats.overview.avgWin}</td></tr>
+        <tr><td>Avg Loss:</td><td style="text-align:right;color:var(--red)">$${stats.overview.avgLoss}</td></tr>
+        <tr><td>Profit Factor:</td><td style="text-align:right;color:var(--purple)">${stats.overview.profitFactor}</td></tr>
+      </table>
+    </div>
+    
+    <!-- BY TRADE TYPE -->
+    <div class="setting-group">
+      <div class="setting-group-title">⚡🌙 BY TRADE TYPE</div>
+      <table style="width:100%;font-size:11px">
+        <tr style="color:var(--text2)"><td></td><td>QUICK</td><td>LONG</td></tr>
+        <tr><td>Count:</td><td style="color:var(--cyan)">${stats.byTradeType.QUICK.count}</td><td style="color:var(--purple)">${stats.byTradeType.LONG.count}</td></tr>
+        <tr><td>Win Rate:</td><td>${stats.byTradeType.QUICK.winRate}</td><td>${stats.byTradeType.LONG.winRate}</td></tr>
+        <tr><td>Total P&L:</td><td>$${stats.byTradeType.QUICK.totalPnl}</td><td>$${stats.byTradeType.LONG.totalPnl}</td></tr>
+        <tr><td>Avg P&L:</td><td>$${stats.byTradeType.QUICK.avgPnl}</td><td>$${stats.byTradeType.LONG.avgPnl}</td></tr>
+      </table>
+    </div>
+    
+    <!-- BY EXIT REASON -->
+    <div class="setting-group">
+      <div class="setting-group-title">🚪 BY EXIT REASON</div>
+      <table style="width:100%;font-size:11px">
+        <tr style="color:var(--text2)"><td>Reason</td><td>Count</td><td>Win%</td><td>Avg P&L</td></tr>
+        ${Object.entries(stats.byExitReason).map(([reason, data]) => `
+          <tr><td>${reason}</td><td>${data.count}</td><td>${data.winRate}</td><td>$${data.avgPnl}</td></tr>
+        `).join('')}
+      </table>
+    </div>
+    
+    <!-- BY SCORE RANGE -->
+    <div class="setting-group">
+      <div class="setting-group-title">📊 BY SCORE RANGE</div>
+      <table style="width:100%;font-size:11px">
+        <tr style="color:var(--text2)"><td>Score</td><td>Count</td><td>Win%</td><td>Avg P&L</td></tr>
+        ${Object.entries(stats.byScoreRange).map(([range, data]) => `
+          <tr><td>${range}</td><td>${data.count}</td><td>${data.winRate}</td><td>$${data.avgPnl}</td></tr>
+        `).join('')}
+      </table>
+    </div>
+    
+    <!-- BY MARKET CAP -->
+    <div class="setting-group">
+      <div class="setting-group-title">💰 BY MARKET CAP</div>
+      <table style="width:100%;font-size:11px">
+        <tr style="color:var(--text2)"><td>MC Range</td><td>Count</td><td>Win%</td><td>Avg P&L</td></tr>
+        ${Object.entries(stats.byMarketCapRange).map(([range, data]) => `
+          <tr><td>${range.replace('_', ' ')}</td><td>${data.count}</td><td>${data.winRate}</td><td>$${data.avgPnl}</td></tr>
+        `).join('')}
+      </table>
+    </div>
+    
+    <!-- DCA ANALYSIS -->
+    <div class="setting-group">
+      <div class="setting-group-title">💎 DCA ANALYSIS</div>
+      <table style="width:100%;font-size:11px">
+        <tr><td>Trades with DCA:</td><td style="text-align:right">${stats.dcaAnalysis.tradesWithDCA}</td></tr>
+        <tr><td>DCA Win Rate:</td><td style="text-align:right;color:var(--green)">${stats.dcaAnalysis.dcaWinRate}</td></tr>
+        <tr><td>No DCA Win Rate:</td><td style="text-align:right">${stats.dcaAnalysis.noDcaWinRate}</td></tr>
+        <tr><td>Avg P&L with DCA:</td><td style="text-align:right">$${stats.dcaAnalysis.avgPnlWithDCA}</td></tr>
+        <tr><td>Total Secured:</td><td style="text-align:right;color:var(--green)">$${stats.dcaAnalysis.totalSecuredByDCA}</td></tr>
+      </table>
+    </div>
+    
+    <!-- TRAILING ANALYSIS -->
+    <div class="setting-group">
+      <div class="setting-group-title">📈 TRAILING ANALYSIS</div>
+      <table style="width:100%;font-size:11px">
+        <tr><td>Trades with Trail:</td><td style="text-align:right">${stats.trailingAnalysis.tradesWithTrailing}</td></tr>
+        <tr><td>Trail Win Rate:</td><td style="text-align:right;color:var(--orange)">${stats.trailingAnalysis.trailingWinRate}</td></tr>
+        <tr><td>Avg Peak:</td><td style="text-align:right">${stats.trailingAnalysis.avgPeakBeforeExit}</td></tr>
+        <tr><td>Avg Exit:</td><td style="text-align:right">${stats.trailingAnalysis.avgFinalPnl}</td></tr>
+        <tr><td>Avg Drop from Peak:</td><td style="text-align:right;color:var(--red)">${stats.trailingAnalysis.avgDropFromPeak}</td></tr>
+      </table>
+    </div>
+    
+    <!-- HOLD TIME -->
+    <div class="setting-group">
+      <div class="setting-group-title">⏱️ HOLD TIME</div>
+      <table style="width:100%;font-size:11px">
+        <tr><td>Avg Hold (All):</td><td style="text-align:right">${stats.holdTimeAnalysis.avgHoldTimeAll}</td></tr>
+        <tr><td>Avg Hold (Wins):</td><td style="text-align:right;color:var(--green)">${stats.holdTimeAnalysis.avgHoldTimeWins}</td></tr>
+        <tr><td>Avg Hold (Losses):</td><td style="text-align:right;color:var(--red)">${stats.holdTimeAnalysis.avgHoldTimeLosses}</td></tr>
+      </table>
+    </div>
+    
+    <!-- BEST TRADES -->
+    <div class="setting-group">
+      <div class="setting-group-title">🏆 BEST TRADES</div>
+      <table style="width:100%;font-size:10px">
+        ${stats.bestTrades.map(t => `
+          <tr><td>$${t.symbol}</td><td style="color:var(--green)">+$${t.pnl}</td><td>${t.pnlPct}</td><td>${t.holdTime}</td></tr>
+        `).join('')}
+      </table>
+    </div>
+    
+    <!-- WORST TRADES -->
+    <div class="setting-group">
+      <div class="setting-group-title">💀 WORST TRADES</div>
+      <table style="width:100%;font-size:10px">
+        ${stats.worstTrades.map(t => `
+          <tr><td>$${t.symbol}</td><td style="color:var(--red)">$${t.pnl}</td><td>${t.pnlPct}</td><td>${t.holdTime}</td></tr>
+        `).join('')}
+      </table>
+    </div>
+    
+    <!-- AI & SCAN -->
+    <div class="setting-group">
+      <div class="setting-group-title">🤖 AI & SCAN STATS</div>
+      <table style="width:100%;font-size:11px">
+        <tr><td>Total Scans:</td><td style="text-align:right">${stats.scanAnalysis.totalScans}</td></tr>
+        <tr><td>Avg Tokens/Scan:</td><td style="text-align:right">${stats.scanAnalysis.avgTokensPerScan}</td></tr>
+        <tr><td>Avg Opps/Scan:</td><td style="text-align:right">${stats.scanAnalysis.avgOpportunitiesPerScan}</td></tr>
+        <tr><td>AI Decisions:</td><td style="text-align:right">${stats.aiDecisionAnalysis.totalDecisions}</td></tr>
+        <tr><td>→ QUICK:</td><td style="text-align:right;color:var(--cyan)">${stats.aiDecisionAnalysis.quickDecisions}</td></tr>
+        <tr><td>→ LONG:</td><td style="text-align:right;color:var(--purple)">${stats.aiDecisionAnalysis.longDecisions}</td></tr>
+        <tr><td>→ SKIP:</td><td style="text-align:right;color:var(--red)">${stats.aiDecisionAnalysis.skipDecisions}</td></tr>
+        <tr><td>Total Skipped:</td><td style="text-align:right">${stats.skipAnalysis.totalSkipped}</td></tr>
+      </table>
+    </div>
+    
+  </div>
+  `;
+  
+  $('statsContent').innerHTML = html;
+}
+
 function showSettingsTab(tabName) {
   document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
@@ -1367,6 +2371,10 @@ function startBot() {
     return;
   }
   isRunning = true;
+  sessionStartTime = Date.now();
+  sessionTrades = 0;
+  sessionPnL = 0;
+  
   $('startBtn').textContent = '⏹ STOP';
   $('modeBadge').textContent = '🟢 RUNNING';
   $('modeBadge').className = 'mode-badge active';
@@ -1377,9 +2385,27 @@ function startBot() {
   scanInterval = setInterval(scan, 40000);
   updateInterval = setInterval(updatePositions, 5000);
   
+  // Update uptime display
+  setInterval(updateUptime, 1000);
+  
   const settings = getSettings();
   if (settings.momentumExitEnabled) {
     momentumInterval = setInterval(checkMomentumExit, settings.momentumInterval * 1000);
+  }
+}
+
+function updateUptime() {
+  if (!sessionStartTime) return;
+  const elapsed = Date.now() - sessionStartTime;
+  const hours = Math.floor(elapsed / 3600000);
+  const mins = Math.floor((elapsed % 3600000) / 60000);
+  const secs = Math.floor((elapsed % 60000) / 1000);
+  
+  const uptimeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m ${secs}s`;
+  
+  // Update header if element exists
+  if ($('uptimeDisplay')) {
+    $('uptimeDisplay').textContent = uptimeStr;
   }
 }
 
@@ -1669,6 +2695,12 @@ async function executeTrade(pair, score, tradeType = 'QUICK') {
     telegram: pair.info?.socials?.find(s => s.type === 'telegram')?.url || null,
     discord: pair.info?.socials?.find(s => s.type === 'discord')?.url || null,
     
+    // Market data at entry (for analytics)
+    entryMarketCap: parseFloat(pair.marketCap) || 0,
+    entryLiquidity: parseFloat(pair.liquidity?.usd) || 0,
+    entryVolume24h: parseFloat(pair.volume?.h24) || 0,
+    entryBuyRatio5m: pair.txns?.m5 ? (pair.txns.m5.buys / (pair.txns.m5.buys + pair.txns.m5.sells) * 100) : 50,
+    
     // Size tracking
     initialSize: size,
     currentSize: size,
@@ -1708,6 +2740,13 @@ async function executeTrade(pair, score, tradeType = 'QUICK') {
   positions.push(position);
   balance -= size;
   
+  // Log for analytics
+  logTradeOpen(position, pair);
+  
+  // Sound & notification
+  playSound('trade');
+  sendBrowserNotification('🎯 New Trade', `${position.label} $${symbol} @ $${fP(entryPrice)}`);
+  
   addLog('🎯', `<span class="cyan">${position.label}</span> $${esc(symbol)} @ $${fP(entryPrice)} — Score: ${score}`);
   updateUI();
   renderPositions();
@@ -1725,6 +2764,12 @@ function partialSell(pos, sellPercent, reason, dcaLevel) {
   securedPnL += pnlForSold;
   balance += sellAmount + pnlForSold;
   
+  // Log for analytics
+  logDCA(pos, dcaLevel, sellPercent, pnlForSold);
+  
+  // Sound
+  playSound('dca');
+  
   const emoji = dcaLevel === 1 ? '🥇' : dcaLevel === 2 ? '🥈' : '🥉';
   addLog('💰', `${emoji} <span class="green">DCA ${dcaLevel}</span> $${esc(pos.symbol)} — Sold ${sellPercent}% — Secured <span class="green">+$${pnlForSold.toFixed(2)}</span>`);
   
@@ -1740,7 +2785,7 @@ function partialSell(pos, sellPercent, reason, dcaLevel) {
   renderPositions();
 }
 
-function closeTrade(pos, reason) {
+function closeTrade(pos, reason, pair = null) {
   // Prevent duplicate closes
   if (!positions.find(p => p.id === pos.id)) return;
   
@@ -1749,6 +2794,9 @@ function closeTrade(pos, reason) {
   
   // Remove from positions FIRST to prevent double processing
   positions = positions.filter(p => p.id !== pos.id);
+  
+  // Log for analytics BEFORE updating totals
+  logTradeClose(pos, reason, pair);
   
   totalPnL += finalPnl;
   balance += pos.currentSize + remainingPnl;
@@ -1771,11 +2819,27 @@ function closeTrade(pos, reason) {
     pairAddress: pos.pairAddress,
     dexUrl: pos.dexUrl,
     tradeType: pos.tradeType,
+    score: pos.score,
+    
+    // Entry data
+    entryPrice: pos.entryPrice,
+    entryMarketCap: pos.entryMarketCap,
+    entryLiquidity: pos.entryLiquidity,
+    
+    // Exit data
+    exitPrice: pos.currentPrice,
     pnl: finalPnl,
     pnlPct: pos.pnlPct,
     highestPnlPct: pos.highestPnlPct,
+    
+    // DCA
     dcaSecured: pos.dcaSecured,
     dcaLevel: pos.dcaLevel,
+    
+    // Trailing
+    trailingActivated: pos.trailingActivated,
+    trailingHigh: pos.trailingHigh,
+    
     reason,
     closeTime: Date.now(),
     holdTime,
@@ -1786,7 +2850,22 @@ function closeTrade(pos, reason) {
   const color = finalPnl >= 0 ? 'green' : 'red';
   const dcaInfo = pos.dcaSecured > 0 ? ` (DCA: +$${pos.dcaSecured.toFixed(2)})` : '';
   
+  // Sound & notification
+  if (finalPnl >= 50) {
+    playSound('bigwin');
+    sendBrowserNotification('🏆 BIG WIN!', `$${pos.symbol} +$${finalPnl.toFixed(2)}`);
+  } else if (finalPnl >= 0) {
+    playSound('win');
+    sendBrowserNotification('✅ Win', `$${pos.symbol} +$${finalPnl.toFixed(2)}`);
+  } else {
+    playSound('loss');
+    sendBrowserNotification('❌ Loss', `$${pos.symbol} $${finalPnl.toFixed(2)}`);
+  }
+  
   addLog(icon, `<span class="${color}">${reason}</span> $${esc(pos.symbol)} — ${finalPnl >= 0 ? '+' : ''}$${finalPnl.toFixed(2)}${dcaInfo} — ${holdMin}min`);
+  
+  // Auto-save
+  saveToStorage();
   
   updateUI();
   renderPositions();
@@ -1852,7 +2931,7 @@ async function updatePositions() {
       // ═══════════════════════════════════
       if (pos.pnlPct <= -pos.stopLoss && !pos.isMoonBag) {
         addLog('🛑', `<span class="red">STOP LOSS</span> $${esc(pos.symbol)} at ${pos.pnlPct.toFixed(1)}%`);
-        closeTrade(pos, 'SL');
+        closeTrade(pos, 'SL', data.pair);
         continue;
       }
       
@@ -1879,6 +2958,7 @@ async function updatePositions() {
       if (pos.pnlPct >= trailActivationPct && !pos.trailingActivated) {
         pos.trailingActivated = true;
         pos.trailingHigh = pos.pnlPct;
+        logTrailingActivated(pos);
         addLog('📈', `<span class="orange">TRAILING</span> $${esc(pos.symbol)} activated at +${pos.pnlPct.toFixed(0)}%`);
       }
       
@@ -1900,7 +2980,7 @@ async function updatePositions() {
         const dropFromHigh = pos.trailingHigh - pos.pnlPct;
         if (dropFromHigh >= pos.currentTrailDistance) {
           addLog('📉', `<span class="orange">TRAIL HIT</span> $${esc(pos.symbol)} — Peak +${pos.trailingHigh.toFixed(0)}% → +${pos.pnlPct.toFixed(1)}%`);
-          closeTrade(pos, 'TRAIL');
+          closeTrade(pos, 'TRAIL', data.pair);
           continue;
         }
       }
@@ -1918,10 +2998,10 @@ async function updatePositions() {
             pos.extended++;
             addLog('🔄', `<span class="cyan">Extended</span> $${esc(pos.symbol)} — ${pos.extended}/${pos.maxExtend}`);
           } else {
-            closeTrade(pos, 'TIMEOUT');
+            closeTrade(pos, 'TIMEOUT', data.pair);
           }
         } else {
-          closeTrade(pos, 'MAX TIME');
+          closeTrade(pos, 'MAX TIME', data.pair);
         }
         continue;
       }
@@ -1973,7 +3053,7 @@ async function checkMomentumExit() {
         
         if (pos.consecutiveBadMomentum >= settings.momentumBadChecks) {
           addLog('📉', `<span class="cyan">MOMENTUM EXIT</span> $${esc(pos.symbol)} — Buyers: ${buyRatio.toFixed(0)}%`);
-          closeTrade(pos, 'MOMENTUM');
+          closeTrade(pos, 'MOMENTUM', data.pair);
         }
       } else {
         pos.consecutiveBadMomentum = 0;
@@ -2200,6 +3280,7 @@ async function scan() {
   // TRADE SELECTION - No limits, just no duplicates
   // ═══════════════════════════════════════════════════════════════
   const topOpps = opportunities.slice(0, 40);
+  let tradesOpened = 0;
   
   // Sets for duplicate prevention
   const tradingNow = new Set();
@@ -2229,6 +3310,7 @@ async function scan() {
         existingSymbols.add(symbol);
         existingAddresses.add(addr);
         await executeTrade(opp.pair, opp.score, 'QUICK');
+        tradesOpened++;
         continue;
       } else if (cached.includes('LONG')) {
         addLog('🌙', `<span class="purple">LONG</span> $${esc(symbol)}`);
@@ -2236,6 +3318,7 @@ async function scan() {
         existingSymbols.add(symbol);
         existingAddresses.add(addr);
         await executeTrade(opp.pair, opp.score, 'LONG');
+        tradesOpened++;
         continue;
       } else if (cached.includes('SKIP')) {
         continue;
@@ -2246,12 +3329,14 @@ async function scan() {
     const overCheck = isOverextended(opp.pair);
     if (overCheck.skip) {
       setCachedAnalysis(addr, 'SKIP');
+      logSkipped(symbol, addr, 'OVEREXTENDED: ' + overCheck.reason, opp.score);
       continue;
     }
     
     const momentumCheck = getMomentumScore(opp.pair);
     if (!momentumCheck.good) {
       setCachedAnalysis(addr, 'SKIP');
+      logSkipped(symbol, addr, 'BAD_MOMENTUM: ' + momentumCheck.reason, opp.score);
       continue;
     }
     
@@ -2260,18 +3345,31 @@ async function scan() {
       addLog('🤖', `Analyzing $${esc(symbol)}...`);
       const analysis = await analyzeForEntry(opp.pair);
       
+      // Log AI decision
+      const mc = parseFloat(opp.pair.marketCap) || 0;
+      const liq = parseFloat(opp.pair.liquidity?.usd) || 0;
+      const chg5m = parseFloat(opp.pair.priceChange?.m5) || 0;
+      const chg1h = parseFloat(opp.pair.priceChange?.h1) || 0;
+      const buys5m = opp.pair.txns?.m5?.buys || 0;
+      const sells5m = opp.pair.txns?.m5?.sells || 0;
+      const buyRatio5m = (buys5m + sells5m) > 0 ? (buys5m / (buys5m + sells5m) * 100) : 50;
+      
+      logAIDecision(symbol, addr, opp.score, analysis, { mc, liq, chg5m, chg1h, buyRatio5m });
+      
       if (analysis.includes('QUICK')) {
         addLog('⚡', `<span class="cyan">QUICK</span> $${esc(symbol)}`);
         tradingNow.add(addr);
         existingSymbols.add(symbol);
         existingAddresses.add(addr);
         await executeTrade(opp.pair, opp.score, 'QUICK');
+        tradesOpened++;
       } else if (analysis.includes('LONG')) {
         addLog('🌙', `<span class="purple">LONG</span> $${esc(symbol)}`);
         tradingNow.add(addr);
         existingSymbols.add(symbol);
         existingAddresses.add(addr);
         await executeTrade(opp.pair, opp.score, 'LONG');
+        tradesOpened++;
       } else if (!analysis.includes('SKIP') && opp.score >= 60) {
         // High score fallback
         addLog('⚡', `<span class="cyan">QUICK</span> $${esc(symbol)} (score)`);
@@ -2279,6 +3377,9 @@ async function scan() {
         existingSymbols.add(symbol);
         existingAddresses.add(addr);
         await executeTrade(opp.pair, opp.score, 'QUICK');
+        tradesOpened++;
+      } else {
+        logSkipped(symbol, addr, 'AI_SKIP', opp.score);
       }
     } catch (e) {
       // Fallback on AI error
@@ -2289,11 +3390,15 @@ async function scan() {
         existingSymbols.add(symbol);
         existingAddresses.add(addr);
         await executeTrade(opp.pair, opp.score, tradeType);
+        tradesOpened++;
       }
     }
     
     await new Promise(r => setTimeout(r, 150));
   }
+  
+  // Log scan results
+  logScan(scannedTotal, oppsTotal, tradesOpened);
 }
 
 // ══════════════════════════════════════
@@ -2625,8 +3730,61 @@ function renderHistory() {
 }
 
 // ══════════════════════════════════════
+// AUTO-SAVE TO LOCALSTORAGE
+// ══════════════════════════════════════
+const STORAGE_KEY = 'sniper_pro_v6_data';
+
+function saveToStorage() {
+  try {
+    const data = {
+      balance,
+      totalPnL,
+      securedPnL,
+      totalTrades,
+      wins,
+      bestTrade,
+      worstTrade,
+      history: history.slice(0, 500),
+      analyticsLog: analyticsLog.slice(-3000),
+      savedAt: Date.now()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Failed to save:', e);
+  }
+}
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      balance = data.balance || INITIAL_BALANCE;
+      totalPnL = data.totalPnL || 0;
+      securedPnL = data.securedPnL || 0;
+      totalTrades = data.totalTrades || 0;
+      wins = data.wins || 0;
+      bestTrade = data.bestTrade || 0;
+      worstTrade = data.worstTrade || 0;
+      history = data.history || [];
+      analyticsLog = data.analyticsLog || [];
+      
+      addLog('💾', `<span class="cyan">Loaded</span> ${history.length} trades from storage`);
+      updateUI();
+      renderHistory();
+    }
+  } catch (e) {
+    console.error('Failed to load:', e);
+  }
+}
+
+// Auto-save every 30 seconds
+setInterval(saveToStorage, 30000);
+
+// ══════════════════════════════════════
 // INIT
 // ══════════════════════════════════════
+loadFromStorage();
 updateUI();
 renderPositions();
 renderHistory();
