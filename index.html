@@ -2008,8 +2008,7 @@ const API_URL = 'https://dexscreener-telegram-bot-production.up.railway.app';
 const CORS_PROXIES = [
   url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
   url => 'https://corsproxy.io/?' + encodeURIComponent(url),
-  url => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url),
-  url => 'https://proxy.cors.sh/' + url
+  url => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url)
 ];
 let workingProxyIndex = 0;
 
@@ -2040,23 +2039,21 @@ async function fetchDexScreener(url, options = {}) {
         }
       });
       
-      if (response.ok) {
-        // Check if it's actually JSON
-        const contentType = response.headers.get('content-type') || '';
-        if (contentType.includes('application/json') || contentType.includes('text/')) {
-          workingProxyIndex = proxyIndex; // Remember working proxy
-          return response;
-        }
+      if (response && response.ok) {
+        workingProxyIndex = proxyIndex;
+        return response;
       }
-      console.warn(`Proxy ${proxyIndex} returned non-ok:`, response.status);
     } catch (err) {
       console.warn(`Proxy ${proxyIndex} failed:`, err.message);
     }
   }
   
-  // All proxies failed - try direct as last resort
-  console.error('All CORS proxies failed, trying direct fetch...');
-  return fetch(url, { ...restOptions, signal: AbortSignal.timeout(10000) });
+  // All proxies failed - return a fake error response instead of null
+  console.error('All CORS proxies failed for:', url);
+  return new Response(JSON.stringify({ error: 'All proxies failed' }), {
+    status: 503,
+    headers: { 'Content-Type': 'application/json' }
+  });
 }
 
 // ═══════════════════════════════════════════
