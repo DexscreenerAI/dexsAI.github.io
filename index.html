@@ -600,8 +600,40 @@ body {
 /* General text response */
 .general-text {
   font-family: var(--sans); font-size: 14px; line-height: 1.75;
-  color: var(--text); white-space: pre-wrap;
+  color: var(--text);
 }
+.general-text h1, .general-text h2, .general-text h3 {
+  font-family: var(--mono); letter-spacing: 1px; margin: 16px 0 8px;
+}
+.general-text h1 { font-size: 14px; color: var(--cyan); text-transform: uppercase; }
+.general-text h2 { font-size: 12px; color: var(--cyan); text-transform: uppercase; border-bottom: 1px solid var(--card-border); padding-bottom: 6px; }
+.general-text h3 { font-size: 11px; color: var(--text); }
+.general-text p { margin: 6px 0; }
+.general-text ul, .general-text ol { padding-left: 18px; margin: 6px 0; }
+.general-text li { margin-bottom: 4px; font-size: 13px; color: var(--text2); }
+.general-text strong { color: #fff; }
+.general-text em { color: var(--text2); font-style: italic; }
+.general-text hr { border: none; border-top: 1px solid var(--card-border); margin: 12px 0; }
+.general-text table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; font-family: var(--mono); }
+.general-text thead { background: var(--bg); }
+.general-text th { padding: 8px 10px; text-align: left; font-size: 9px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--card-border); }
+.general-text td { padding: 8px 10px; border-bottom: 1px solid var(--card-border); color: var(--text); }
+.general-text tr:last-child td { border-bottom: none; }
+.ai-section { background: var(--bg); border-radius: 8px; padding: 12px; margin: 10px 0; border-left: 3px solid var(--cyan); }
+.ai-section.entry { border-left-color: var(--green); }
+.ai-section.stoploss { border-left-color: var(--red); }
+.ai-section.target { border-left-color: var(--purple); }
+.ai-section.warning { border-left-color: var(--yellow); }
+.ai-section-title { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.ai-section.entry .ai-section-title { color: var(--green); }
+.ai-section.stoploss .ai-section-title { color: var(--red); }
+.ai-section.target .ai-section-title { color: var(--purple); }
+.ai-section.warning .ai-section-title { color: var(--yellow); }
+.ai-verdict { display: inline-block; padding: 6px 14px; border-radius: 6px; font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: 1px; margin: 8px 0; }
+.ai-verdict.buy { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+.ai-verdict.sell { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+.ai-verdict.wait { background: var(--yellow-dim); color: var(--yellow); border: 1px solid var(--yellow); }
+.ai-verdict.avoid { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
 
 /* Note list */
 .note-list { margin: 0; padding-left: 18px; list-style: none; }
@@ -4144,13 +4176,93 @@ function renderMessages() {
       } else if (msg.html) {
         html += msg.html;
       } else if (msg.text) {
-        html += `<div class="card card-accent"><div class="general-text">${esc(msg.text)}</div></div>`;
+        html += `<div class="card card-accent"><div class="general-text">${formatAIResponse(msg.text)}</div></div>`;
       }
       html += `</div>`;
     }
   }
   $('msgContainer').innerHTML = html;
   scrollToLastUserMessage();
+}
+
+function formatAIResponse(text) {
+  if (!text || text.length < 20) return esc(text);
+  let html = text;
+
+  // Escape HTML but keep markdown
+  html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // Detect verdict words and style them
+  html = html.replace(/\b(BUY)\b(?!\s*ratio)/gi, '<span class="ai-verdict buy">BUY</span>');
+  html = html.replace(/\b(SELL)\b/gi, '<span class="ai-verdict sell">SELL</span>');
+  html = html.replace(/\b(WAIT)\b/gi, '<span class="ai-verdict wait">WAIT</span>');
+  html = html.replace(/\b(AVOID)\b/gi, '<span class="ai-verdict avoid">AVOID</span>');
+
+  // Tables: | col | col |
+  html = html.replace(/((?:\|[^\n]+\|\n?)+)/g, (match) => {
+    const rows = match.trim().split('\n').filter(r => r.trim());
+    if (rows.length < 2) return match;
+    let table = '<table>';
+    rows.forEach((row, i) => {
+      // Skip separator row (|---|---|)
+      if (/^\|[\s\-:]+\|$/.test(row.trim())) return;
+      const cells = row.split('|').filter(c => c.trim() !== '');
+      const tag = i === 0 ? 'th' : 'td';
+      const wrap = i === 0 ? 'thead' : '';
+      if (wrap) table += `<${wrap}>`;
+      table += '<tr>' + cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('') + '</tr>';
+      if (wrap) table += `</${wrap}>`;
+    });
+    table += '</table>';
+    return table;
+  });
+
+  // Headings
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+  // Bold and italic
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+  html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+
+  // Horizontal rule
+  html = html.replace(/^---+$/gm, '<hr>');
+
+  // Section detection - Entry/Stop Loss/Target/Warning blocks
+  html = html.replace(/<h2>(.*(?:entry|entr[ée]|zone d'entr).*)<\/h2>/gi, '</div><div class="ai-section entry"><div class="ai-section-title">$1</div>');
+  html = html.replace(/<h2>(.*(?:stop.?loss|SL|invalidat).*)<\/h2>/gi, '</div><div class="ai-section stoploss"><div class="ai-section-title">$1</div>');
+  html = html.replace(/<h2>(.*(?:take.?profit|target|TP|objectif).*)<\/h2>/gi, '</div><div class="ai-section target"><div class="ai-section-title">$1</div>');
+  html = html.replace(/<h2>(.*(?:warning|risk|invalidation|danger|⚠|❌).*)<\/h2>/gi, '</div><div class="ai-section warning"><div class="ai-section-title">$1</div>');
+
+  // Lists
+  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>');
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+
+  // Paragraphs - wrap loose text in <p>
+  html = html.replace(/^(?!<[hultdos]|<\/)(.+)$/gm, (match) => {
+    if (match.trim() === '') return '';
+    return `<p>${match}</p>`;
+  });
+
+  // Close any open ai-section divs
+  // Count opens vs closes
+  const opens = (html.match(/<div class="ai-section/g) || []).length;
+  const closes = (html.match(/<\/div>/g) || []).length - opens;
+  if (opens > 0) {
+    html += '</div>'.repeat(Math.max(0, opens - closes));
+    // Remove the first stray </div> at the beginning
+    html = html.replace(/^<\/div>/, '');
+  }
+
+  // Clean up empty paragraphs
+  html = html.replace(/<p>\s*<\/p>/g, '');
+  html = html.replace(/<p><hr><\/p>/g, '<hr>');
+
+  return html;
 }
 
 async function downloadAnalysis(btn) {
