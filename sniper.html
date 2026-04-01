@@ -602,6 +602,69 @@ body {
 .pos-footer .orange { color: var(--orange); }
 .pos-footer .yellow { color: var(--yellow); }
 
+/* Position Action Buttons */
+.pos-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.pos-action-btn {
+  padding: 6px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.pos-action-btn:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(0,212,255,0.1);
+}
+.pos-action-btn.dex {
+  border-color: var(--green);
+  color: var(--green);
+}
+.pos-action-btn.dex:hover {
+  background: rgba(0,255,136,0.15);
+}
+.pos-action-btn.twitter {
+  border-color: #1da1f2;
+  color: #1da1f2;
+}
+.pos-action-btn.twitter:hover {
+  background: rgba(29,161,242,0.15);
+}
+.pos-action-btn.telegram {
+  border-color: #0088cc;
+  color: #0088cc;
+}
+.pos-action-btn.telegram:hover {
+  background: rgba(0,136,204,0.15);
+}
+.pos-action-btn.discord {
+  border-color: #5865f2;
+  color: #5865f2;
+}
+.pos-action-btn.discord:hover {
+  background: rgba(88,101,242,0.15);
+}
+.pos-action-btn.website {
+  border-color: var(--purple);
+  color: var(--purple);
+}
+.pos-action-btn.website:hover {
+  background: rgba(168,85,247,0.15);
+}
+
 /* ══════════════════════════════════════
    HISTORY - ENHANCED
    ══════════════════════════════════════ */
@@ -615,9 +678,15 @@ body {
   border-radius: 8px;
   margin-bottom: 8px;
   font-size: 11px;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: 1px solid transparent;
 }
-.history-item:hover { background: var(--bg4); }
+.history-item:hover { 
+  background: var(--bg4); 
+  border-color: var(--cyan);
+  transform: translateX(4px);
+}
 .history-time { color: var(--text2); font-size: 10px; }
 .history-token { 
   color: var(--text); 
@@ -1593,6 +1662,13 @@ async function executeTrade(pair, score, tradeType = 'QUICK') {
     entryPrice,
     currentPrice: entryPrice,
     
+    // URLs & Socials
+    dexUrl: pair.url || `https://dexscreener.com/${chain}/${pairAddress}`,
+    website: pair.info?.websites?.[0]?.url || null,
+    twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || null,
+    telegram: pair.info?.socials?.find(s => s.type === 'telegram')?.url || null,
+    discord: pair.info?.socials?.find(s => s.type === 'discord')?.url || null,
+    
     // Size tracking
     initialSize: size,
     currentSize: size,
@@ -1691,6 +1767,9 @@ function closeTrade(pos, reason) {
   history.unshift({
     symbol: pos.symbol,
     address: pos.address,
+    chain: pos.chain,
+    pairAddress: pos.pairAddress,
+    dexUrl: pos.dexUrl,
     tradeType: pos.tradeType,
     pnl: finalPnl,
     pnlPct: pos.pnlPct,
@@ -1741,6 +1820,16 @@ async function updatePositions() {
       
       const newPrice = parseFloat(data.pair.priceUsd) || pos.currentPrice;
       pos.currentPrice = newPrice;
+      
+      // Update socials if not set
+      if (!pos.twitter && data.pair.info?.socials) {
+        pos.twitter = data.pair.info.socials.find(s => s.type === 'twitter')?.url || null;
+        pos.telegram = data.pair.info.socials.find(s => s.type === 'telegram')?.url || null;
+        pos.discord = data.pair.info.socials.find(s => s.type === 'discord')?.url || null;
+      }
+      if (!pos.website && data.pair.info?.websites?.[0]) {
+        pos.website = data.pair.info.websites[0].url;
+      }
       
       const change = (newPrice - pos.entryPrice) / pos.entryPrice;
       pos.pnlPct = change * 100;
@@ -2485,6 +2574,14 @@ function renderPositions() {
         ${pos.dcaLevel > 0 ? `<span>DCA: <span class="purple">${pos.dcaLevel}/3</span></span>` : ''}
         ${pos.isMoonBag ? '<span class="pink">♾️ Infinite hold</span>' : ''}
       </div>
+      
+      <div class="pos-actions">
+        <a href="${pos.dexUrl}" target="_blank" class="pos-action-btn dex">📊 DexScreener</a>
+        ${pos.twitter ? `<a href="${pos.twitter}" target="_blank" class="pos-action-btn twitter">𝕏</a>` : ''}
+        ${pos.telegram ? `<a href="${pos.telegram}" target="_blank" class="pos-action-btn telegram">✈️ TG</a>` : ''}
+        ${pos.discord ? `<a href="${pos.discord}" target="_blank" class="pos-action-btn discord">💬 DC</a>` : ''}
+        ${pos.website ? `<a href="${pos.website}" target="_blank" class="pos-action-btn website">🌐 Web</a>` : ''}
+      </div>
     </div>`;
   }
   
@@ -2515,7 +2612,7 @@ function renderHistory() {
     
     const securedInfo = trade.dcaSecured > 0 ? `+$${trade.dcaSecured.toFixed(0)} DCA` : '';
     
-    html += `<div class="history-item">
+    html += `<div class="history-item" onclick="window.open('${trade.dexUrl}', '_blank')" style="cursor:pointer">
       <span class="history-time">${time}</span>
       <span class="history-token">${typeIcon} $${esc(trade.symbol)}</span>
       <span class="history-reason ${reasonClass}">${trade.reason}</span>
