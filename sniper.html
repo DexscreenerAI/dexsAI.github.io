@@ -796,14 +796,6 @@ body {
           <input type="number" id="minScore" value="45" min="20" max="90">
           <span class="setting-hint">Minimum score to trade (20-90)</span>
         </div>
-        <div class="setting">
-          <label>⚡ MAX QUICK POSITIONS</label>
-          <input type="number" id="maxQuick" value="6" min="1" max="20">
-        </div>
-        <div class="setting">
-          <label>🌙 MAX LONG POSITIONS</label>
-          <input type="number" id="maxLong" value="4" min="1" max="15">
-        </div>
         <div class="setting full">
           <label>🔗 CHAINS</label>
           <select id="chains">
@@ -1197,8 +1189,6 @@ function getSettings() {
     // Basic
     positionSize: parseInt($('positionSize')?.value) || 100,
     minScore: parseInt($('minScore')?.value) || 45,
-    maxQuick: parseInt($('maxQuick')?.value) || 6,
-    maxLong: parseInt($('maxLong')?.value) || 4,
     chains: $('chains')?.value || 'all',
     
     // Trailing
@@ -1264,8 +1254,6 @@ function resetSettings() {
   // Reset to defaults
   $('positionSize').value = 100;
   $('minScore').value = 45;
-  $('maxQuick').value = 6;
-  $('maxLong').value = 4;
   $('trailActivation').value = 12;
   $('trailDistance').value = 25;
   $('trailTight').value = 12;
@@ -1575,7 +1563,7 @@ async function executeTrade(pair, score, tradeType = 'QUICK') {
   const settings = getSettings();
   const size = settings.positionSize;
   
-  if (balance < size) return false;
+  if (balance < size) return;
   
   const symbol = pair.baseToken?.symbol || 'UNKNOWN';
   const chain = pair.chainId;
@@ -1584,9 +1572,13 @@ async function executeTrade(pair, score, tradeType = 'QUICK') {
   const entryPrice = parseFloat(pair.priceUsd) || 0;
   const logo = pair.info?.imageUrl || '';
   
-  if (entryPrice === 0) return false;
-  if (positions.find(p => p.address === address)) return false;
-  if (positions.find(p => p.symbol === symbol)) return false;
+  if (entryPrice === 0) return;
+  if (!address) return;
+  
+  // STRICT DUPLICATE CHECK
+  if (positions.find(p => p.address === address)) return;
+  if (positions.find(p => p.symbol === symbol)) return;
+  if (history.find(h => h.address === address)) return;
   
   const adaptiveSL = calculateAdaptiveSL(pair);
   const isLong = tradeType === 'LONG';
@@ -1643,7 +1635,6 @@ async function executeTrade(pair, score, tradeType = 'QUICK') {
   addLog('🎯', `<span class="cyan">${position.label}</span> $${esc(symbol)} @ $${fP(entryPrice)} — Score: ${score}`);
   updateUI();
   renderPositions();
-  return true;
 }
 
 function partialSell(pos, sellPercent, reason, dcaLevel) {
@@ -1674,8 +1665,14 @@ function partialSell(pos, sellPercent, reason, dcaLevel) {
 }
 
 function closeTrade(pos, reason) {
+  // Prevent duplicate closes
+  if (!positions.find(p => p.id === pos.id)) return;
+  
   const remainingPnl = pos.currentSize * (pos.pnlPct / 100);
   const finalPnl = remainingPnl + pos.dcaSecured;
+  
+  // Remove from positions FIRST to prevent double processing
+  positions = positions.filter(p => p.id !== pos.id);
   
   totalPnL += finalPnl;
   balance += pos.currentSize + remainingPnl;
@@ -1705,8 +1702,6 @@ function closeTrade(pos, reason) {
     holdTime,
     holdMin
   });
-  
-  positions = positions.filter(p => p.id !== pos.id);
   
   const icon = finalPnl >= 0 ? '✅' : '❌';
   const color = finalPnl >= 0 ? 'green' : 'red';
@@ -1912,19 +1907,11 @@ async function scan() {
   if (!isRunning) return;
   
   const settings = getSettings();
-  const maxQuick = settings.maxQuick;
-  const maxLong = settings.maxLong;
   
-  // Count current positions
+  // Count current positions (for display only)
   const quickCount = positions.filter(p => p.tradeType === 'QUICK').length;
   const longCount = positions.filter(p => p.tradeType === 'LONG').length;
   const moonCount = positions.filter(p => p.tradeType === 'MOON').length;
-  
-  // Skip if full
-  if (quickCount >= maxQuick && longCount >= maxLong) {
-    $('scannerText').textContent = '⏸️ Positions full — Waiting for exits...';
-    return;
-  }
   
   const chainList = settings.chains === 'all' ? ['solana', 'ethereum', 'base'] : [settings.chains];
   const allPairs = new Map();
@@ -2121,28 +2108,23 @@ async function scan() {
   addLog('🔍', `Found <span class="green">${oppsTotal}</span> opportunities from <span class="yellow">${scannedTotal}</span> tokens`);
   
   // ═══════════════════════════════════════════════════════════════
-  // TRADE SELECTION
+  // TRADE SELECTION - No limits, just no duplicates
   // ═══════════════════════════════════════════════════════════════
-  const maxPositions = maxQuick + maxLong;
   const topOpps = opportunities.slice(0, 40);
-  
-  let qCount = positions.filter(p => p.tradeType === 'QUICK').length;
-  let lCount = positions.filter(p => p.tradeType === 'LONG').length;
   
   // Sets for duplicate prevention
   const tradingNow = new Set();
   const existingAddresses = new Set(positions.map(p => p.address));
   const existingSymbols = new Set(positions.map(p => p.symbol));
-  const historyAddresses = new Set(history.slice(0, 100).map(h => h.address));
+  const historyAddresses = new Set(history.slice(0, 200).map(h => h.address));
   
   for (const opp of topOpps) {
-    if (positions.length >= maxPositions) break;
     if (balance < settings.positionSize) break;
     
     const addr = opp.pair.baseToken?.address;
     const symbol = opp.pair.baseToken?.symbol || 'UNKNOWN';
     
-    // Skip duplicates
+    // Skip duplicates ONLY
     if (!addr) continue;
     if (existingAddresses.has(addr)) continue;
     if (existingSymbols.has(symbol)) continue;
@@ -2152,17 +2134,19 @@ async function scan() {
     // Check cache first
     const cached = getCachedAnalysis(addr);
     if (cached) {
-      if (cached.includes('QUICK') && qCount < maxQuick) {
+      if (cached.includes('QUICK')) {
         addLog('⚡', `<span class="cyan">QUICK</span> $${esc(symbol)}`);
         tradingNow.add(addr);
         existingSymbols.add(symbol);
-        if (await executeTrade(opp.pair, opp.score, 'QUICK')) qCount++;
+        existingAddresses.add(addr);
+        await executeTrade(opp.pair, opp.score, 'QUICK');
         continue;
-      } else if (cached.includes('LONG') && lCount < maxLong) {
+      } else if (cached.includes('LONG')) {
         addLog('🌙', `<span class="purple">LONG</span> $${esc(symbol)}`);
         tradingNow.add(addr);
         existingSymbols.add(symbol);
-        if (await executeTrade(opp.pair, opp.score, 'LONG')) lCount++;
+        existingAddresses.add(addr);
+        await executeTrade(opp.pair, opp.score, 'LONG');
         continue;
       } else if (cached.includes('SKIP')) {
         continue;
@@ -2187,35 +2171,35 @@ async function scan() {
       addLog('🤖', `Analyzing $${esc(symbol)}...`);
       const analysis = await analyzeForEntry(opp.pair);
       
-      if (analysis.includes('QUICK') && qCount < maxQuick) {
+      if (analysis.includes('QUICK')) {
         addLog('⚡', `<span class="cyan">QUICK</span> $${esc(symbol)}`);
         tradingNow.add(addr);
         existingSymbols.add(symbol);
-        if (await executeTrade(opp.pair, opp.score, 'QUICK')) qCount++;
-      } else if (analysis.includes('LONG') && lCount < maxLong) {
+        existingAddresses.add(addr);
+        await executeTrade(opp.pair, opp.score, 'QUICK');
+      } else if (analysis.includes('LONG')) {
         addLog('🌙', `<span class="purple">LONG</span> $${esc(symbol)}`);
         tradingNow.add(addr);
         existingSymbols.add(symbol);
-        if (await executeTrade(opp.pair, opp.score, 'LONG')) lCount++;
-      } else if (!analysis.includes('SKIP') && opp.score >= 60 && qCount < maxQuick) {
+        existingAddresses.add(addr);
+        await executeTrade(opp.pair, opp.score, 'LONG');
+      } else if (!analysis.includes('SKIP') && opp.score >= 60) {
         // High score fallback
-        addLog('⚡', `<span class="cyan">QUICK</span> $${esc(symbol)} (score fallback)`);
+        addLog('⚡', `<span class="cyan">QUICK</span> $${esc(symbol)} (score)`);
         tradingNow.add(addr);
         existingSymbols.add(symbol);
-        if (await executeTrade(opp.pair, opp.score, 'QUICK')) qCount++;
+        existingAddresses.add(addr);
+        await executeTrade(opp.pair, opp.score, 'QUICK');
       }
     } catch (e) {
       // Fallback on AI error
       if (opp.score >= 55) {
         const mc = parseFloat(opp.pair.marketCap) || 0;
         const tradeType = mc < 100000 ? 'LONG' : 'QUICK';
-        if ((tradeType === 'QUICK' && qCount < maxQuick) || (tradeType === 'LONG' && lCount < maxLong)) {
-          tradingNow.add(addr);
-          existingSymbols.add(symbol);
-          if (await executeTrade(opp.pair, opp.score, tradeType)) {
-            if (tradeType === 'QUICK') qCount++; else lCount++;
-          }
-        }
+        tradingNow.add(addr);
+        existingSymbols.add(symbol);
+        existingAddresses.add(addr);
+        await executeTrade(opp.pair, opp.score, tradeType);
       }
     }
     
