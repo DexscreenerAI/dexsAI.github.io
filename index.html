@@ -2059,10 +2059,14 @@ async function fetchDexScreener(url, options = {}) {
 }
 
 function createErrorResponse(message) {
-  return new Response(JSON.stringify({ error: message, pairs: [] }), {
+  // Create a safe mock response object that works everywhere
+  return {
+    ok: false,
     status: 503,
-    headers: { 'Content-Type': 'application/json' }
-  });
+    statusText: 'Service Unavailable',
+    json: async () => ({ error: message, pairs: [] }),
+    text: async () => JSON.stringify({ error: message, pairs: [] })
+  };
 }
 
 function convertToBackendProxy(url) {
@@ -2599,7 +2603,7 @@ async function handleChartRequest(query, chartRequest) {
   if (address) {
     // User provided a contract address
     showLoading('Fetching chart...');
-    pair = await fetchDexScreener(address.addr);
+    pair = await fetchTokenData(address.addr);
     
     if (pair) {
       symbol = pair.baseToken?.symbol || '???';
@@ -2613,7 +2617,7 @@ async function handleChartRequest(query, chartRequest) {
     if (mention.type === 'symbol') {
       pair = await fetchTokenBySymbol(mention.value);
     } else if (mention.type === 'address') {
-      pair = await fetchDexScreener(mention.value);
+      pair = await fetchTokenData(mention.value);
     }
     
     if (pair) {
@@ -2630,7 +2634,7 @@ async function handleChartRequest(query, chartRequest) {
     if (!pairAddress && lastAnalyzedToken.address) {
       // Try to fetch pair address
       showLoading('Fetching chart...');
-      pair = await fetchDexScreener(lastAnalyzedToken.address);
+      pair = await fetchTokenData(lastAnalyzedToken.address);
       if (pair) {
         pairAddress = pair.pairAddress || '';
         chain = pair.chainId || chain;
@@ -2750,7 +2754,7 @@ async function handleFreeChat(query) {
       mentionedToken = await fetchTokenBySymbol(mention.value);
     } else if (mention.type === 'address') {
       // Fetch by address
-      mentionedToken = await fetchDexScreener(mention.value);
+      mentionedToken = await fetchTokenData(mention.value);
     }
     
     if (mentionedToken) {
@@ -2826,12 +2830,12 @@ The user is asking a general crypto question. No specific token is being analyze
 }
 
 // ═══════════════════════════════════════════
-// DEXSCREENER FETCH
+// DEXSCREENER FETCH TOKEN DATA
 // ═══════════════════════════════════════════
-async function fetchDexScreener(addr) {
+async function fetchTokenData(addr) {
   try {
     const r = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/tokens/${addr}`, { signal: AbortSignal.timeout(10000) });
-    if (!r.ok) return null;
+    if (!r || !r.ok) return null;
     const d = await r.json();
     if (!d.pairs || !d.pairs.length) return null;
     d.pairs.sort((a,b) => (parseFloat(b.volume?.h24)||0) - (parseFloat(a.volume?.h24)||0));
@@ -2845,7 +2849,7 @@ async function fetchDexScreener(addr) {
 async function searchDexScreener(query) {
   try {
     const r = await fetchDexScreener(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`, { signal: AbortSignal.timeout(10000) });
-    if (!r.ok) return null;
+    if (!r || !r.ok) return null;
     const d = await r.json();
     if (!d.pairs || !d.pairs.length) return null;
     d.pairs.sort((a,b) => (parseFloat(b.volume?.h24)||0) - (parseFloat(a.volume?.h24)||0));
@@ -4431,7 +4435,7 @@ async function sendQuery(query) {
       }
       
       // Fetch token data from DexScreener
-      pair = await fetchDexScreener(addrInfo.addr);
+      pair = await fetchTokenData(addrInfo.addr);
       if (pair && addrInfo.type === 'sol') {
         rugData = await fetchRugcheck(addrInfo.addr);
       }
