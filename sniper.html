@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚡ AUTO SNIPER</title>
+<title>⚡ AI SNIPER PRO v6</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -11,11 +11,14 @@
   --bg: #0a0a0a;
   --bg2: #111111;
   --bg3: #1a1a1a;
+  --bg4: #222222;
   --green: #00ff88;
   --red: #ff4757;
   --cyan: #00d4ff;
   --yellow: #ffd700;
   --purple: #a855f7;
+  --orange: #ff9500;
+  --pink: #ff6b9d;
   --text: #e2e8f0;
   --text2: #94a3b8;
   --border: #2a2a2a;
@@ -28,7 +31,9 @@ body {
   min-height: 100vh;
 }
 
-/* ── HEADER ── */
+/* ══════════════════════════════════════
+   HEADER
+   ══════════════════════════════════════ */
 .header {
   background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
   border-bottom: 2px solid var(--green);
@@ -36,7 +41,7 @@ body {
   text-align: center;
 }
 .header h1 {
-  font-size: 24px;
+  font-size: 28px;
   letter-spacing: 4px;
   text-shadow: 0 0 20px var(--green);
   margin-bottom: 8px;
@@ -46,16 +51,34 @@ body {
   color: var(--text2);
   letter-spacing: 1px;
 }
+.version-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  background: rgba(168,85,247,0.2);
+  border: 1px solid var(--purple);
+  border-radius: 12px;
+  font-size: 9px;
+  color: var(--purple);
+  letter-spacing: 1px;
+}
 .mode-badge {
   display: inline-block;
   margin-top: 10px;
+  margin-left: 10px;
   padding: 6px 16px;
-  background: rgba(0,255,136,0.1);
-  border: 1px solid var(--green);
+  background: rgba(255,71,87,0.1);
+  border: 1px solid var(--red);
   border-radius: 20px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 2px;
+  color: var(--red);
+}
+.mode-badge.active {
+  background: rgba(0,255,136,0.1);
+  border-color: var(--green);
+  color: var(--green);
   animation: pulse 2s infinite;
 }
 @keyframes pulse {
@@ -63,22 +86,24 @@ body {
   50% { opacity: 0.7; box-shadow: 0 0 20px var(--green); }
 }
 
-/* ── P&L BANNER ── */
+/* ══════════════════════════════════════
+   P&L BANNER
+   ══════════════════════════════════════ */
 .pnl-banner {
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
-  padding: 20px;
+  padding: 15px;
 }
 .pnl-grid {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
 }
 .pnl-box {
   text-align: center;
-  padding: 15px;
+  padding: 10px 6px;
   background: var(--bg3);
   border-radius: 8px;
 }
@@ -86,14 +111,18 @@ body {
   border: 2px solid var(--green);
   background: rgba(0,255,136,0.05);
 }
+.pnl-box.highlight {
+  border: 1px solid var(--cyan);
+  background: rgba(0,212,255,0.05);
+}
 .pnl-label {
-  font-size: 9px;
+  font-size: 8px;
   color: var(--text2);
   letter-spacing: 1px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 .pnl-value {
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 700;
 }
 .pnl-value.green { color: var(--green); }
@@ -101,358 +130,186 @@ body {
 .pnl-value.cyan { color: var(--cyan); }
 .pnl-value.yellow { color: var(--yellow); }
 .pnl-value.purple { color: var(--purple); }
+.pnl-value.orange { color: var(--orange); }
+.pnl-value.pink { color: var(--pink); }
 
-/* ── CONTROLS ── */
+/* ══════════════════════════════════════
+   CONTROLS
+   ══════════════════════════════════════ */
 .controls {
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 0 20px;
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
   justify-content: center;
+  gap: 10px;
+  padding: 15px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 .ctrl-btn {
-  padding: 14px 28px;
-  background: var(--bg3);
-  border: 2px solid var(--green);
-  color: var(--green);
+  padding: 12px 24px;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 2px;
+  border: 2px solid var(--green);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--green);
   cursor: pointer;
   transition: all 0.2s;
 }
 .ctrl-btn:hover {
   background: var(--green);
-  color: #000;
-  box-shadow: 0 0 30px var(--green);
+  color: var(--bg);
+  box-shadow: 0 0 20px var(--green);
 }
-.ctrl-btn.active {
-  background: var(--green);
-  color: #000;
-  animation: pulse 2s infinite;
-}
-.ctrl-btn.danger {
-  border-color: var(--red);
-  color: var(--red);
-}
-.ctrl-btn.danger:hover {
-  background: var(--red);
-  color: #fff;
-}
+.ctrl-btn.danger { border-color: var(--red); color: var(--red); }
+.ctrl-btn.danger:hover { background: var(--red); color: white; box-shadow: 0 0 20px var(--red); }
+.ctrl-btn.secondary { border-color: var(--cyan); color: var(--cyan); }
+.ctrl-btn.secondary:hover { background: var(--cyan); color: var(--bg); }
+.ctrl-btn.warning { border-color: var(--orange); color: var(--orange); }
+.ctrl-btn.warning:hover { background: var(--orange); color: var(--bg); }
 
-/* ── MODAL ── */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
+/* ══════════════════════════════════════
+   SETTINGS MODAL
+   ══════════════════════════════════════ */
+.modal {
   display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.95);
+  z-index: 1000;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  overflow-y: auto;
   padding: 20px;
 }
-.modal-overlay.active {
-  display: flex;
-}
-.modal {
+.modal.show { display: flex; }
+.modal-content {
   background: var(--bg2);
   border: 2px solid var(--green);
   border-radius: 12px;
+  padding: 25px;
   width: 100%;
-  max-width: 400px;
-  animation: modalIn 0.2s;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
-@keyframes modalIn {
-  from { transform: scale(0.9); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-.modal-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-  font-weight: 700;
+.modal-title {
+  font-size: 20px;
+  text-align: center;
+  margin-bottom: 20px;
   letter-spacing: 2px;
-  color: var(--green);
 }
-.modal-close {
-  background: none;
-  border: none;
+.settings-tabs {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.settings-tab {
+  padding: 8px 16px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
   color: var(--text2);
-  font-size: 24px;
+  font-size: 11px;
   cursor: pointer;
-  line-height: 1;
+  transition: all 0.2s;
 }
-.modal-close:hover {
-  color: var(--red);
-}
-.modal-content {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.modal-footer {
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: flex-end;
+.settings-tab:hover { border-color: var(--cyan); color: var(--cyan); }
+.settings-tab.active { background: var(--cyan); color: var(--bg); border-color: var(--cyan); }
+.settings-panel { display: none; }
+.settings-panel.active { display: block; }
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
 }
 .setting {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
+.setting.full { grid-column: 1 / -1; }
 .setting label {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text2);
   letter-spacing: 1px;
 }
 .setting input, .setting select {
-  padding: 12px;
-  background: var(--bg);
+  padding: 10px;
+  background: var(--bg3);
   border: 1px solid var(--border);
+  border-radius: 6px;
   color: var(--text);
   font-family: inherit;
   font-size: 14px;
-  border-radius: 6px;
 }
 .setting input:focus, .setting select:focus {
   outline: none;
   border-color: var(--green);
 }
-
-/* ── MAIN LAYOUT ── */
-.main-layout {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px 40px;
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 20px;
-}
-@media (max-width: 900px) {
-  .main-layout { grid-template-columns: 1fr; }
-}
-
-/* ── PANEL ── */
-.panel {
-  background: var(--bg2);
-  border: 1px solid var(--border);
+.setting-group {
+  grid-column: 1 / -1;
+  padding: 15px;
+  background: var(--bg3);
   border-radius: 8px;
-  overflow: hidden;
+  margin: 5px 0;
 }
-.panel-header {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.panel-title {
+.setting-group-title {
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 2px;
   color: var(--cyan);
-}
-.panel-badge {
-  font-size: 10px;
-  padding: 4px 10px;
-  background: var(--bg3);
-  border-radius: 10px;
-  color: var(--text2);
-}
-.panel-content {
-  padding: 12px;
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-/* ── POSITION CARD ── */
-.pos-card {
-  background: var(--bg3);
-  border-radius: 8px;
-  padding: 14px;
-  margin-bottom: 10px;
-  border-left: 4px solid var(--cyan);
-}
-.pos-card.profit { border-left-color: var(--green); }
-.pos-card.loss { border-left-color: var(--red); }
-.pos-card.long-trade { border-left-color: var(--purple); background: rgba(168,85,247,0.05); }
-
-.trade-type {
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-left: 6px;
-  font-weight: 700;
-}
-.trade-type.cyan { background: rgba(0,212,255,0.2); color: var(--cyan); }
-.trade-type.purple { background: rgba(168,85,247,0.2); color: var(--purple); }
-.pos-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 10px;
-}
-.pos-token {
+  margin-bottom: 12px;
+  letter-spacing: 1px;
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-.pos-logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
-  overflow: hidden;
-}
-.pos-logo img { width: 100%; height: 100%; object-fit: cover; }
-.pos-symbol {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-}
-.pos-chain {
-  font-size: 10px;
-  color: var(--text2);
-}
-.pos-pnl {
-  text-align: right;
-}
-.pos-pnl-value {
-  font-size: 18px;
-  font-weight: 700;
-}
-.pos-pnl-value.green { color: var(--green); }
-.pos-pnl-value.red { color: var(--red); }
-.pos-pnl-pct {
-  font-size: 12px;
-  color: var(--text2);
-}
-.pos-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  margin-bottom: 10px;
 }
-.pos-stat {
-  text-align: center;
-  padding: 8px;
-  background: var(--bg);
-  border-radius: 4px;
-}
-.pos-stat-label {
-  font-size: 8px;
-  color: var(--text2);
-  margin-bottom: 3px;
-}
-.pos-stat-value {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text);
-}
-.pos-progress {
-  height: 4px;
-  background: var(--bg);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-.pos-progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--green), var(--yellow), var(--red));
-  transition: width 0.3s;
-}
-.pos-status {
-  font-size: 10px;
-  color: var(--text2);
-}
-.pos-status span { color: var(--cyan); }
-
-/* ── LOG ── */
-.log-item {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border);
-  font-size: 11px;
+.modal-footer {
+  margin-top: 20px;
   display: flex;
   gap: 10px;
-  align-items: flex-start;
+  justify-content: center;
 }
-.log-item:last-child { border-bottom: none; }
-.log-time { color: var(--text2); white-space: nowrap; }
-.log-icon { font-size: 14px; }
-.log-text { flex: 1; color: var(--text); line-height: 1.4; }
-.log-text .green { color: var(--green); }
-.log-text .red { color: var(--red); }
-.log-text .cyan { color: var(--cyan); }
-.log-text .yellow { color: var(--yellow); }
-.log-text .purple { color: var(--purple); }
-
-.pos-status .green { color: var(--green); }
-.pos-status .red { color: var(--red); }
-.pos-status .cyan { color: var(--cyan); }
-.pos-status .yellow { color: var(--yellow); }
-
-/* ── HISTORY ── */
-.history-item {
-  display: grid;
-  grid-template-columns: 60px 1fr 80px 70px;
-  gap: 10px;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border);
-  font-size: 11px;
+.checkbox-row {
+  display: flex;
   align-items: center;
+  gap: 10px;
+  padding: 8px 0;
 }
-.history-item:last-child { border-bottom: none; }
-.history-time { color: var(--text2); }
-.history-token { font-weight: 600; color: var(--text); }
-.history-result {
-  text-align: center;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-weight: 700;
-  font-size: 10px;
+.checkbox-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green);
 }
-.history-result.win { background: rgba(0,255,136,0.2); color: var(--green); }
-.history-result.loss { background: rgba(255,71,87,0.2); color: var(--red); }
-.history-pnl { text-align: right; font-weight: 700; }
-.history-pnl.green { color: var(--green); }
-.history-pnl.red { color: var(--red); }
-
-/* ── EMPTY ── */
-.empty {
-  text-align: center;
-  padding: 40px;
+.checkbox-row label {
+  font-size: 12px;
+  color: var(--text);
+}
+.setting-hint {
+  font-size: 9px;
   color: var(--text2);
+  margin-top: 4px;
 }
-.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
-.empty-text { font-size: 11px; letter-spacing: 1px; }
 
-/* ── SCANNER ── */
+/* ══════════════════════════════════════
+   SCANNER STATUS
+   ══════════════════════════════════════ */
 .scanner-status {
-  max-width: 1200px;
-  margin: 0 auto 15px;
-  padding: 0 20px;
+  padding: 12px 20px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
 }
 .scanner-bar {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 16px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  max-width: 1400px;
+  margin: 0 auto;
   flex-wrap: wrap;
   gap: 10px;
 }
@@ -465,7 +322,7 @@ body {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--text2);
+  background: var(--red);
 }
 .scanner-dot.active {
   background: var(--green);
@@ -475,43 +332,408 @@ body {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
-.scanner-text { font-size: 12px; color: var(--text); }
-.scanner-stats {
-  display: flex;
-  gap: 20px;
-  font-size: 11px;
+.scanner-text {
+  font-size: 12px;
   color: var(--text2);
 }
-.scanner-stats span { color: var(--cyan); }
+.scanner-stats {
+  display: flex;
+  gap: 15px;
+  font-size: 11px;
+  flex-wrap: wrap;
+}
+.scanner-stat { color: var(--text2); }
+.scanner-stat span { color: var(--cyan); font-weight: 700; }
 
+/* ══════════════════════════════════════
+   MAIN LAYOUT
+   ══════════════════════════════════════ */
+.main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 20px;
+  max-width: 1800px;
+  margin: 0 auto;
+}
+@media (max-width: 1200px) {
+  .main { grid-template-columns: 1fr; }
+}
+
+.section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+}
+.section-title {
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--cyan);
+}
+.section-badge {
+  font-size: 10px;
+  padding: 4px 10px;
+  background: var(--bg);
+  border-radius: 12px;
+  color: var(--text2);
+}
+.section-content {
+  padding: 15px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* ══════════════════════════════════════
+   POSITION CARDS - ENHANCED
+   ══════════════════════════════════════ */
+.pos-card {
+  background: var(--bg3);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 12px;
+  border-left: 4px solid var(--cyan);
+  position: relative;
+  transition: all 0.3s;
+}
+.pos-card:hover {
+  background: var(--bg4);
+}
+.pos-card.profit { border-left-color: var(--green); }
+.pos-card.loss { border-left-color: var(--red); }
+.pos-card.long-trade { background: rgba(168,85,247,0.08); }
+.pos-card.trailing { 
+  border-left-color: var(--orange);
+  box-shadow: 0 0 15px rgba(255,149,0,0.2);
+}
+.pos-card.moon-bag {
+  border-left-color: var(--pink);
+  background: rgba(255,107,157,0.08);
+}
+
+.pos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.pos-token {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pos-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  overflow: hidden;
+  border: 2px solid var(--border);
+}
+.pos-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pos-info { }
+.pos-symbol {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pos-chain {
+  font-size: 10px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+.trade-type {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.trade-type.quick { background: rgba(0,212,255,0.2); color: var(--cyan); }
+.trade-type.long { background: rgba(168,85,247,0.2); color: var(--purple); }
+.trade-type.moon { background: rgba(255,107,157,0.2); color: var(--pink); }
+
+.pos-pnl {
+  text-align: right;
+}
+.pos-pnl-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+.pos-pnl-pct {
+  font-size: 12px;
+  margin-top: 2px;
+}
+.pos-pnl-pct.green { color: var(--green); }
+.pos-pnl-pct.red { color: var(--red); }
+
+.pos-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+}
+.pos-stat {
+  text-align: center;
+  padding: 8px 4px;
+  background: var(--bg);
+  border-radius: 6px;
+}
+.pos-stat-label {
+  font-size: 8px;
+  color: var(--text2);
+  margin-bottom: 3px;
+}
+.pos-stat-value {
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 600;
+}
+.pos-stat-value.green { color: var(--green); }
+.pos-stat-value.red { color: var(--red); }
+.pos-stat-value.orange { color: var(--orange); }
+
+.pos-progress-container {
+  margin: 12px 0;
+}
+.pos-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--text2);
+  margin-bottom: 4px;
+}
+.pos-progress {
+  height: 6px;
+  background: var(--bg);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+.pos-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--cyan));
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+.pos-progress-bar.warning { background: linear-gradient(90deg, var(--yellow), var(--orange)); }
+.pos-progress-bar.danger { background: linear-gradient(90deg, var(--orange), var(--red)); }
+
+/* DCA Progress */
+.pos-dca-progress {
+  display: flex;
+  gap: 4px;
+  margin: 10px 0;
+}
+.dca-level {
+  flex: 1;
+  height: 4px;
+  background: var(--bg);
+  border-radius: 2px;
+  position: relative;
+}
+.dca-level.filled {
+  background: var(--green);
+}
+.dca-level.active {
+  background: linear-gradient(90deg, var(--green), var(--yellow));
+  animation: dcaPulse 1s infinite;
+}
+@keyframes dcaPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.pos-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.pos-tag {
+  font-size: 8px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pos-tag.trailing { background: rgba(255,149,0,0.2); color: var(--orange); }
+.pos-tag.secured { background: rgba(0,255,136,0.2); color: var(--green); }
+.pos-tag.dca { background: rgba(168,85,247,0.2); color: var(--purple); }
+.pos-tag.momentum { background: rgba(0,212,255,0.2); color: var(--cyan); }
+.pos-tag.whale { background: rgba(255,215,0,0.2); color: var(--yellow); }
+.pos-tag.volume { background: rgba(255,107,157,0.2); color: var(--pink); }
+.pos-tag.moon { background: rgba(255,107,157,0.3); color: var(--pink); }
+
+.pos-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 10px;
+  color: var(--text2);
+}
+.pos-footer .green { color: var(--green); }
+.pos-footer .red { color: var(--red); }
+.pos-footer .cyan { color: var(--cyan); }
+.pos-footer .orange { color: var(--orange); }
+.pos-footer .yellow { color: var(--yellow); }
+
+/* ══════════════════════════════════════
+   HISTORY - ENHANCED
+   ══════════════════════════════════════ */
+.history-item {
+  display: grid;
+  grid-template-columns: 50px 1fr auto auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg3);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  transition: background 0.2s;
+}
+.history-item:hover { background: var(--bg4); }
+.history-time { color: var(--text2); font-size: 10px; }
+.history-token { 
+  color: var(--text); 
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.history-reason {
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.history-reason.tp { background: rgba(0,255,136,0.2); color: var(--green); }
+.history-reason.trail { background: rgba(255,149,0,0.2); color: var(--orange); }
+.history-reason.momentum { background: rgba(0,212,255,0.2); color: var(--cyan); }
+.history-reason.sl { background: rgba(255,71,87,0.2); color: var(--red); }
+.history-reason.timeout { background: rgba(255,215,0,0.2); color: var(--yellow); }
+.history-secured {
+  font-size: 9px;
+  color: var(--purple);
+}
+.history-pnl { font-weight: 700; font-size: 12px; }
+.history-pnl.green { color: var(--green); }
+.history-pnl.red { color: var(--red); }
+
+/* ══════════════════════════════════════
+   ACTIVITY LOG
+   ══════════════════════════════════════ */
+.log-item {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+.log-time { color: var(--text2); min-width: 55px; font-size: 10px; }
+.log-icon { min-width: 18px; }
+.log-text { color: var(--text); line-height: 1.4; }
+.log-text .green { color: var(--green); }
+.log-text .red { color: var(--red); }
+.log-text .cyan { color: var(--cyan); }
+.log-text .yellow { color: var(--yellow); }
+.log-text .purple { color: var(--purple); }
+.log-text .orange { color: var(--orange); }
+.log-text .pink { color: var(--pink); }
+
+/* ══════════════════════════════════════
+   EMPTY STATES
+   ══════════════════════════════════════ */
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--text2);
+}
+.empty-icon { font-size: 40px; margin-bottom: 15px; }
+.empty-text { font-size: 12px; letter-spacing: 1px; }
+
+/* ══════════════════════════════════════
+   SCROLLBAR
+   ══════════════════════════════════════ */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--green); }
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════ */
+@media (max-width: 600px) {
+  .pnl-grid { grid-template-columns: repeat(4, 1fr); }
+  .pnl-value { font-size: 14px; }
+  .pos-stats { grid-template-columns: repeat(2, 1fr); }
+  .history-item { grid-template-columns: 1fr auto; }
+  .history-time, .history-reason, .history-secured { display: none; }
+  .settings-grid { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
+<!-- ══════════════════════════════════════
+     HEADER
+     ══════════════════════════════════════ -->
 <header class="header">
-  <h1>⚡ AI SNIPER v5</h1>
-  <p>💾 1h Cache • 70 Keywords • Max 6 Quick + 4 Long • Aggressive</p>
-  <div class="mode-badge" id="modeBadge">🔴 STOPPED</div>
+  <h1>⚡ AI SNIPER PRO</h1>
+  <p>🎯 Smart Trailing • DCA Out • Momentum Exit • Whale Detection • Moon Bags</p>
+  <span class="version-badge">v6.0 ULTIMATE</span>
+  <span class="mode-badge" id="modeBadge">🔴 STOPPED</span>
 </header>
 
-<!-- P&L BANNER -->
+<!-- ══════════════════════════════════════
+     P&L BANNER
+     ══════════════════════════════════════ -->
 <div class="pnl-banner">
   <div class="pnl-grid">
     <div class="pnl-box main">
-      <div class="pnl-label">TOTAL P&L</div>
+      <div class="pnl-label">💰 TOTAL P&L</div>
       <div class="pnl-value green" id="totalPnl">$0.00</div>
     </div>
     <div class="pnl-box">
-      <div class="pnl-label">BALANCE</div>
+      <div class="pnl-label">💵 BALANCE</div>
       <div class="pnl-value cyan" id="balance">$10,000</div>
     </div>
+    <div class="pnl-box highlight">
+      <div class="pnl-label">🔒 SECURED</div>
+      <div class="pnl-value green" id="securedPnl">$0</div>
+    </div>
     <div class="pnl-box">
-      <div class="pnl-label">WIN RATE</div>
+      <div class="pnl-label">📊 WIN RATE</div>
       <div class="pnl-value yellow" id="winRate">--%</div>
+    </div>
+    <div class="pnl-box">
+      <div class="pnl-label">🏆 BEST</div>
+      <div class="pnl-value green" id="bestTrade">$0</div>
     </div>
     <div class="pnl-box">
       <div class="pnl-label">⚡ QUICK</div>
@@ -522,71 +744,306 @@ body {
       <div class="pnl-value purple" id="longCount">0</div>
     </div>
     <div class="pnl-box">
-      <div class="pnl-label">TRADES</div>
+      <div class="pnl-label">🌕 MOON</div>
+      <div class="pnl-value pink" id="moonCount">0</div>
+    </div>
+    <div class="pnl-box">
+      <div class="pnl-label">📈 TRADES</div>
       <div class="pnl-value" id="totalTrades">0</div>
+    </div>
+    <div class="pnl-box">
+      <div class="pnl-label">📊 AVG P&L</div>
+      <div class="pnl-value" id="avgPnl">$0</div>
     </div>
   </div>
 </div>
 
-<!-- CONTROLS -->
+<!-- ══════════════════════════════════════
+     CONTROLS
+     ══════════════════════════════════════ -->
 <div class="controls">
-  <button class="ctrl-btn" id="startBtn" onclick="toggleBot()">▶ START BOT</button>
-  <button class="ctrl-btn" onclick="openSettings()">⚙️ SETTINGS</button>
-  <button class="ctrl-btn danger" onclick="resetAll()">🔄 RESET</button>
+  <button class="ctrl-btn" id="startBtn" onclick="startBot()">▶ START</button>
+  <button class="ctrl-btn secondary" onclick="openSettings()">⚙️ SETTINGS</button>
+  <button class="ctrl-btn warning" onclick="closeAllPositions()">⚠️ CLOSE ALL</button>
+  <button class="ctrl-btn danger" onclick="resetBot()">🔄 RESET</button>
 </div>
 
-<!-- SETTINGS MODAL -->
-<div class="modal-overlay" id="settingsModal" onclick="closeSettings(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <span>⚙️ SNIPER SETTINGS</span>
-      <button class="modal-close" onclick="closeSettings()">&times;</button>
+<!-- ══════════════════════════════════════
+     SETTINGS MODAL
+     ══════════════════════════════════════ -->
+<div class="modal" id="settingsModal">
+  <div class="modal-content">
+    <div class="modal-title">⚙️ ADVANCED SETTINGS</div>
+    
+    <div class="settings-tabs">
+      <div class="settings-tab active" onclick="showSettingsTab('basic')">💰 Basic</div>
+      <div class="settings-tab" onclick="showSettingsTab('trailing')">📈 Trailing</div>
+      <div class="settings-tab" onclick="showSettingsTab('dca')">💎 DCA Out</div>
+      <div class="settings-tab" onclick="showSettingsTab('exit')">🚪 Exit Rules</div>
+      <div class="settings-tab" onclick="showSettingsTab('filters')">🔍 Filters</div>
     </div>
-    <div class="modal-content">
-      <div class="setting">
-        <label>💰 POSITION SIZE ($)</label>
-        <input type="number" id="positionSize" value="100" min="10" max="1000">
-      </div>
-      <div class="setting">
-        <label>🎯 TAKE PROFIT (%)</label>
-        <input type="number" id="takeProfit" value="20" min="5" max="200">
-      </div>
-      <div class="setting">
-        <label>🛑 STOP LOSS (%)</label>
-        <input type="number" id="stopLoss" value="10" min="5" max="50">
-      </div>
-      <div class="setting">
-        <label>⏱️ MAX HOLD (min)</label>
-        <input type="number" id="maxHold" value="15" min="1" max="60">
-      </div>
-      <div class="setting">
-        <label>📊 MIN SCORE</label>
-        <input type="number" id="minScore" value="45" min="20" max="90">
-      </div>
-      <div class="setting">
-        <label>⚡ MAX QUICK</label>
-        <input type="number" id="maxQuick" value="6" min="1" max="15">
-      </div>
-      <div class="setting">
-        <label>🌙 MAX LONG</label>
-        <input type="number" id="maxLong" value="4" min="1" max="10">
-      </div>
-      <div class="setting">
-        <label>🔗 CHAINS</label>
-        <select id="chains">
-          <option value="all">Solana + Ethereum</option>
-          <option value="solana">Solana Only</option>
-          <option value="ethereum">Ethereum Only</option>
-        </select>
+    
+    <!-- BASIC TAB -->
+    <div class="settings-panel active" id="panel-basic">
+      <div class="settings-grid">
+        <div class="setting">
+          <label>💰 POSITION SIZE ($)</label>
+          <input type="number" id="positionSize" value="100" min="10" max="10000">
+          <span class="setting-hint">Amount per trade</span>
+        </div>
+        <div class="setting">
+          <label>📊 MIN SCORE</label>
+          <input type="number" id="minScore" value="45" min="20" max="90">
+          <span class="setting-hint">Minimum score to trade (20-90)</span>
+        </div>
+        <div class="setting">
+          <label>⚡ MAX QUICK POSITIONS</label>
+          <input type="number" id="maxQuick" value="6" min="1" max="20">
+        </div>
+        <div class="setting">
+          <label>🌙 MAX LONG POSITIONS</label>
+          <input type="number" id="maxLong" value="4" min="1" max="15">
+        </div>
+        <div class="setting full">
+          <label>🔗 CHAINS</label>
+          <select id="chains">
+            <option value="all">Solana + Ethereum + Base</option>
+            <option value="solana">Solana Only</option>
+            <option value="ethereum">Ethereum Only</option>
+            <option value="base">Base Only</option>
+          </select>
+        </div>
       </div>
     </div>
+    
+    <!-- TRAILING TAB -->
+    <div class="settings-panel" id="panel-trailing">
+      <div class="setting-group">
+        <div class="setting-group-title">📈 SMART TRAILING STOP</div>
+        <p style="font-size:10px;color:var(--text2);margin-bottom:15px">
+          Trailing stop follows price up and locks in profits. Distance tightens as profit grows.
+        </p>
+        <div class="settings-grid">
+          <div class="setting">
+            <label>ACTIVATION (%)</label>
+            <input type="number" id="trailActivation" value="12" min="5" max="100">
+            <span class="setting-hint">Start trailing after this profit %</span>
+          </div>
+          <div class="setting">
+            <label>BASE DISTANCE (%)</label>
+            <input type="number" id="trailDistance" value="25" min="10" max="60">
+            <span class="setting-hint">Initial trail distance from peak</span>
+          </div>
+          <div class="setting">
+            <label>TIGHT DISTANCE (%)</label>
+            <input type="number" id="trailTight" value="12" min="5" max="30">
+            <span class="setting-hint">Tighter trail at high profits</span>
+          </div>
+          <div class="setting">
+            <label>TIGHTEN AT (%)</label>
+            <input type="number" id="trailTightenAt" value="50" min="20" max="200">
+            <span class="setting-hint">Start tightening at this profit %</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- DCA OUT TAB -->
+    <div class="settings-panel" id="panel-dca">
+      <div class="setting-group">
+        <div class="setting-group-title">💎 DCA OUT (PARTIAL TAKE PROFITS)</div>
+        <p style="font-size:10px;color:var(--text2);margin-bottom:15px">
+          Lock in profits gradually. Remaining position becomes a "Moon Bag" with infinite upside.
+        </p>
+        <div class="checkbox-row">
+          <input type="checkbox" id="dcaEnabled" checked>
+          <label>Enable DCA Out</label>
+        </div>
+        <div class="settings-grid" style="margin-top:12px">
+          <div class="setting">
+            <label>🥇 1st TP at (%)</label>
+            <input type="number" id="dca1Pct" value="20" min="5" max="100">
+          </div>
+          <div class="setting">
+            <label>Sell (%)</label>
+            <input type="number" id="dca1Sell" value="30" min="10" max="60">
+          </div>
+          <div class="setting">
+            <label>🥈 2nd TP at (%)</label>
+            <input type="number" id="dca2Pct" value="50" min="20" max="200">
+          </div>
+          <div class="setting">
+            <label>Sell (%)</label>
+            <input type="number" id="dca2Sell" value="30" min="10" max="60">
+          </div>
+          <div class="setting">
+            <label>🥉 3rd TP at (%)</label>
+            <input type="number" id="dca3Pct" value="100" min="40" max="500">
+          </div>
+          <div class="setting">
+            <label>Sell (%)</label>
+            <input type="number" id="dca3Sell" value="25" min="10" max="60">
+          </div>
+        </div>
+        <div class="checkbox-row" style="margin-top:15px">
+          <input type="checkbox" id="moonBagEnabled" checked>
+          <label>🌕 Keep Moon Bag (remaining % rides forever with tight trail)</label>
+        </div>
+      </div>
+    </div>
+    
+    <!-- EXIT RULES TAB -->
+    <div class="settings-panel" id="panel-exit">
+      <div class="setting-group">
+        <div class="setting-group-title">🛑 STOP LOSS (ADAPTIVE)</div>
+        <p style="font-size:10px;color:var(--text2);margin-bottom:15px">
+          Stop loss adapts to token volatility. More volatile = wider SL.
+        </p>
+        <div class="settings-grid">
+          <div class="setting">
+            <label>BASE SL (%)</label>
+            <input type="number" id="baseSL" value="12" min="5" max="30">
+          </div>
+          <div class="setting">
+            <label>MAX SL (%)</label>
+            <input type="number" id="maxSL" value="25" min="10" max="50">
+          </div>
+        </div>
+      </div>
+      
+      <div class="setting-group">
+        <div class="setting-group-title">📉 MOMENTUM EXIT</div>
+        <p style="font-size:10px;color:var(--text2);margin-bottom:15px">
+          Exit when buyers leave and sell pressure increases.
+        </p>
+        <div class="checkbox-row">
+          <input type="checkbox" id="momentumExitEnabled" checked>
+          <label>Enable Momentum Exit</label>
+        </div>
+        <div class="settings-grid" style="margin-top:12px">
+          <div class="setting">
+            <label>MIN BUY RATIO (%)</label>
+            <input type="number" id="momentumMinRatio" value="35" min="20" max="50">
+            <span class="setting-hint">Exit if buy ratio drops below</span>
+          </div>
+          <div class="setting">
+            <label>CHECK INTERVAL (sec)</label>
+            <input type="number" id="momentumInterval" value="60" min="30" max="300">
+          </div>
+          <div class="setting">
+            <label>MIN PROFIT TO CHECK (%)</label>
+            <input type="number" id="momentumMinProfit" value="5" min="0" max="30">
+            <span class="setting-hint">Only check when in profit</span>
+          </div>
+          <div class="setting">
+            <label>BAD CHECKS TO EXIT</label>
+            <input type="number" id="momentumBadChecks" value="2" min="1" max="5">
+            <span class="setting-hint">Consecutive bad checks</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="setting-group">
+        <div class="setting-group-title">⏱️ TIME LIMITS</div>
+        <div class="settings-grid">
+          <div class="setting">
+            <label>⚡ QUICK MAX HOLD (min)</label>
+            <input type="number" id="quickMaxHold" value="20" min="5" max="120">
+          </div>
+          <div class="setting">
+            <label>🌙 LONG MAX HOLD (hours)</label>
+            <input type="number" id="longMaxHold" value="6" min="1" max="48">
+          </div>
+          <div class="setting">
+            <label>⚡ QUICK EXTENSIONS</label>
+            <input type="number" id="quickExtensions" value="1" min="0" max="5">
+          </div>
+          <div class="setting">
+            <label>🌙 LONG EXTENSIONS</label>
+            <input type="number" id="longExtensions" value="3" min="0" max="10">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- FILTERS TAB -->
+    <div class="settings-panel" id="panel-filters">
+      <div class="setting-group">
+        <div class="setting-group-title">💰 MARKET CAP FILTER</div>
+        <div class="settings-grid">
+          <div class="setting">
+            <label>MIN MC ($)</label>
+            <input type="number" id="minMC" value="1000" min="100" max="100000">
+          </div>
+          <div class="setting">
+            <label>MAX MC ($)</label>
+            <input type="number" id="maxMC" value="50000000" min="100000" max="1000000000">
+          </div>
+        </div>
+      </div>
+      
+      <div class="setting-group">
+        <div class="setting-group-title">💧 LIQUIDITY FILTER</div>
+        <div class="settings-grid">
+          <div class="setting">
+            <label>MIN LIQUIDITY ($)</label>
+            <input type="number" id="minLiquidity" value="500" min="100" max="100000">
+          </div>
+          <div class="setting">
+            <label>MIN LIQ/MC RATIO (%)</label>
+            <input type="number" id="minLiqRatio" value="2" min="1" max="20">
+          </div>
+        </div>
+      </div>
+      
+      <div class="setting-group">
+        <div class="setting-group-title">🚫 ANTI-FOMO FILTERS</div>
+        <p style="font-size:10px;color:var(--text2);margin-bottom:15px">
+          Skip tokens that already pumped too much.
+        </p>
+        <div class="settings-grid">
+          <div class="setting">
+            <label>MAX 5m PUMP (%)</label>
+            <input type="number" id="maxPump5m" value="100" min="20" max="500">
+          </div>
+          <div class="setting">
+            <label>MAX 1h PUMP (%)</label>
+            <input type="number" id="maxPump1h" value="200" min="50" max="1000">
+          </div>
+          <div class="setting">
+            <label>MAX 5m DUMP (%)</label>
+            <input type="number" id="maxDump5m" value="40" min="10" max="80">
+          </div>
+          <div class="setting">
+            <label>MAX 1h DUMP (%)</label>
+            <input type="number" id="maxDump1h" value="50" min="20" max="90">
+          </div>
+        </div>
+      </div>
+      
+      <div class="setting-group">
+        <div class="setting-group-title">🐋 WHALE DETECTION</div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="whaleDetection" checked>
+          <label>Boost score for whale activity</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="volumeSpikeDetection" checked>
+          <label>Boost score for volume spikes</label>
+        </div>
+      </div>
+    </div>
+    
     <div class="modal-footer">
+      <button class="ctrl-btn secondary" onclick="resetSettings()">↺ DEFAULT</button>
       <button class="ctrl-btn" onclick="closeSettings()">✓ SAVE</button>
     </div>
   </div>
 </div>
 
-<!-- SCANNER STATUS -->
+<!-- ══════════════════════════════════════
+     SCANNER STATUS
+     ══════════════════════════════════════ -->
 <div class="scanner-status">
   <div class="scanner-bar">
     <div class="scanner-info">
@@ -594,82 +1051,101 @@ body {
       <div class="scanner-text" id="scannerText">Click START to begin</div>
     </div>
     <div class="scanner-stats">
-      Scanned: <span id="scannedCount">0</span> | 
-      Found: <span id="oppsCount">0</span> |
-      Last: <span id="lastScan">--:--</span>
+      <div class="scanner-stat">Scanned: <span id="scannedCount">0</span></div>
+      <div class="scanner-stat">Opportunities: <span id="oppsCount">0</span></div>
+      <div class="scanner-stat">Cache: <span id="cacheCount">0</span></div>
+      <div class="scanner-stat">Last: <span id="lastScan">--:--</span></div>
     </div>
   </div>
 </div>
 
-<!-- MAIN LAYOUT -->
-<div class="main-layout">
-  <div>
-    <!-- Active Positions -->
-    <div class="panel" style="margin-bottom:20px;">
-      <div class="panel-header">
-        <div class="panel-title">📊 ACTIVE POSITIONS</div>
-        <div class="panel-badge" id="positionsBadge">0 open</div>
+<!-- ══════════════════════════════════════
+     MAIN LAYOUT
+     ══════════════════════════════════════ -->
+<div class="main">
+  <!-- LEFT: Positions -->
+  <div class="left-col">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">📊 ACTIVE POSITIONS</span>
+        <span class="section-badge" id="positionsBadge">0 open</span>
       </div>
-      <div class="panel-content" id="positionsContainer">
-        <div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No active positions</div></div>
+      <div class="section-content" id="positionsContainer">
+        <div class="empty">
+          <div class="empty-icon">📊</div>
+          <div class="empty-text">No active positions</div>
+        </div>
       </div>
     </div>
     
-    <!-- Trade History -->
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">📜 TRADE HISTORY</div>
-        <div class="panel-badge" id="historyBadge">0 trades</div>
+    <div class="section" style="margin-top:20px">
+      <div class="section-header">
+        <span class="section-title">📜 TRADE HISTORY</span>
+        <span class="section-badge" id="historyBadge">0 trades</span>
       </div>
-      <div class="panel-content" id="historyContainer" style="max-height:250px;">
-        <div class="empty"><div class="empty-icon">📜</div><div class="empty-text">No trades yet</div></div>
+      <div class="section-content" id="historyContainer">
+        <div class="empty">
+          <div class="empty-icon">📜</div>
+          <div class="empty-text">No trades yet</div>
+        </div>
       </div>
     </div>
   </div>
   
-  <!-- Activity Log -->
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title">📡 ACTIVITY LOG</div>
-      <div class="panel-badge">live</div>
-    </div>
-    <div class="panel-content" id="logContainer" style="max-height:600px;">
-      <div class="empty"><div class="empty-icon">📡</div><div class="empty-text">Start the bot to see activity</div></div>
+  <!-- RIGHT: Activity Log -->
+  <div class="right-col">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">📡 ACTIVITY LOG</span>
+        <span class="section-badge">live</span>
+      </div>
+      <div class="section-content" id="logContainer"></div>
     </div>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+// ██████╗  █████╗ ██████╗ ████████╗    ██████╗
+// ██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝    ╚════██╗
+// ██████╔╝███████║██████╔╝   ██║        █████╔╝
+// ██╔═══╝ ██╔══██║██╔══██╗   ██║       ██╔═══╝
+// ██║     ██║  ██║██║  ██║   ██║       ███████╗
+// ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝       ╚══════╝
+// PART 2: JAVASCRIPT - CORE LOGIC
+// ══════════════════════════════════════════════════════════════════════════════
+
+const $ = id => document.getElementById(id);
+const AI_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/chat';
+
+// ══════════════════════════════════════
 // STATE
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════
 const INITIAL_BALANCE = 10000;
 let balance = INITIAL_BALANCE;
 let totalPnL = 0;
+let securedPnL = 0;
 let totalTrades = 0;
 let wins = 0;
-let totalWinAmount = 0;
-
-let isRunning = false;
-let scanInterval = null;
-let updateInterval = null;
-
+let bestTrade = 0;
+let worstTrade = 0;
 let positions = [];
 let history = [];
 let logs = [];
+let isRunning = false;
+let scanInterval = null;
+let updateInterval = null;
+let momentumInterval = null;
 
-let scannedCount = 0;
-let oppsCount = 0;
+// Stats
+let scannedTotal = 0;
+let oppsTotal = 0;
 
-const $ = id => document.getElementById(id);
-
-const AI_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/chat';
-
-// ═══════════════════════════════════════════
-// CACHE - Remember analyzed tokens for 1 HOUR
-// ═══════════════════════════════════════════
-const analyzedCache = new Map(); // { address: { result, timestamp } }
-const CACHE_DURATION = 60 * 60 * 1000; // 1 HOUR
+// ══════════════════════════════════════
+// CACHE SYSTEM - 1 HOUR
+// ══════════════════════════════════════
+const analyzedCache = new Map();
+const CACHE_DURATION = 60 * 60 * 1000;
 
 function getCachedAnalysis(address) {
   const cached = analyzedCache.get(address);
@@ -681,18 +1157,228 @@ function getCachedAnalysis(address) {
 
 function setCachedAnalysis(address, result) {
   analyzedCache.set(address, { result, timestamp: Date.now() });
-  // Clean old entries if too many
-  if (analyzedCache.size > 1000) {
-    const oldest = [...analyzedCache.entries()]
+  // Cleanup old entries
+  if (analyzedCache.size > 2000) {
+    const entries = [...analyzedCache.entries()]
       .sort((a, b) => a[1].timestamp - b[1].timestamp)
-      .slice(0, 200);
-    oldest.forEach(([k]) => analyzedCache.delete(k));
+      .slice(0, 500);
+    entries.forEach(([k]) => analyzedCache.delete(k));
+  }
+  $('cacheCount').textContent = analyzedCache.size;
+}
+
+// ══════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════
+const esc = s => (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const fN = n => n >= 1e9 ? (n/1e9).toFixed(2)+'B' : n >= 1e6 ? (n/1e6).toFixed(2)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : n.toFixed(0);
+const fP = p => p < 0.0001 ? p.toFixed(8) : p < 0.01 ? p.toFixed(6) : p < 1 ? p.toFixed(4) : p.toFixed(2);
+const getTime = () => new Date().toLocaleTimeString('en-US', { hour12: false });
+const getShortTime = () => new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+function addLog(icon, text) {
+  logs.unshift({ time: getTime(), icon, text });
+  if (logs.length > 150) logs.pop();
+  renderLogs();
+}
+
+function renderLogs() {
+  const container = $('logContainer');
+  container.innerHTML = logs.slice(0, 80).map(l => 
+    `<div class="log-item"><span class="log-time">${l.time}</span><span class="log-icon">${l.icon}</span><span class="log-text">${l.text}</span></div>`
+  ).join('');
+}
+
+// ══════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════
+function getSettings() {
+  return {
+    // Basic
+    positionSize: parseInt($('positionSize')?.value) || 100,
+    minScore: parseInt($('minScore')?.value) || 45,
+    maxQuick: parseInt($('maxQuick')?.value) || 6,
+    maxLong: parseInt($('maxLong')?.value) || 4,
+    chains: $('chains')?.value || 'all',
+    
+    // Trailing
+    trailActivation: parseInt($('trailActivation')?.value) || 12,
+    trailDistance: parseInt($('trailDistance')?.value) || 25,
+    trailTight: parseInt($('trailTight')?.value) || 12,
+    trailTightenAt: parseInt($('trailTightenAt')?.value) || 50,
+    
+    // DCA
+    dcaEnabled: $('dcaEnabled')?.checked ?? true,
+    dca1Pct: parseInt($('dca1Pct')?.value) || 20,
+    dca1Sell: parseInt($('dca1Sell')?.value) || 30,
+    dca2Pct: parseInt($('dca2Pct')?.value) || 50,
+    dca2Sell: parseInt($('dca2Sell')?.value) || 30,
+    dca3Pct: parseInt($('dca3Pct')?.value) || 100,
+    dca3Sell: parseInt($('dca3Sell')?.value) || 25,
+    moonBagEnabled: $('moonBagEnabled')?.checked ?? true,
+    
+    // Stop Loss
+    baseSL: parseInt($('baseSL')?.value) || 12,
+    maxSL: parseInt($('maxSL')?.value) || 25,
+    
+    // Momentum Exit
+    momentumExitEnabled: $('momentumExitEnabled')?.checked ?? true,
+    momentumMinRatio: parseInt($('momentumMinRatio')?.value) || 35,
+    momentumInterval: parseInt($('momentumInterval')?.value) || 60,
+    momentumMinProfit: parseInt($('momentumMinProfit')?.value) || 5,
+    momentumBadChecks: parseInt($('momentumBadChecks')?.value) || 2,
+    
+    // Time Limits
+    quickMaxHold: parseInt($('quickMaxHold')?.value) || 20,
+    longMaxHold: (parseInt($('longMaxHold')?.value) || 6) * 60,
+    quickExtensions: parseInt($('quickExtensions')?.value) || 1,
+    longExtensions: parseInt($('longExtensions')?.value) || 3,
+    
+    // Filters
+    minMC: parseInt($('minMC')?.value) || 1000,
+    maxMC: parseInt($('maxMC')?.value) || 50000000,
+    minLiquidity: parseInt($('minLiquidity')?.value) || 500,
+    minLiqRatio: parseInt($('minLiqRatio')?.value) || 2,
+    maxPump5m: parseInt($('maxPump5m')?.value) || 100,
+    maxPump1h: parseInt($('maxPump1h')?.value) || 200,
+    maxDump5m: parseInt($('maxDump5m')?.value) || 40,
+    maxDump1h: parseInt($('maxDump1h')?.value) || 50,
+    
+    // Detection
+    whaleDetection: $('whaleDetection')?.checked ?? true,
+    volumeSpikeDetection: $('volumeSpikeDetection')?.checked ?? true
+  };
+}
+
+function openSettings() { $('settingsModal').classList.add('show'); }
+function closeSettings() { $('settingsModal').classList.remove('show'); }
+
+function showSettingsTab(tabName) {
+  document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.settings-tab[onclick*="${tabName}"]`).classList.add('active');
+  $('panel-' + tabName).classList.add('active');
+}
+
+function resetSettings() {
+  // Reset to defaults
+  $('positionSize').value = 100;
+  $('minScore').value = 45;
+  $('maxQuick').value = 6;
+  $('maxLong').value = 4;
+  $('trailActivation').value = 12;
+  $('trailDistance').value = 25;
+  $('trailTight').value = 12;
+  $('trailTightenAt').value = 50;
+  $('dcaEnabled').checked = true;
+  $('dca1Pct').value = 20;
+  $('dca1Sell').value = 30;
+  $('dca2Pct').value = 50;
+  $('dca2Sell').value = 30;
+  $('dca3Pct').value = 100;
+  $('dca3Sell').value = 25;
+  $('moonBagEnabled').checked = true;
+  $('baseSL').value = 12;
+  $('maxSL').value = 25;
+  $('momentumExitEnabled').checked = true;
+  $('momentumMinRatio').value = 35;
+  $('momentumInterval').value = 60;
+  $('momentumMinProfit').value = 5;
+  $('momentumBadChecks').value = 2;
+  $('quickMaxHold').value = 20;
+  $('longMaxHold').value = 6;
+  $('quickExtensions').value = 1;
+  $('longExtensions').value = 3;
+  $('minMC').value = 1000;
+  $('maxMC').value = 50000000;
+  $('minLiquidity').value = 500;
+  $('minLiqRatio').value = 2;
+  $('maxPump5m').value = 100;
+  $('maxPump1h').value = 200;
+  $('maxDump5m').value = 40;
+  $('maxDump1h').value = 50;
+  $('whaleDetection').checked = true;
+  $('volumeSpikeDetection').checked = true;
+}
+
+// ══════════════════════════════════════
+// BOT CONTROL
+// ══════════════════════════════════════
+function startBot() {
+  if (isRunning) {
+    stopBot();
+    return;
+  }
+  isRunning = true;
+  $('startBtn').textContent = '⏹ STOP';
+  $('modeBadge').textContent = '🟢 RUNNING';
+  $('modeBadge').className = 'mode-badge active';
+  $('scannerDot').classList.add('active');
+  addLog('🚀', '<span class="green">Bot started</span> — Scanning for opportunities...');
+  
+  scan();
+  scanInterval = setInterval(scan, 40000);
+  updateInterval = setInterval(updatePositions, 5000);
+  
+  const settings = getSettings();
+  if (settings.momentumExitEnabled) {
+    momentumInterval = setInterval(checkMomentumExit, settings.momentumInterval * 1000);
   }
 }
 
-// ═══════════════════════════════════════════
-// AI ANALYSIS - LESS STRICT
-// ═══════════════════════════════════════════
+function stopBot() {
+  isRunning = false;
+  $('startBtn').textContent = '▶ START';
+  $('modeBadge').textContent = '🔴 STOPPED';
+  $('modeBadge').className = 'mode-badge';
+  $('scannerDot').classList.remove('active');
+  if (scanInterval) clearInterval(scanInterval);
+  if (updateInterval) clearInterval(updateInterval);
+  if (momentumInterval) clearInterval(momentumInterval);
+  addLog('⏹️', 'Bot stopped');
+}
+
+function resetBot() {
+  if (!confirm('Reset all data? This cannot be undone.')) return;
+  stopBot();
+  balance = INITIAL_BALANCE;
+  totalPnL = 0;
+  securedPnL = 0;
+  totalTrades = 0;
+  wins = 0;
+  bestTrade = 0;
+  worstTrade = 0;
+  positions = [];
+  history = [];
+  logs = [];
+  analyzedCache.clear();
+  scannedTotal = 0;
+  oppsTotal = 0;
+  updateUI();
+  renderPositions();
+  renderHistory();
+  renderLogs();
+  $('scannedCount').textContent = '0';
+  $('oppsCount').textContent = '0';
+  $('cacheCount').textContent = '0';
+  $('lastScan').textContent = '--:--';
+  $('scannerText').textContent = 'Click START to begin';
+  addLog('🔄', 'Bot reset — All data cleared');
+}
+
+function closeAllPositions() {
+  if (positions.length === 0) return;
+  if (!confirm(`Close all ${positions.length} positions?`)) return;
+  
+  for (const pos of [...positions]) {
+    closeTrade(pos, 'MANUAL');
+  }
+  addLog('⚠️', `Closed all positions manually`);
+}
+
+// ══════════════════════════════════════
+// AI ANALYSIS
+// ══════════════════════════════════════
 async function askAI(prompt) {
   try {
     const res = await fetch(AI_API, {
@@ -704,88 +1390,159 @@ async function askAI(prompt) {
     const data = await res.json();
     return data.response || data.message || '';
   } catch (e) {
-    console.log('AI error:', e);
     return '';
   }
 }
 
-// LESS STRICT - allow more entries
+// ══════════════════════════════════════════════════════════════════════════════
+// ███████╗██╗██╗  ████████╗███████╗██████╗ ███████╗
+// ██╔════╝██║██║  ╚══██╔══╝██╔════╝██╔══██╗██╔════╝
+// █████╗  ██║██║     ██║   █████╗  ██████╔╝███████╗
+// ██╔══╝  ██║██║     ██║   ██╔══╝  ██╔══██╗╚════██║
+// ██║     ██║███████╗██║   ███████╗██║  ██║███████║
+// ╚═╝     ╚═╝╚══════╝╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝
+// ══════════════════════════════════════════════════════════════════════════════
+
 function isOverextended(pair) {
+  const settings = getSettings();
   const chg5m = parseFloat(pair.priceChange?.m5) || 0;
   const chg1h = parseFloat(pair.priceChange?.h1) || 0;
   const chg6h = parseFloat(pair.priceChange?.h6) || 0;
   
-  // Only skip EXTREME cases
-  if (chg1h > 200) return { skip: true, reason: '+200% in 1h' };
-  if (chg5m > 100) return { skip: true, reason: '+100% in 5min' };
-  if (chg6h > 400) return { skip: true, reason: '+400% in 6h' };
+  // Pumped too much
+  if (chg5m > settings.maxPump5m) return { skip: true, reason: `+${chg5m.toFixed(0)}% 5m` };
+  if (chg1h > settings.maxPump1h) return { skip: true, reason: `+${chg1h.toFixed(0)}% 1h` };
+  if (chg6h > 400) return { skip: true, reason: `+${chg6h.toFixed(0)}% 6h` };
   
-  // Only skip severe dumps
-  if (chg5m < -40) return { skip: true, reason: '-40% in 5min' };
-  if (chg1h < -50) return { skip: true, reason: '-50% in 1h' };
+  // Dumped too much
+  if (chg5m < -settings.maxDump5m) return { skip: true, reason: `${chg5m.toFixed(0)}% 5m` };
+  if (chg1h < -settings.maxDump1h) return { skip: true, reason: `${chg1h.toFixed(0)}% 1h` };
   
   return { skip: false };
 }
 
-// LESS STRICT momentum check
 function getMomentumScore(pair) {
   const buys5m = pair.txns?.m5?.buys || 0;
   const sells5m = pair.txns?.m5?.sells || 0;
   const total5m = buys5m + sells5m;
   
-  // If no/few recent transactions, allow it (new token)
-  if (total5m < 5) return { good: true, strength: 'new', reason: 'New token' };
+  if (total5m < 3) return { good: true, strength: 'new', ratio: 50 };
   
-  const ratio5m = buys5m / total5m;
+  const ratio5m = (buys5m / total5m) * 100;
   
-  // Only skip if VERY heavy selling
-  if (ratio5m < 0.25) return { good: false, reason: 'Heavy dump' };
+  if (ratio5m < 20) return { good: false, reason: 'Heavy dump', ratio: ratio5m };
+  if (ratio5m > 65) return { good: true, strength: 'strong', ratio: ratio5m };
+  if (ratio5m > 50) return { good: true, strength: 'moderate', ratio: ratio5m };
+  if (ratio5m > 35) return { good: true, strength: 'weak', ratio: ratio5m };
   
-  // Determine strength
-  if (ratio5m > 0.60) return { good: true, strength: 'strong' };
-  if (ratio5m > 0.45) return { good: true, strength: 'moderate' };
-  
-  return { good: true, strength: 'weak' };
+  return { good: false, reason: 'Low buy pressure', ratio: ratio5m };
 }
 
+function detectWhaleActivity(pair) {
+  const vol5m = parseFloat(pair.volume?.m5) || 0;
+  const vol1h = parseFloat(pair.volume?.h1) || 0;
+  const mc = parseFloat(pair.marketCap) || 1;
+  
+  // High volume relative to MC = whale activity
+  const volRatio5m = vol5m / mc;
+  const volRatio1h = vol1h / mc;
+  
+  if (volRatio5m > 0.05) return { detected: true, strength: 'massive', boost: 15 };
+  if (volRatio5m > 0.02) return { detected: true, strength: 'strong', boost: 10 };
+  if (volRatio1h > 0.1) return { detected: true, strength: 'moderate', boost: 5 };
+  
+  return { detected: false, boost: 0 };
+}
+
+function detectVolumeSpike(pair) {
+  const vol5m = parseFloat(pair.volume?.m5) || 0;
+  const vol1h = parseFloat(pair.volume?.h1) || 0;
+  
+  if (vol1h === 0) return { spike: false, boost: 0 };
+  
+  // 5min volume should be ~8.3% of 1h if uniform
+  // If much higher = spike
+  const expected5m = vol1h / 12;
+  const spikeRatio = vol5m / expected5m;
+  
+  if (spikeRatio > 5) return { spike: true, strength: 'massive', boost: 12 };
+  if (spikeRatio > 3) return { spike: true, strength: 'strong', boost: 8 };
+  if (spikeRatio > 2) return { spike: true, strength: 'moderate', boost: 4 };
+  
+  return { spike: false, boost: 0 };
+}
+
+function calculateAdaptiveSL(pair) {
+  const settings = getSettings();
+  const chg5m = Math.abs(parseFloat(pair.priceChange?.m5) || 0);
+  const chg1h = Math.abs(parseFloat(pair.priceChange?.h1) || 0);
+  
+  let sl = settings.baseSL;
+  
+  // More volatile = wider SL
+  if (chg1h > 80) sl = Math.min(sl * 2, settings.maxSL);
+  else if (chg1h > 50) sl = Math.min(sl * 1.7, settings.maxSL);
+  else if (chg1h > 30) sl = Math.min(sl * 1.4, settings.maxSL);
+  else if (chg1h > 20) sl = Math.min(sl * 1.2, settings.maxSL);
+  
+  return Math.round(sl);
+}
+
+function calculateDynamicTrailDistance(pnlPct, settings) {
+  // Tighter trailing as profit increases
+  if (pnlPct >= 150) return Math.max(8, settings.trailTight * 0.6);
+  if (pnlPct >= 100) return Math.max(10, settings.trailTight * 0.8);
+  if (pnlPct >= settings.trailTightenAt) return settings.trailTight;
+  
+  // Linear interpolation from base to tight
+  const progress = pnlPct / settings.trailTightenAt;
+  return settings.trailDistance - (settings.trailDistance - settings.trailTight) * progress * 0.5;
+}
+
+// ══════════════════════════════════════
+// AI ENTRY ANALYSIS
+// ══════════════════════════════════════
 async function analyzeForEntry(pair) {
   const symbol = pair.baseToken?.symbol || 'UNKNOWN';
   const address = pair.baseToken?.address;
   
-  // Check cache first - if QUICK or LONG, return immediately (no AI call)
   const cached = getCachedAnalysis(address);
-  if (cached) {
-    return cached; // Return cached result, no AI call needed
-  }
+  if (cached) return cached;
   
   const mc = parseFloat(pair.marketCap) || 0;
   const liq = parseFloat(pair.liquidity?.usd) || 0;
-  const vol = parseFloat(pair.volume?.h24) || 0;
   const chg5m = parseFloat(pair.priceChange?.m5) || 0;
   const chg1h = parseFloat(pair.priceChange?.h1) || 0;
   const chg6h = parseFloat(pair.priceChange?.h6) || 0;
+  const chg24h = parseFloat(pair.priceChange?.h24) || 0;
   const buys5m = pair.txns?.m5?.buys || 0;
   const sells5m = pair.txns?.m5?.sells || 0;
   const buyRatio5m = (buys5m + sells5m) > 0 ? ((buys5m / (buys5m + sells5m)) * 100).toFixed(0) : 50;
+  const vol24h = parseFloat(pair.volume?.h24) || 0;
   
-  const prompt = `Crypto sniper. Quick analysis:
+  const prompt = `Memecoin sniper. Quick decision needed:
 
-$${symbol} | MC: $${fN(mc)} | Liq: $${fN(liq)}
-5m: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(0)}% | 1h: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(0)}% | 6h: ${chg6h > 0 ? '+' : ''}${chg6h.toFixed(0)}%
-Buys 5m: ${buyRatio5m}%
+$${symbol}
+MC: $${fN(mc)} | Liq: $${fN(liq)} | Vol24h: $${fN(vol24h)}
+5m: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(0)}%
+1h: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(0)}%
+6h: ${chg6h > 0 ? '+' : ''}${chg6h.toFixed(0)}%
+24h: ${chg24h > 0 ? '+' : ''}${chg24h.toFixed(0)}%
+Buy ratio 5m: ${buyRatio5m}%
 
-Reply ONLY: QUICK, LONG, or SKIP`;
+QUICK = Active pump, scalp 15-30% fast
+LONG = Low MC gem, hold for 50%+
+SKIP = Bad setup, dumping, or overextended
+
+Reply ONLY one word: QUICK, LONG, or SKIP`;
 
   const response = await askAI(prompt);
   const result = response.toUpperCase();
-  
-  // Cache the result for 1 hour
   setCachedAnalysis(address, result);
-  
   return result;
 }
 
-async function analyzeForPump(pair) {
+async function analyzeForContinue(pair, pnlPct) {
   const symbol = pair.baseToken?.symbol || 'UNKNOWN';
   const chg5m = parseFloat(pair.priceChange?.m5) || 0;
   const chg1h = parseFloat(pair.priceChange?.h1) || 0;
@@ -793,247 +1550,446 @@ async function analyzeForPump(pair) {
   const sells5m = pair.txns?.m5?.sells || 0;
   const buyRatio5m = (buys5m + sells5m) > 0 ? ((buys5m / (buys5m + sells5m)) * 100).toFixed(0) : 50;
   
-  const prompt = `$${symbol} | 5m: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(0)}% | 1h: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(0)}% | Buys: ${buyRatio5m}%
-PUMP, HOLD, or DUMP?`;
+  const prompt = `$${symbol} | Current P&L: ${pnlPct > 0 ? '+' : ''}${pnlPct.toFixed(0)}%
+5m: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(0)}% | 1h: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(0)}%
+Buy ratio: ${buyRatio5m}%
 
-  const response = await askAI(prompt);
-  return response.toUpperCase();
+HOLD = Keep position, momentum still good
+SELL = Exit now, momentum dying
+
+Reply ONLY: HOLD or SELL`;
+
+  return (await askAI(prompt)).toUpperCase();
 }
 
-async function shouldExtendPosition(pos) {
-  try {
-    const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${pos.chain}/${pos.pairAddress}`, { signal: AbortSignal.timeout(5000) });
-    const data = await res.json();
+// ══════════════════════════════════════════════════════════════════════════════
+// ████████╗██████╗  █████╗ ██████╗ ██╗███╗   ██╗ ██████╗
+// ╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██║████╗  ██║██╔════╝
+//    ██║   ██████╔╝███████║██║  ██║██║██╔██╗ ██║██║  ███╗
+//    ██║   ██╔══██╗██╔══██║██║  ██║██║██║╚██╗██║██║   ██║
+//    ██║   ██║  ██║██║  ██║██████╔╝██║██║ ╚████║╚██████╔╝
+//    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝╚═╝  ╚═══╝ ╚═════╝
+// ══════════════════════════════════════════════════════════════════════════════
+
+async function executeTrade(pair, score, tradeType = 'QUICK') {
+  const settings = getSettings();
+  const size = settings.positionSize;
+  
+  if (balance < size) return false;
+  
+  const symbol = pair.baseToken?.symbol || 'UNKNOWN';
+  const chain = pair.chainId;
+  const address = pair.baseToken?.address;
+  const pairAddress = pair.pairAddress;
+  const entryPrice = parseFloat(pair.priceUsd) || 0;
+  const logo = pair.info?.imageUrl || '';
+  
+  if (entryPrice === 0) return false;
+  if (positions.find(p => p.address === address)) return false;
+  if (positions.find(p => p.symbol === symbol)) return false;
+  
+  const adaptiveSL = calculateAdaptiveSL(pair);
+  const isLong = tradeType === 'LONG';
+  
+  const position = {
+    id: Date.now(),
+    symbol,
+    chain,
+    address,
+    pairAddress,
+    logo,
+    entryPrice,
+    currentPrice: entryPrice,
     
-    if (!data.pair) return { extend: false, reason: 'No data' };
+    // Size tracking
+    initialSize: size,
+    currentSize: size,
     
-    const pair = data.pair;
-    const analysis = await analyzeForPump(pair);
+    score,
+    tradeType,
+    pnl: 0,
+    pnlPct: 0,
+    highestPnlPct: 0,
+    entryTime: Date.now(),
+    extended: 0,
     
-    if (analysis.includes('PUMP')) {
-      return { extend: true, reason: analysis };
-    } else if (analysis.includes('HOLD') && pos.pnl >= 0) {
-      return { extend: true, reason: analysis };
-    } else {
-      return { extend: false, reason: analysis };
-    }
-  } catch (e) {
-    return { extend: false, reason: 'Analysis failed' };
-  }
-}
-
-// ═══════════════════════════════════════════
-// MODAL
-// ═══════════════════════════════════════════
-function openSettings() {
-  $('settingsModal').classList.add('active');
-}
-
-function closeSettings(e) {
-  if (!e || e.target === $('settingsModal')) {
-    $('settingsModal').classList.remove('active');
-  }
-}
-
-// ═══════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════
-function fN(n) {
-  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
-  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
-  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-  return n.toFixed(0);
-}
-
-function fP(n) {
-  if (n < 0.00001) return n.toExponential(2);
-  if (n < 0.01) return n.toFixed(6);
-  if (n < 1) return n.toFixed(4);
-  return n.toFixed(2);
-}
-
-function getTime() {
-  return new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
-function getShortTime() {
-  return new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-}
-
-function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
-function addLog(icon, text) {
-  logs.unshift({ time: getTime(), icon, text });
-  if (logs.length > 100) logs.pop();
-  renderLogs();
-}
-
-// ═══════════════════════════════════════════
-// SETTINGS
-// ═══════════════════════════════════════════
-function getSettings() {
-  return {
-    positionSize: parseInt($('positionSize').value) || 100,
-    takeProfit: parseInt($('takeProfit').value) || 25,
-    stopLoss: parseInt($('stopLoss').value) || 12,
-    maxHold: parseInt($('maxHold').value) || 15,
-    minScore: parseInt($('minScore').value) || 45,
-    maxQuick: parseInt($('maxQuick').value) || 6,
-    maxLong: parseInt($('maxLong').value) || 4,
-    chains: $('chains').value
+    // Trailing Stop
+    trailingActivated: false,
+    trailingHigh: 0,
+    currentTrailDistance: settings.trailDistance,
+    
+    // DCA Out tracking
+    dcaLevel: 0,      // 0, 1, 2, 3
+    dcaSecured: 0,    // $ locked in
+    isMoonBag: false, // After all DCA levels
+    
+    // Stop Loss
+    stopLoss: adaptiveSL,
+    
+    // Momentum tracking
+    lastMomentumCheck: Date.now(),
+    consecutiveBadMomentum: 0,
+    lastBuyRatio: 50,
+    
+    // Config
+    maxHold: isLong ? settings.longMaxHold : settings.quickMaxHold,
+    maxExtend: isLong ? settings.longExtensions : settings.quickExtensions,
+    label: isLong ? '🌙 LONG' : '⚡ QUICK'
   };
+  
+  positions.push(position);
+  balance -= size;
+  
+  addLog('🎯', `<span class="cyan">${position.label}</span> $${esc(symbol)} @ $${fP(entryPrice)} — Score: ${score}`);
+  updateUI();
+  renderPositions();
+  return true;
 }
 
-// ═══════════════════════════════════════════
-// BOT CONTROL
-// ═══════════════════════════════════════════
-function toggleBot() {
-  if (isRunning) stopBot();
-  else startBot();
+function partialSell(pos, sellPercent, reason, dcaLevel) {
+  const settings = getSettings();
+  const sellAmount = pos.currentSize * (sellPercent / 100);
+  const pnlForSold = sellAmount * (pos.pnlPct / 100);
+  
+  pos.currentSize -= sellAmount;
+  pos.dcaSecured += pnlForSold;
+  pos.dcaLevel = dcaLevel;
+  
+  securedPnL += pnlForSold;
+  balance += sellAmount + pnlForSold;
+  
+  const emoji = dcaLevel === 1 ? '🥇' : dcaLevel === 2 ? '🥈' : '🥉';
+  addLog('💰', `${emoji} <span class="green">DCA ${dcaLevel}</span> $${esc(pos.symbol)} — Sold ${sellPercent}% — Secured <span class="green">+$${pnlForSold.toFixed(2)}</span>`);
+  
+  // Check if should become moon bag
+  if (dcaLevel === 3 && settings.moonBagEnabled && pos.currentSize > 0) {
+    pos.isMoonBag = true;
+    pos.tradeType = 'MOON';
+    pos.label = '🌕 MOON';
+    addLog('🌕', `<span class="pink">MOON BAG</span> $${esc(pos.symbol)} — Remaining $${pos.currentSize.toFixed(0)} rides free!`);
+  }
+  
+  updateUI();
+  renderPositions();
 }
 
-function startBot() {
-  isRunning = true;
-  $('startBtn').textContent = '⏸ STOP BOT';
-  $('startBtn').classList.add('active');
-  $('modeBadge').textContent = '🟢 RUNNING';
-  $('modeBadge').style.borderColor = 'var(--green)';
-  $('scannerDot').classList.add('active');
+function closeTrade(pos, reason) {
+  const remainingPnl = pos.currentSize * (pos.pnlPct / 100);
+  const finalPnl = remainingPnl + pos.dcaSecured;
   
-  addLog('🚀', 'Bot started — Scanning 5 sources + 25 keywords...');
+  totalPnL += finalPnl;
+  balance += pos.currentSize + remainingPnl;
+  totalTrades++;
   
-  scan();
-  scanInterval = setInterval(scan, 35000); // Every 35s (massive scan)
-  updateInterval = setInterval(updatePositions, 8000);
-}
-
-function stopBot() {
-  isRunning = false;
-  $('startBtn').textContent = '▶ START BOT';
-  $('startBtn').classList.remove('active');
-  $('modeBadge').textContent = '🔴 STOPPED';
-  $('modeBadge').style.borderColor = 'var(--red)';
-  $('scannerDot').classList.remove('active');
-  $('scannerText').textContent = 'Bot stopped';
+  if (finalPnl > 0) {
+    wins++;
+    if (finalPnl > bestTrade) bestTrade = finalPnl;
+  } else {
+    if (finalPnl < worstTrade) worstTrade = finalPnl;
+  }
   
-  clearInterval(scanInterval);
-  clearInterval(updateInterval);
-  scanInterval = null;
-  updateInterval = null;
+  const holdTime = Date.now() - pos.entryTime;
+  const holdMin = Math.floor(holdTime / 60000);
   
-  addLog('⏹️', 'Bot stopped');
-}
-
-function resetAll() {
-  if (positions.length > 0 && !confirm('Close all positions and reset?')) return;
+  history.unshift({
+    symbol: pos.symbol,
+    address: pos.address,
+    tradeType: pos.tradeType,
+    pnl: finalPnl,
+    pnlPct: pos.pnlPct,
+    highestPnlPct: pos.highestPnlPct,
+    dcaSecured: pos.dcaSecured,
+    dcaLevel: pos.dcaLevel,
+    reason,
+    closeTime: Date.now(),
+    holdTime,
+    holdMin
+  });
   
-  stopBot();
+  positions = positions.filter(p => p.id !== pos.id);
   
-  for (const pos of positions) closeTrade(pos, 'RESET');
+  const icon = finalPnl >= 0 ? '✅' : '❌';
+  const color = finalPnl >= 0 ? 'green' : 'red';
+  const dcaInfo = pos.dcaSecured > 0 ? ` (DCA: +$${pos.dcaSecured.toFixed(2)})` : '';
   
-  balance = INITIAL_BALANCE;
-  totalPnL = 0;
-  totalTrades = 0;
-  wins = 0;
-  totalWinAmount = 0;
-  positions = [];
-  history = [];
-  logs = [];
-  scannedCount = 0;
-  oppsCount = 0;
+  addLog(icon, `<span class="${color}">${reason}</span> $${esc(pos.symbol)} — ${finalPnl >= 0 ? '+' : ''}$${finalPnl.toFixed(2)}${dcaInfo} — ${holdMin}min`);
   
   updateUI();
   renderPositions();
   renderHistory();
-  renderLogs();
-  
-  addLog('🔄', 'Account reset to $10,000');
 }
 
-// ═══════════════════════════════════════════
-// SCANNER - MASSIVE SOURCES + MORE TOKENS
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+// ██╗   ██╗██████╗ ██████╗  █████╗ ████████╗███████╗
+// ██║   ██║██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██╔════╝
+// ██║   ██║██████╔╝██║  ██║███████║   ██║   █████╗
+// ██║   ██║██╔═══╝ ██║  ██║██╔══██║   ██║   ██╔══╝
+// ╚██████╔╝██║     ██████╔╝██║  ██║   ██║   ███████╗
+//  ╚═════╝ ╚═╝     ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝
+// ══════════════════════════════════════════════════════════════════════════════
+
+async function updatePositions() {
+  if (positions.length === 0) return;
+  
+  const settings = getSettings();
+  
+  for (let i = positions.length - 1; i >= 0; i--) {
+    const pos = positions[i];
+    
+    try {
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${pos.chain}/${pos.pairAddress}`, { 
+        signal: AbortSignal.timeout(6000) 
+      });
+      const data = await res.json();
+      
+      if (!data.pair) continue;
+      
+      const newPrice = parseFloat(data.pair.priceUsd) || pos.currentPrice;
+      pos.currentPrice = newPrice;
+      
+      const change = (newPrice - pos.entryPrice) / pos.entryPrice;
+      pos.pnlPct = change * 100;
+      pos.pnl = pos.currentSize * change + pos.dcaSecured;
+      
+      if (pos.pnlPct > pos.highestPnlPct) {
+        pos.highestPnlPct = pos.pnlPct;
+      }
+      
+      // Update momentum data
+      const buys5m = data.pair.txns?.m5?.buys || 0;
+      const sells5m = data.pair.txns?.m5?.sells || 0;
+      const total5m = buys5m + sells5m;
+      pos.lastBuyRatio = total5m > 0 ? (buys5m / total5m) * 100 : 50;
+      
+      const holdTime = (Date.now() - pos.entryTime) / 60000;
+      
+      // ═══════════════════════════════════
+      // 1. STOP LOSS CHECK
+      // ═══════════════════════════════════
+      if (pos.pnlPct <= -pos.stopLoss && !pos.isMoonBag) {
+        addLog('🛑', `<span class="red">STOP LOSS</span> $${esc(pos.symbol)} at ${pos.pnlPct.toFixed(1)}%`);
+        closeTrade(pos, 'SL');
+        continue;
+      }
+      
+      // ═══════════════════════════════════
+      // 2. DCA OUT (PARTIAL TAKE PROFITS)
+      // ═══════════════════════════════════
+      if (settings.dcaEnabled && pos.dcaLevel < 3 && !pos.isMoonBag) {
+        if (pos.dcaLevel === 0 && pos.pnlPct >= settings.dca1Pct) {
+          partialSell(pos, settings.dca1Sell, 'DCA 1', 1);
+        }
+        else if (pos.dcaLevel === 1 && pos.pnlPct >= settings.dca2Pct) {
+          partialSell(pos, settings.dca2Sell, 'DCA 2', 2);
+        }
+        else if (pos.dcaLevel === 2 && pos.pnlPct >= settings.dca3Pct) {
+          partialSell(pos, settings.dca3Sell, 'DCA 3', 3);
+        }
+      }
+      
+      // ═══════════════════════════════════
+      // 3. TRAILING STOP
+      // ═══════════════════════════════════
+      const trailActivationPct = pos.isMoonBag ? 10 : settings.trailActivation;
+      
+      if (pos.pnlPct >= trailActivationPct && !pos.trailingActivated) {
+        pos.trailingActivated = true;
+        pos.trailingHigh = pos.pnlPct;
+        addLog('📈', `<span class="orange">TRAILING</span> $${esc(pos.symbol)} activated at +${pos.pnlPct.toFixed(0)}%`);
+      }
+      
+      if (pos.trailingActivated) {
+        // Update high
+        if (pos.pnlPct > pos.trailingHigh) {
+          pos.trailingHigh = pos.pnlPct;
+        }
+        
+        // Calculate dynamic trail distance
+        pos.currentTrailDistance = calculateDynamicTrailDistance(pos.trailingHigh, settings);
+        
+        // Moon bags have tighter trail
+        if (pos.isMoonBag) {
+          pos.currentTrailDistance = Math.max(8, pos.currentTrailDistance * 0.7);
+        }
+        
+        // Check if dropped too much from high
+        const dropFromHigh = pos.trailingHigh - pos.pnlPct;
+        if (dropFromHigh >= pos.currentTrailDistance) {
+          addLog('📉', `<span class="orange">TRAIL HIT</span> $${esc(pos.symbol)} — Peak +${pos.trailingHigh.toFixed(0)}% → +${pos.pnlPct.toFixed(1)}%`);
+          closeTrade(pos, 'TRAIL');
+          continue;
+        }
+      }
+      
+      // ═══════════════════════════════════
+      // 4. TIME-BASED EXIT (with AI check for LONG)
+      // ═══════════════════════════════════
+      if (!pos.isMoonBag && holdTime >= pos.maxHold) {
+        if (pos.extended < pos.maxExtend) {
+          // Ask AI if should extend
+          const analysis = await analyzeForContinue(data.pair, pos.pnlPct);
+          
+          if (analysis.includes('HOLD') && pos.pnlPct >= -5) {
+            pos.entryTime = Date.now();
+            pos.extended++;
+            addLog('🔄', `<span class="cyan">Extended</span> $${esc(pos.symbol)} — ${pos.extended}/${pos.maxExtend}`);
+          } else {
+            closeTrade(pos, 'TIMEOUT');
+          }
+        } else {
+          closeTrade(pos, 'MAX TIME');
+        }
+        continue;
+      }
+      
+    } catch (e) {
+      // Silent error
+    }
+  }
+  
+  renderPositions();
+  updateUI();
+}
+
+// ══════════════════════════════════════
+// MOMENTUM EXIT CHECK
+// ══════════════════════════════════════
+async function checkMomentumExit() {
+  if (positions.length === 0) return;
+  
+  const settings = getSettings();
+  if (!settings.momentumExitEnabled) return;
+  
+  for (let i = positions.length - 1; i >= 0; i--) {
+    const pos = positions[i];
+    
+    // Skip moon bags and positions not in sufficient profit
+    if (pos.isMoonBag) continue;
+    if (pos.pnlPct < settings.momentumMinProfit) continue;
+    
+    try {
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${pos.chain}/${pos.pairAddress}`, { 
+        signal: AbortSignal.timeout(5000) 
+      });
+      const data = await res.json();
+      
+      if (!data.pair) continue;
+      
+      const buys5m = data.pair.txns?.m5?.buys || 0;
+      const sells5m = data.pair.txns?.m5?.sells || 0;
+      const total5m = buys5m + sells5m;
+      
+      if (total5m < 5) continue;
+      
+      const buyRatio = (buys5m / total5m) * 100;
+      pos.lastBuyRatio = buyRatio;
+      
+      if (buyRatio < settings.momentumMinRatio) {
+        pos.consecutiveBadMomentum++;
+        
+        if (pos.consecutiveBadMomentum >= settings.momentumBadChecks) {
+          addLog('📉', `<span class="cyan">MOMENTUM EXIT</span> $${esc(pos.symbol)} — Buyers: ${buyRatio.toFixed(0)}%`);
+          closeTrade(pos, 'MOMENTUM');
+        }
+      } else {
+        pos.consecutiveBadMomentum = 0;
+      }
+      
+    } catch (e) {}
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ███████╗ ██████╗ █████╗ ███╗   ██╗███╗   ██╗███████╗██████╗
+// ██╔════╝██╔════╝██╔══██╗████╗  ██║████╗  ██║██╔════╝██╔══██╗
+// ███████╗██║     ███████║██╔██╗ ██║██╔██╗ ██║█████╗  ██████╔╝
+// ╚════██║██║     ██╔══██║██║╚██╗██║██║╚██╗██║██╔══╝  ██╔══██╗
+// ███████║╚██████╗██║  ██║██║ ╚████║██║ ╚████║███████╗██║  ██║
+// ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
+// ══════════════════════════════════════════════════════════════════════════════
+
 async function scan() {
   if (!isRunning) return;
   
   const settings = getSettings();
-  const maxQuick = parseInt($('maxQuick').value) || 6;
-  const maxLong = parseInt($('maxLong').value) || 4;
+  const maxQuick = settings.maxQuick;
+  const maxLong = settings.maxLong;
   
-  // CHECK IF POSITIONS ARE FULL - SKIP ENTIRE SCAN
+  // Count current positions
   const quickCount = positions.filter(p => p.tradeType === 'QUICK').length;
   const longCount = positions.filter(p => p.tradeType === 'LONG').length;
+  const moonCount = positions.filter(p => p.tradeType === 'MOON').length;
   
+  // Skip if full
   if (quickCount >= maxQuick && longCount >= maxLong) {
-    $('scannerText').textContent = `⏸️ Full: ${quickCount}⚡ + ${longCount}🌙 — Waiting...`;
-    addLog('⏸️', `Positions full (${quickCount}⚡/${maxQuick} + ${longCount}🌙/${maxLong}) — Skipping scan`);
+    $('scannerText').textContent = '⏸️ Positions full — Waiting for exits...';
     return;
   }
   
-  const chains = settings.chains === 'all' ? ['solana', 'ethereum'] : [settings.chains];
+  const chainList = settings.chains === 'all' ? ['solana', 'ethereum', 'base'] : [settings.chains];
   const allPairs = new Map();
-  let sourcesScanned = 0;
   
-  // ═══ SOURCE 1: Latest token profiles ═══
+  // ═══════════════════════════════════════════════════════════════
+  // SOURCE 1: Latest profiles (newest tokens)
+  // ═══════════════════════════════════════════════════════════════
   try {
-    $('scannerText').textContent = '📡 New tokens...';
+    $('scannerText').textContent = '📡 Scanning new tokens...';
     const res = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      for (const t of data.slice(0, 100)) {
-        if (t.tokenAddress && chains.includes(t.chainId)) {
+      for (const t of data.slice(0, 120)) {
+        if (t.tokenAddress && chainList.includes(t.chainId)) {
           allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'new', boost: 12 });
         }
       }
     }
-    sourcesScanned++;
   } catch(e) {}
   
-  // ═══ SOURCE 2: Top boosted ═══
+  // ═══════════════════════════════════════════════════════════════
+  // SOURCE 2: Top boosted (paid promotion = potential)
+  // ═══════════════════════════════════════════════════════════════
   try {
-    $('scannerText').textContent = '🚀 Boosted...';
+    $('scannerText').textContent = `📡 ${allPairs.size} tokens...`;
     const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      for (const t of data.slice(0, 100)) {
-        if (t.tokenAddress && chains.includes(t.chainId) && !allPairs.has(t.tokenAddress)) {
+      for (const t of data.slice(0, 120)) {
+        if (t.tokenAddress && chainList.includes(t.chainId) && !allPairs.has(t.tokenAddress)) {
           allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'boosted', boost: 18 });
         }
       }
     }
-    sourcesScanned++;
   } catch(e) {}
   
-  // ═══ SOURCE 3: Latest boosts ═══
+  // ═══════════════════════════════════════════════════════════════
+  // SOURCE 3: Latest boosts
+  // ═══════════════════════════════════════════════════════════════
   try {
-    $('scannerText').textContent = '⚡ Latest boosts...';
+    $('scannerText').textContent = `📡 ${allPairs.size} tokens...`;
     const res = await fetch('https://api.dexscreener.com/token-boosts/latest/v1', { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      for (const t of data.slice(0, 80)) {
-        if (t.tokenAddress && chains.includes(t.chainId) && !allPairs.has(t.tokenAddress)) {
+      for (const t of data.slice(0, 100)) {
+        if (t.tokenAddress && chainList.includes(t.chainId) && !allPairs.has(t.tokenAddress)) {
           allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'boost-new', boost: 15 });
         }
       }
     }
-    sourcesScanned++;
   } catch(e) {}
   
-  // ═══ SOURCE 4: Top gainers per chain ═══
+  // ═══════════════════════════════════════════════════════════════
+  // SOURCE 4: Top gainers per chain
+  // ═══════════════════════════════════════════════════════════════
   try {
-    $('scannerText').textContent = '📈 Gainers...';
-    for (const chain of chains) {
+    $('scannerText').textContent = `📡 ${allPairs.size} tokens...`;
+    for (const chain of chainList) {
       const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${chain}`, { signal: AbortSignal.timeout(6000) });
       const data = await res.json();
       if (data.pairs) {
         const gainers = data.pairs
           .filter(p => p.chainId === chain && parseFloat(p.priceChange?.h1) > 0)
           .sort((a, b) => (parseFloat(b.priceChange?.h1) || 0) - (parseFloat(a.priceChange?.h1) || 0))
-          .slice(0, 60);
+          .slice(0, 80);
         
         for (const p of gainers) {
           const addr = p.baseToken?.address;
@@ -1042,86 +1998,95 @@ async function scan() {
           }
         }
       }
-      sourcesScanned++;
     }
   } catch(e) {}
   
-  // ═══ SOURCE 5: MASSIVE keyword search (70 keywords) ═══
-  const searchQueries = [
-    // Meme culture
-    'moon', 'pump', 'gem', 'degen', 'pepe', 'ai', 'meme', 'inu', 'wojak', 'based',
-    'trump', 'elon', 'cat', 'dog', 'frog', 'baby', 'doge', 'shib', 'bonk', 'wif',
-    'lambo', 'rich', 'gold', 'diamond', 'rocket', 'bull', 'ape', 'chad', 'giga',
-    'king', 'god', 'sol', 'eth', 'btc', 'nft', 'web3', 'pixel', 'punk', 'rare',
-    'epic', 'legend', 'alpha', 'sigma', 'safe', 'new', 'hot', 'fire', 'burn',
-    'cope', 'kek', 'wagmi', 'ser', 'fren', 'anon', 'whale', 'dragon', 'panda',
-    'monkey', 'lion', 'wolf', 'fox', 'bear', 'bird', 'fish', 'pig', 'rat',
-    // Letters
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-    // Numbers  
-    '1', '2', '3', '4', '5', '69', '420', '100', '777', '999', '1000',
-    // Extra
-    'coin', 'token', 'cash', 'win', 'play', 'game', 'cute', 'musk', 'usa', 'japan',
-    'fair', 'mega', 'super', 'hyper', 'turbo', 'fast', 'speed', 'power', 'max'
+  // ═══════════════════════════════════════════════════════════════
+  // SOURCE 5: Massive keyword search (80 random keywords)
+  // ═══════════════════════════════════════════════════════════════
+  const allKeywords = [
+    // Meme culture essentials
+    'moon', 'pump', 'gem', 'degen', 'pepe', 'wojak', 'based', 'chad', 'giga',
+    'trump', 'elon', 'musk', 'biden', 'obama', 'kanye', 'drake',
+    // Animals
+    'cat', 'dog', 'frog', 'inu', 'shib', 'doge', 'bonk', 'wif', 'popcat',
+    'panda', 'monkey', 'ape', 'lion', 'wolf', 'fox', 'bear', 'bull', 'whale',
+    'dragon', 'phoenix', 'bird', 'fish', 'rat', 'pig', 'cow', 'duck',
+    // Crypto culture
+    'ai', 'gpt', 'agent', 'bot', 'meme', 'nft', 'web3', 'defi', 'dao',
+    'sol', 'eth', 'btc', 'base', 'matic', 'avax', 'arb',
+    // Vibes
+    'rich', 'gold', 'diamond', 'rocket', 'lambo', 'million', 'billion',
+    'king', 'queen', 'god', 'jesus', 'buddha', 'devil', 'angel',
+    'alpha', 'sigma', 'beta', 'omega', 'ultra', 'mega', 'super', 'hyper',
+    'safe', 'fair', 'new', 'hot', 'fire', 'burn', 'moon', 'mars',
+    'cope', 'kek', 'wagmi', 'ngmi', 'gm', 'ser', 'fren', 'anon',
+    // Numbers & letters
+    'a', 'b', 'c', 'd', 'e', 'x', 'z',
+    '1', '69', '420', '100', '777', '999', '1000', '10000',
+    // Misc
+    'baby', 'mini', 'micro', 'nano', 'pixel', 'punk', 'rare', 'epic', 'legend',
+    'coin', 'token', 'cash', 'money', 'buck', 'dollar',
+    'game', 'play', 'win', 'bet', 'casino', 'poker',
+    'usa', 'america', 'china', 'japan', 'korea', 'india', 'europe',
+    'turbo', 'fast', 'speed', 'power', 'max', 'pro', 'elite'
   ];
   
-  // Take 70 random keywords
-  const shuffled = searchQueries.sort(() => Math.random() - 0.5).slice(0, 70);
+  const shuffled = [...allKeywords].sort(() => Math.random() - 0.5).slice(0, 80);
   
   for (let i = 0; i < shuffled.length; i++) {
     const q = shuffled[i];
-    $('scannerText').textContent = `🔍 "${q}" (${i+1}/70)...`;
+    $('scannerText').textContent = `🔍 ${allPairs.size} tokens...`;
     
     try {
       const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${q}`, { signal: AbortSignal.timeout(4000) });
       const data = await res.json();
       
       if (data.pairs) {
-        for (const p of data.pairs.slice(0, 60)) {
+        for (const p of data.pairs.slice(0, 70)) {
           const addr = p.baseToken?.address;
-          if (addr && chains.includes(p.chainId) && !allPairs.has(addr)) {
+          if (addr && chainList.includes(p.chainId) && !allPairs.has(addr)) {
             allPairs.set(addr, { address: addr, chain: p.chainId, source: 'search', boost: 0, pair: p });
           }
         }
       }
-      sourcesScanned++;
     } catch(e) {}
     
-    // Faster scanning
-    if (i % 15 === 14) await new Promise(r => setTimeout(r, 30));
+    if (i % 20 === 19) await new Promise(r => setTimeout(r, 50));
   }
   
-  $('scannerText').textContent = `⚙️ Enriching ${allPairs.size} tokens...`;
+  $('scannerText').textContent = `⚙️ Analyzing ${allPairs.size} tokens...`;
   
-  // ═══ ENRICH with full pair data ═══
+  // ═══════════════════════════════════════════════════════════════
+  // ENRICH & FILTER
+  // ═══════════════════════════════════════════════════════════════
   const enriched = [];
   const candidates = Array.from(allPairs.values());
-  let processed = 0;
   
-  for (const cand of candidates) {
-    processed++;
-    if (processed % 30 === 0) {
-      $('scannerText').textContent = `⚙️ ${processed}/${candidates.length}...`;
+  for (let i = 0; i < candidates.length; i++) {
+    const cand = candidates[i];
+    
+    if (i % 100 === 0) {
+      $('scannerText').textContent = `⚙️ ${i}/${candidates.length}...`;
     }
     
     try {
       let pair = cand.pair;
       
       if (!pair) {
-        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cand.address}`, { signal: AbortSignal.timeout(4000) });
+        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cand.address}`, { signal: AbortSignal.timeout(3000) });
         const data = await res.json();
-        if (data.pairs && data.pairs[0]) {
-          pair = data.pairs[0];
-        }
+        if (data.pairs && data.pairs[0]) pair = data.pairs[0];
       }
       
       if (pair) {
         const mc = parseFloat(pair.marketCap) || 0;
         const liq = parseFloat(pair.liquidity?.usd) || 0;
+        const liqRatio = mc > 0 ? (liq / mc) * 100 : 0;
         
-        // Very lenient filters - allow almost everything
-        if (mc > 500 && mc < 50000000 && liq > 200) {
+        // Apply filters
+        if (mc >= settings.minMC && mc <= settings.maxMC && 
+            liq >= settings.minLiquidity && liqRatio >= settings.minLiqRatio) {
           pair._source = cand.source;
           pair._boost = cand.boost;
           enriched.push(pair);
@@ -1129,63 +2094,82 @@ async function scan() {
       }
     } catch(e) {}
     
-    if (processed % 20 === 0) await new Promise(r => setTimeout(r, 15));
+    if (i % 25 === 24) await new Promise(r => setTimeout(r, 20));
   }
   
-  scannedCount = enriched.length;
-  $('scannedCount').textContent = scannedCount;
+  scannedTotal = enriched.length;
+  $('scannedCount').textContent = scannedTotal;
   $('lastScan').textContent = getShortTime();
   
-  // Score and filter
+  // ═══════════════════════════════════════════════════════════════
+  // SCORE & FILTER
+  // ═══════════════════════════════════════════════════════════════
   const opportunities = [];
+  
   for (const pair of enriched) {
-    const score = analyzeOpportunity(pair);
-    if (score >= settings.minScore) opportunities.push({ pair, score });
+    const score = calculateScore(pair, settings);
+    if (score >= settings.minScore) {
+      opportunities.push({ pair, score });
+    }
   }
   
   opportunities.sort((a, b) => b.score - a.score);
-  oppsCount = opportunities.length;
-  $('oppsCount').textContent = oppsCount;
+  oppsTotal = opportunities.length;
+  $('oppsCount').textContent = oppsTotal;
   
-  $('scannerText').textContent = `✅ ${oppsCount} opps / ${scannedCount} | Cache: ${analyzedCache.size}`;
-  addLog('🔍', `<span class="cyan">${sourcesScanned}</span> src — <span class="yellow">${scannedCount}</span> tokens — <span class="green">${oppsCount}</span> opps — 💾 ${analyzedCache.size}`);
+  $('scannerText').textContent = `✅ ${oppsTotal} opportunities`;
+  addLog('🔍', `Found <span class="green">${oppsTotal}</span> opportunities from <span class="yellow">${scannedTotal}</span> tokens`);
   
-  // TRADE SELECTION - use maxQuick/maxLong from start of function
+  // ═══════════════════════════════════════════════════════════════
+  // TRADE SELECTION
+  // ═══════════════════════════════════════════════════════════════
   const maxPositions = maxQuick + maxLong;
-  const topOpps = opportunities.slice(0, 30);
+  const topOpps = opportunities.slice(0, 40);
   
   let qCount = positions.filter(p => p.tradeType === 'QUICK').length;
   let lCount = positions.filter(p => p.tradeType === 'LONG').length;
+  
+  // Sets for duplicate prevention
+  const tradingNow = new Set();
+  const existingAddresses = new Set(positions.map(p => p.address));
+  const existingSymbols = new Set(positions.map(p => p.symbol));
+  const historyAddresses = new Set(history.slice(0, 100).map(h => h.address));
   
   for (const opp of topOpps) {
     if (positions.length >= maxPositions) break;
     if (balance < settings.positionSize) break;
     
     const addr = opp.pair.baseToken?.address;
-    if (positions.find(p => p.address === addr)) continue;
-    if (history.find(h => h.address === addr)) continue; // Don't re-buy sold tokens
-    
     const symbol = opp.pair.baseToken?.symbol || 'UNKNOWN';
     
-    // CHECK CACHE FIRST - instant trade if cached as QUICK or LONG (no AI call!)
+    // Skip duplicates
+    if (!addr) continue;
+    if (existingAddresses.has(addr)) continue;
+    if (existingSymbols.has(symbol)) continue;
+    if (tradingNow.has(addr)) continue;
+    if (historyAddresses.has(addr)) continue;
+    
+    // Check cache first
     const cached = getCachedAnalysis(addr);
     if (cached) {
       if (cached.includes('QUICK') && qCount < maxQuick) {
-        addLog('💾', `Cache → QUICK $${esc(symbol)}`);
-        await executeTrade(opp.pair, opp.score, 'QUICK');
-        qCount++;
+        addLog('⚡', `<span class="cyan">QUICK</span> $${esc(symbol)}`);
+        tradingNow.add(addr);
+        existingSymbols.add(symbol);
+        if (await executeTrade(opp.pair, opp.score, 'QUICK')) qCount++;
         continue;
       } else if (cached.includes('LONG') && lCount < maxLong) {
-        addLog('💾', `Cache → LONG $${esc(symbol)}`);
-        await executeTrade(opp.pair, opp.score, 'LONG');
-        lCount++;
+        addLog('🌙', `<span class="purple">LONG</span> $${esc(symbol)}`);
+        tradingNow.add(addr);
+        existingSymbols.add(symbol);
+        if (await executeTrade(opp.pair, opp.score, 'LONG')) lCount++;
         continue;
       } else if (cached.includes('SKIP')) {
-        continue; // Skip silently
+        continue;
       }
     }
     
-    // Quick pre-checks (no AI)
+    // Pre-checks (no AI)
     const overCheck = isOverextended(opp.pair);
     if (overCheck.skip) {
       setCachedAnalysis(addr, 'SKIP');
@@ -1198,304 +2182,183 @@ async function scan() {
       continue;
     }
     
-    // AI Analysis (only for NEW tokens not in cache)
+    // AI Analysis
     try {
-      addLog('🤖', `AI: $${esc(symbol)}...`);
+      addLog('🤖', `Analyzing $${esc(symbol)}...`);
       const analysis = await analyzeForEntry(opp.pair);
       
       if (analysis.includes('QUICK') && qCount < maxQuick) {
         addLog('⚡', `<span class="cyan">QUICK</span> $${esc(symbol)}`);
-        await executeTrade(opp.pair, opp.score, 'QUICK');
-        qCount++;
+        tradingNow.add(addr);
+        existingSymbols.add(symbol);
+        if (await executeTrade(opp.pair, opp.score, 'QUICK')) qCount++;
       } else if (analysis.includes('LONG') && lCount < maxLong) {
         addLog('🌙', `<span class="purple">LONG</span> $${esc(symbol)}`);
-        await executeTrade(opp.pair, opp.score, 'LONG');
-        lCount++;
-      } else if (!analysis.includes('SKIP')) {
-        // Default to QUICK if AI unclear and score good
-        if (opp.score >= 55 && qCount < maxQuick) {
-          addLog('🎯', `Score → QUICK $${esc(symbol)}`);
-          await executeTrade(opp.pair, opp.score, 'QUICK');
-          qCount++;
-        }
+        tradingNow.add(addr);
+        existingSymbols.add(symbol);
+        if (await executeTrade(opp.pair, opp.score, 'LONG')) lCount++;
+      } else if (!analysis.includes('SKIP') && opp.score >= 60 && qCount < maxQuick) {
+        // High score fallback
+        addLog('⚡', `<span class="cyan">QUICK</span> $${esc(symbol)} (score fallback)`);
+        tradingNow.add(addr);
+        existingSymbols.add(symbol);
+        if (await executeTrade(opp.pair, opp.score, 'QUICK')) qCount++;
       }
     } catch (e) {
-      // Fallback if AI fails - trade anyway if score good
-      if (opp.score >= 50) {
+      // Fallback on AI error
+      if (opp.score >= 55) {
         const mc = parseFloat(opp.pair.marketCap) || 0;
         const tradeType = mc < 100000 ? 'LONG' : 'QUICK';
         if ((tradeType === 'QUICK' && qCount < maxQuick) || (tradeType === 'LONG' && lCount < maxLong)) {
-          addLog('🎯', `Fallback: ${tradeType} $${esc(symbol)}`);
-          await executeTrade(opp.pair, opp.score, tradeType);
-          if (tradeType === 'QUICK') qCount++; else lCount++;
+          tradingNow.add(addr);
+          existingSymbols.add(symbol);
+          if (await executeTrade(opp.pair, opp.score, tradeType)) {
+            if (tradeType === 'QUICK') qCount++; else lCount++;
+          }
         }
       }
     }
     
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 150));
   }
 }
 
-function analyzeOpportunity(pair) {
+// ══════════════════════════════════════
+// ADVANCED SCORING ALGORITHM
+// ══════════════════════════════════════
+function calculateScore(pair, settings) {
   const mc = parseFloat(pair.marketCap) || 0;
   const liq = parseFloat(pair.liquidity?.usd) || 0;
-  const vol = parseFloat(pair.volume?.h24) || 0;
+  const vol24h = parseFloat(pair.volume?.h24) || 0;
+  const vol5m = parseFloat(pair.volume?.m5) || 0;
   const chg5m = parseFloat(pair.priceChange?.m5) || 0;
   const chg1h = parseFloat(pair.priceChange?.h1) || 0;
   const chg6h = parseFloat(pair.priceChange?.h6) || 0;
+  const chg24h = parseFloat(pair.priceChange?.h24) || 0;
+  
   const buys = pair.txns?.h24?.buys || 0;
   const sells = pair.txns?.h24?.sells || 0;
   const buys5m = pair.txns?.m5?.buys || 0;
   const sells5m = pair.txns?.m5?.sells || 0;
+  const buys1h = pair.txns?.h1?.buys || 0;
+  const sells1h = pair.txns?.h1?.sells || 0;
+  
   const total = buys + sells;
   const total5m = buys5m + sells5m;
+  const total1h = buys1h + sells1h;
+  
   const buyRatio = total > 0 ? (buys / total) * 100 : 50;
   const buyRatio5m = total5m > 0 ? (buys5m / total5m) * 100 : 50;
+  const buyRatio1h = total1h > 0 ? (buys1h / total1h) * 100 : 50;
+  
   const sourceBoost = pair._boost || 0;
   
-  let score = 20; // Base score - start higher
-  
-  // Source boost
+  let score = 15; // Base
   score += sourceBoost;
   
-  // MC bonus (prefer lower MC)
-  if (mc < 30000) score += 20;
-  else if (mc < 100000) score += 15;
-  else if (mc < 500000) score += 10;
-  else if (mc < 2000000) score += 5;
+  // ═══ MARKET CAP SCORING ═══
+  // Lower MC = higher potential
+  if (mc < 20000) score += 25;        // Micro cap gem
+  else if (mc < 50000) score += 20;   // Very small
+  else if (mc < 100000) score += 15;  // Small
+  else if (mc < 500000) score += 10;  // Medium-small
+  else if (mc < 2000000) score += 5;  // Medium
+  else score += 0;                     // Larger cap
   
-  // Liquidity ratio
+  // ═══ LIQUIDITY RATIO ═══
   const liqRatio = mc > 0 ? (liq / mc) * 100 : 0;
-  if (liqRatio >= 2 && liqRatio <= 15) score += 10; // Healthy range
+  if (liqRatio >= 3 && liqRatio <= 12) score += 12;  // Sweet spot
+  else if (liqRatio >= 2 && liqRatio <= 20) score += 6;
   
-  // Momentum - more forgiving
-  if (chg5m > 0) score += 8;
-  if (chg5m > 5) score += 5;
-  if (chg1h > 0) score += 5;
-  if (chg1h > 10) score += 5;
+  // ═══ MOMENTUM (SHORT-TERM) ═══
+  if (chg5m > 0 && chg5m < 30) score += 10;   // Healthy 5m pump
+  if (chg5m >= 30 && chg5m < 60) score += 5;  // Strong but risky
+  if (chg5m >= 5 && chg5m < 20) score += 5;   // Sweet spot
   
-  // Only penalize extreme moves
-  if (chg1h > 100) score -= 10;
-  if (chg5m > 50) score -= 8;
-  if (chg5m < -20) score -= 5;
-  if (chg1h < -30) score -= 8;
+  if (chg1h > 0 && chg1h < 50) score += 8;    // Healthy 1h pump
+  if (chg1h >= 10 && chg1h < 40) score += 5;  // Sweet spot
   
-  // Buy pressure bonus
-  if (buyRatio5m > 55) score += 10;
-  if (buyRatio5m > 65) score += 5;
-  if (buyRatio > 55) score += 5;
+  // ═══ MOMENTUM PENALTIES ═══
+  if (chg5m > 80) score -= 15;   // Too pumped
+  if (chg1h > 150) score -= 12;  // Way too pumped
+  if (chg5m < -25) score -= 10;  // Dumping hard
+  if (chg1h < -40) score -= 12;  // Dumping hard
   
-  // Penalize heavy selling
-  if (buyRatio5m < 35) score -= 10;
+  // ═══ BUY PRESSURE ═══
+  if (buyRatio5m > 60) score += 12;   // Strong buying
+  if (buyRatio5m > 70) score += 6;    // Very strong
+  if (buyRatio1h > 55) score += 6;    // Sustained buying
   
-  // Volume bonus
-  const volRatio = mc > 0 ? (vol / mc) : 0;
-  if (volRatio > 0.3) score += 8;
-  if (volRatio > 1) score += 5;
+  if (buyRatio5m < 35) score -= 12;   // Heavy selling
+  if (buyRatio5m < 25) score -= 8;    // Extreme selling
   
-  // Activity bonus
-  if (total5m > 5) score += 5;
-  if (total > 100) score += 5;
+  // ═══ VOLUME ═══
+  const volRatio = mc > 0 ? (vol24h / mc) : 0;
+  if (volRatio > 0.5) score += 10;    // Very active
+  if (volRatio > 1) score += 5;       // Extremely active
+  if (volRatio > 0.2) score += 5;     // Active
   
-  return Math.min(100, Math.max(0, score));
-}
-
-// ═══════════════════════════════════════════
-// TRADING - QUICK & LONG MODES
-// ═══════════════════════════════════════════
-const TRADE_CONFIGS = {
-  QUICK: {
-    takeProfit: 18,    // 18% TP
-    stopLoss: 10,      // 10% SL
-    maxHold: 20,       // 20 minutes max
-    maxExtend: 1,      // 1 extension max
-    label: '⚡ QUICK'
-  },
-  LONG: {
-    takeProfit: 60,    // 60% TP
-    stopLoss: 15,      // 15% SL
-    maxHold: 360,      // 6 hours (360 min)
-    maxExtend: 3,      // 3 extensions (up to 24h)
-    label: '🌙 LONG'
-  }
-};
-
-async function executeTrade(pair, score, tradeType = 'QUICK') {
-  const settings = getSettings();
-  const size = settings.positionSize;
-  const config = TRADE_CONFIGS[tradeType] || TRADE_CONFIGS.QUICK;
+  // ═══ TRANSACTION COUNT ═══
+  if (total5m > 10) score += 6;       // Active trading
+  if (total5m > 20) score += 4;       // Very active
+  if (total1h > 50) score += 4;       // Sustained activity
+  if (total > 200) score += 4;        // Established
   
-  if (balance < size) return;
-  
-  const symbol = pair.baseToken?.symbol || 'UNKNOWN';
-  const chain = pair.chainId;
-  const address = pair.baseToken?.address;
-  const pairAddress = pair.pairAddress;
-  const entryPrice = parseFloat(pair.priceUsd) || 0;
-  const logo = pair.info?.imageUrl || '';
-  
-  if (entryPrice === 0) return;
-  
-  const position = {
-    id: Date.now(),
-    symbol,
-    chain,
-    address,
-    pairAddress,
-    logo,
-    entryPrice,
-    currentPrice: entryPrice,
-    size,
-    score,
-    source: pair._source || 'search',
-    tradeType,
-    config,
-    pnl: 0,
-    pnlPct: 0,
-    entryTime: Date.now(),
-    extended: 0
-  };
-  
-  positions.push(position);
-  balance -= size;
-  
-  addLog('🎯', `<span class="cyan">${config.label}</span> $${esc(symbol)} @ $${fP(entryPrice)} — $${size} — TP:${config.takeProfit}% SL:${config.stopLoss}%`);
-  
-  updateUI();
-  renderPositions();
-}
-
-async function updatePositions() {
-  if (positions.length === 0) return;
-  
-  for (let i = positions.length - 1; i >= 0; i--) {
-    const pos = positions[i];
-    const config = pos.config || TRADE_CONFIGS.QUICK;
-    
-    try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${pos.chain}/${pos.pairAddress}`, { signal: AbortSignal.timeout(5000) });
-      const data = await res.json();
-      
-      if (data.pair) {
-        const newPrice = parseFloat(data.pair.priceUsd) || pos.currentPrice;
-        pos.currentPrice = newPrice;
-        
-        const change = (newPrice - pos.entryPrice) / pos.entryPrice;
-        pos.pnlPct = change * 100;
-        pos.pnl = pos.size * change;
-        
-        const holdTime = (Date.now() - pos.entryTime) / 60000;
-        
-        // Take Profit (based on trade type config)
-        if (pos.pnlPct >= config.takeProfit) {
-          addLog('🎯', `<span class="green">TP HIT!</span> ${config.label} $${esc(pos.symbol)} +${pos.pnlPct.toFixed(1)}%`);
-          closeTrade(pos, 'TP');
-          continue;
-        }
-        
-        // Stop Loss (based on trade type config)
-        if (pos.pnlPct <= -config.stopLoss) {
-          addLog('🛑', `<span class="red">SL HIT!</span> ${config.label} $${esc(pos.symbol)} ${pos.pnlPct.toFixed(1)}%`);
-          closeTrade(pos, 'SL');
-          continue;
-        }
-        
-        // Trailing stop for LONG trades in profit
-        if (pos.tradeType === 'LONG' && pos.pnlPct > 30) {
-          // If we were up 30%+ but now dropping below 20%, secure profits
-          if (!pos.trailingActivated && pos.pnlPct > 30) {
-            pos.trailingActivated = true;
-            pos.trailingHigh = pos.pnlPct;
-            addLog('📈', `Trailing stop activated for $${esc(pos.symbol)} at +${pos.pnlPct.toFixed(1)}%`);
-          }
-          if (pos.trailingActivated) {
-            if (pos.pnlPct > pos.trailingHigh) pos.trailingHigh = pos.pnlPct;
-            // Sell if dropped 15% from high
-            if (pos.trailingHigh - pos.pnlPct > 15) {
-              addLog('📉', `<span class="yellow">TRAILING STOP</span> $${esc(pos.symbol)} — Was +${pos.trailingHigh.toFixed(0)}%, now +${pos.pnlPct.toFixed(1)}%`);
-              closeTrade(pos, 'TRAIL');
-              continue;
-            }
-          }
-        }
-        
-        // Max Hold - AI decision
-        if (holdTime >= config.maxHold && pos.extended < config.maxExtend) {
-          addLog('🤖', `<span class="yellow">TIMEOUT</span> ${config.label} $${esc(pos.symbol)} — Analyzing...`);
-          
-          const decision = await shouldExtendPosition(pos);
-          
-          if (decision.extend) {
-            pos.entryTime = Date.now(); // Reset timer
-            pos.extended++;
-            const nextHoldMin = pos.tradeType === 'LONG' ? 360 : 15;
-            addLog('🔄', `<span class="cyan">EXTENDED</span> $${esc(pos.symbol)} +${nextHoldMin}min — ${decision.reason.substring(0, 40)}`);
-          } else {
-            addLog('📉', `<span class="yellow">AI SELL</span> $${esc(pos.symbol)} — ${decision.reason.substring(0, 40)}`);
-            closeTrade(pos, 'AI');
-          }
-          continue;
-        }
-        
-        // Force close if max extensions reached
-        if (holdTime >= config.maxHold && pos.extended >= config.maxExtend) {
-          addLog('⏰', `<span class="yellow">MAX TIME</span> $${esc(pos.symbol)} — ${pos.tradeType} limit reached`);
-          closeTrade(pos, 'TIME');
-          continue;
-        }
-      }
-    } catch (e) {}
+  // ═══ WHALE DETECTION ═══
+  if (settings.whaleDetection) {
+    const whale = detectWhaleActivity(pair);
+    score += whale.boost;
   }
   
-  renderPositions();
-  updateUI();
-}
-
-function closeTrade(pos, reason) {
-  const change = (pos.currentPrice - pos.entryPrice) / pos.entryPrice;
-  pos.pnlPct = change * 100;
-  pos.pnl = pos.size * change;
-  
-  totalPnL += pos.pnl;
-  balance += pos.size + pos.pnl;
-  totalTrades++;
-  
-  if (pos.pnl > 0) {
-    wins++;
-    totalWinAmount += pos.pnl;
+  // ═══ VOLUME SPIKE DETECTION ═══
+  if (settings.volumeSpikeDetection) {
+    const spike = detectVolumeSpike(pair);
+    score += spike.boost;
   }
   
-  history.unshift({ ...pos, closeTime: Date.now(), reason });
-  if (history.length > 50) history.pop();
+  // ═══ TREND CONSISTENCY ═══
+  // All timeframes positive = trend consistency bonus
+  if (chg5m > 0 && chg1h > 0 && chg6h > 0) score += 8;
+  if (chg5m > 0 && chg1h > 0 && chg6h > 0 && chg24h > 0) score += 5;
   
-  positions = positions.filter(p => p.id !== pos.id);
+  // Reversal pattern (was down, now up) = potential
+  if (chg24h < -20 && chg1h > 10) score += 6;
   
-  const emoji = pos.pnl >= 0 ? '✅' : '❌';
-  const color = pos.pnl >= 0 ? 'green' : 'red';
-  addLog(emoji, `<span class="${color}">SOLD</span> $${esc(pos.symbol)} — <span class="${color}">${pos.pnl >= 0 ? '+' : ''}$${pos.pnl.toFixed(2)} (${pos.pnlPct >= 0 ? '+' : ''}${pos.pnlPct.toFixed(1)}%)</span> [${reason}]`);
-  
-  renderPositions();
-  renderHistory();
-  updateUI();
+  return Math.min(100, Math.max(0, Math.round(score)));
 }
 
-// ═══════════════════════════════════════════
-// UI
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+// ██████╗ ███████╗███╗   ██╗██████╗ ███████╗██████╗
+// ██╔══██╗██╔════╝████╗  ██║██╔══██╗██╔════╝██╔══██╗
+// ██████╔╝█████╗  ██╔██╗ ██║██║  ██║█████╗  ██████╔╝
+// ██╔══██╗██╔══╝  ██║╚██╗██║██║  ██║██╔══╝  ██╔══██╗
+// ██║  ██║███████╗██║ ╚████║██████╔╝███████╗██║  ██║
+// ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝╚═════╝ ╚══════╝╚═╝  ╚═╝
+// ══════════════════════════════════════════════════════════════════════════════
+
 function updateUI() {
   const pnlEl = $('totalPnl');
   pnlEl.textContent = (totalPnL >= 0 ? '+' : '') + '$' + totalPnL.toFixed(2);
   pnlEl.className = 'pnl-value ' + (totalPnL >= 0 ? 'green' : 'red');
   
   $('balance').textContent = '$' + balance.toFixed(0);
+  $('securedPnl').textContent = '+$' + securedPnL.toFixed(0);
   $('winRate').textContent = (totalTrades > 0 ? ((wins / totalTrades) * 100).toFixed(0) : '--') + '%';
+  $('bestTrade').textContent = '+$' + bestTrade.toFixed(0);
   $('totalTrades').textContent = totalTrades;
   
-  // Count QUICK and LONG positions
-  const quickCount = positions.filter(p => p.tradeType === 'QUICK').length;
-  const longCount = positions.filter(p => p.tradeType === 'LONG').length;
-  $('quickCount').textContent = quickCount;
-  $('longCount').textContent = longCount;
+  const avgPnl = totalTrades > 0 ? totalPnL / totalTrades : 0;
+  const avgPnlEl = $('avgPnl');
+  avgPnlEl.textContent = (avgPnl >= 0 ? '+' : '') + '$' + avgPnl.toFixed(2);
+  avgPnlEl.className = 'pnl-value ' + (avgPnl >= 0 ? 'green' : 'red');
+  
+  const qCount = positions.filter(p => p.tradeType === 'QUICK').length;
+  const lCount = positions.filter(p => p.tradeType === 'LONG').length;
+  const mCount = positions.filter(p => p.tradeType === 'MOON').length;
+  
+  $('quickCount').textContent = qCount;
+  $('longCount').textContent = lCount;
+  $('moonCount').textContent = mCount;
 }
 
 function renderPositions() {
@@ -1507,24 +2370,23 @@ function renderPositions() {
     return;
   }
   
-  // Sort: LONG first, then QUICK
+  // Sort: Moon bags first, then by P&L
   const sorted = [...positions].sort((a, b) => {
+    if (a.isMoonBag && !b.isMoonBag) return -1;
+    if (!a.isMoonBag && b.isMoonBag) return 1;
     if (a.tradeType === 'LONG' && b.tradeType !== 'LONG') return -1;
     if (a.tradeType !== 'LONG' && b.tradeType === 'LONG') return 1;
-    return 0;
+    return b.pnlPct - a.pnlPct;
   });
   
   let html = '';
   
   for (const pos of sorted) {
     const isProfit = pos.pnl >= 0;
-    const config = pos.config || TRADE_CONFIGS.QUICK;
-    const holdMin = Math.floor((Date.now() - pos.entryTime) / 60000);
-    const holdSec = Math.floor(((Date.now() - pos.entryTime) % 60000) / 1000);
-    const holdPct = Math.min(100, (holdMin / config.maxHold) * 100);
-    const isLong = pos.tradeType === 'LONG';
-    const typeColor = isLong ? 'purple' : 'cyan';
-    const typeIcon = isLong ? '🌙' : '⚡';
+    const holdMs = Date.now() - pos.entryTime;
+    const holdMin = Math.floor(holdMs / 60000);
+    const holdSec = Math.floor((holdMs % 60000) / 1000);
+    const holdPct = Math.min(100, (holdMin / pos.maxHold) * 100);
     
     // Format hold time
     let holdDisplay = `${holdMin}m ${holdSec}s`;
@@ -1534,38 +2396,110 @@ function renderPositions() {
       holdDisplay = `${hours}h ${mins}m`;
     }
     
-    // Max hold display
-    let maxHoldDisplay = `${config.maxHold}m`;
-    if (config.maxHold >= 60) {
-      maxHoldDisplay = `${Math.floor(config.maxHold / 60)}h`;
+    let maxHoldDisplay = pos.maxHold >= 60 ? `${Math.floor(pos.maxHold / 60)}h` : `${pos.maxHold}m`;
+    
+    // Card classes
+    let cardClass = isProfit ? 'profit' : 'loss';
+    if (pos.isMoonBag) cardClass = 'moon-bag';
+    else if (pos.trailingActivated) cardClass += ' trailing';
+    else if (pos.tradeType === 'LONG') cardClass += ' long-trade';
+    
+    // Trade type display
+    let typeClass = 'quick';
+    if (pos.isMoonBag) typeClass = 'moon';
+    else if (pos.tradeType === 'LONG') typeClass = 'long';
+    
+    // Progress bar class
+    let progressClass = '';
+    if (!pos.isMoonBag) {
+      if (holdPct > 85) progressClass = 'danger';
+      else if (holdPct > 65) progressClass = 'warning';
     }
     
-    html += `<div class="pos-card ${isProfit ? 'profit' : 'loss'} ${isLong ? 'long-trade' : ''}">
+    // Tags
+    let tags = '';
+    if (pos.isMoonBag) {
+      tags += `<span class="pos-tag moon">🌕 FREE RIDE</span>`;
+    }
+    if (pos.trailingActivated) {
+      tags += `<span class="pos-tag trailing">📈 TRAIL +${pos.trailingHigh.toFixed(0)}%</span>`;
+    }
+    if (pos.dcaSecured > 0) {
+      tags += `<span class="pos-tag secured">🔒 +$${pos.dcaSecured.toFixed(0)}</span>`;
+    }
+    if (pos.lastBuyRatio > 60) {
+      tags += `<span class="pos-tag momentum">🔥 ${pos.lastBuyRatio.toFixed(0)}% buys</span>`;
+    }
+    
+    // DCA progress visualization
+    let dcaProgress = '';
+    if (pos.dcaLevel > 0 || pos.pnlPct > 15) {
+      dcaProgress = `<div class="pos-dca-progress">
+        <div class="dca-level ${pos.dcaLevel >= 1 ? 'filled' : (pos.pnlPct >= 15 ? 'active' : '')}"></div>
+        <div class="dca-level ${pos.dcaLevel >= 2 ? 'filled' : (pos.dcaLevel === 1 && pos.pnlPct >= 40 ? 'active' : '')}"></div>
+        <div class="dca-level ${pos.dcaLevel >= 3 ? 'filled' : (pos.dcaLevel === 2 && pos.pnlPct >= 80 ? 'active' : '')}"></div>
+      </div>`;
+    }
+    
+    html += `<div class="pos-card ${cardClass}">
       <div class="pos-header">
         <div class="pos-token">
           <div class="pos-logo">${pos.logo ? `<img src="${pos.logo}" onerror="this.style.display='none';this.parentElement.textContent='${pos.symbol.charAt(0)}'">` : pos.symbol.charAt(0)}</div>
-          <div>
-            <div class="pos-symbol">$${esc(pos.symbol)} <span class="trade-type ${typeColor}">${typeIcon} ${pos.tradeType}</span></div>
+          <div class="pos-info">
+            <div class="pos-symbol">
+              $${esc(pos.symbol)}
+              <span class="trade-type ${typeClass}">${pos.label}</span>
+            </div>
             <div class="pos-chain">${pos.chain} • Score: ${pos.score}</div>
           </div>
         </div>
         <div class="pos-pnl">
           <div class="pos-pnl-value ${isProfit ? 'green' : 'red'}">${isProfit ? '+' : ''}$${pos.pnl.toFixed(2)}</div>
-          <div class="pos-pnl-pct">${isProfit ? '+' : ''}${pos.pnlPct.toFixed(2)}%</div>
+          <div class="pos-pnl-pct ${isProfit ? 'green' : 'red'}">${isProfit ? '+' : ''}${pos.pnlPct.toFixed(1)}%</div>
         </div>
       </div>
+      
       <div class="pos-stats">
-        <div class="pos-stat"><div class="pos-stat-label">ENTRY</div><div class="pos-stat-value">$${fP(pos.entryPrice)}</div></div>
-        <div class="pos-stat"><div class="pos-stat-label">CURRENT</div><div class="pos-stat-value">$${fP(pos.currentPrice)}</div></div>
-        <div class="pos-stat"><div class="pos-stat-label">SIZE</div><div class="pos-stat-value">$${pos.size}</div></div>
+        <div class="pos-stat">
+          <div class="pos-stat-label">ENTRY</div>
+          <div class="pos-stat-value">$${fP(pos.entryPrice)}</div>
+        </div>
+        <div class="pos-stat">
+          <div class="pos-stat-label">CURRENT</div>
+          <div class="pos-stat-value">$${fP(pos.currentPrice)}</div>
+        </div>
+        <div class="pos-stat">
+          <div class="pos-stat-label">SIZE</div>
+          <div class="pos-stat-value">$${pos.currentSize.toFixed(0)}</div>
+        </div>
+        <div class="pos-stat">
+          <div class="pos-stat-label">${pos.trailingActivated ? 'TRAIL' : 'SL'}</div>
+          <div class="pos-stat-value ${pos.trailingActivated ? 'orange' : 'red'}">
+            ${pos.trailingActivated ? `-${pos.currentTrailDistance.toFixed(0)}%` : `-${pos.stopLoss}%`}
+          </div>
+        </div>
       </div>
-      <div class="pos-progress"><div class="pos-progress-bar" style="width:${holdPct}%"></div></div>
-      <div class="pos-status">
-        ⏱️ ${holdDisplay} / ${maxHoldDisplay} • 
-        TP: <span class="green">+${config.takeProfit}%</span> • 
-        SL: <span class="red">-${config.stopLoss}%</span>
-        ${pos.extended ? ` • <span class="cyan">EXT ${pos.extended}x</span>` : ''}
-        ${pos.trailingActivated ? ` • <span class="yellow">TRAIL 📈</span>` : ''}
+      
+      ${dcaProgress}
+      
+      ${!pos.isMoonBag ? `
+      <div class="pos-progress-container">
+        <div class="pos-progress-labels">
+          <span>⏱️ ${holdDisplay}</span>
+          <span>${maxHoldDisplay}${pos.extended ? ` (ext ${pos.extended}x)` : ''}</span>
+        </div>
+        <div class="pos-progress">
+          <div class="pos-progress-bar ${progressClass}" style="width:${holdPct}%"></div>
+        </div>
+      </div>
+      ` : ''}
+      
+      ${tags ? `<div class="pos-tags">${tags}</div>` : ''}
+      
+      <div class="pos-footer">
+        <span>Peak: <span class="green">+${pos.highestPnlPct.toFixed(0)}%</span></span>
+        ${pos.dcaLevel > 0 ? `<span>DCA: <span class="purple">${pos.dcaLevel}/3</span></span>` : ''}
+        ${pos.isMoonBag ? '<span class="pink">♾️ Infinite hold</span>' : ''}
       </div>
     </div>`;
   }
@@ -1583,15 +2517,25 @@ function renderHistory() {
   }
   
   let html = '';
-  for (const trade of history.slice(0, 20)) {
+  for (const trade of history.slice(0, 50)) {
     const isWin = trade.pnl >= 0;
     const time = new Date(trade.closeTime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-    const typeIcon = trade.tradeType === 'LONG' ? '🌙' : '⚡';
+    const typeIcon = trade.tradeType === 'MOON' ? '🌕' : trade.tradeType === 'LONG' ? '🌙' : '⚡';
+    
+    // Reason styling
+    let reasonClass = 'timeout';
+    if (trade.reason === 'SL') reasonClass = 'sl';
+    else if (trade.reason === 'TRAIL') reasonClass = 'trail';
+    else if (trade.reason === 'MOMENTUM') reasonClass = 'momentum';
+    else if (trade.reason.includes('DCA') || trade.reason === 'TP') reasonClass = 'tp';
+    
+    const securedInfo = trade.dcaSecured > 0 ? `+$${trade.dcaSecured.toFixed(0)} DCA` : '';
     
     html += `<div class="history-item">
       <span class="history-time">${time}</span>
       <span class="history-token">${typeIcon} $${esc(trade.symbol)}</span>
-      <span class="history-result ${isWin ? 'win' : 'loss'}">${isWin ? 'WIN' : 'LOSS'}</span>
+      <span class="history-reason ${reasonClass}">${trade.reason}</span>
+      <span class="history-secured">${securedInfo}</span>
       <span class="history-pnl ${isWin ? 'green' : 'red'}">${isWin ? '+' : ''}$${trade.pnl.toFixed(2)}</span>
     </div>`;
   }
@@ -1599,23 +2543,13 @@ function renderHistory() {
   container.innerHTML = html;
 }
 
-function renderLogs() {
-  const container = $('logContainer');
-  
-  if (logs.length === 0) {
-    container.innerHTML = `<div class="empty"><div class="empty-icon">📡</div><div class="empty-text">Start the bot to see activity</div></div>`;
-    return;
-  }
-  
-  let html = '';
-  for (const log of logs.slice(0, 50)) {
-    html += `<div class="log-item"><span class="log-time">${log.time}</span><span class="log-icon">${log.icon}</span><span class="log-text">${log.text}</span></div>`;
-  }
-  
-  container.innerHTML = html;
-}
-
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
 updateUI();
+renderPositions();
+renderHistory();
+addLog('💡', 'AI Sniper Pro v6 loaded — Configure settings and click START');
 </script>
 </body>
 </html>
