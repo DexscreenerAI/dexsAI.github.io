@@ -2003,23 +2003,60 @@ let pendingQuestion = null; // Store pending question type ('safe', 'buysell') w
 const API_URL = 'https://dexscreener-telegram-bot-production.up.railway.app';
 
 // ═══════════════════════════════════════════
-// CORS PROXY HELPER
+// CORS PROXY - Multiple fallbacks
 // ═══════════════════════════════════════════
-const CORS_PROXY = 'https://corsproxy.io/?';
-
-function needsCorsProxy() {
-  // Only need proxy in production (not localhost)
-  return location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
-}
+const CORS_PROXIES = [
+  url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+  url => 'https://corsproxy.io/?' + encodeURIComponent(url),
+  url => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url),
+  url => 'https://proxy.cors.sh/' + url
+];
+let workingProxyIndex = 0;
 
 async function fetchDexScreener(url, options = {}) {
-  // In production, always use proxy to avoid CORS issues
-  if (needsCorsProxy()) {
-    const proxyUrl = CORS_PROXY + encodeURIComponent(url);
-    return fetch(proxyUrl, options);
+  // En localhost, fetch direct
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    return fetch(url, options);
   }
-  // In localhost, direct fetch works
-  return fetch(url, options);
+  
+  // Remove any existing signal from options to avoid conflicts
+  const { signal, ...restOptions } = options;
+  
+  // En production, essayer les proxies
+  const startIndex = workingProxyIndex;
+  
+  for (let i = 0; i < CORS_PROXIES.length; i++) {
+    const proxyIndex = (startIndex + i) % CORS_PROXIES.length;
+    const proxyFn = CORS_PROXIES[proxyIndex];
+    const proxyUrl = proxyFn(url);
+    
+    try {
+      const response = await fetch(proxyUrl, { 
+        ...restOptions, 
+        signal: AbortSignal.timeout(15000),
+        headers: {
+          'Accept': 'application/json',
+          ...restOptions.headers
+        }
+      });
+      
+      if (response.ok) {
+        // Check if it's actually JSON
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json') || contentType.includes('text/')) {
+          workingProxyIndex = proxyIndex; // Remember working proxy
+          return response;
+        }
+      }
+      console.warn(`Proxy ${proxyIndex} returned non-ok:`, response.status);
+    } catch (err) {
+      console.warn(`Proxy ${proxyIndex} failed:`, err.message);
+    }
+  }
+  
+  // All proxies failed - try direct as last resort
+  console.error('All CORS proxies failed, trying direct fetch...');
+  return fetch(url, { ...restOptions, signal: AbortSignal.timeout(10000) });
 }
 
 // ═══════════════════════════════════════════
