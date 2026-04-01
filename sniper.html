@@ -296,6 +296,52 @@ body {
   margin-top: 4px;
 }
 
+/* Chain Checkboxes */
+.chain-checkboxes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.chain-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.chain-checkbox:hover {
+  border-color: var(--cyan);
+}
+.chain-checkbox input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.chain-checkbox input:checked + .chain-label {
+  color: var(--text);
+}
+.chain-label {
+  font-size: 12px;
+  color: var(--text2);
+}
+.chain-stat {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.3);
+}
+.chain-stat.green { color: var(--green); }
+.chain-stat.red { color: var(--red); }
+.chain-stat.yellow { color: var(--yellow); }
+.chain-checkbox.solana input:checked ~ .chain-label { color: #14f195; }
+.chain-checkbox.base input:checked ~ .chain-label { color: #0052ff; }
+.chain-checkbox.ethereum input:checked ~ .chain-label { color: #627eea; }
+
 /* ══════════════════════════════════════
    SCANNER STATUS
    ══════════════════════════════════════ */
@@ -382,6 +428,142 @@ body {
   gap: 20px;
 }
 
+.middle-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.middle-col .section-content {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.watchlist-section .section-header {
+  border-left: 3px solid var(--cyan);
+}
+
+.whale-section .section-header {
+  border-left: 3px solid var(--orange);
+}
+
+/* Watchlist Item */
+.watchlist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.watchlist-item:hover {
+  background: var(--bg3);
+}
+.watchlist-token {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.watchlist-symbol {
+  font-weight: 600;
+  color: var(--cyan);
+}
+.watchlist-chain {
+  font-size: 10px;
+  color: var(--text2);
+}
+.watchlist-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.watchlist-scans {
+  font-size: 11px;
+  color: var(--text2);
+}
+.watchlist-bar {
+  width: 60px;
+  height: 6px;
+  background: var(--bg);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.watchlist-bar-fill {
+  height: 100%;
+  background: var(--cyan);
+  transition: width 0.3s;
+}
+.watchlist-score {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--bg);
+}
+.watchlist-score.ready {
+  background: var(--green);
+  color: #000;
+}
+.watchlist-btn {
+  padding: 5px 10px;
+  font-size: 10px;
+  border: 1px solid var(--green);
+  color: var(--green);
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.watchlist-btn:hover {
+  background: var(--green);
+  color: #000;
+}
+
+/* Whale Alert Item */
+.whale-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border);
+}
+.whale-item.buy {
+  border-left: 3px solid var(--green);
+}
+.whale-item.sell {
+  border-left: 3px solid var(--red);
+}
+.whale-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.whale-icon {
+  font-size: 18px;
+}
+.whale-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.whale-symbol {
+  font-weight: 600;
+  color: var(--text);
+}
+.whale-action {
+  font-size: 10px;
+  color: var(--text2);
+}
+.whale-amount {
+  font-weight: 600;
+  font-size: 14px;
+}
+.whale-amount.buy { color: var(--green); }
+.whale-amount.sell { color: var(--red); }
+.whale-time {
+  font-size: 10px;
+  color: var(--text2);
+}
+
 .bottom-col .section-content {
   max-height: 300px;
   overflow-y: auto;
@@ -389,6 +571,7 @@ body {
 
 @media (max-width: 1200px) {
   .trades-row { grid-template-columns: 1fr; }
+  .middle-row { grid-template-columns: 1fr; }
   .bottom-row { grid-template-columns: 1fr; }
 }
 
@@ -817,7 +1000,7 @@ body {
 <header class="header">
   <h1>⚡ AI SNIPER PRO</h1>
   <p>🎯 Smart Trailing • DCA Out • Momentum Exit • Whale Detection • Moon Bags</p>
-  <span class="version-badge">v6.3 ULTIMATE</span>
+  <span class="version-badge">v6.4 ULTIMATE</span>
   <span class="mode-badge" id="modeBadge">🔴 STOPPED</span>
 </header>
 
@@ -925,13 +1108,24 @@ body {
           <span class="setting-hint">⚠️ &lt;75 = low win rate</span>
         </div>
         <div class="setting full">
-          <label>🔗 CHAINS</label>
-          <select id="chains">
-            <option value="all">Solana + Ethereum + Base</option>
-            <option value="solana">Solana Only</option>
-            <option value="ethereum">Ethereum Only</option>
-            <option value="base">Base Only</option>
-          </select>
+          <label>🔗 CHAINS (check to enable)</label>
+          <div class="chain-checkboxes">
+            <label class="chain-checkbox solana">
+              <input type="checkbox" id="chainSolana" checked>
+              <span class="chain-label">☀️ Solana</span>
+              <span class="chain-stat green">+$209</span>
+            </label>
+            <label class="chain-checkbox base">
+              <input type="checkbox" id="chainBase">
+              <span class="chain-label">🔵 Base</span>
+              <span class="chain-stat red">-$187</span>
+            </label>
+            <label class="chain-checkbox ethereum">
+              <input type="checkbox" id="chainEthereum">
+              <span class="chain-label">💎 Ethereum</span>
+              <span class="chain-stat yellow">-$4</span>
+            </label>
+          </div>
         </div>
       </div>
     </div>
@@ -1023,12 +1217,12 @@ body {
         <div class="settings-grid">
           <div class="setting">
             <label>BASE SL (%)</label>
-            <input type="number" id="baseSL" value="18" min="10" max="35">
-            <span class="setting-hint">⚠️ Too tight = false triggers</span>
+            <input type="number" id="baseSL" value="25" min="10" max="50">
+            <span class="setting-hint">⚠️ Analytics: 0% SL win rate → wider is better</span>
           </div>
           <div class="setting">
             <label>MAX SL (%)</label>
-            <input type="number" id="maxSL" value="30" min="15" max="50">
+            <input type="number" id="maxSL" value="40" min="20" max="60">
           </div>
         </div>
       </div>
@@ -1170,6 +1364,17 @@ body {
           <label>Check Rugcheck.xyz (Solana only)</label>
         </div>
       </div>
+      
+      <div class="setting-group">
+        <div class="setting-group-title">👀 WATCHLIST MODE (Beta)</div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="watchlistEnabled">
+          <label>Analyze tokens 5x before entry (safer but slower)</label>
+        </div>
+        <p style="font-size:10px;color:var(--text2);margin-top:8px">
+          When enabled, new tokens go to Watchlist first. After 5 scans with stable score, you can snipe manually or auto-snipe if confidence > 75%.
+        </p>
+      </div>
     </div>
     
     <!-- ALERTS TAB -->
@@ -1281,6 +1486,39 @@ body {
     </div>
   </div>
   
+  <!-- MIDDLE ROW: Watchlist + Whale Alerts -->
+  <div class="middle-row">
+    <div class="middle-col">
+      <div class="section watchlist-section">
+        <div class="section-header">
+          <span class="section-title">👀 WATCHLIST</span>
+          <span class="section-badge cyan" id="watchlistBadge">0 watching</span>
+        </div>
+        <div class="section-content" id="watchlistContainer">
+          <div class="empty">
+            <div class="empty-icon">👀</div>
+            <div class="empty-text">New tokens will appear here for analysis</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="middle-col">
+      <div class="section whale-section">
+        <div class="section-header">
+          <span class="section-title">🐋 WHALE ALERTS</span>
+          <span class="section-badge orange" id="whaleBadge">0 alerts</span>
+        </div>
+        <div class="section-content" id="whaleContainer">
+          <div class="empty">
+            <div class="empty-icon">🐋</div>
+            <div class="empty-text">Whale activity will appear here</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <!-- BOTTOM: Activity Log + Trade History -->
   <div class="bottom-row">
     <div class="bottom-col">
@@ -1348,6 +1586,294 @@ let scannedTotal = 0;
 let oppsTotal = 0;
 let sessionTrades = 0;
 let sessionPnL = 0;
+
+// Watchlist - tokens being analyzed before entry
+let watchlist = [];
+const WATCHLIST_SCANS_REQUIRED = 5;
+const WATCHLIST_CONFIDENCE_THRESHOLD = 75;
+
+// Whale alerts
+let whaleAlerts = [];
+const WHALE_MIN_AMOUNT = 5000; // $5K minimum to be whale
+
+// ══════════════════════════════════════
+// WATCHLIST FUNCTIONS
+// ══════════════════════════════════════
+function addToWatchlist(token) {
+  // Check if already in watchlist
+  if (watchlist.find(w => w.address === token.address)) return;
+  
+  watchlist.push({
+    symbol: token.symbol,
+    address: token.address,
+    chain: token.chain,
+    pairAddress: token.pairAddress,
+    dexUrl: token.dexUrl,
+    scans: 1,
+    scores: [token.score],
+    buyRatios: [token.buyRatio || 50],
+    volumes: [token.volume || 0],
+    prices: [token.price || 0],
+    addedAt: Date.now(),
+    lastScan: Date.now()
+  });
+  
+  renderWatchlist();
+  addLog('👀', `Watching <span class="cyan">$${esc(token.symbol)}</span> — scan 1/${WATCHLIST_SCANS_REQUIRED}`);
+}
+
+function updateWatchlistToken(address, data) {
+  const token = watchlist.find(w => w.address === address);
+  if (!token) return;
+  
+  token.scans++;
+  token.scores.push(data.score);
+  token.buyRatios.push(data.buyRatio || 50);
+  token.volumes.push(data.volume || 0);
+  token.prices.push(data.price || 0);
+  token.lastScan = Date.now();
+  
+  // Calculate confidence
+  const confidence = calculateWatchlistConfidence(token);
+  
+  if (token.scans >= WATCHLIST_SCANS_REQUIRED) {
+    if (confidence >= WATCHLIST_CONFIDENCE_THRESHOLD) {
+      addLog('🎯', `<span class="green">READY TO SNIPE</span> $${esc(token.symbol)} — Confidence: ${confidence}%`);
+    } else {
+      addLog('⚠️', `<span class="yellow">LOW CONFIDENCE</span> $${esc(token.symbol)} — ${confidence}% (skipping)`);
+      removeFromWatchlist(address);
+    }
+  }
+  
+  renderWatchlist();
+}
+
+function calculateWatchlistConfidence(token) {
+  if (token.scores.length < 2) return 0;
+  
+  let confidence = 50;
+  
+  // Score stability (±5 = +20, ±10 = +10, ±20 = -10)
+  const scoreStd = standardDeviation(token.scores);
+  if (scoreStd <= 5) confidence += 20;
+  else if (scoreStd <= 10) confidence += 10;
+  else if (scoreStd > 20) confidence -= 10;
+  
+  // Average score
+  const avgScore = token.scores.reduce((a,b) => a+b, 0) / token.scores.length;
+  if (avgScore >= 85) confidence += 15;
+  else if (avgScore >= 75) confidence += 5;
+  else if (avgScore < 60) confidence -= 15;
+  
+  // Buy ratio trend (increasing = good)
+  const brTrend = token.buyRatios[token.buyRatios.length - 1] - token.buyRatios[0];
+  if (brTrend > 10) confidence += 10;
+  else if (brTrend < -10) confidence -= 15;
+  
+  // Volume trend (increasing = good)
+  if (token.volumes.length >= 2) {
+    const volLast = token.volumes[token.volumes.length - 1];
+    const volFirst = token.volumes[0];
+    if (volFirst > 0 && volLast > volFirst * 1.5) confidence += 10;
+  }
+  
+  // Price not too pumped
+  if (token.prices.length >= 2) {
+    const priceLast = token.prices[token.prices.length - 1];
+    const priceFirst = token.prices[0];
+    if (priceFirst > 0) {
+      const pumpPct = ((priceLast - priceFirst) / priceFirst) * 100;
+      if (pumpPct > 50) confidence -= 20; // Already pumped too much
+      else if (pumpPct < 20 && pumpPct > 0) confidence += 10; // Healthy growth
+    }
+  }
+  
+  return Math.max(0, Math.min(100, Math.round(confidence)));
+}
+
+function standardDeviation(arr) {
+  const n = arr.length;
+  if (n === 0) return 0;
+  const mean = arr.reduce((a, b) => a + b, 0) / n;
+  const variance = arr.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n;
+  return Math.sqrt(variance);
+}
+
+function removeFromWatchlist(address) {
+  watchlist = watchlist.filter(w => w.address !== address);
+  renderWatchlist();
+}
+
+function cleanupWatchlist() {
+  const now = Date.now();
+  const MAX_AGE = 10 * 60 * 1000; // 10 minutes max
+  const MAX_STALE = 3 * 60 * 1000; // 3 minutes without update
+  
+  const before = watchlist.length;
+  watchlist = watchlist.filter(w => {
+    const age = now - w.addedAt;
+    const stale = now - w.lastScan;
+    
+    if (age > MAX_AGE) {
+      addLog('⏰', `Removed $${esc(w.symbol)} from watchlist (too old)`);
+      return false;
+    }
+    if (stale > MAX_STALE && w.scans < WATCHLIST_SCANS_REQUIRED) {
+      addLog('⏰', `Removed $${esc(w.symbol)} from watchlist (stale)`);
+      return false;
+    }
+    return true;
+  });
+  
+  if (watchlist.length !== before) {
+    renderWatchlist();
+  }
+}
+
+function snipeFromWatchlist(address) {
+  const token = watchlist.find(w => w.address === address);
+  if (!token) return;
+  
+  const confidence = calculateWatchlistConfidence(token);
+  addLog('🎯', `<span class="green">SNIPING</span> $${esc(token.symbol)} from watchlist (${confidence}% confidence)`);
+  
+  // Remove from watchlist and execute trade
+  removeFromWatchlist(address);
+  
+  // Create pair object for executeTrade
+  const avgScore = Math.round(token.scores.reduce((a,b) => a+b, 0) / token.scores.length);
+  
+  // Fetch fresh data and execute
+  fetchAndSnipe(token, avgScore);
+}
+
+async function fetchAndSnipe(token, score) {
+  try {
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${token.chain}/${token.pairAddress}`, { signal: AbortSignal.timeout(6000) });
+    const data = await res.json();
+    if (data.pair) {
+      await executeTrade(data.pair, score, 'QUICK');
+    }
+  } catch (e) {
+    addLog('❌', `Failed to snipe $${esc(token.symbol)}`);
+  }
+}
+
+function renderWatchlist() {
+  const container = $('watchlistContainer');
+  $('watchlistBadge').textContent = watchlist.length + ' watching';
+  
+  if (watchlist.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">👀</div><div class="empty-text">New tokens will appear here for analysis</div></div>`;
+    return;
+  }
+  
+  let html = '';
+  for (const token of watchlist) {
+    const progress = (token.scans / WATCHLIST_SCANS_REQUIRED) * 100;
+    const confidence = calculateWatchlistConfidence(token);
+    const avgScore = Math.round(token.scores.reduce((a,b) => a+b, 0) / token.scores.length);
+    const isReady = token.scans >= WATCHLIST_SCANS_REQUIRED && confidence >= WATCHLIST_CONFIDENCE_THRESHOLD;
+    
+    html += `<div class="watchlist-item">
+      <div class="watchlist-token">
+        <div>
+          <div class="watchlist-symbol">$${esc(token.symbol)}</div>
+          <div class="watchlist-chain">${token.chain} • Score: ${avgScore}</div>
+        </div>
+      </div>
+      <div class="watchlist-progress">
+        <span class="watchlist-scans">${token.scans}/${WATCHLIST_SCANS_REQUIRED}</span>
+        <div class="watchlist-bar">
+          <div class="watchlist-bar-fill" style="width:${progress}%"></div>
+        </div>
+        <span class="watchlist-score ${isReady ? 'ready' : ''}">${confidence}%</span>
+        ${isReady ? `<button class="watchlist-btn" onclick="snipeFromWatchlist('${token.address}')">🎯 Snipe</button>` : ''}
+      </div>
+    </div>`;
+  }
+  
+  container.innerHTML = html;
+}
+
+// ══════════════════════════════════════
+// WHALE ALERT FUNCTIONS
+// ══════════════════════════════════════
+function addWhaleAlert(type, symbol, chain, amount, txCount) {
+  whaleAlerts.unshift({
+    type, // 'buy' or 'sell'
+    symbol,
+    chain,
+    amount,
+    txCount,
+    time: Date.now()
+  });
+  
+  // Keep only last 20 alerts
+  if (whaleAlerts.length > 20) whaleAlerts.pop();
+  
+  renderWhaleAlerts();
+  
+  const icon = type === 'buy' ? '🟢' : '🔴';
+  const color = type === 'buy' ? 'green' : 'red';
+  addLog('🐋', `${icon} <span class="${color}">$${fN(amount)}</span> ${type.toUpperCase()} on $${esc(symbol)}`);
+}
+
+function detectWhaleFromTxns(pair) {
+  const vol5m = parseFloat(pair.volume?.m5) || 0;
+  const buys5m = pair.txns?.m5?.buys || 0;
+  const sells5m = pair.txns?.m5?.sells || 0;
+  const total5m = buys5m + sells5m;
+  
+  if (vol5m < WHALE_MIN_AMOUNT || total5m === 0) return null;
+  
+  // Average tx size
+  const avgTxSize = vol5m / total5m;
+  
+  // If few transactions but high volume = whale
+  if (total5m <= 5 && avgTxSize >= WHALE_MIN_AMOUNT) {
+    const buyRatio = buys5m / total5m;
+    return {
+      type: buyRatio > 0.5 ? 'buy' : 'sell',
+      amount: avgTxSize,
+      txCount: total5m
+    };
+  }
+  
+  return null;
+}
+
+function renderWhaleAlerts() {
+  const container = $('whaleContainer');
+  $('whaleBadge').textContent = whaleAlerts.length + ' alerts';
+  
+  if (whaleAlerts.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">🐋</div><div class="empty-text">Whale activity will appear here</div></div>`;
+    return;
+  }
+  
+  let html = '';
+  for (const alert of whaleAlerts.slice(0, 10)) {
+    const timeAgo = Math.floor((Date.now() - alert.time) / 60000);
+    const timeStr = timeAgo < 1 ? 'now' : `${timeAgo}m ago`;
+    
+    html += `<div class="whale-item ${alert.type}">
+      <div class="whale-info">
+        <span class="whale-icon">${alert.type === 'buy' ? '🟢' : '🔴'}</span>
+        <div class="whale-details">
+          <span class="whale-symbol">$${esc(alert.symbol)}</span>
+          <span class="whale-action">${alert.txCount} tx on ${alert.chain}</span>
+        </div>
+      </div>
+      <div>
+        <div class="whale-amount ${alert.type}">${alert.type === 'buy' ? '+' : '-'}$${fN(alert.amount)}</div>
+        <div class="whale-time">${timeStr}</div>
+      </div>
+    </div>`;
+  }
+  
+  container.innerHTML = html;
+}
 
 // ══════════════════════════════════════
 // ANALYTICS LOG SYSTEM
@@ -1547,7 +2073,7 @@ function logSkipped(symbol, address, reason, score = null) {
 function exportData() {
   const exportObj = {
     exportDate: new Date().toISOString(),
-    version: 'v6.3',
+    version: 'v6.4',
     
     // Current state
     state: {
@@ -2321,11 +2847,17 @@ function renderLogs() {
 // SETTINGS
 // ══════════════════════════════════════
 function getSettings() {
+  // Get enabled chains
+  const enabledChains = [];
+  if ($('chainSolana')?.checked) enabledChains.push('solana');
+  if ($('chainBase')?.checked) enabledChains.push('base');
+  if ($('chainEthereum')?.checked) enabledChains.push('ethereum');
+  
   return {
     // Basic
     positionSize: parseInt($('positionSize')?.value) || 100,
     minScore: parseInt($('minScore')?.value) || 75,
-    chains: $('chains')?.value || 'all',
+    chains: enabledChains.length > 0 ? enabledChains : ['solana'],
     
     // Trailing
     trailActivation: parseInt($('trailActivation')?.value) || 10,
@@ -2343,9 +2875,9 @@ function getSettings() {
     dca3Sell: parseInt($('dca3Sell')?.value) || 20,
     moonBagEnabled: $('moonBagEnabled')?.checked ?? true,
     
-    // Stop Loss
-    baseSL: parseInt($('baseSL')?.value) || 18,
-    maxSL: parseInt($('maxSL')?.value) || 30,
+    // Stop Loss - UPDATED based on analytics (SL had 0% win rate)
+    baseSL: parseInt($('baseSL')?.value) || 25,
+    maxSL: parseInt($('maxSL')?.value) || 40,
     
     // Momentum Exit
     momentumExitEnabled: $('momentumExitEnabled')?.checked ?? true,
@@ -2374,7 +2906,8 @@ function getSettings() {
     whaleDetection: $('whaleDetection')?.checked ?? true,
     volumeSpikeDetection: $('volumeSpikeDetection')?.checked ?? true,
     rugcheckEnabled: $('rugcheckEnabled')?.checked ?? true,
-    honeypotDetection: $('honeypotDetection')?.checked ?? true
+    honeypotDetection: $('honeypotDetection')?.checked ?? true,
+    watchlistEnabled: $('watchlistEnabled')?.checked ?? false
   };
 }
 
@@ -3663,7 +4196,19 @@ async function scan() {
   const longCount = positions.filter(p => p.tradeType === 'LONG').length;
   const moonCount = positions.filter(p => p.tradeType === 'MOON').length;
   
-  const chainList = settings.chains === 'all' ? ['solana', 'ethereum', 'base'] : [settings.chains];
+  // chains is now an array from checkboxes
+  const chainList = Array.isArray(settings.chains) ? settings.chains : [settings.chains];
+  if (chainList.length === 0) {
+    addLog('⚠️', '<span class="red">No chains selected!</span> Enable at least one chain.');
+    return;
+  }
+  addLog('🔗', `Scanning chains: <span class="cyan">${chainList.join(', ')}</span>`);
+  
+  // Cleanup old watchlist entries
+  if (settings.watchlistEnabled) {
+    cleanupWatchlist();
+  }
+  
   const allPairs = new Map();
   
   // ═══════════════════════════════════════════════════════════════
@@ -3845,6 +4390,13 @@ async function scan() {
   
   for (const pair of enriched) {
     const score = calculateScore(pair, settings);
+    
+    // Detect whale activity
+    const whale = detectWhaleFromTxns(pair);
+    if (whale && pair.baseToken?.symbol) {
+      addWhaleAlert(whale.type, pair.baseToken.symbol, pair.chainId, whale.amount, whale.txCount);
+    }
+    
     if (score >= settings.minScore) {
       opportunities.push({ pair, score });
     }
@@ -3881,6 +4433,63 @@ async function scan() {
     if (existingSymbols.has(symbol)) continue;
     if (tradingNow.has(addr)) continue;
     if (historyAddresses.has(addr)) continue;
+    
+    // ═══════════════════════════════════════════════════════════════
+    // WATCHLIST MODE - Analyze tokens multiple times before entry
+    // ═══════════════════════════════════════════════════════════════
+    if (settings.watchlistEnabled) {
+      const inWatchlist = watchlist.find(w => w.address === addr);
+      
+      if (inWatchlist) {
+        // Update existing watchlist entry
+        const buys5m = opp.pair.txns?.m5?.buys || 0;
+        const sells5m = opp.pair.txns?.m5?.sells || 0;
+        const buyRatio = (buys5m + sells5m) > 0 ? (buys5m / (buys5m + sells5m) * 100) : 50;
+        const vol5m = parseFloat(opp.pair.volume?.m5) || 0;
+        const price = parseFloat(opp.pair.priceUsd) || 0;
+        
+        updateWatchlistToken(addr, {
+          score: opp.score,
+          buyRatio,
+          volume: vol5m,
+          price
+        });
+        
+        // Check if ready to auto-snipe
+        const confidence = calculateWatchlistConfidence(inWatchlist);
+        if (inWatchlist.scans >= WATCHLIST_SCANS_REQUIRED && confidence >= WATCHLIST_CONFIDENCE_THRESHOLD) {
+          // Auto-snipe!
+          removeFromWatchlist(addr);
+          tradingNow.add(addr);
+          existingSymbols.add(symbol);
+          existingAddresses.add(addr);
+          addLog('🎯', `<span class="green">AUTO-SNIPE</span> $${esc(symbol)} — ${confidence}% confidence`);
+          await executeTrade(opp.pair, opp.score, 'QUICK');
+          tradesOpened++;
+        }
+        continue;
+      } else {
+        // Add new token to watchlist
+        const buys5m = opp.pair.txns?.m5?.buys || 0;
+        const sells5m = opp.pair.txns?.m5?.sells || 0;
+        const buyRatio = (buys5m + sells5m) > 0 ? (buys5m / (buys5m + sells5m) * 100) : 50;
+        const vol5m = parseFloat(opp.pair.volume?.m5) || 0;
+        const price = parseFloat(opp.pair.priceUsd) || 0;
+        
+        addToWatchlist({
+          symbol,
+          address: addr,
+          chain: opp.pair.chainId,
+          pairAddress: opp.pair.pairAddress,
+          dexUrl: opp.pair.url,
+          score: opp.score,
+          buyRatio,
+          volume: vol5m,
+          price
+        });
+        continue;
+      }
+    }
     
     // Check cache first
     const cached = getCachedAnalysis(addr);
@@ -4391,7 +5000,9 @@ loadFromStorage();
 updateUI();
 renderPositions();
 renderHistory();
-addLog('💡', 'AI Sniper Pro v6 loaded — Configure settings and click START');
+renderWatchlist();
+renderWhaleAlerts();
+addLog('💡', 'AI Sniper Pro v6.4 loaded — Solana only + Watchlist + Whale Alerts');
 </script>
 </body>
 </html>
