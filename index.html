@@ -1985,7 +1985,7 @@ body {
         <button class="ia-btn" onclick="handleChart()"><span>📊</span> Chart</button>
         <button class="ia-btn" onclick="handleSafeCheck()"><span>🛡️</span> Safe?</button>
         <button class="ia-btn" onclick="handleBuySell()"><span>📈</span> Buy/Sell?</button>
-        <button class="ia-btn" onclick="handleTrending()"><span>🔥</span> Trending</button>
+        <button class="ia-btn" onclick="handleTarget()"><span>🔮</span> Target</button>
         <button class="ia-btn" onclick="handleGems()"><span>💎</span> Gems</button>
       </div>
       <div class="input-wrap">
@@ -6296,6 +6296,34 @@ async function handleTrending() {
 // ═══════════════════════════════════════════
 // 💎 HANDLE GEMS (IS THIS TOKEN A GEM?)
 // ═══════════════════════════════════════════
+function handleTarget() {
+  if (isLoading) return;
+  if (lastAnalyzedToken) {
+    const symbol = lastAnalyzedToken.symbol?.toUpperCase() || lastAnalyzedToken.fullAnalysis?.ticker || '???';
+    currentAIToken = {
+      symbol,
+      chain: lastAnalyzedToken.chain || lastAnalyzedToken.fullAnalysis?.chain || 'unknown',
+      price: lastAnalyzedToken.price || lastAnalyzedToken.fullAnalysis?.currentPrice || 0,
+      mc: lastAnalyzedToken.marketCap || lastAnalyzedToken.fullAnalysis?._dex?.marketCap || 0,
+      liq: lastAnalyzedToken.liquidity || 0,
+      vol24h: lastAnalyzedToken.volume24h || 0,
+      buyRatio: lastAnalyzedToken.buyRatio || 50,
+      chg24h: lastAnalyzedToken.priceChange24h || 0,
+      description: ''
+    };
+    handleAIOption('target');
+  } else {
+    const c = conversations.find(x => x.id === activeId);
+    c.messages.push({ role: 'user', content: '🔮 Price Target?' });
+    c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
+      <div style="font-size:13px;color:var(--text);margin-bottom:10px">🔮 Paste a <strong>contract address</strong> first, then I'll estimate price targets.</div>
+    </div>` });
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+  }
+}
+
 function handleGems() {
   window.location.href = './gems.html';
 }
