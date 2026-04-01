@@ -2145,18 +2145,23 @@ async function askAI(message, tokenContext = null) {
     const response = await fetch(`${API_URL}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, tokenContext })
+      body: JSON.stringify({ message, tokenContext }),
+      signal: AbortSignal.timeout(30000)
     });
-    
+
     if (!response.ok) {
-      return { error: true, message: 'AI service temporarily unavailable.' };
+      console.error('AI response not ok:', response.status);
+      return { error: true, answer: '⚠️ AI service temporarily unavailable. Please try again in a moment.' };
     }
-    
+
     const data = await response.json();
+    if (!data.answer) {
+      return { error: true, answer: '⚠️ AI returned an empty response. Please try again.' };
+    }
     return { error: false, answer: data.answer };
   } catch (err) {
     console.error('AI Chat error:', err);
-    return { error: true, message: 'AI service temporarily unavailable. Please try again.' };
+    return { error: true, answer: '⚠️ Could not reach AI service. Check your connection and try again.' };
   }
 }
 
