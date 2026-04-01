@@ -705,6 +705,7 @@ body {
 .history-reason.trail { background: rgba(255,149,0,0.2); color: var(--orange); }
 .history-reason.momentum { background: rgba(0,212,255,0.2); color: var(--cyan); }
 .history-reason.sl { background: rgba(255,71,87,0.2); color: var(--red); }
+.history-reason.rug { background: rgba(255,0,0,0.3); color: #ff0000; font-weight: bold; }
 .history-reason.timeout { background: rgba(255,215,0,0.2); color: var(--yellow); }
 .history-secured {
   font-size: 9px;
@@ -1051,7 +1052,8 @@ body {
         <div class="settings-grid">
           <div class="setting">
             <label>MIN MC ($)</label>
-            <input type="number" id="minMC" value="1000" min="100" max="100000">
+            <input type="number" id="minMC" value="30000" min="1000" max="500000">
+            <span class="setting-hint">⚠️ &lt;30K = high rug risk</span>
           </div>
           <div class="setting">
             <label>MAX MC ($)</label>
@@ -1065,11 +1067,13 @@ body {
         <div class="settings-grid">
           <div class="setting">
             <label>MIN LIQUIDITY ($)</label>
-            <input type="number" id="minLiquidity" value="500" min="100" max="100000">
+            <input type="number" id="minLiquidity" value="15000" min="1000" max="100000">
+            <span class="setting-hint">⚠️ &lt;10K = easy to rug</span>
           </div>
           <div class="setting">
             <label>MIN LIQ/MC RATIO (%)</label>
-            <input type="number" id="minLiqRatio" value="2" min="1" max="20">
+            <input type="number" id="minLiqRatio" value="5" min="1" max="30">
+            <span class="setting-hint">Higher = safer</span>
           </div>
         </div>
       </div>
@@ -1742,6 +1746,11 @@ function calculateStats() {
       byReason: skipReasons
     },
     
+    rugAnalysis: {
+      rugPulls: closedTrades.filter(t => t.reason === 'RUG' || t.reason === 'LIQ REMOVE').length,
+      rugLosses: closedTrades.filter(t => t.reason === 'RUG' || t.reason === 'LIQ REMOVE').reduce((sum, t) => sum + t.pnl, 0).toFixed(2)
+    },
+    
     scanAnalysis: {
       totalScans: scans.length,
       avgTokensPerScan: scans.length > 0 ? Math.round(scans.reduce((sum, s) => sum + s.tokensScanned, 0) / scans.length) : 0,
@@ -2021,10 +2030,10 @@ function getSettings() {
     longExtensions: parseInt($('longExtensions')?.value) || 3,
     
     // Filters
-    minMC: parseInt($('minMC')?.value) || 1000,
+    minMC: parseInt($('minMC')?.value) || 30000,
     maxMC: parseInt($('maxMC')?.value) || 50000000,
-    minLiquidity: parseInt($('minLiquidity')?.value) || 500,
-    minLiqRatio: parseInt($('minLiqRatio')?.value) || 2,
+    minLiquidity: parseInt($('minLiquidity')?.value) || 15000,
+    minLiqRatio: parseInt($('minLiqRatio')?.value) || 5,
     maxPump5m: parseInt($('maxPump5m')?.value) || 100,
     maxPump1h: parseInt($('maxPump1h')?.value) || 200,
     maxDump5m: parseInt($('maxDump5m')?.value) || 40,
@@ -2049,6 +2058,17 @@ function closeStats() { $('statsModal').classList.remove('show'); }
 function generateRecommendations(stats) {
   const recs = [];
   const settings = getSettings();
+  
+  // Rug pull warning
+  if (stats.rugAnalysis && stats.rugAnalysis.rugPulls > 0) {
+    recs.push(`💀 <b>${stats.rugAnalysis.rugPulls} rug pulls</b> detected (lost $${Math.abs(parseFloat(stats.rugAnalysis.rugLosses)).toFixed(0)}). Consider <b>increasing MIN MC to $50K+</b> and <b>MIN LIQUIDITY to $20K+</b>.`);
+  }
+  
+  // Tiny MC warning
+  const tinyMC = stats.byMarketCapRange?.['tiny_10k-50k'];
+  if (tinyMC && tinyMC.count >= 3 && parseFloat(tinyMC.winRate) < 30) {
+    recs.push(`⚠️ Tiny MC (10k-50k) trades have ${tinyMC.winRate} win rate. Consider <b>setting MIN MC to $50,000+</b>.`);
+  }
   
   // Win rate analysis
   const winRate = parseFloat(stats.overview.winRate);
@@ -2307,6 +2327,7 @@ function refreshStats() {
         <tr><td>→ LONG:</td><td style="text-align:right;color:var(--purple)">${stats.aiDecisionAnalysis.longDecisions}</td></tr>
         <tr><td>→ SKIP:</td><td style="text-align:right;color:var(--red)">${stats.aiDecisionAnalysis.skipDecisions}</td></tr>
         <tr><td>Total Skipped:</td><td style="text-align:right">${stats.skipAnalysis.totalSkipped}</td></tr>
+        ${stats.rugAnalysis ? `<tr><td>💀 Rug Pulls:</td><td style="text-align:right;color:#ff0000;font-weight:bold">${stats.rugAnalysis.rugPulls} ($${stats.rugAnalysis.rugLosses})</td></tr>` : ''}
       </table>
     </div>
     
@@ -2350,10 +2371,10 @@ function resetSettings() {
   $('longMaxHold').value = 6;
   $('quickExtensions').value = 1;
   $('longExtensions').value = 3;
-  $('minMC').value = 1000;
+  $('minMC').value = 30000;
   $('maxMC').value = 50000000;
-  $('minLiquidity').value = 500;
-  $('minLiqRatio').value = 2;
+  $('minLiquidity').value = 15000;
+  $('minLiqRatio').value = 5;
   $('maxPump5m').value = 100;
   $('maxPump1h').value = 200;
   $('maxDump5m').value = 40;
@@ -2898,6 +2919,55 @@ async function updatePositions() {
       if (!data.pair) continue;
       
       const newPrice = parseFloat(data.pair.priceUsd) || pos.currentPrice;
+      
+      // ═══════════════════════════════════
+      // RUG PULL DETECTION - Price dropped > 80%
+      // ═══════════════════════════════════
+      const priceChange = (newPrice - pos.entryPrice) / pos.entryPrice * 100;
+      if (priceChange <= -80) {
+        // RUG PULL - Lost everything
+        pos.currentPrice = newPrice;
+        pos.pnlPct = -100; // Consider total loss
+        pos.pnl = -pos.currentSize; // Lost entire position
+        
+        addLog('💀', `<span class="red">RUG PULL</span> $${esc(pos.symbol)} — Price dropped ${priceChange.toFixed(0)}%`);
+        logAnalytics('RUG_PULL', {
+          tradeId: pos.id,
+          symbol: pos.symbol,
+          address: pos.address,
+          entryPrice: pos.entryPrice,
+          exitPrice: newPrice,
+          priceDropPct: priceChange,
+          lostAmount: pos.currentSize
+        });
+        closeTrade(pos, 'RUG', data.pair);
+        continue;
+      }
+      
+      // ═══════════════════════════════════
+      // LIQUIDITY REMOVE DETECTION
+      // ═══════════════════════════════════
+      const currentLiq = parseFloat(data.pair.liquidity?.usd) || 0;
+      if (pos.entryLiquidity && currentLiq < pos.entryLiquidity * 0.3) {
+        // Liquidity dropped by 70%+ = likely rug
+        pos.currentPrice = newPrice;
+        pos.pnlPct = Math.min(priceChange, -50); // At least -50% loss
+        pos.pnl = pos.currentSize * (pos.pnlPct / 100);
+        
+        addLog('💀', `<span class="red">LIQUIDITY REMOVED</span> $${esc(pos.symbol)} — Liq dropped ${((1 - currentLiq / pos.entryLiquidity) * 100).toFixed(0)}%`);
+        logAnalytics('LIQUIDITY_REMOVE', {
+          tradeId: pos.id,
+          symbol: pos.symbol,
+          address: pos.address,
+          entryLiquidity: pos.entryLiquidity,
+          exitLiquidity: currentLiq,
+          liqDropPct: (1 - currentLiq / pos.entryLiquidity) * 100,
+          pnlPct: pos.pnlPct
+        });
+        closeTrade(pos, 'LIQ REMOVE', data.pair);
+        continue;
+      }
+      
       pos.currentPrice = newPrice;
       
       // Update socials if not set
@@ -3502,6 +3572,21 @@ function calculateScore(pair, settings) {
   // Reversal pattern (was down, now up) = potential
   if (chg24h < -20 && chg1h > 10) score += 6;
   
+  // ═══ ANTI-RUG PENALTIES ═══
+  // Very low MC = high rug risk
+  if (mc < 10000) score -= 20;
+  else if (mc < 20000) score -= 10;
+  else if (mc < 30000) score -= 5;
+  
+  // Very low liquidity = easy to rug
+  if (liq < 5000) score -= 25;
+  else if (liq < 10000) score -= 15;
+  else if (liq < 15000) score -= 8;
+  
+  // Low liq ratio = suspicious
+  if (liqRatio < 3) score -= 10;
+  if (liqRatio < 2) score -= 10;
+  
   return Math.min(100, Math.max(0, Math.round(score)));
 }
 
@@ -3548,14 +3633,8 @@ function renderPositions() {
     return;
   }
   
-  // Sort: Moon bags first, then by P&L
-  const sorted = [...positions].sort((a, b) => {
-    if (a.isMoonBag && !b.isMoonBag) return -1;
-    if (!a.isMoonBag && b.isMoonBag) return 1;
-    if (a.tradeType === 'LONG' && b.tradeType !== 'LONG') return -1;
-    if (a.tradeType !== 'LONG' && b.tradeType === 'LONG') return 1;
-    return b.pnlPct - a.pnlPct;
-  });
+  // Sort: By P&L (highest first)
+  const sorted = [...positions].sort((a, b) => b.pnlPct - a.pnlPct);
   
   let html = '';
   
@@ -3593,6 +3672,9 @@ function renderPositions() {
       if (holdPct > 85) progressClass = 'danger';
       else if (holdPct > 65) progressClass = 'warning';
     }
+    
+    // P&L color
+    const pnlColor = isProfit ? 'green' : 'red';
     
     // Tags
     let tags = '';
@@ -3632,8 +3714,8 @@ function renderPositions() {
           </div>
         </div>
         <div class="pos-pnl">
-          <div class="pos-pnl-value ${isProfit ? 'green' : 'red'}">${isProfit ? '+' : ''}$${pos.pnl.toFixed(2)}</div>
-          <div class="pos-pnl-pct ${isProfit ? 'green' : 'red'}">${isProfit ? '+' : ''}${pos.pnlPct.toFixed(1)}%</div>
+          <div class="pos-pnl-value" style="color:var(--${pnlColor})">${isProfit ? '+' : ''}$${pos.pnl.toFixed(2)}</div>
+          <div class="pos-pnl-pct" style="color:var(--${pnlColor})">${isProfit ? '+' : ''}${pos.pnlPct.toFixed(1)}%</div>
         </div>
       </div>
       
@@ -3714,6 +3796,7 @@ function renderHistory() {
     else if (trade.reason === 'TRAIL') reasonClass = 'trail';
     else if (trade.reason === 'MOMENTUM') reasonClass = 'momentum';
     else if (trade.reason.includes('DCA') || trade.reason === 'TP') reasonClass = 'tp';
+    else if (trade.reason === 'RUG' || trade.reason === 'LIQ REMOVE') reasonClass = 'rug';
     
     const securedInfo = trade.dcaSecured > 0 ? `+$${trade.dcaSecured.toFixed(0)} DCA` : '';
     
