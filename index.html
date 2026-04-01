@@ -4618,8 +4618,10 @@ async function sendQuery(query) {
             c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
             pendingQuestion = null;
           } else if (pendingQuestion === 'buysell') {
-            c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
+            c.messages.push({ role: 'assistant', analysis });
             pendingQuestion = null;
+            // Trigger AI opinion after rendering
+            setTimeout(() => handleBuySell(), 500);
           } else if (pendingQuestion === 'chart') {
             c.messages.push({ role: 'assistant', html: renderChart(analysis.ticker, pair.chainId || 'solana', pair.pairAddress) });
             pendingQuestion = null;
@@ -4710,8 +4712,9 @@ async function sendQuery(query) {
         c.messages.push({ role: 'assistant', html: renderSafeReport(analysis, rugData) });
         pendingQuestion = null;
       } else if (pendingQuestion === 'buysell') {
-        c.messages.push({ role: 'assistant', html: renderBuySellSignal(analysis) });
+        c.messages.push({ role: 'assistant', analysis });
         pendingQuestion = null;
+        setTimeout(() => handleBuySell(), 500);
       } else if (pendingQuestion === 'chart') {
         c.messages.push({ role: 'assistant', html: renderChart(analysis.ticker, pair.chainId || 'solana', pair.pairAddress) });
         pendingQuestion = null;
@@ -6152,81 +6155,25 @@ function handleSafeCheck() {
 function handleBuySell() {
   if (isLoading) return;
   const c = conversations.find(x => x.id === activeId);
-  
+
   if (lastAnalyzedToken) {
-    // Check if it's a DexScreener token (has pair) or a major crypto (CoinGecko)
-    if (lastAnalyzedToken.pair && lastAnalyzedToken.fullAnalysis) {
-      // DexScreener token - use full trade signal
-      const { pair, rugData, fullAnalysis } = lastAnalyzedToken;
-      c.messages.push({ role: 'user', content: `📈 Should I buy or sell $${fullAnalysis.ticker}?` });
-      c.messages.push({ role: 'assistant', html: renderBuySellSignal(fullAnalysis) });
-      c.title = `📈 Signal: $${fullAnalysis.ticker}`;
-    } else {
-      // Major crypto (BTC, ETH, etc.) - simplified signal
-      const symbol = lastAnalyzedToken.symbol?.toUpperCase() || '???';
-      const price = lastAnalyzedToken.price || 0;
-      const chg24h = lastAnalyzedToken.priceChange24h || 0;
-      const chg7d = lastAnalyzedToken.priceChange7d || 0;
-      const bias = chg24h > 5 ? 'BULLISH' : chg24h < -5 ? 'BEARISH' : 'NEUTRAL';
-      const biasColor = bias === 'BULLISH' ? 'var(--green)' : bias === 'BEARISH' ? 'var(--red)' : 'var(--yellow)';
-      const biasIcon = bias === 'BULLISH' ? '🟢' : bias === 'BEARISH' ? '🔴' : '🟡';
-      const action = bias === 'BULLISH' ? 'ACCUMULATE' : bias === 'BEARISH' ? 'WAIT FOR DIP' : 'HOLD';
-      const badgeClass = bias === 'BULLISH' ? 'badge-green' : bias === 'BEARISH' ? 'badge-red' : 'badge-yellow';
-      
-      c.messages.push({ role: 'user', content: `📈 Should I buy or sell $${symbol}?` });
-      c.messages.push({ role: 'assistant', html: `<div class="card" style="border-left:3px solid ${biasColor}">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <div>
-            <div class="sec-title" style="margin-bottom:4px"><span class="sec-icon">📈</span> TRADE SIGNAL</div>
-            <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan)">$${symbol}</div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-size:28px">${biasIcon}</div>
-            <span class="badge ${badgeClass}">${action}</span>
-          </div>
-        </div>
-        
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-          <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center">
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px">PRICE</div>
-            <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--text)">${fP(price)}</div>
-          </div>
-          <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center">
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px">24H</div>
-            <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:${chg24h >= 0 ? 'var(--green)' : 'var(--red)'}">${chg24h > 0 ? '+' : ''}${chg24h.toFixed(1)}%</div>
-          </div>
-          <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center">
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px">7D</div>
-            <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:${chg7d >= 0 ? 'var(--green)' : 'var(--red)'}">${chg7d > 0 ? '+' : ''}${chg7d.toFixed(1)}%</div>
-          </div>
-        </div>
-        
-        <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px">
-          ${bias === 'BULLISH' ? `$${symbol} is showing positive momentum. Consider dollar-cost averaging or adding to existing positions on minor dips.` : 
-            bias === 'BEARISH' ? `$${symbol} is in a correction phase. Consider waiting for support levels or accumulating in smaller tranches.` :
-            `$${symbol} is consolidating. Hold existing positions and wait for clearer directional signals.`}
-        </div>
-        
-        <div style="background:var(--bg);border-radius:8px;padding:12px">
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">💡 STRATEGY FOR MAJORS</div>
-          <div style="font-size:11px;color:var(--text);line-height:1.5">
-            • DCA (Dollar Cost Average) over time<br>
-            • Use limit orders on dips<br>
-            • Don't try to time the market perfectly<br>
-            • Consider as long-term holdings
-          </div>
-        </div>
-        
-        <div style="margin-top:12px;font-size:11px;color:var(--text3);font-style:italic">⚠️ Not financial advice. Always DYOR.</div>
-      </div>` });
-      c.title = `📈 Signal: $${symbol}`;
-    }
-    renderSidebar();
-    renderMessages();
-    updateTopbar();
-    scrollToLastUserMessage();
+    const symbol = lastAnalyzedToken.symbol?.toUpperCase() || lastAnalyzedToken.fullAnalysis?.ticker || '???';
+    const token = {
+      symbol,
+      chain: lastAnalyzedToken.chain || lastAnalyzedToken.fullAnalysis?.chain || 'unknown',
+      price: lastAnalyzedToken.price || lastAnalyzedToken.fullAnalysis?.currentPrice || 0,
+      mc: lastAnalyzedToken.marketCap || lastAnalyzedToken.fullAnalysis?._dex?.marketCap || 0,
+      liq: lastAnalyzedToken.liquidity || (lastAnalyzedToken.fullAnalysis?._dex?.liquidity?.usd ? parseFloat(lastAnalyzedToken.fullAnalysis._dex.liquidity.usd) : 0),
+      vol24h: lastAnalyzedToken.volume24h || (lastAnalyzedToken.fullAnalysis?._dex?.volume?.h24 ? parseFloat(lastAnalyzedToken.fullAnalysis._dex.volume.h24) : 0),
+      buyRatio: lastAnalyzedToken.buyRatio || 50,
+      chg1h: lastAnalyzedToken.priceChange1h || 0,
+      chg6h: lastAnalyzedToken.priceChange6h || 0,
+      chg24h: lastAnalyzedToken.priceChange24h || 0,
+      bias: lastAnalyzedToken.analysis?.bias || lastAnalyzedToken.fullAnalysis?.bias || 'NEUTRAL',
+      confidence: lastAnalyzedToken.analysis?.confidence || lastAnalyzedToken.fullAnalysis?.confidence || 50
+    };
+    getAIBuySellOpinion(token);
   } else {
-    // No token yet, ask for contract and remember we want trade signal
     pendingQuestion = 'buysell';
     c.messages.push({ role: 'user', content: '📈 Should I buy or sell?' });
     c.messages.push({ role: 'assistant', html: `<div class="card card-accent">
