@@ -2007,6 +2007,17 @@ let pendingQuestion = null; // Store pending question type ('safe', 'buysell') w
 const API_URL = 'https://dexscreener-telegram-bot-production.up.railway.app';
 
 // ═══════════════════════════════════════════
+// AbortSignal.timeout polyfill (older mobile browsers)
+// ═══════════════════════════════════════════
+if (!AbortSignal.timeout) {
+  AbortSignal.timeout = function(ms) {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(new DOMException('TimeoutError', 'TimeoutError')), ms);
+    return controller.signal;
+  };
+}
+
+// ═══════════════════════════════════════════
 // CORS PROXY - Use Railway backend first
 // ═══════════════════════════════════════════
 async function fetchDexScreener(url, options = {}) {
@@ -2019,12 +2030,25 @@ async function fetchDexScreener(url, options = {}) {
       return createErrorResponse('Direct fetch failed');
     }
   }
-  
-  // En production, utiliser le backend Railway comme proxy
+
+  // 1) Try direct fetch (DexScreener API supports CORS)
+  try {
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(10000),
+      headers: { 'Accept': 'application/json' }
+    });
+    if (response && response.ok) {
+      return response;
+    }
+  } catch (e) {
+    console.warn('Direct DexScreener fetch failed:', e.message);
+  }
+
+  // 2) Try backend Railway proxy
   try {
     const proxyUrl = convertToBackendProxy(url);
     if (proxyUrl) {
-      const response = await fetch(proxyUrl, { 
+      const response = await fetch(proxyUrl, {
         signal: AbortSignal.timeout(15000),
         headers: { 'Accept': 'application/json' }
       });
@@ -2035,17 +2059,17 @@ async function fetchDexScreener(url, options = {}) {
   } catch (e) {
     console.warn('Backend proxy failed:', e.message);
   }
-  
-  // Fallback: public CORS proxies
+
+  // 3) Fallback: public CORS proxies
   const publicProxies = [
     'https://api.allorigins.win/raw?url=',
     'https://corsproxy.io/?'
   ];
-  
+
   for (const proxy of publicProxies) {
     try {
       const proxyUrl = proxy + encodeURIComponent(url);
-      const response = await fetch(proxyUrl, { 
+      const response = await fetch(proxyUrl, {
         signal: AbortSignal.timeout(12000),
         headers: { 'Accept': 'application/json' }
       });
@@ -2056,7 +2080,7 @@ async function fetchDexScreener(url, options = {}) {
       console.warn('Public proxy failed:', proxy);
     }
   }
-  
+
   // All failed
   console.error('All proxies failed for:', url);
   return createErrorResponse('All proxies failed');
