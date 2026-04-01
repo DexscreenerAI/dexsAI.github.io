@@ -493,8 +493,8 @@ body {
 
 <!-- HEADER -->
 <header class="header">
-  <h1>⚡ AI AUTO SNIPER v3</h1>
-  <p>🤖 Smart Entry • ⚡ Quick (20min) + 🌙 Long (24h) • Trailing Stop • Anti-FOMO</p>
+  <h1>⚡ AI AUTO SNIPER v4</h1>
+  <p>🤖 Smart Cache • ⚡ Quick + 🌙 Long • Aggressive Mode • 40 Keywords</p>
   <div class="mode-badge" id="modeBadge">🔴 STOPPED</div>
 </header>
 
@@ -561,7 +561,7 @@ body {
       </div>
       <div class="setting">
         <label>📊 MIN SCORE</label>
-        <input type="number" id="minScore" value="65" min="40" max="90">
+        <input type="number" id="minScore" value="55" min="30" max="90">
       </div>
       <div class="setting">
         <label>🔗 CHAINS</label>
@@ -658,7 +658,32 @@ const $ = id => document.getElementById(id);
 const AI_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/chat';
 
 // ═══════════════════════════════════════════
-// AI ANALYSIS - IMPROVED ENTRY TIMING
+// CACHE - Remember analyzed tokens
+// ═══════════════════════════════════════════
+const analyzedCache = new Map(); // { address: { result, timestamp } }
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+
+function getCachedAnalysis(address) {
+  const cached = analyzedCache.get(address);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.result;
+  }
+  return null;
+}
+
+function setCachedAnalysis(address, result) {
+  analyzedCache.set(address, { result, timestamp: Date.now() });
+  // Clean old entries
+  if (analyzedCache.size > 500) {
+    const oldest = [...analyzedCache.entries()]
+      .sort((a, b) => a[1].timestamp - b[1].timestamp)
+      .slice(0, 100);
+    oldest.forEach(([k]) => analyzedCache.delete(k));
+  }
+}
+
+// ═══════════════════════════════════════════
+// AI ANALYSIS - LESS STRICT
 // ═══════════════════════════════════════════
 async function askAI(prompt) {
   try {
@@ -676,48 +701,62 @@ async function askAI(prompt) {
   }
 }
 
-// Check if token already pumped too much (bad entry)
+// LESS STRICT - allow more entries
 function isOverextended(pair) {
   const chg5m = parseFloat(pair.priceChange?.m5) || 0;
   const chg1h = parseFloat(pair.priceChange?.h1) || 0;
   const chg6h = parseFloat(pair.priceChange?.h6) || 0;
-  const chg24h = parseFloat(pair.priceChange?.h24) || 0;
   
-  // Already pumped too much - will likely retrace
-  if (chg1h > 80) return { skip: true, reason: 'Pumped +80% in 1h - too late' };
-  if (chg5m > 40) return { skip: true, reason: 'Spiked +40% in 5min - FOMO trap' };
-  if (chg6h > 150) return { skip: true, reason: 'Already 2.5x in 6h - exhausted' };
+  // Only skip EXTREME cases
+  if (chg1h > 150) return { skip: true, reason: 'Pumped +150% in 1h' };
+  if (chg5m > 80) return { skip: true, reason: 'Spiked +80% in 5min' };
+  if (chg6h > 300) return { skip: true, reason: 'Already 4x in 6h' };
   
-  // Price dropping fast - don't catch falling knife
-  if (chg5m < -15) return { skip: true, reason: 'Dumping -15% in 5min - falling knife' };
-  if (chg1h < -25) return { skip: true, reason: 'Crashing -25% in 1h - avoid' };
+  // Only skip severe dumps
+  if (chg5m < -30) return { skip: true, reason: 'Dumping -30% in 5min' };
+  if (chg1h < -40) return { skip: true, reason: 'Crashing -40% in 1h' };
   
   return { skip: false };
 }
 
-// Check buy/sell momentum
+// LESS STRICT momentum check
 function getMomentumScore(pair) {
   const buys5m = pair.txns?.m5?.buys || 0;
   const sells5m = pair.txns?.m5?.sells || 0;
   const buys1h = pair.txns?.h1?.buys || 0;
   const sells1h = pair.txns?.h1?.sells || 0;
   
-  const ratio5m = (buys5m + sells5m) > 0 ? buys5m / (buys5m + sells5m) : 0.5;
-  const ratio1h = (buys1h + sells1h) > 0 ? buys1h / (buys1h + sells1h) : 0.5;
+  const total5m = buys5m + sells5m;
+  const total1h = buys1h + sells1h;
   
-  // Need strong buy pressure in last 5 min
-  if (ratio5m < 0.45) return { good: false, reason: 'Selling pressure in last 5min' };
-  if (ratio1h < 0.40) return { good: false, reason: 'More sellers than buyers in 1h' };
+  // If no recent transactions, allow it (new token)
+  if (total5m < 3) return { good: true, strength: 'new', reason: 'New/quiet token' };
   
-  // Great entry: buyers dominating
+  const ratio5m = total5m > 0 ? buys5m / total5m : 0.5;
+  const ratio1h = total1h > 0 ? buys1h / total1h : 0.5;
+  
+  // Only skip if HEAVY selling
+  if (ratio5m < 0.30) return { good: false, reason: 'Heavy selling in 5min' };
+  if (ratio1h < 0.30) return { good: false, reason: 'Heavy selling in 1h' };
+  
+  // Determine strength
   if (ratio5m > 0.60 && ratio1h > 0.55) return { good: true, strength: 'strong' };
-  if (ratio5m > 0.52) return { good: true, strength: 'moderate' };
+  if (ratio5m > 0.50) return { good: true, strength: 'moderate' };
   
-  return { good: false, reason: 'Weak buy pressure' };
+  return { good: true, strength: 'weak' };
 }
 
 async function analyzeForEntry(pair) {
   const symbol = pair.baseToken?.symbol || 'UNKNOWN';
+  const address = pair.baseToken?.address;
+  
+  // Check cache first
+  const cached = getCachedAnalysis(address);
+  if (cached) {
+    addLog('💾', `Cache hit for $${esc(symbol)}`);
+    return cached;
+  }
+  
   const mc = parseFloat(pair.marketCap) || 0;
   const liq = parseFloat(pair.liquidity?.usd) || 0;
   const vol = parseFloat(pair.volume?.h24) || 0;
@@ -732,38 +771,27 @@ async function analyzeForEntry(pair) {
   const buyRatio = (buys + sells) > 0 ? ((buys / (buys + sells)) * 100).toFixed(0) : 50;
   const buyRatio5m = (buys5m + sells5m) > 0 ? ((buys5m / (buys5m + sells5m)) * 100).toFixed(0) : 50;
   
-  const prompt = `You are a crypto trading expert. Analyze this memecoin and decide the BEST STRATEGY:
+  const prompt = `Crypto trader. Analyze this memecoin - be AGGRESSIVE, we want to trade:
 
 $${symbol}
-- Market Cap: $${fN(mc)}
-- Liquidity: $${fN(liq)} (${((liq/mc)*100).toFixed(1)}% of MC)
-- Volume 24h: $${fN(vol)}
+- MC: $${fN(mc)} | Liq: $${fN(liq)} | Vol24h: $${fN(vol)}
+- 5m: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(1)}% | 1h: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(1)}% | 6h: ${chg6h > 0 ? '+' : ''}${chg6h.toFixed(1)}%
+- 5min txns: ${buys5m}B/${sells5m}S (${buyRatio5m}%) | 24h: ${buys}B/${sells}S (${buyRatio}%)
 
-PRICE ACTION:
-- 5min: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(1)}%
-- 1h: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(1)}%
-- 6h: ${chg6h > 0 ? '+' : ''}${chg6h.toFixed(1)}%
-- 24h: ${chg24h > 0 ? '+' : ''}${chg24h.toFixed(1)}%
+DECIDE (be aggressive, we WANT trades):
+- QUICK = Active pump, take 15-20% fast
+- LONG = Low MC gem, hold for 50%+
+- SKIP = Only if clearly dumping hard
 
-MOMENTUM:
-- Last 5min: ${buys5m} buys / ${sells5m} sells (${buyRatio5m}% buyers)
-- Last 24h: ${buys} buys / ${sells} sells (${buyRatio}% buyers)
-
-DECIDE:
-1. QUICK = Fast pump happening NOW, take 15-20% profit in 15-30min
-   - Good for: Active pump, high 5min momentum, volatile
-   
-2. LONG = Early accumulation phase, hold for 50-200% in 6-24h
-   - Good for: Low MC <$50K, steady buys, not pumped yet, strong fundamentals
-   
-3. WAIT = Will dip first, don't enter now
-
-4. SKIP = Bad setup, avoid
-
-Reply format: QUICK, LONG, WAIT, or SKIP. Then max 15 words why.`;
+Reply: QUICK, LONG, or SKIP + 8 words max`;
 
   const response = await askAI(prompt);
-  return response.toUpperCase();
+  const result = response.toUpperCase();
+  
+  // Cache the result
+  setCachedAnalysis(address, result);
+  
+  return result;
 }
 
 async function analyzeForPump(pair) {
@@ -776,15 +804,11 @@ async function analyzeForPump(pair) {
   const sells5m = pair.txns?.m5?.sells || 0;
   const buyRatio5m = (buys5m + sells5m) > 0 ? ((buys5m / (buys5m + sells5m)) * 100).toFixed(0) : 50;
   
-  const prompt = `Analyze $${symbol} position - should we HOLD or SELL now?
+  const prompt = `$${symbol} position check:
+MC: $${fN(mc)} | 5m: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(1)}% | 1h: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(1)}%
+5min: ${buys5m}B/${sells5m}S (${buyRatio5m}%)
 
-Current state:
-- MC: $${fN(mc)}, Liq: $${fN(liq)}
-- 5min: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(1)}%
-- 1h: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(1)}%
-- Last 5min: ${buys5m} buys / ${sells5m} sells (${buyRatio5m}% buyers)
-
-Reply ONLY: PUMP (momentum strong, hold), HOLD (uncertain), or DUMP (sell now). Max 10 words reason.`;
+PUMP (hold), HOLD (uncertain), or DUMP (sell)? 5 words max`;
 
   const response = await askAI(prompt);
   return response.toUpperCase();
@@ -871,7 +895,7 @@ function getSettings() {
     takeProfit: parseInt($('takeProfit').value) || 25,
     stopLoss: parseInt($('stopLoss').value) || 12,
     maxHold: parseInt($('maxHold').value) || 15,
-    minScore: parseInt($('minScore').value) || 60,
+    minScore: parseInt($('minScore').value) || 55,
     chains: $('chains').value
   };
 }
@@ -943,23 +967,23 @@ function resetAll() {
 }
 
 // ═══════════════════════════════════════════
-// SCANNER - MASSIVE SOURCES LIKE GEMS
+// SCANNER - MASSIVE SOURCES + MORE TOKENS
 // ═══════════════════════════════════════════
 async function scan() {
   if (!isRunning) return;
   
   const settings = getSettings();
   const chains = settings.chains === 'all' ? ['solana', 'ethereum'] : [settings.chains];
-  const allPairs = new Map(); // Use Map for deduplication
+  const allPairs = new Map();
   let sourcesScanned = 0;
   
-  // ═══ SOURCE 1: Latest token profiles (NEW TOKENS) ═══
+  // ═══ SOURCE 1: Latest token profiles ═══
   try {
-    $('scannerText').textContent = '📡 Scanning new token profiles...';
+    $('scannerText').textContent = '📡 New tokens...';
     const res = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      for (const t of data.slice(0, 50)) {
+      for (const t of data.slice(0, 80)) {
         if (t.tokenAddress && chains.includes(t.chainId)) {
           allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'new', boost: 12 });
         }
@@ -968,13 +992,13 @@ async function scan() {
     sourcesScanned++;
   } catch(e) {}
   
-  // ═══ SOURCE 2: Boosted tokens (PAID PROMOTION) ═══
+  // ═══ SOURCE 2: Top boosted ═══
   try {
-    $('scannerText').textContent = '🚀 Scanning boosted tokens...';
+    $('scannerText').textContent = '🚀 Boosted tokens...';
     const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      for (const t of data.slice(0, 50)) {
+      for (const t of data.slice(0, 80)) {
         if (t.tokenAddress && chains.includes(t.chainId) && !allPairs.has(t.tokenAddress)) {
           allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'boosted', boost: 18 });
         }
@@ -985,11 +1009,11 @@ async function scan() {
   
   // ═══ SOURCE 3: Latest boosts ═══
   try {
-    $('scannerText').textContent = '⚡ Scanning latest boosts...';
+    $('scannerText').textContent = '⚡ Latest boosts...';
     const res = await fetch('https://api.dexscreener.com/token-boosts/latest/v1', { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      for (const t of data.slice(0, 40)) {
+      for (const t of data.slice(0, 60)) {
         if (t.tokenAddress && chains.includes(t.chainId) && !allPairs.has(t.tokenAddress)) {
           allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'boost-new', boost: 15 });
         }
@@ -1000,15 +1024,15 @@ async function scan() {
   
   // ═══ SOURCE 4: Top gainers per chain ═══
   try {
-    $('scannerText').textContent = '📈 Scanning top gainers...';
+    $('scannerText').textContent = '📈 Gainers...';
     for (const chain of chains) {
       const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${chain}`, { signal: AbortSignal.timeout(6000) });
       const data = await res.json();
       if (data.pairs) {
         const gainers = data.pairs
-          .filter(p => p.chainId === chain && parseFloat(p.priceChange?.h1) > 5)
+          .filter(p => p.chainId === chain && parseFloat(p.priceChange?.h1) > 3)
           .sort((a, b) => (parseFloat(b.priceChange?.h1) || 0) - (parseFloat(a.priceChange?.h1) || 0))
-          .slice(0, 30);
+          .slice(0, 40);
         
         for (const p of gainers) {
           const addr = p.baseToken?.address;
@@ -1021,20 +1045,20 @@ async function scan() {
     }
   } catch(e) {}
   
-  // ═══ SOURCE 5: MASSIVE keyword search (like gems.html) ═══
+  // ═══ SOURCE 5: MASSIVE keyword search (more keywords) ═══
   const searchQueries = [
-    // Hot crypto terms
+    // Hot meme terms
     'moon', 'pump', 'gem', 'degen', 'pepe', 'ai', 'meme', 'inu', 'wojak', 'based',
     'trump', 'elon', 'cat', 'dog', 'frog', 'baby', 'doge', 'shib', 'bonk', 'wif',
     'lambo', 'rich', 'gold', 'diamond', '100x', 'rocket', 'bull', 'bear', 'ape',
     'chad', 'giga', 'mega', 'super', 'king', 'queen', 'god', 'devil', 'angel',
-    // ALL letters
+    // Letters
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
     // Numbers
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
     '69', '420', '1000', '100', '777', '666', '999',
-    // Crypto culture
+    // Crypto
     'sol', 'eth', 'btc', 'nft', 'defi', 'web3', 'meta', 'verse', 'pixel', 'punk',
     'rare', 'epic', 'legend', 'titan', 'alpha', 'beta', 'omega', 'sigma',
     'safe', 'fair', 'new', 'next', 'hot', 'fire', 'burn', 'stake',
@@ -1044,25 +1068,24 @@ async function scan() {
     // Animals
     'bear', 'fish', 'bird', 'lion', 'tiger', 'wolf', 'fox', 'rat', 'bat', 
     'pig', 'cow', 'duck', 'goat', 'snake', 'dragon', 'panda', 'monkey',
-    // Colors
-    'red', 'blue', 'green', 'pink', 'black', 'white', 'purple', 'orange',
-    // Actions
-    'buy', 'sell', 'hold', 'dump', 'send', 'rug', 'flip', 'yolo', 'fomo'
+    // Extra
+    'coin', 'token', 'cash', 'money', 'win', 'bet', 'play', 'game',
+    'cute', 'funny', 'musk', 'joe', 'biden', 'usa', 'china', 'japan'
   ];
   
-  // Shuffle and take 25 random queries for speed
-  const shuffled = searchQueries.sort(() => Math.random() - 0.5).slice(0, 25);
+  // Shuffle and take 40 random queries
+  const shuffled = searchQueries.sort(() => Math.random() - 0.5).slice(0, 40);
   
   for (let i = 0; i < shuffled.length; i++) {
     const q = shuffled[i];
-    $('scannerText').textContent = `🔍 Searching "${q}" (${i+1}/${shuffled.length})...`;
+    $('scannerText').textContent = `🔍 "${q}" (${i+1}/${shuffled.length})...`;
     
     try {
       const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${q}`, { signal: AbortSignal.timeout(5000) });
       const data = await res.json();
       
       if (data.pairs) {
-        for (const p of data.pairs.slice(0, 40)) {
+        for (const p of data.pairs.slice(0, 50)) {
           const addr = p.baseToken?.address;
           if (addr && chains.includes(p.chainId) && !allPairs.has(addr)) {
             allPairs.set(addr, { address: addr, chain: p.chainId, source: 'search', boost: 0, pair: p });
@@ -1072,21 +1095,21 @@ async function scan() {
       sourcesScanned++;
     } catch(e) {}
     
-    // Small delay every 5 queries
-    if (i % 5 === 4) await new Promise(r => setTimeout(r, 100));
+    // Small delay every 8 queries
+    if (i % 8 === 7) await new Promise(r => setTimeout(r, 80));
   }
   
   $('scannerText').textContent = `⚙️ Enriching ${allPairs.size} tokens...`;
   
-  // ═══ ENRICH: Fetch full pair data for tokens without it ═══
+  // ═══ ENRICH with full pair data ═══
   const enriched = [];
   const candidates = Array.from(allPairs.values());
   let processed = 0;
   
   for (const cand of candidates) {
     processed++;
-    if (processed % 20 === 0) {
-      $('scannerText').textContent = `⚙️ Analyzing ${processed}/${candidates.length}...`;
+    if (processed % 30 === 0) {
+      $('scannerText').textContent = `⚙️ ${processed}/${candidates.length}...`;
     }
     
     try {
@@ -1104,8 +1127,8 @@ async function scan() {
         const mc = parseFloat(pair.marketCap) || 0;
         const liq = parseFloat(pair.liquidity?.usd) || 0;
         
-        // Filter: Only small cap memecoins with liquidity
-        if (mc > 5000 && mc < 5000000 && liq > 2000) {
+        // LESS STRICT filters - allow more tokens
+        if (mc > 3000 && mc < 10000000 && liq > 1000) {
           pair._source = cand.source;
           pair._boost = cand.boost;
           enriched.push(pair);
@@ -1113,15 +1136,14 @@ async function scan() {
       }
     } catch(e) {}
     
-    // Rate limit
-    if (processed % 10 === 0) await new Promise(r => setTimeout(r, 50));
+    if (processed % 15 === 0) await new Promise(r => setTimeout(r, 30));
   }
   
   scannedCount = enriched.length;
   $('scannedCount').textContent = scannedCount;
   $('lastScan').textContent = getShortTime();
   
-  // Find opportunities
+  // Score and filter
   const opportunities = [];
   for (const pair of enriched) {
     const score = analyzeOpportunity(pair);
@@ -1132,15 +1154,15 @@ async function scan() {
   oppsCount = opportunities.length;
   $('oppsCount').textContent = oppsCount;
   
-  $('scannerText').textContent = `✅ ${oppsCount} opportunities from ${scannedCount} tokens — Filtering...`;
-  addLog('🔍', `Scanned <span class="cyan">${sourcesScanned}</span> sources — <span class="yellow">${scannedCount}</span> tokens — <span class="green">${oppsCount}</span> opportunities`);
+  $('scannerText').textContent = `✅ ${oppsCount} opps from ${scannedCount} tokens`;
+  addLog('🔍', `<span class="cyan">${sourcesScanned}</span> sources — <span class="yellow">${scannedCount}</span> tokens — <span class="green">${oppsCount}</span> opps`);
   
-  // STRICT FILTERING + AI Analysis
-  const maxPositions = 6; // Allow more positions (mix of quick and long)
-  const maxQuick = 3;     // Max 3 quick trades
-  const maxLong = 3;      // Max 3 long trades
+  // TRADE SELECTION - less strict, more trades
+  const maxPositions = 6;
+  const maxQuick = 3;
+  const maxLong = 3;
   
-  const topOpps = opportunities.slice(0, 15); // Check more candidates
+  const topOpps = opportunities.slice(0, 20); // Check more
   
   let quickCount = positions.filter(p => p.tradeType === 'QUICK').length;
   let longCount = positions.filter(p => p.tradeType === 'LONG').length;
@@ -1152,54 +1174,67 @@ async function scan() {
     const addr = opp.pair.baseToken?.address;
     if (positions.find(p => p.address === addr)) continue;
     
+    // Skip if already analyzed and cached as SKIP recently
+    const cached = getCachedAnalysis(addr);
+    if (cached && cached.includes('SKIP')) {
+      continue; // Don't re-analyze, just skip
+    }
+    
     const symbol = opp.pair.baseToken?.symbol || 'UNKNOWN';
     
-    // STEP 1: Check if overextended
+    // STEP 1: Overextended check (very lenient now)
     const overCheck = isOverextended(opp.pair);
     if (overCheck.skip) {
       addLog('⚠️', `<span class="yellow">SKIP</span> $${esc(symbol)} — ${overCheck.reason}`);
+      setCachedAnalysis(addr, 'SKIP');
       continue;
     }
     
-    // STEP 2: Check momentum
+    // STEP 2: Momentum (very lenient)
     const momentumCheck = getMomentumScore(opp.pair);
     if (!momentumCheck.good) {
       addLog('📉', `<span class="yellow">SKIP</span> $${esc(symbol)} — ${momentumCheck.reason}`);
+      setCachedAnalysis(addr, 'SKIP');
       continue;
     }
     
-    // STEP 3: AI Analysis - QUICK, LONG, WAIT, or SKIP
+    // STEP 3: AI Analysis
     try {
       addLog('🤖', `Analyzing $${esc(symbol)}...`);
       const analysis = await analyzeForEntry(opp.pair);
       
       if (analysis.includes('QUICK') && quickCount < maxQuick) {
-        addLog('⚡', `AI says <span class="cyan">QUICK TRADE</span> — $${esc(symbol)}`);
+        addLog('⚡', `<span class="cyan">QUICK</span> $${esc(symbol)}`);
         await executeTrade(opp.pair, opp.score, 'QUICK');
         quickCount++;
       } else if (analysis.includes('LONG') && longCount < maxLong) {
-        addLog('🌙', `AI says <span class="purple">LONG HOLD</span> — $${esc(symbol)}`);
+        addLog('🌙', `<span class="purple">LONG</span> $${esc(symbol)}`);
         await executeTrade(opp.pair, opp.score, 'LONG');
         longCount++;
-      } else if (analysis.includes('WAIT')) {
-        addLog('⏳', `AI says <span class="cyan">WAIT</span> $${esc(symbol)} — Will dip first`);
+      } else if (!analysis.includes('SKIP') && !analysis.includes('WAIT')) {
+        // If AI returns something else, default to QUICK if score high
+        if (opp.score >= 70 && quickCount < maxQuick) {
+          addLog('🎯', `Score high — QUICK $${esc(symbol)}`);
+          await executeTrade(opp.pair, opp.score, 'QUICK');
+          quickCount++;
+        }
       } else {
-        addLog('⏭️', `AI says <span class="red">SKIP</span> $${esc(symbol)} — ${analysis.substring(0, 45)}`);
+        addLog('⏭️', `AI: SKIP $${esc(symbol)}`);
       }
     } catch (e) {
-      // Fallback: use score to decide
-      if (momentumCheck.strength === 'strong' && opp.score >= 80) {
+      // Fallback if AI fails
+      if (opp.score >= 65) {
         const mc = parseFloat(opp.pair.marketCap) || 0;
-        const tradeType = mc < 50000 ? 'LONG' : 'QUICK';
+        const tradeType = mc < 100000 ? 'LONG' : 'QUICK';
         if ((tradeType === 'QUICK' && quickCount < maxQuick) || (tradeType === 'LONG' && longCount < maxLong)) {
-          addLog('🎯', `Fallback: ${tradeType} — $${esc(symbol)}`);
+          addLog('🎯', `Fallback: ${tradeType} $${esc(symbol)}`);
           await executeTrade(opp.pair, opp.score, tradeType);
           if (tradeType === 'QUICK') quickCount++; else longCount++;
         }
       }
     }
     
-    await new Promise(r => setTimeout(r, 600));
+    await new Promise(r => setTimeout(r, 400));
   }
 }
 
@@ -1220,59 +1255,49 @@ function analyzeOpportunity(pair) {
   const buyRatio5m = total5m > 0 ? (buys5m / total5m) * 100 : 50;
   const sourceBoost = pair._boost || 0;
   
-  let score = 0;
+  let score = 20; // Base score - start higher
   
   // Source boost
   score += sourceBoost;
   
-  // Low MC = moonshot potential (max 25)
-  if (mc < 20000) score += 25;
-  else if (mc < 50000) score += 22;
-  else if (mc < 100000) score += 18;
-  else if (mc < 500000) score += 12;
-  else if (mc < 1000000) score += 6;
+  // MC bonus (prefer lower MC)
+  if (mc < 30000) score += 20;
+  else if (mc < 100000) score += 15;
+  else if (mc < 500000) score += 10;
+  else if (mc < 2000000) score += 5;
   
-  // Thin liquidity (max 15)
+  // Liquidity ratio
   const liqRatio = mc > 0 ? (liq / mc) * 100 : 0;
-  if (liqRatio < 3) score += 15;
-  else if (liqRatio < 5) score += 12;
-  else if (liqRatio < 8) score += 8;
+  if (liqRatio >= 2 && liqRatio <= 15) score += 10; // Healthy range
   
-  // MOMENTUM - reward steady growth, PENALIZE overextension
-  // Best: +5% to +25% in 1h (early pump)
-  // Bad: +50%+ in 1h (already pumped, will retrace)
-  if (chg1h >= 5 && chg1h <= 25) score += 20; // Sweet spot
-  else if (chg1h > 25 && chg1h <= 40) score += 10; // Getting risky
-  else if (chg1h > 40 && chg1h <= 60) score += 0; // Risky
-  else if (chg1h > 60) score -= 15; // PENALTY - overextended
-  else if (chg1h < -10) score -= 10; // PENALTY - dumping
+  // Momentum - more forgiving
+  if (chg5m > 0) score += 8;
+  if (chg5m > 5) score += 5;
+  if (chg1h > 0) score += 5;
+  if (chg1h > 10) score += 5;
   
-  // 5min momentum - prefer slight positive, not spike
-  if (chg5m >= 2 && chg5m <= 15) score += 15; // Healthy
-  else if (chg5m > 15 && chg5m <= 30) score += 5; // Hot but risky
-  else if (chg5m > 30) score -= 10; // FOMO trap
-  else if (chg5m < -5) score -= 5; // Selling
+  // Only penalize extreme moves
+  if (chg1h > 100) score -= 10;
+  if (chg5m > 50) score -= 8;
+  if (chg5m < -20) score -= 5;
+  if (chg1h < -30) score -= 8;
   
-  // Buy pressure in last 5 MINUTES (more important than 24h)
-  if (buyRatio5m > 65) score += 20;
-  else if (buyRatio5m > 55) score += 12;
-  else if (buyRatio5m > 50) score += 5;
-  else if (buyRatio5m < 45) score -= 10; // PENALTY - selling pressure
+  // Buy pressure bonus
+  if (buyRatio5m > 55) score += 10;
+  if (buyRatio5m > 65) score += 5;
+  if (buyRatio > 55) score += 5;
   
-  // 24h buy pressure (secondary)
-  if (buyRatio > 60) score += 8;
-  else if (buyRatio > 55) score += 5;
+  // Penalize heavy selling
+  if (buyRatio5m < 35) score -= 10;
   
-  // Volume activity (max 10)
+  // Volume bonus
   const volRatio = mc > 0 ? (vol / mc) : 0;
-  if (volRatio > 1.5) score += 10;
-  else if (volRatio > 0.8) score += 7;
-  else if (volRatio > 0.3) score += 4;
+  if (volRatio > 0.3) score += 8;
+  if (volRatio > 1) score += 5;
   
-  // Recent activity in last 5 min
-  if (total5m > 20) score += 5;
-  else if (total5m > 10) score += 3;
-  else if (total5m < 3) score -= 5; // Dead token
+  // Activity bonus
+  if (total5m > 5) score += 5;
+  if (total > 100) score += 5;
   
   return Math.min(100, Math.max(0, score));
 }
