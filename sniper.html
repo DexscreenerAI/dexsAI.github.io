@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ AUTO SNIPER</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0a0a;
+  --bg2: #111111;
+  --bg3: #1a1a1a;
+  --green: #00ff88;
+  --red: #ff4757;
+  --cyan: #00d4ff;
+  --yellow: #ffd700;
+  --purple: #a855f7;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --border: #2a2a2a;
+}
+
+body {
+  font-family: 'Courier New', monospace;
+  background: var(--bg);
+  color: var(--green);
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.header {
+  background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
+  border-bottom: 2px solid var(--green);
+  padding: 20px;
+  text-align: center;
+}
+.header h1 {
+  font-size: 24px;
+  letter-spacing: 4px;
+  text-shadow: 0 0 20px var(--green);
+  margin-bottom: 8px;
+}
+.header p {
+  font-size: 11px;
+  color: var(--text2);
+  letter-spacing: 1px;
+}
+.mode-badge {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 6px 16px;
+  background: rgba(0,255,136,0.1);
+  border: 1px solid var(--green);
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--green); }
+  50% { opacity: 0.7; box-shadow: 0 0 20px var(--green); }
+}
+
+/* ── P&L BANNER ── */
+.pnl-banner {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 20px;
+}
+.pnl-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+}
+.pnl-box {
+  text-align: center;
+  padding: 15px;
+  background: var(--bg3);
+  border-radius: 8px;
+}
+.pnl-box.main {
+  border: 2px solid var(--green);
+  background: rgba(0,255,136,0.05);
+}
+.pnl-label {
+  font-size: 9px;
+  color: var(--text2);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.pnl-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+.pnl-value.green { color: var(--green); }
+.pnl-value.red { color: var(--red); }
+.pnl-value.cyan { color: var(--cyan); }
+.pnl-value.yellow { color: var(--yellow); }
+
+/* ── CONTROLS ── */
+.controls {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ctrl-btn {
+  padding: 14px 28px;
+  background: var(--bg3);
+  border: 2px solid var(--green);
+  color: var(--green);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ctrl-btn:hover {
+  background: var(--green);
+  color: #000;
+  box-shadow: 0 0 30px var(--green);
+}
+.ctrl-btn.active {
+  background: var(--green);
+  color: #000;
+  animation: pulse 2s infinite;
+}
+.ctrl-btn.danger {
+  border-color: var(--red);
+  color: var(--red);
+}
+.ctrl-btn.danger:hover {
+  background: var(--red);
+  color: #fff;
+}
+
+/* ── SETTINGS ── */
+.settings {
+  max-width: 1200px;
+  margin: 0 auto 20px;
+  padding: 0 20px;
+}
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 16px;
+  border-radius: 8px;
+}
+.setting {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.setting label {
+  font-size: 10px;
+  color: var(--text2);
+  letter-spacing: 1px;
+}
+.setting input, .setting select {
+  padding: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  border-radius: 4px;
+}
+.setting input:focus, .setting select:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+/* ── MAIN LAYOUT ── */
+.main-layout {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 40px;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 20px;
+}
+@media (max-width: 900px) {
+  .main-layout { grid-template-columns: 1fr; }
+}
+
+/* ── PANEL ── */
+.panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.panel-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.panel-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--cyan);
+}
+.panel-badge {
+  font-size: 10px;
+  padding: 4px 10px;
+  background: var(--bg3);
+  border-radius: 10px;
+  color: var(--text2);
+}
+.panel-content {
+  padding: 12px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* ── POSITION CARD ── */
+.pos-card {
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 10px;
+  border-left: 4px solid var(--cyan);
+}
+.pos-card.profit { border-left-color: var(--green); }
+.pos-card.loss { border-left-color: var(--red); }
+.pos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.pos-token {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pos-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  overflow: hidden;
+}
+.pos-logo img { width: 100%; height: 100%; object-fit: cover; }
+.pos-symbol {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.pos-chain {
+  font-size: 10px;
+  color: var(--text2);
+}
+.pos-pnl {
+  text-align: right;
+}
+.pos-pnl-value {
+  font-size: 18px;
+  font-weight: 700;
+}
+.pos-pnl-value.green { color: var(--green); }
+.pos-pnl-value.red { color: var(--red); }
+.pos-pnl-pct {
+  font-size: 12px;
+  color: var(--text2);
+}
+.pos-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.pos-stat {
+  text-align: center;
+  padding: 8px;
+  background: var(--bg);
+  border-radius: 4px;
+}
+.pos-stat-label {
+  font-size: 8px;
+  color: var(--text2);
+  margin-bottom: 3px;
+}
+.pos-stat-value {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+}
+.pos-progress {
+  height: 4px;
+  background: var(--bg);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.pos-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--yellow), var(--red));
+  transition: width 0.3s;
+}
+.pos-status {
+  font-size: 10px;
+  color: var(--text2);
+}
+.pos-status span { color: var(--cyan); }
+
+/* ── LOG ── */
+.log-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.log-item:last-child { border-bottom: none; }
+.log-time { color: var(--text2); white-space: nowrap; }
+.log-icon { font-size: 14px; }
+.log-text { flex: 1; color: var(--text); line-height: 1.4; }
+.log-text .green { color: var(--green); }
+.log-text .red { color: var(--red); }
+.log-text .cyan { color: var(--cyan); }
+.log-text .yellow { color: var(--yellow); }
+
+/* ── HISTORY ── */
+.history-item {
+  display: grid;
+  grid-template-columns: 60px 1fr 80px 70px;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  align-items: center;
+}
+.history-item:last-child { border-bottom: none; }
+.history-time { color: var(--text2); }
+.history-token { font-weight: 600; color: var(--text); }
+.history-result {
+  text-align: center;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 10px;
+}
+.history-result.win { background: rgba(0,255,136,0.2); color: var(--green); }
+.history-result.loss { background: rgba(255,71,87,0.2); color: var(--red); }
+.history-pnl { text-align: right; font-weight: 700; }
+.history-pnl.green { color: var(--green); }
+.history-pnl.red { color: var(--red); }
+
+/* ── EMPTY ── */
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--text2);
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+.empty-text { font-size: 11px; letter-spacing: 1px; }
+
+/* ── SCANNER ── */
+.scanner-status {
+  max-width: 1200px;
+  margin: 0 auto 15px;
+  padding: 0 20px;
+}
+.scanner-bar {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.scanner-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.scanner-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text2);
+}
+.scanner-dot.active {
+  background: var(--green);
+  animation: blink 1s infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.scanner-text { font-size: 12px; color: var(--text); }
+.scanner-stats {
+  display: flex;
+  gap: 20px;
+  font-size: 11px;
+  color: var(--text2);
+}
+.scanner-stats span { color: var(--cyan); }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <h1>⚡ AUTO SNIPER</h1>
+  <p>100% Automated Paper Trading • Real DexScreener Prices • Memecoins Only</p>
+  <div class="mode-badge" id="modeBadge">🔴 STOPPED</div>
+</header>
+
+<!-- P&L BANNER -->
+<div class="pnl-banner">
+  <div class="pnl-grid">
+    <div class="pnl-box main">
+      <div class="pnl-label">TOTAL P&L</div>
+      <div class="pnl-value green" id="totalPnl">$0.00</div>
+    </div>
+    <div class="pnl-box">
+      <div class="pnl-label">BALANCE</div>
+      <div class="pnl-value cyan" id="balance">$10,000</div>
+    </div>
+    <div class="pnl-box">
+      <div class="pnl-label">WIN RATE</div>
+      <div class="pnl-value yellow" id="winRate">--%</div>
+    </div>
+    <div class="pnl-box">
+      <div class="pnl-label">TRADES</div>
+      <div class="pnl-value" id="totalTrades">0</div>
+    </div>
+    <div class="pnl-box">
+      <div class="pnl-label">ACTIVE</div>
+      <div class="pnl-value cyan" id="activeCount">0</div>
+    </div>
+    <div class="pnl-box">
+      <div class="pnl-label">AVG WIN</div>
+      <div class="pnl-value green" id="avgWin">$0</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <button class="ctrl-btn" id="startBtn" onclick="toggleBot()">▶ START BOT</button>
+  <button class="ctrl-btn danger" onclick="resetAll()">🔄 RESET</button>
+</div>
+
+<!-- SETTINGS -->
+<div class="settings">
+  <div class="settings-grid">
+    <div class="setting">
+      <label>💰 POSITION SIZE ($)</label>
+      <input type="number" id="positionSize" value="100" min="10" max="1000">
+    </div>
+    <div class="setting">
+      <label>🎯 TAKE PROFIT (%)</label>
+      <input type="number" id="takeProfit" value="25" min="5" max="200">
+    </div>
+    <div class="setting">
+      <label>🛑 STOP LOSS (%)</label>
+      <input type="number" id="stopLoss" value="12" min="5" max="50">
+    </div>
+    <div class="setting">
+      <label>⏱️ MAX HOLD (min)</label>
+      <input type="number" id="maxHold" value="15" min="1" max="60">
+    </div>
+    <div class="setting">
+      <label>📊 MIN SCORE</label>
+      <input type="number" id="minScore" value="60" min="30" max="90">
+    </div>
+    <div class="setting">
+      <label>🔗 CHAINS</label>
+      <select id="chains">
+        <option value="all">Solana + Ethereum</option>
+        <option value="solana">Solana Only</option>
+        <option value="ethereum">Ethereum Only</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- SCANNER STATUS -->
+<div class="scanner-status">
+  <div class="scanner-bar">
+    <div class="scanner-info">
+      <div class="scanner-dot" id="scannerDot"></div>
+      <div class="scanner-text" id="scannerText">Click START to begin</div>
+    </div>
+    <div class="scanner-stats">
+      Scanned: <span id="scannedCount">0</span> | 
+      Found: <span id="oppsCount">0</span> |
+      Last: <span id="lastScan">--:--</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main-layout">
+  <div>
+    <!-- Active Positions -->
+    <div class="panel" style="margin-bottom:20px;">
+      <div class="panel-header">
+        <div class="panel-title">📊 ACTIVE POSITIONS</div>
+        <div class="panel-badge" id="positionsBadge">0 open</div>
+      </div>
+      <div class="panel-content" id="positionsContainer">
+        <div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No active positions</div></div>
+      </div>
+    </div>
+    
+    <!-- Trade History -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">📜 TRADE HISTORY</div>
+        <div class="panel-badge" id="historyBadge">0 trades</div>
+      </div>
+      <div class="panel-content" id="historyContainer" style="max-height:250px;">
+        <div class="empty"><div class="empty-icon">📜</div><div class="empty-text">No trades yet</div></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Activity Log -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">📡 ACTIVITY LOG</div>
+      <div class="panel-badge">live</div>
+    </div>
+    <div class="panel-content" id="logContainer" style="max-height:600px;">
+      <div class="empty"><div class="empty-icon">📡</div><div class="empty-text">Start the bot to see activity</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const INITIAL_BALANCE = 10000;
+let balance = INITIAL_BALANCE;
+let totalPnL = 0;
+let totalTrades = 0;
+let wins = 0;
+let totalWinAmount = 0;
+
+let isRunning = false;
+let scanInterval = null;
+let updateInterval = null;
+
+let positions = [];
+let history = [];
+let logs = [];
+
+let scannedCount = 0;
+let oppsCount = 0;
+
+const $ = id => document.getElementById(id);
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function fN(n) {
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return n.toFixed(0);
+}
+
+function fP(n) {
+  if (n < 0.00001) return n.toExponential(2);
+  if (n < 0.01) return n.toFixed(6);
+  if (n < 1) return n.toFixed(4);
+  return n.toFixed(2);
+}
+
+function getTime() {
+  return new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function getShortTime() {
+  return new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function addLog(icon, text) {
+  logs.unshift({ time: getTime(), icon, text });
+  if (logs.length > 100) logs.pop();
+  renderLogs();
+}
+
+// ═══════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════
+function getSettings() {
+  return {
+    positionSize: parseInt($('positionSize').value) || 100,
+    takeProfit: parseInt($('takeProfit').value) || 25,
+    stopLoss: parseInt($('stopLoss').value) || 12,
+    maxHold: parseInt($('maxHold').value) || 15,
+    minScore: parseInt($('minScore').value) || 60,
+    chains: $('chains').value
+  };
+}
+
+// ═══════════════════════════════════════════
+// BOT CONTROL
+// ═══════════════════════════════════════════
+function toggleBot() {
+  if (isRunning) stopBot();
+  else startBot();
+}
+
+function startBot() {
+  isRunning = true;
+  $('startBtn').textContent = '⏸ STOP BOT';
+  $('startBtn').classList.add('active');
+  $('modeBadge').textContent = '🟢 RUNNING';
+  $('modeBadge').style.borderColor = 'var(--green)';
+  $('scannerDot').classList.add('active');
+  
+  addLog('🚀', 'Bot started — Hunting for memecoins...');
+  
+  scan();
+  scanInterval = setInterval(scan, 20000);
+  updateInterval = setInterval(updatePositions, 8000);
+}
+
+function stopBot() {
+  isRunning = false;
+  $('startBtn').textContent = '▶ START BOT';
+  $('startBtn').classList.remove('active');
+  $('modeBadge').textContent = '🔴 STOPPED';
+  $('modeBadge').style.borderColor = 'var(--red)';
+  $('scannerDot').classList.remove('active');
+  $('scannerText').textContent = 'Bot stopped';
+  
+  clearInterval(scanInterval);
+  clearInterval(updateInterval);
+  scanInterval = null;
+  updateInterval = null;
+  
+  addLog('⏹️', 'Bot stopped');
+}
+
+function resetAll() {
+  if (positions.length > 0 && !confirm('Close all positions and reset?')) return;
+  
+  stopBot();
+  
+  for (const pos of positions) closeTrade(pos, 'RESET');
+  
+  balance = INITIAL_BALANCE;
+  totalPnL = 0;
+  totalTrades = 0;
+  wins = 0;
+  totalWinAmount = 0;
+  positions = [];
+  history = [];
+  logs = [];
+  scannedCount = 0;
+  oppsCount = 0;
+  
+  updateUI();
+  renderPositions();
+  renderHistory();
+  renderLogs();
+  
+  addLog('🔄', 'Account reset to $10,000');
+}
+
+// ═══════════════════════════════════════════
+// SCANNER
+// ═══════════════════════════════════════════
+async function scan() {
+  if (!isRunning) return;
+  
+  const settings = getSettings();
+  $('scannerText').textContent = 'Scanning...';
+  
+  const chains = settings.chains === 'all' ? ['solana', 'ethereum'] : [settings.chains];
+  const queries = ['pepe', 'doge', 'meme', 'ai', 'cat', 'dog', 'moon', 'pump', 'wojak', 'frog', 'trump', 'elon', 'shib', 'bonk', 'wif', 'inu'];
+  const shuffled = queries.sort(() => Math.random() - 0.5).slice(0, 5);
+  
+  let allPairs = [];
+  
+  for (const q of shuffled) {
+    try {
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${q}`, { signal: AbortSignal.timeout(8000) });
+      const data = await res.json();
+      
+      if (data.pairs) {
+        const valid = data.pairs.filter(p => {
+          if (!chains.includes(p.chainId)) return false;
+          const mc = parseFloat(p.marketCap) || 0;
+          const liq = parseFloat(p.liquidity?.usd) || 0;
+          return mc > 5000 && mc < 5000000 && liq > 2000;
+        });
+        allPairs.push(...valid);
+      }
+    } catch (e) {}
+  }
+  
+  // Dedupe
+  const seen = new Set();
+  allPairs = allPairs.filter(p => {
+    if (seen.has(p.pairAddress)) return false;
+    seen.add(p.pairAddress);
+    return true;
+  });
+  
+  scannedCount = allPairs.length;
+  $('scannedCount').textContent = scannedCount;
+  $('lastScan').textContent = getShortTime();
+  
+  // Find opportunities
+  const opportunities = [];
+  for (const pair of allPairs) {
+    const score = analyzeOpportunity(pair);
+    if (score >= settings.minScore) opportunities.push({ pair, score });
+  }
+  
+  opportunities.sort((a, b) => b.score - a.score);
+  oppsCount = opportunities.length;
+  $('oppsCount').textContent = oppsCount;
+  
+  $('scannerText').textContent = `Found ${opportunities.length} opportunities`;
+  
+  // Auto-execute
+  const maxPositions = 5;
+  
+  for (const opp of opportunities) {
+    if (positions.length >= maxPositions) break;
+    if (balance < settings.positionSize) break;
+    
+    const addr = opp.pair.baseToken?.address;
+    if (positions.find(p => p.address === addr)) continue;
+    
+    await executeTrade(opp.pair, opp.score);
+  }
+}
+
+function analyzeOpportunity(pair) {
+  const mc = parseFloat(pair.marketCap) || 0;
+  const liq = parseFloat(pair.liquidity?.usd) || 0;
+  const vol = parseFloat(pair.volume?.h24) || 0;
+  const chg5m = parseFloat(pair.priceChange?.m5) || 0;
+  const chg1h = parseFloat(pair.priceChange?.h1) || 0;
+  const buys = pair.txns?.h24?.buys || 0;
+  const sells = pair.txns?.h24?.sells || 0;
+  const total = buys + sells;
+  const buyRatio = total > 0 ? (buys / total) * 100 : 50;
+  
+  let score = 0;
+  
+  // Low MC (max 25)
+  if (mc < 20000) score += 25;
+  else if (mc < 50000) score += 22;
+  else if (mc < 100000) score += 18;
+  else if (mc < 500000) score += 12;
+  else if (mc < 1000000) score += 6;
+  
+  // Thin liquidity (max 20)
+  const liqRatio = mc > 0 ? (liq / mc) * 100 : 0;
+  if (liqRatio < 3) score += 20;
+  else if (liqRatio < 5) score += 15;
+  else if (liqRatio < 8) score += 10;
+  
+  // Momentum (max 25)
+  if (chg5m > 15) score += 20;
+  else if (chg5m > 8) score += 15;
+  else if (chg5m > 3) score += 10;
+  else if (chg5m > 0) score += 5;
+  
+  if (chg1h > 20) score += 5;
+  else if (chg1h > 10) score += 3;
+  
+  // Buy pressure (max 20)
+  if (buyRatio > 65) score += 20;
+  else if (buyRatio > 58) score += 15;
+  else if (buyRatio > 52) score += 10;
+  
+  // Volume (max 10)
+  const volRatio = mc > 0 ? (vol / mc) : 0;
+  if (volRatio > 1) score += 10;
+  else if (volRatio > 0.5) score += 7;
+  else if (volRatio > 0.2) score += 4;
+  
+  return Math.min(100, Math.max(0, score));
+}
+
+// ═══════════════════════════════════════════
+// TRADING
+// ═══════════════════════════════════════════
+async function executeTrade(pair, score) {
+  const settings = getSettings();
+  const size = settings.positionSize;
+  
+  if (balance < size) return;
+  
+  const symbol = pair.baseToken?.symbol || 'UNKNOWN';
+  const chain = pair.chainId;
+  const address = pair.baseToken?.address;
+  const pairAddress = pair.pairAddress;
+  const entryPrice = parseFloat(pair.priceUsd) || 0;
+  const logo = pair.info?.imageUrl || '';
+  
+  if (entryPrice === 0) return;
+  
+  const position = {
+    id: Date.now(),
+    symbol,
+    chain,
+    address,
+    pairAddress,
+    logo,
+    entryPrice,
+    currentPrice: entryPrice,
+    size,
+    score,
+    pnl: 0,
+    pnlPct: 0,
+    entryTime: Date.now()
+  };
+  
+  positions.push(position);
+  balance -= size;
+  
+  addLog('🎯', `<span class="cyan">BUY</span> $${esc(symbol)} @ $${fP(entryPrice)} — $${size} — Score: ${score}`);
+  
+  updateUI();
+  renderPositions();
+}
+
+async function updatePositions() {
+  if (positions.length === 0) return;
+  
+  const settings = getSettings();
+  
+  for (let i = positions.length - 1; i >= 0; i--) {
+    const pos = positions[i];
+    
+    try {
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${pos.chain}/${pos.pairAddress}`, { signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      
+      if (data.pair) {
+        const newPrice = parseFloat(data.pair.priceUsd) || pos.currentPrice;
+        pos.currentPrice = newPrice;
+        
+        const change = (newPrice - pos.entryPrice) / pos.entryPrice;
+        pos.pnlPct = change * 100;
+        pos.pnl = pos.size * change;
+        
+        const holdTime = (Date.now() - pos.entryTime) / 60000;
+        
+        // Take Profit
+        if (pos.pnlPct >= settings.takeProfit) {
+          addLog('🎯', `<span class="green">TP HIT!</span> $${esc(pos.symbol)} +${pos.pnlPct.toFixed(1)}%`);
+          closeTrade(pos, 'TP');
+          continue;
+        }
+        
+        // Stop Loss
+        if (pos.pnlPct <= -settings.stopLoss) {
+          addLog('🛑', `<span class="red">SL HIT!</span> $${esc(pos.symbol)} ${pos.pnlPct.toFixed(1)}%`);
+          closeTrade(pos, 'SL');
+          continue;
+        }
+        
+        // Max Hold
+        if (holdTime >= settings.maxHold) {
+          addLog('⏰', `<span class="yellow">TIMEOUT</span> $${esc(pos.symbol)}`);
+          closeTrade(pos, 'TIME');
+          continue;
+        }
+      }
+    } catch (e) {}
+  }
+  
+  renderPositions();
+  updateUI();
+}
+
+function closeTrade(pos, reason) {
+  const change = (pos.currentPrice - pos.entryPrice) / pos.entryPrice;
+  pos.pnlPct = change * 100;
+  pos.pnl = pos.size * change;
+  
+  totalPnL += pos.pnl;
+  balance += pos.size + pos.pnl;
+  totalTrades++;
+  
+  if (pos.pnl > 0) {
+    wins++;
+    totalWinAmount += pos.pnl;
+  }
+  
+  history.unshift({ ...pos, closeTime: Date.now(), reason });
+  if (history.length > 50) history.pop();
+  
+  positions = positions.filter(p => p.id !== pos.id);
+  
+  const emoji = pos.pnl >= 0 ? '✅' : '❌';
+  const color = pos.pnl >= 0 ? 'green' : 'red';
+  addLog(emoji, `<span class="${color}">SOLD</span> $${esc(pos.symbol)} — <span class="${color}">${pos.pnl >= 0 ? '+' : ''}$${pos.pnl.toFixed(2)} (${pos.pnlPct >= 0 ? '+' : ''}${pos.pnlPct.toFixed(1)}%)</span> [${reason}]`);
+  
+  renderPositions();
+  renderHistory();
+  updateUI();
+}
+
+// ═══════════════════════════════════════════
+// UI
+// ═══════════════════════════════════════════
+function updateUI() {
+  const pnlEl = $('totalPnl');
+  pnlEl.textContent = (totalPnL >= 0 ? '+' : '') + '$' + totalPnL.toFixed(2);
+  pnlEl.className = 'pnl-value ' + (totalPnL >= 0 ? 'green' : 'red');
+  
+  $('balance').textContent = '$' + balance.toFixed(0);
+  $('winRate').textContent = (totalTrades > 0 ? ((wins / totalTrades) * 100).toFixed(0) : '--') + '%';
+  $('totalTrades').textContent = totalTrades;
+  $('activeCount').textContent = positions.length;
+  $('avgWin').textContent = '$' + (wins > 0 ? (totalWinAmount / wins).toFixed(0) : 0);
+}
+
+function renderPositions() {
+  const container = $('positionsContainer');
+  $('positionsBadge').textContent = positions.length + ' open';
+  
+  if (positions.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No active positions</div></div>`;
+    return;
+  }
+  
+  const settings = getSettings();
+  let html = '';
+  
+  for (const pos of positions) {
+    const isProfit = pos.pnl >= 0;
+    const holdMin = Math.floor((Date.now() - pos.entryTime) / 60000);
+    const holdSec = Math.floor(((Date.now() - pos.entryTime) % 60000) / 1000);
+    const holdPct = Math.min(100, (holdMin / settings.maxHold) * 100);
+    
+    html += `<div class="pos-card ${isProfit ? 'profit' : 'loss'}">
+      <div class="pos-header">
+        <div class="pos-token">
+          <div class="pos-logo">${pos.logo ? `<img src="${pos.logo}" onerror="this.style.display='none';this.parentElement.textContent='${pos.symbol.charAt(0)}'">` : pos.symbol.charAt(0)}</div>
+          <div>
+            <div class="pos-symbol">$${esc(pos.symbol)}</div>
+            <div class="pos-chain">${pos.chain} • Score: ${pos.score}</div>
+          </div>
+        </div>
+        <div class="pos-pnl">
+          <div class="pos-pnl-value ${isProfit ? 'green' : 'red'}">${isProfit ? '+' : ''}$${pos.pnl.toFixed(2)}</div>
+          <div class="pos-pnl-pct">${isProfit ? '+' : ''}${pos.pnlPct.toFixed(2)}%</div>
+        </div>
+      </div>
+      <div class="pos-stats">
+        <div class="pos-stat"><div class="pos-stat-label">ENTRY</div><div class="pos-stat-value">$${fP(pos.entryPrice)}</div></div>
+        <div class="pos-stat"><div class="pos-stat-label">CURRENT</div><div class="pos-stat-value">$${fP(pos.currentPrice)}</div></div>
+        <div class="pos-stat"><div class="pos-stat-label">SIZE</div><div class="pos-stat-value">$${pos.size}</div></div>
+      </div>
+      <div class="pos-progress"><div class="pos-progress-bar" style="width:${holdPct}%"></div></div>
+      <div class="pos-status">⏱️ ${holdMin}m ${holdSec}s / ${settings.maxHold}m • TP: <span>+${settings.takeProfit}%</span> • SL: <span>-${settings.stopLoss}%</span></div>
+    </div>`;
+  }
+  
+  container.innerHTML = html;
+}
+
+function renderHistory() {
+  const container = $('historyContainer');
+  $('historyBadge').textContent = history.length + ' trades';
+  
+  if (history.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">📜</div><div class="empty-text">No trades yet</div></div>`;
+    return;
+  }
+  
+  let html = '';
+  for (const trade of history.slice(0, 20)) {
+    const isWin = trade.pnl >= 0;
+    const time = new Date(trade.closeTime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    
+    html += `<div class="history-item">
+      <span class="history-time">${time}</span>
+      <span class="history-token">$${esc(trade.symbol)}</span>
+      <span class="history-result ${isWin ? 'win' : 'loss'}">${isWin ? 'WIN' : 'LOSS'}</span>
+      <span class="history-pnl ${isWin ? 'green' : 'red'}">${isWin ? '+' : ''}$${trade.pnl.toFixed(2)}</span>
+    </div>`;
+  }
+  
+  container.innerHTML = html;
+}
+
+function renderLogs() {
+  const container = $('logContainer');
+  
+  if (logs.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">📡</div><div class="empty-text">Start the bot to see activity</div></div>`;
+    return;
+  }
+  
+  let html = '';
+  for (const log of logs.slice(0, 50)) {
+    html += `<div class="log-item"><span class="log-time">${log.time}</span><span class="log-icon">${log.icon}</span><span class="log-text">${log.text}</span></div>`;
+  }
+  
+  container.innerHTML = html;
+}
+
+updateUI();
+</script>
+</body>
+</html>
