@@ -1133,7 +1133,6 @@ async function startHunt() {
     if (topGems.length === 0) {
       $('progressSection').classList.remove('active');
       $('heroSection').style.display = 'block';
-      $('huntBtn').disabled = false;
       alert('No HIGH POTENTIAL gems found right now. Market conditions may be unfavorable. Try again later!');
       return;
     }
@@ -1187,15 +1186,15 @@ No explanations, just symbols.`;
     setTimeout(() => {
       $('progressSection').classList.remove('active');
       $('resultsSection').classList.add('active');
-      $('huntBtn').disabled = false;
     }, 500);
     
   } catch (err) {
     console.error('Hunt failed:', err);
     $('progressSection').classList.remove('active');
     $('heroSection').style.display = 'block';
-    $('huntBtn').disabled = false;
     alert('Hunt failed: ' + err.message);
+  } finally {
+    $('huntBtn').disabled = false;
   }
 }
 
