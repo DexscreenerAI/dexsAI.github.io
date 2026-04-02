@@ -3748,7 +3748,7 @@ async function checkMomentumExit() {
         pos.consecutiveBadMomentum = 0;
       }
       
-    } catch (e) {}
+    } catch (e) { console.error('Momentum exit check failed:', e); }
   }
 }
 
@@ -3795,8 +3795,8 @@ async function scan() {
         }
       }
     }
-  } catch(e) {}
-  
+  } catch(e) { console.error('Fetching latest token profiles failed:', e); }
+
   // ═══════════════════════════════════════════════════════════════
   // SOURCE 2: Top boosted (paid promotion = potential)
   // ═══════════════════════════════════════════════════════════════
@@ -3811,8 +3811,8 @@ async function scan() {
         }
       }
     }
-  } catch(e) {}
-  
+  } catch(e) { console.error('Fetching top boosted tokens failed:', e); }
+
   // ═══════════════════════════════════════════════════════════════
   // SOURCE 3: Latest boosts
   // ═══════════════════════════════════════════════════════════════
@@ -3827,8 +3827,8 @@ async function scan() {
         }
       }
     }
-  } catch(e) {}
-  
+  } catch(e) { console.error('Fetching latest boosts failed:', e); }
+
   // ═══════════════════════════════════════════════════════════════
   // SOURCE 4: Top gainers per chain
   // ═══════════════════════════════════════════════════════════════
@@ -3851,8 +3851,8 @@ async function scan() {
         }
       }
     }
-  } catch(e) {}
-  
+  } catch(e) { console.error('Fetching top gainers failed:', e); }
+
   // ═══════════════════════════════════════════════════════════════
   // SOURCE 5: Massive keyword search (80 random keywords)
   // ═══════════════════════════════════════════════════════════════
@@ -3902,8 +3902,8 @@ async function scan() {
           }
         }
       }
-    } catch(e) {}
-    
+    } catch(e) { console.error('Keyword search fetch failed:', e); }
+
     if (i % 20 === 19) await new Promise(r => setTimeout(r, 50));
   }
   
@@ -3944,8 +3944,8 @@ async function scan() {
           enriched.push(pair);
         }
       }
-    } catch(e) {}
-    
+    } catch(e) { console.error('Token enrichment/filtering failed:', e); }
+
     if (i % 25 === 24) await new Promise(r => setTimeout(r, 20));
   }
   
