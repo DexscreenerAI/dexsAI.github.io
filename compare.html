@@ -843,6 +843,7 @@ html, body { height:100%; background: var(--bg); color: var(--text); font-family
 // ═══════════════════════════════════════════
 let selectedTokens = [];
 let searchTimeout = null;
+let searchController = null;
 
 const $ = id => document.getElementById(id);
 
@@ -911,9 +912,11 @@ document.addEventListener('click', function(e) {
 });
 
 async function searchTokens(query) {
+  if (searchController) searchController.abort();
+  searchController = new AbortController();
   try {
     const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`, {
-      signal: AbortSignal.timeout(8000)
+      signal: searchController.signal
     });
     const data = await res.json();
     
@@ -967,6 +970,7 @@ async function searchTokens(query) {
     $('searchResults').innerHTML = html;
     
   } catch (err) {
+    if (err.name === 'AbortError') return;
     $('searchResults').innerHTML = '<div class="search-no-results">Search failed. Try again.</div>';
   }
 }
