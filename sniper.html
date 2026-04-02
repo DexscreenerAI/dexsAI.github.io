@@ -845,6 +845,183 @@ body {
 /* ══════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════ */
+
+/* ── Tablet / Mobile (768px and below) ── */
+@media (max-width: 768px) {
+  /* Header */
+  .header { padding: 14px 12px; }
+  .header h1 { font-size: 20px; letter-spacing: 2px; }
+  .header p { font-size: 10px; }
+  .version-badge, .mode-badge { font-size: 9px; padding: 4px 10px; }
+  .mode-badge { margin-left: 4px; }
+
+  /* P&L banner: 2-column grid */
+  .pnl-banner { padding: 10px; }
+  .pnl-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .pnl-box { padding: 8px 4px; }
+  .pnl-value { font-size: 14px; }
+  .pnl-label { font-size: 7px; }
+
+  /* Controls: larger touch targets */
+  .controls {
+    padding: 10px;
+    gap: 8px;
+  }
+  .ctrl-btn {
+    padding: 14px 18px;
+    font-size: 11px;
+    min-height: 44px;
+    min-width: 44px;
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  /* Scanner status: stack vertically */
+  .scanner-status { padding: 10px 12px; }
+  .scanner-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .scanner-stats {
+    width: 100%;
+    justify-content: space-between;
+    font-size: 10px;
+  }
+
+  /* Main layout: reduced padding, full width */
+  .main {
+    padding: 12px;
+    gap: 14px;
+  }
+
+  /* Dashboard grids: stack vertically */
+  .trades-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .bottom-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* Section cards */
+  .section { border-radius: 8px; }
+  .section-header { padding: 12px 14px; }
+  .section-title { font-size: 12px; letter-spacing: 1px; }
+  .section-content { padding: 10px; max-height: 500px; }
+
+  /* Position cards */
+  .pos-card { padding: 12px; border-radius: 8px; }
+  .pos-header { flex-wrap: wrap; gap: 8px; }
+  .pos-symbol { font-size: 14px; }
+  .pos-pnl-value { font-size: 18px; }
+  .pos-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .pos-stat { padding: 6px 3px; }
+  .pos-stat-label { font-size: 7px; }
+  .pos-stat-value { font-size: 10px; }
+
+  /* Position action buttons: larger touch targets */
+  .pos-action-btn {
+    padding: 10px 12px;
+    font-size: 11px;
+    min-height: 44px;
+    min-width: 44px;
+    justify-content: center;
+  }
+  .pos-actions { gap: 8px; }
+
+  /* History items */
+  .history-item {
+    grid-template-columns: 40px 1fr auto;
+    gap: 8px;
+    padding: 10px;
+    font-size: 10px;
+  }
+  .history-secured { display: none; }
+  .history-reason { font-size: 8px; padding: 2px 6px; }
+  .history-pnl { font-size: 11px; }
+
+  /* Log items */
+  .log-item { font-size: 10px; gap: 8px; }
+  .log-time { min-width: 45px; font-size: 9px; }
+
+  /* Tables: horizontal scroll */
+  .section-content table,
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  /* Modal: near full-screen on mobile */
+  .modal { padding: 10px; }
+  .modal-content {
+    max-width: 100%;
+    padding: 16px;
+    border-radius: 8px;
+    max-height: 95vh;
+  }
+  .modal-title { font-size: 16px; margin-bottom: 14px; }
+
+  /* Settings */
+  .settings-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .settings-tabs { gap: 4px; }
+  .settings-tab {
+    padding: 10px 12px;
+    font-size: 10px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .setting input, .setting select {
+    padding: 12px;
+    font-size: 16px; /* prevent iOS zoom on focus */
+    min-height: 44px;
+  }
+  .setting label { font-size: 10px; }
+
+  /* Chain checkboxes */
+  .chain-checkboxes { gap: 6px; }
+  .chain-checkbox {
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+
+  /* Modal footer buttons */
+  .modal-footer { flex-wrap: wrap; }
+  .modal-footer .ctrl-btn {
+    flex: 1 1 100%;
+    min-height: 44px;
+  }
+
+  /* Checkbox rows: larger touch targets */
+  .checkbox-row input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Inline grid layouts from JS-generated HTML */
+  [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Empty states */
+  .empty { padding: 30px 15px; }
+  .empty-icon { font-size: 32px; }
+  .empty-text { font-size: 11px; }
+}
+
 @media (max-width: 600px) {
   .pnl-grid { grid-template-columns: repeat(4, 1fr); }
   .pnl-value { font-size: 14px; }
