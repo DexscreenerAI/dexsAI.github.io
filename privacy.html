@@ -214,6 +214,9 @@ footer {
   </a>
   <div class="nav-links">
     <a href="./index.html">App</a>
+    <a href="./compare.html">Compare</a>
+    <a href="./gems.html">Gems</a>
+    <a href="./sniper.html">Sniper</a>
     <a href="./og-detector.html">OG Detector</a>
     <a href="./telegram-bot.html">Telegram Bot</a>
     <a href="./extension.html">Extension</a>
@@ -226,6 +229,9 @@ footer {
 </nav>
 <div class="nav-mobile-menu" id="mobileMenu">
   <a href="./index.html">🏠 App</a>
+  <a href="./compare.html">⚖️ Compare</a>
+  <a href="./gems.html">💎 Gems</a>
+  <a href="./sniper.html">🎯 Sniper</a>
   <a href="./og-detector.html">🔍 OG Detector</a>
   <a href="./telegram-bot.html">🤖 Telegram Bot</a>
   <a href="./extension.html">🧩 Extension</a>
@@ -240,7 +246,7 @@ footer {
     <img class="logo" src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="DexScreener AI">
     <h1>DEXSCREENER <span>AI</span></h1>
     <h2 style="justify-content:center;margin:20px 0 10px;">Privacy Policy</h2>
-    <p class="updated">Last updated: March 28, 2026</p>
+    <p class="updated">Last updated: April 2, 2026</p>
   </header>
 
   <div class="highlight">
@@ -249,45 +255,73 @@ footer {
   </div>
 
   <h2>Overview</h2>
-  <p>DexScreener AI is a Chrome extension that provides AI-powered token analysis directly on DexScreener.com. We are committed to protecting your privacy and being transparent about our practices.</p>
+  <p>DexScreener AI is a crypto token intelligence platform available as a <strong>web application</strong> (dexscreenerai.com) and a <strong>Chrome extension</strong>. The platform includes tools such as Token Analysis, AI Buy/Sell/Target analysis, Token Comparator, Gem Hunter, Sniper Bot, and OG Detector. We are committed to protecting your privacy and being transparent about our practices.</p>
 
   <h2>Data Collection</h2>
   <p><strong>We do NOT collect:</strong></p>
   <ul>
     <li>Personal information (name, email, etc.)</li>
-    <li>Wallet addresses</li>
+    <li>Wallet addresses or private keys</li>
     <li>Browsing history</li>
-    <li>Trading activity</li>
+    <li>Trading activity or portfolio data</li>
+    <li>IP addresses or device fingerprints</li>
     <li>Any other user data</li>
   </ul>
+  <p>We do not use cookies, tracking pixels, analytics services, or any form of user tracking.</p>
 
-  <h2>How the Extension Works</h2>
-  <p>DexScreener AI operates entirely within your browser:</p>
+  <h2>How the Platform Works</h2>
+
+  <h3 style="color:var(--text);font-size:16px;margin:20px 0 10px;">Web Application (dexscreenerai.com)</h3>
+  <p>The web application runs entirely in your browser:</p>
+  <ul>
+    <li><strong>Token data</strong> is fetched from the public DexScreener and CoinGecko APIs</li>
+    <li><strong>Safety checks</strong> are performed via the public Rugcheck API</li>
+    <li><strong>AI analysis</strong> (Buy/Sell, Target, Strategy) is processed through our proxy backend — only the token symbol and market data are sent, never any personal information</li>
+    <li><strong>Gem Hunter</strong> scans trending tokens using public APIs and scores them locally</li>
+    <li><strong>Token Comparator</strong> compares tokens using public market data and safety APIs</li>
+    <li><strong>Sniper Bot</strong> monitors new token listings using public APIs — all settings are stored locally in your browser</li>
+    <li><strong>OG Detector</strong> analyzes early wallet activity using public blockchain data</li>
+    <li><strong>AI response cache</strong> is stored temporarily in your browser memory (5 minutes) and is never sent externally</li>
+  </ul>
+
+  <h3 style="color:var(--text);font-size:16px;margin:20px 0 10px;">Chrome Extension</h3>
+  <p>The Chrome extension operates entirely within your browser:</p>
   <ul>
     <li><strong>Token data</strong> is fetched directly from the public DexScreener API</li>
     <li><strong>Rugcheck data</strong> (for Solana tokens) is fetched from the public Rugcheck API</li>
     <li><strong>Analysis</strong> is performed locally in your browser using JavaScript</li>
-    <li><strong>No data</strong> is sent to our servers (we don't have any servers)</li>
+    <li><strong>Panel preferences</strong> (position, collapsed state) are stored locally and never leave your device</li>
   </ul>
 
   <h2>Third-Party Services</h2>
-  <p>The extension makes API calls to:</p>
+  <p>The platform makes API calls to the following public services:</p>
   <ul>
-    <li><strong>DexScreener API</strong> (api.dexscreener.com) — to fetch token/pair data</li>
-    <li><strong>Rugcheck API</strong> (api.rugcheck.xyz) — to fetch Solana token risk data</li>
+    <li><strong>DexScreener API</strong> (api.dexscreener.com) — token and pair market data</li>
+    <li><strong>CoinGecko API</strong> (api.coingecko.com) — token market data for major cryptocurrencies</li>
+    <li><strong>Rugcheck API</strong> (api.rugcheck.xyz) — token safety and risk analysis</li>
+    <li><strong>AI Backend Proxy</strong> — processes AI analysis requests (only receives token symbol and public market data, no personal information)</li>
   </ul>
-  <p>These are public APIs. We do not control their privacy policies. Please review their respective privacy policies for more information.</p>
+  <p>These are third-party services with their own privacy policies. We do not control how they handle requests. Only publicly available market data is transmitted — never any personal or identifying information.</p>
 
   <h2>Local Storage</h2>
-  <p>The extension may store minimal preferences locally in your browser (such as panel position or collapsed state). This data never leaves your device.</p>
+  <p>The platform stores minimal data locally in your browser:</p>
+  <ul>
+    <li><strong>Sniper settings</strong> — chain preferences, risk parameters, and scanner configuration</li>
+    <li><strong>Extension preferences</strong> — panel position and display state</li>
+    <li><strong>AI cache</strong> — temporary in-memory cache of AI responses (cleared after 5 minutes or page refresh)</li>
+  </ul>
+  <p>This data is stored exclusively on your device and is never transmitted externally.</p>
 
-  <h2>Permissions</h2>
+  <h2>Permissions (Chrome Extension)</h2>
   <p>The extension requests the following permissions:</p>
   <ul>
-    <li><strong>Host permissions for dexscreener.com</strong> — to inject the analysis panel</li>
-    <li><strong>Host permissions for API endpoints</strong> — to fetch token data</li>
+    <li><strong>Host permissions for dexscreener.com</strong> — to inject the analysis panel on token pages</li>
+    <li><strong>Host permissions for API endpoints</strong> — to fetch token and safety data</li>
   </ul>
   <p>We request only the minimum permissions necessary for the extension to function.</p>
+
+  <h2>No Account Required</h2>
+  <p>DexScreener AI does not require any account creation, login, or registration. There are no user accounts, passwords, or authentication of any kind.</p>
 
   <h2>Children's Privacy</h2>
   <p>DexScreener AI is not intended for use by children under the age of 18. We do not knowingly collect any information from children.</p>
@@ -299,6 +333,7 @@ footer {
   <p>If you have any questions about this Privacy Policy, please contact us:</p>
   <ul>
     <li>Twitter/X: <a href="https://x.com/dexscreenerai" target="_blank">@dexscreenerai</a></li>
+    <li>Telegram: <a href="https://t.me/dexscreeneraitoken" target="_blank">@dexscreeneraitoken</a></li>
   </ul>
 
   <footer>
