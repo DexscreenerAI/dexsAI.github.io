@@ -75,23 +75,33 @@ html, body { height:100%; background: var(--bg); color: var(--text); font-family
   color: var(--cyan);
   font-weight: 400;
 }
-.header-back {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--bg3);
-  border: 1px solid var(--card-border);
-  border-radius: 8px;
-  color: var(--text);
-  text-decoration: none;
-  font-family: var(--mono);
-  font-size: 12px;
-  transition: all 0.15s;
+.header-nav-links { display: flex; gap: 20px; flex-wrap: wrap; }
+.header-nav-links a {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  color: var(--text2); text-decoration: none; letter-spacing: 0.5px;
+  transition: color .15s;
+  white-space: nowrap;
 }
-.header-back:hover {
-  border-color: var(--cyan);
-  color: var(--cyan);
+.header-nav-links a:hover, .header-nav-links a.active { color: var(--cyan); }
+.header-menu-btn {
+  display: none; background: var(--card); border: 1px solid var(--card-border);
+  color: #fff; font-size: 18px; padding: 6px 10px; border-radius: 6px; cursor: pointer;
+}
+.header-mobile-menu {
+  display: none; position: fixed; top: 69px; left: 0; right: 0;
+  background: var(--bg); border-bottom: 1px solid var(--card-border);
+  flex-direction: column; padding: 12px; z-index: 99;
+}
+.header-mobile-menu.open { display: flex; }
+.header-mobile-menu a {
+  padding: 12px 16px; color: var(--text); text-decoration: none;
+  font-family: var(--mono); font-size: 12px; border-radius: 8px;
+}
+.header-mobile-menu a:hover { background: var(--card); color: var(--cyan); }
+.header-mobile-menu a.active { color: var(--cyan); }
+@media (max-width: 900px) {
+  .header-nav-links { display: none; }
+  .header-menu-btn { display: block; }
 }
 
 /* ── MAIN CONTAINER ── */
@@ -781,16 +791,42 @@ html, body { height:100%; background: var(--bg); color: var(--text); font-family
 <!-- HEADER -->
 <header class="header">
   <div class="header-inner">
-    <a href="index.html" class="header-logo">
+    <a href="./index.html" class="header-logo">
       <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="Logo">
       <div>
         <div class="header-logo-text">TOKEN COMPARATOR</div>
         <div class="header-logo-sub">by DexScreener AI</div>
       </div>
     </a>
-    <a href="index.html" class="header-back">← Back to App</a>
+    <div class="header-nav-links">
+      <a href="./index.html">App</a>
+      <a href="./compare.html" class="active">Compare</a>
+      <a href="./gems.html">Gems</a>
+      <a href="./sniper.html">Sniper</a>
+      <a href="./og-detector.html">OG Detector</a>
+      <a href="./telegram-bot.html">Telegram Bot</a>
+      <a href="./extension.html">Extension</a>
+      <a href="./promote.html">Promote</a>
+      <a href="./litepaper.html">Litepaper</a>
+      <a href="https://t.me/dexscreeneraitoken" target="_blank">Telegram</a>
+      <a href="https://x.com/dexscreenerai" target="_blank">Twitter</a>
+    </div>
+    <button class="header-menu-btn" onclick="document.getElementById('headerMobileMenu').classList.toggle('open'); this.textContent = this.textContent === '☰' ? '✕' : '☰'">☰</button>
   </div>
 </header>
+<div class="header-mobile-menu" id="headerMobileMenu">
+  <a href="./index.html">🏠 App</a>
+  <a href="./compare.html" class="active">⚖️ Compare</a>
+  <a href="./gems.html">💎 Gems</a>
+  <a href="./sniper.html">🎯 Sniper</a>
+  <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./telegram-bot.html">🤖 Telegram Bot</a>
+  <a href="./extension.html">🧩 Extension</a>
+  <a href="./promote.html">⭐ Promote</a>
+  <a href="./litepaper.html">📄 Litepaper</a>
+  <a href="https://t.me/dexscreeneraitoken" target="_blank">💬 Telegram</a>
+  <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
+</div>
 
 <!-- MAIN CONTAINER -->
 <div class="container">
