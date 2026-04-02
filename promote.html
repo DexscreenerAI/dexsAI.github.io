@@ -159,6 +159,86 @@ body {
   .nav-social-icons { display: flex; }
 }
 
+/* ── Mobile Responsive (768px) ── */
+@media (max-width: 768px) {
+  .navbar { padding: 0 12px; }
+  .nav-logo span { font-size: 11px; }
+
+  .container { padding: 70px 14px 40px; }
+
+  /* Hero */
+  .hero { margin-bottom: 24px; }
+  .hero-badge { font-size: 10px; padding: 8px 14px; margin-bottom: 16px; }
+  .hero h1 { font-size: 24px; }
+  .hero p { font-size: 14px; }
+
+  /* Benefits: 2 columns */
+  .benefits { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 24px; }
+  .benefit { padding: 14px 10px; border-radius: 10px; }
+  .benefit-icon { font-size: 26px; margin-bottom: 8px; }
+  .benefit-title { font-size: 10px; }
+  .benefit-text { font-size: 10px; }
+
+  /* Buy Bot */
+  .buybot-highlight { padding: 18px 14px; margin-bottom: 20px; border-radius: 12px; }
+  .buybot-highlight .icon { font-size: 36px; margin-bottom: 10px; }
+  .buybot-highlight h3 { font-size: 15px; margin-bottom: 8px; }
+  .buybot-highlight p { font-size: 13px; margin-bottom: 12px; }
+  .buybot-features { gap: 8px; }
+  .buybot-feature { font-size: 10px; padding: 6px 10px; }
+
+  /* Features Box */
+  .features-box { padding: 18px 14px; margin-bottom: 20px; border-radius: 14px; }
+  .features-title { font-size: 14px; margin-bottom: 16px; }
+  .features-list { gap: 10px; }
+  .feature-item { padding: 10px 12px; gap: 10px; border-radius: 10px; }
+  .feature-check { font-size: 16px; }
+  .feature-item span { font-size: 13px; }
+
+  /* Payment Box */
+  .payment-box { padding: 20px 14px; margin-bottom: 20px; border-radius: 14px; }
+  .payment-amount { font-size: 40px; }
+  .payment-amount span { font-size: 20px; }
+  .payment-duration { font-size: 12px; }
+  .payment-address { padding: 10px 12px; flex-wrap: wrap; gap: 8px; }
+  .payment-address code { font-size: 9px; }
+  .copy-btn { min-height: 44px; padding: 10px 16px; font-size: 11px; }
+
+  /* Form */
+  .form-card { padding: 20px 14px; margin-bottom: 20px; border-radius: 12px; }
+  .form-title { font-size: 14px; margin-bottom: 18px; }
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+  .form-input {
+    padding: 14px;
+    font-size: 16px; /* prevent iOS zoom */
+    min-height: 44px;
+    border-radius: 8px;
+  }
+  .form-input.small { font-size: 14px; }
+  .form-label { font-size: 10px; margin-bottom: 6px; }
+  .form-group { margin-bottom: 14px; }
+  .submit-btn {
+    padding: 16px;
+    font-size: 14px;
+    border-radius: 10px;
+    min-height: 50px;
+  }
+
+  /* Success */
+  .success-message { padding: 20px; }
+  .success-icon { font-size: 48px; margin-bottom: 14px; }
+  .success-title { font-size: 18px; }
+  .success-text { font-size: 13px; }
+
+  /* Footer */
+  .footer-note { font-size: 12px; padding: 16px 0 30px; }
+
+  /* Promo Banner */
+  .promo-banner { padding: 8px 0; }
+  .promo-item { font-size: 11px; padding: 5px 10px; }
+  .promo-item img { width: 16px; height: 16px; }
+}
+
 /* Container */
 .container {
   max-width: 700px;
@@ -643,6 +723,9 @@ body {
   </a>
   <div class="nav-links">
     <a href="./index.html" class="nav-link">App</a>
+    <a href="./compare.html" class="nav-link">Compare</a>
+    <a href="./gems.html" class="nav-link">Gems</a>
+    <a href="./sniper.html" class="nav-link">Sniper</a>
     <a href="./og-detector.html" class="nav-link">OG Detector</a>
     <a href="./telegram-bot.html" class="nav-link">Telegram Bot</a>
     <a href="./extension.html" class="nav-link">Extension</a>
@@ -665,6 +748,9 @@ body {
 <!-- Mobile Menu -->
 <div class="mobile-menu" id="mobileMenu">
   <a href="./index.html">🏠 App</a>
+  <a href="./compare.html">⚖️ Compare</a>
+  <a href="./gems.html">💎 Gems</a>
+  <a href="./sniper.html">🎯 Sniper</a>
   <a href="./og-detector.html">🔍 OG Detector</a>
   <a href="./telegram-bot.html">🤖 Telegram Bot</a>
   <a href="./extension.html">🧩 Extension</a>
