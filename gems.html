@@ -33,63 +33,47 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 6px; }
 
-/* ── HEADER ── */
-.header {
+/* ── HEADER / NAV ── */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 24px;
   background: rgba(6, 10, 16, 0.95);
-  backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--card-border);
-  padding: 16px 24px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  backdrop-filter: blur(10px);
 }
-.header-inner {
-  max-width: 1100px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.nav-logo {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; color: #fff;
+  font-family: var(--mono); font-weight: 700; font-size: 13px;
 }
-.header-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-decoration: none;
+.nav-logo img { height: 28px; }
+.nav-links { display: flex; gap: 24px; }
+.nav-links a {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  color: var(--text2); text-decoration: none; letter-spacing: 0.5px;
+  transition: color .15s;
 }
-.header-logo img {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+.nav-links a:hover, .nav-links a.active { color: var(--cyan); }
+.nav-menu-btn {
+  display: none; background: var(--card); border: 1px solid var(--card-border);
+  color: #fff; font-size: 18px; padding: 6px 10px; border-radius: 6px; cursor: pointer;
 }
-.header-logo-text {
-  font-family: var(--mono);
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 1px;
+.nav-mobile-menu {
+  display: none; position: fixed; top: 53px; left: 0; right: 0;
+  background: var(--bg); border-bottom: 1px solid var(--card-border);
+  flex-direction: column; padding: 12px; z-index: 999;
 }
-.header-logo-sub {
-  font-size: 11px;
-  color: var(--gold);
-  font-weight: 400;
+.nav-mobile-menu.open { display: flex; }
+.nav-mobile-menu a {
+  padding: 12px 16px; color: var(--text); text-decoration: none;
+  font-family: var(--mono); font-size: 12px; border-radius: 8px;
 }
-.header-back {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--bg3);
-  border: 1px solid var(--card-border);
-  border-radius: 8px;
-  color: var(--text);
-  text-decoration: none;
-  font-family: var(--mono);
-  font-size: 12px;
-  transition: all 0.15s;
-}
-.header-back:hover {
-  border-color: var(--cyan);
-  color: var(--cyan);
+.nav-mobile-menu a:hover { background: var(--card); color: var(--cyan); }
+.nav-mobile-menu a.active { color: var(--cyan); }
+@media (max-width: 900px) {
+  .nav-links { display: none; }
+  .nav-menu-btn { display: block; }
 }
 
 /* ── CONTAINER ── */
@@ -97,6 +81,7 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px;
+  padding-top: 77px;
 }
 
 /* ── HERO SECTION ── */
@@ -593,8 +578,7 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
 
 /* ── MOBILE ── */
 @media (max-width: 768px) {
-  .container { padding: 16px; }
-  .header { padding: 12px 16px; }
+  .container { padding: 16px; padding-top: 77px; }
   .hero { padding: 40px 16px; }
   .hero-icon { font-size: 48px; }
   .hero-title { font-size: 24px; }
@@ -616,19 +600,40 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
 </head>
 <body>
 
-<!-- HEADER -->
-<header class="header">
-  <div class="header-inner">
-    <a href="index.html" class="header-logo">
-      <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="Logo">
-      <div>
-        <div class="header-logo-text">FIND THE GEM</div>
-        <div class="header-logo-sub">💎 AI-Powered Scanner</div>
-      </div>
-    </a>
-    <a href="index.html" class="header-back">← Back to App</a>
+<!-- NAV -->
+<nav class="nav">
+  <a href="./index.html" class="nav-logo">
+    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="Logo">
+    <span>DEXSCREENER AI</span>
+  </a>
+  <div class="nav-links">
+    <a href="./index.html">App</a>
+    <a href="./compare.html">Compare</a>
+    <a href="./gems.html" class="active">Gems</a>
+    <a href="./sniper.html">Sniper</a>
+    <a href="./og-detector.html">OG Detector</a>
+    <a href="./telegram-bot.html">Telegram Bot</a>
+    <a href="./extension.html">Extension</a>
+    <a href="./promote.html">Promote</a>
+    <a href="./litepaper.html">Litepaper</a>
+    <a href="https://t.me/dexscreeneraitoken" target="_blank">Telegram</a>
+    <a href="https://x.com/dexscreenerai" target="_blank">Twitter</a>
   </div>
-</header>
+  <button class="nav-menu-btn" onclick="document.getElementById('mobileMenu').classList.toggle('open'); this.textContent = this.textContent === '☰' ? '✕' : '☰'">☰</button>
+</nav>
+<div class="nav-mobile-menu" id="mobileMenu">
+  <a href="./index.html">🏠 App</a>
+  <a href="./compare.html">⚖️ Compare</a>
+  <a href="./gems.html" class="active">💎 Gems</a>
+  <a href="./sniper.html">🎯 Sniper</a>
+  <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./telegram-bot.html">🤖 Telegram Bot</a>
+  <a href="./extension.html">🧩 Extension</a>
+  <a href="./promote.html">⭐ Promote</a>
+  <a href="./litepaper.html">📄 Litepaper</a>
+  <a href="https://t.me/dexscreeneraitoken" target="_blank">💬 Telegram</a>
+  <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
+</div>
 
 <!-- CONTAINER -->
 <div class="container">
