@@ -529,17 +529,64 @@ body {
   line-height: 1.7;
 }
 
-/* Responsive */
-@media (max-width: 600px) {
-  .header h1 { font-size: 28px; }
+/* Responsive - Tablet/Mobile */
+@media (max-width: 768px) {
+  .container { padding: 100px 16px 32px; }
+  .header { margin-bottom: 28px; }
+  .header h1 { font-size: 28px; letter-spacing: 1px; }
   .header-icon { font-size: 48px; }
+  .header p { font-size: 14px; }
+
+  .search-box { padding: 16px; border-radius: 12px; }
   .search-row { flex-direction: column; }
-  .search-btn { width: 100%; }
+  .search-btn { width: 100%; min-height: 44px; font-size: 14px; }
+  .search-input { min-height: 44px; font-size: 14px; }
+
+  .chain-btn { min-height: 44px; padding: 10px 14px; font-size: 12px; }
+
+  .results-box { border-radius: 12px; }
+  .results-header { padding: 14px 16px; }
+  .results-list { max-height: none; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .result-item { padding: 14px 16px; gap: 10px; }
   .result-row { flex-wrap: wrap; gap: 10px; }
-  .result-stats { align-items: flex-start; flex-direction: row; gap: 12px; }
-  .result-meta { flex-direction: column; gap: 4px; }
-  .result-actions { padding-left: 0; }
-  .action-btn { padding: 6px 10px; font-size: 10px; }
+  .result-rank { width: 40px; }
+  .result-badge { font-size: 9px; padding: 5px 8px; }
+  .result-info { min-width: 0; flex-basis: calc(100% - 110px); }
+  .result-name { font-size: 14px; }
+  .result-meta { font-size: 10px; flex-direction: column; gap: 4px; }
+  .result-stats {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .result-actions {
+    padding-left: 0;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .action-btn {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 12px;
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+  .copy-btn { min-height: 44px; padding: 10px 12px; font-size: 11px; }
+
+  .info-box { padding: 16px; border-radius: 10px; }
+  .info-text { font-size: 13px; }
+}
+
+/* Responsive - Small Mobile */
+@media (max-width: 600px) {
+  .container { padding: 90px 12px 24px; }
+  .header h1 { font-size: 22px; }
+  .header p { font-size: 13px; }
+  .result-info { flex-basis: 100%; }
+  .action-btn { flex: 1 1 calc(50% - 4px); min-width: 0; font-size: 11px; }
 }
 
 /* Promo Banner */
