@@ -5687,14 +5687,32 @@ function timeAgo(date) {
   return date.toLocaleDateString();
 }
 
+const aiCache = new Map(); // Cache AI responses: key = "symbol_type" -> {data, timestamp}
+const AI_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 async function handleAIOption(type) {
   if (!currentAIToken || isLoading) return;
-  
+
   const token = currentAIToken;
   hideAIOptions();
-  
+
   const c = conversations.find(x => x.id === activeId);
   const isCTO = detectCTO(token.description);
+
+  // Check cache
+  const cacheKey = `${token.symbol}_${type}_${Math.round(token.price * 1000)}`;
+  const cached = aiCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp) < AI_CACHE_TTL) {
+    const typeLabels = { pumping: '💡 Why Pumping?', strategy: '🎯 AI Strategy', quick: '⚡ Quick Take', target: '🔮 Target' };
+    c.messages.push({ role: 'user', content: `${typeLabels[type]} for $${token.symbol}` });
+    c.messages.push(cached.data);
+    c.title = `${typeLabels[type].split(' ')[0]} $${token.symbol}`;
+    renderSidebar();
+    renderMessages();
+    updateTopbar();
+    scrollToLastUserMessage();
+    return;
+  }
   
   // For 'pumping', fetch news first
   let newsContext = '';
@@ -5929,7 +5947,13 @@ Then ONE sentence explaining why. Be direct and decisive.`,
       text: `❌ AI analysis error: ${err.message}` 
     });
   }
-  
+
+  // Cache the last assistant message (skip errors)
+  const lastMsg = c.messages[c.messages.length - 1];
+  if (lastMsg && lastMsg.role === 'assistant' && !lastMsg.text?.startsWith('⚠️') && !lastMsg.text?.startsWith('❌')) {
+    aiCache.set(cacheKey, { data: { ...lastMsg }, timestamp: Date.now() });
+  }
+
   isLoading = false;
   renderMessages();
   scrollToLastUserMessage();
@@ -5940,10 +5964,20 @@ Then ONE sentence explaining why. Be direct and decisive.`,
 // ═══════════════════════════════════════════
 async function getAIBuySellOpinion(token) {
   if (isLoading) return;
-  
+
   const c = conversations.find(x => x.id === activeId);
-  
-  // Build context
+
+  // Check cache
+  const cacheKey = `${token.symbol}_buysell_${Math.round((token.price || 0) * 1000)}`;
+  const cached = aiCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp) < AI_CACHE_TTL) {
+    c.messages.push({ role: 'user', content: `🤖 AI Opinion: Should I buy or sell $${token.symbol}?` });
+    c.messages.push(cached.data);
+    renderMessages();
+    scrollToLastUserMessage();
+    return;
+  }
+
   const context = `Token: $${token.symbol}
 Chain: ${token.chain || 'Unknown'}
 Price: ${fP(token.price || 0)}
@@ -5967,11 +6001,10 @@ Based on this data, give me your HONEST opinion:
 
 Be direct and decisive. No fluff.`;
 
-  // Show user message
   c.messages.push({ role: 'user', content: `🤖 AI Opinion: Should I buy or sell $${token.symbol}?` });
   renderMessages();
   showLoading();
-  
+
   try {
     const response = await askAI(prompt, {
       symbol: token.symbol,
@@ -5981,28 +6014,21 @@ Be direct and decisive. No fluff.`;
       liquidity: token.liq,
       volume24h: token.vol24h
     });
-    
+
     hideLoading();
-    
+
     if (response.error) {
-      c.messages.push({ 
-        role: 'assistant', 
-        text: `⚠️ ${response.message || 'AI opinion failed. Please try again.'}` 
-      });
+      c.messages.push({ role: 'assistant', text: `⚠️ ${response.message || 'AI opinion failed. Please try again.'}` });
     } else {
-      c.messages.push({ 
-        role: 'assistant', 
-        text: `🤖 **AI Opinion on $${token.symbol}**\n\n${response.answer}` 
-      });
+      const msg = { role: 'assistant', text: `🤖 **AI Opinion on $${token.symbol}**\n\n${response.answer}` };
+      c.messages.push(msg);
+      aiCache.set(cacheKey, { data: { ...msg }, timestamp: Date.now() });
     }
   } catch (err) {
     hideLoading();
-    c.messages.push({ 
-      role: 'assistant', 
-      text: `❌ AI error: ${err.message}` 
-    });
+    c.messages.push({ role: 'assistant', text: `❌ AI error: ${err.message}` });
   }
-  
+
   isLoading = false;
   renderMessages();
   scrollToLastUserMessage();
