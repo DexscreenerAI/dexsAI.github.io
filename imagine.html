@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -18,104 +17,9 @@ button:hover { filter:brightness(1.1) !important; }
 @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 @keyframes scanline { 0% { top:-100%; } 100% { top:200%; } }
 @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
-
-/* ═══ NAVBAR ═══ */
-.navbar {
-  position: fixed; top: 0; left: 0; right: 0; height: 56px;
-  background: rgba(6,10,16,0.95); backdrop-filter: blur(10px);
-  border-bottom: 1px solid #1a2636; display: flex; align-items: center;
-  padding: 0 20px; z-index: 1000;
-}
-.nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; }
-.nav-logo img { width: 28px; height: 28px; border-radius: 6px; }
-.nav-logo span { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 1px; }
-.nav-links { display: flex; align-items: center; gap: 18px; margin-left: auto; }
-.nav-link {
-  color: rgba(255,255,255,0.50); text-decoration: none;
-  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
-  letter-spacing: 0.5px; padding: 6px 10px; border-radius: 6px; transition: all 0.15s;
-}
-.nav-link:hover { color: #fff; background: #101822; }
-.nav-link.active { color: #00d4ff; background: rgba(0,212,255,0.12); }
-.mobile-menu-btn {
-  display: none; background: none; border: none; color: #dfe4ed;
-  font-size: 24px; cursor: pointer; padding: 4px; margin-left: auto;
-}
-.mobile-menu {
-  display: none; position: fixed; top: 56px; left: 0; right: 0;
-  background: #0b1018; border-bottom: 1px solid #1a2636;
-  padding: 12px; z-index: 999; flex-direction: column; gap: 4px;
-}
-.mobile-menu.open { display: flex; }
-.mobile-menu a {
-  color: #dfe4ed; text-decoration: none; font-family: 'JetBrains Mono', monospace;
-  font-size: 12px; padding: 12px 16px; border-radius: 8px; transition: background 0.15s;
-}
-.mobile-menu a:hover { background: #101822; }
-.mobile-menu a.active { color: #00d4ff; background: rgba(0,212,255,0.12); }
-.nav-social-icons { display: none; align-items: center; gap: 12px; margin-left: auto; margin-right: 12px; }
-.nav-social-icons a {
-  display: flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px; border-radius: 8px; background: #101822;
-  color: rgba(255,255,255,0.50); transition: all 0.15s;
-}
-.nav-social-icons a:hover { background: rgba(0,212,255,0.12); color: #00d4ff; }
-.nav-social-icons svg { width: 18px; height: 18px; }
-@media (max-width: 900px) {
-  .nav-links { display: none; }
-  .mobile-menu-btn { display: block; }
-  .nav-social-icons { display: flex; }
-}
 </style>
 </head>
 <body>
-
-<!-- NAVBAR -->
-<nav class="navbar">
-  <a href="./index.html" class="nav-logo">
-    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="DexScreener AI">
-    <span>DEXSCREENER AI</span>
-  </a>
-  <div class="nav-links">
-    <a href="./index.html" class="nav-link">App</a>
-    <a href="./compare.html" class="nav-link">Compare</a>
-    <a href="./gems.html" class="nav-link">Gems</a>
-    <a href="./sniper.html" class="nav-link">Sniper</a>
-    <a href="./og-detector.html" class="nav-link">OG Detector</a>
-    <a href="./telegram-bot.html" class="nav-link">Telegram Bot</a>
-    <a href="./extension.html" class="nav-link">Extension</a>
-    <a href="./promote.html" class="nav-link">Promote</a>
-    <a href="./imagine.html" class="nav-link active">Imagine</a>
-    <a href="./litepaper.html" class="nav-link">Litepaper</a>
-    <a href="https://t.me/dexscreeneraitoken" target="_blank" class="nav-link">Telegram</a>
-    <a href="https://x.com/dexscreenerai" target="_blank" class="nav-link">Twitter</a>
-  </div>
-  <div class="nav-social-icons">
-    <a href="https://t.me/dexscreeneraitoken" target="_blank" title="Telegram">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
-    </a>
-    <a href="https://x.com/dexscreenerai" target="_blank" title="Twitter">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-    </a>
-  </div>
-  <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
-</nav>
-
-<!-- Mobile Menu -->
-<div class="mobile-menu" id="mobileMenu">
-  <a href="./index.html">🏠 App</a>
-  <a href="./compare.html">⚖️ Compare</a>
-  <a href="./gems.html">💎 Gems</a>
-  <a href="./sniper.html">🎯 Sniper</a>
-  <a href="./og-detector.html">🔍 OG Detector</a>
-  <a href="./telegram-bot.html">🤖 Telegram Bot</a>
-  <a href="./extension.html">🧩 Extension</a>
-  <a href="./promote.html">⭐ Promote</a>
-  <a href="./imagine.html" class="active">🎨 Imagine</a>
-  <a href="./litepaper.html">📄 Litepaper</a>
-  <a href="https://t.me/dexscreeneraitoken" target="_blank">💬 Telegram</a>
-  <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
-</div>
 
 <div id="app"></div>
 
@@ -181,7 +85,7 @@ function render(){
     <div style="position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0 16px 80px;">
 
       <!-- HEADER -->
-      <div style="padding:80px 0 20px;">
+      <div style="padding:24px 0 20px;">
         <div style="display:flex;align-items:center;gap:12px;">
           <div style="width:40px;height:40px;border-radius:10px;background:${V.cd};border:1px solid rgba(0,212,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${V.cy}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
@@ -428,11 +332,11 @@ async function generate(){
         sceneContent = {type:"image",source:{type:"url",url:sceneUrl}};
       }
 
-      // Step 1: Claude analyze
+      // Step 1: Claude analyze (via backend proxy — no CORS)
       stepText=`Analyzing scene ${si+1}/${total}...`; render();
-      const res = await fetch("https://api.anthropic.com/v1/messages",{
+      const res = await fetch("https://dexscreener-telegram-bot-production.up.railway.app/api/vision",{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,messages:[{role:"user",content:[
+        body:JSON.stringify({max_tokens:400,messages:[{role:"user",content:[
           sceneContent,
           charContent,
           {type:"text",text:`IMAGE 1 = a reference scene. IMAGE 2 = a character/subject.\n\nYour job: write ONE image generation prompt that recreates the EXACT same scene, composition, framing, lighting, mood, setting, and pose from IMAGE 1 — but replace the main subject with the character from IMAGE 2.\n\nDescribe the character from IMAGE 2 in extreme visual detail (species, colors, clothing, accessories, expression, features).\nDescribe the scene from IMAGE 1 in extreme detail (setting, lighting, camera angle, mood, composition, background elements).\n\nCombine both into a single cohesive prompt. Add this style suffix at the end: ${style.suffix}\n\nOutput ONLY the raw prompt. No preamble, no explanation.`}
@@ -466,17 +370,9 @@ async function generate(){
 }
 
 // ═══════════════════════════════════════════
-// MOBILE MENU
-// ═══════════════════════════════════════════
-function toggleMobileMenu(){
-  document.getElementById('mobileMenu').classList.toggle('open');
-}
-
-// ═══════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════
 render();
 </script>
-
 </body>
 </html>
