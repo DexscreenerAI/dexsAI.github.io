@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚡ AI SNIPER PRO v7.1 - SOLANA MEGA SCANNER</title>
+<title>⚡ SOLANA SNIPER v7.2 - PUMP.FUN EDITION</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -20,6 +20,7 @@
   --orange: #ff9500;
   --pink: #ff6b9d;
   --solana: #14f195;
+  --pump: #00e5ff;
   --text: #e2e8f0;
   --text2: #94a3b8;
   --border: #2a2a2a;
@@ -34,16 +35,19 @@ body {
 
 .header {
   background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
-  border-bottom: 2px solid var(--solana);
+  border-bottom: 2px solid var(--pump);
   padding: 20px;
   text-align: center;
 }
 .header h1 {
-  font-size: 28px;
-  letter-spacing: 4px;
-  text-shadow: 0 0 20px var(--solana);
+  font-size: 26px;
+  letter-spacing: 3px;
+  text-shadow: 0 0 20px var(--pump);
   margin-bottom: 8px;
-  color: var(--solana);
+  background: linear-gradient(90deg, var(--solana), var(--pump));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 .header p {
   font-size: 11px;
@@ -54,11 +58,11 @@ body {
   display: inline-block;
   margin-top: 8px;
   padding: 4px 12px;
-  background: rgba(20,241,149,0.2);
-  border: 1px solid var(--solana);
+  background: rgba(0,229,255,0.2);
+  border: 1px solid var(--pump);
   border-radius: 12px;
   font-size: 9px;
-  color: var(--solana);
+  color: var(--pump);
   letter-spacing: 1px;
 }
 .mode-badge {
@@ -75,14 +79,14 @@ body {
   color: var(--red);
 }
 .mode-badge.active {
-  background: rgba(20,241,149,0.1);
-  border-color: var(--solana);
-  color: var(--solana);
+  background: rgba(0,229,255,0.1);
+  border-color: var(--pump);
+  color: var(--pump);
   animation: pulse 2s infinite;
 }
 @keyframes pulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--solana); }
-  50% { opacity: 0.7; box-shadow: 0 0 20px var(--solana); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--pump); }
+  50% { opacity: 0.7; box-shadow: 0 0 20px var(--pump); }
 }
 
 .pnl-banner {
@@ -94,7 +98,7 @@ body {
   max-width: 1600px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
   gap: 8px;
 }
 .pnl-box {
@@ -104,12 +108,12 @@ body {
   border-radius: 8px;
 }
 .pnl-box.main {
-  border: 2px solid var(--solana);
-  background: rgba(20,241,149,0.05);
+  border: 2px solid var(--pump);
+  background: rgba(0,229,255,0.05);
 }
 .pnl-box.highlight {
-  border: 1px solid var(--cyan);
-  background: rgba(0,212,255,0.05);
+  border: 1px solid var(--solana);
+  background: rgba(20,241,149,0.05);
 }
 .pnl-label {
   font-size: 8px;
@@ -118,7 +122,7 @@ body {
   margin-bottom: 4px;
 }
 .pnl-value {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
 }
 .pnl-value.green { color: var(--green); }
@@ -127,6 +131,7 @@ body {
 .pnl-value.yellow { color: var(--yellow); }
 .pnl-value.purple { color: var(--purple); }
 .pnl-value.solana { color: var(--solana); }
+.pnl-value.pump { color: var(--pump); }
 
 .controls {
   display: flex;
@@ -143,22 +148,22 @@ body {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 2px;
-  border: 2px solid var(--solana);
+  border: 2px solid var(--pump);
   border-radius: 8px;
   background: transparent;
-  color: var(--solana);
+  color: var(--pump);
   cursor: pointer;
   transition: all 0.2s;
 }
 .ctrl-btn:hover {
-  background: var(--solana);
+  background: var(--pump);
   color: var(--bg);
-  box-shadow: 0 0 20px var(--solana);
+  box-shadow: 0 0 20px var(--pump);
 }
 .ctrl-btn.danger { border-color: var(--red); color: var(--red); }
 .ctrl-btn.danger:hover { background: var(--red); color: white; }
-.ctrl-btn.secondary { border-color: var(--cyan); color: var(--cyan); }
-.ctrl-btn.secondary:hover { background: var(--cyan); color: var(--bg); }
+.ctrl-btn.secondary { border-color: var(--solana); color: var(--solana); }
+.ctrl-btn.secondary:hover { background: var(--solana); color: var(--bg); }
 .ctrl-btn.warning { border-color: var(--orange); color: var(--orange); }
 .ctrl-btn.warning:hover { background: var(--orange); color: var(--bg); }
 
@@ -179,7 +184,7 @@ body {
 .modal.show { display: flex; }
 .modal-content {
   background: var(--bg2);
-  border: 2px solid var(--solana);
+  border: 2px solid var(--pump);
   border-radius: 12px;
   padding: 25px;
   width: 100%;
@@ -192,7 +197,7 @@ body {
   text-align: center;
   margin-bottom: 20px;
   letter-spacing: 2px;
-  color: var(--solana);
+  color: var(--pump);
 }
 .settings-grid {
   display: grid;
@@ -221,7 +226,7 @@ body {
 }
 .setting input:focus {
   outline: none;
-  border-color: var(--solana);
+  border-color: var(--pump);
 }
 .setting-group {
   grid-column: 1 / -1;
@@ -232,7 +237,7 @@ body {
 }
 .setting-group-title {
   font-size: 12px;
-  color: var(--solana);
+  color: var(--pump);
   margin-bottom: 12px;
   letter-spacing: 1px;
 }
@@ -251,7 +256,7 @@ body {
 .checkbox-row input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  accent-color: var(--solana);
+  accent-color: var(--pump);
 }
 .checkbox-row label {
   font-size: 12px;
@@ -289,7 +294,7 @@ body {
   background: var(--red);
 }
 .scanner-dot.active {
-  background: var(--solana);
+  background: var(--pump);
   animation: blink 1s infinite;
 }
 @keyframes blink {
@@ -302,12 +307,14 @@ body {
 }
 .scanner-stats {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   font-size: 11px;
   flex-wrap: wrap;
 }
 .scanner-stat { color: var(--text2); }
-.scanner-stat span { color: var(--solana); font-weight: 700; }
+.scanner-stat span { color: var(--pump); font-weight: 700; }
+.scanner-stat.pump span { color: var(--pump); }
+.scanner-stat.dex span { color: var(--solana); }
 
 .main {
   display: flex;
@@ -362,7 +369,7 @@ body {
 .section-title {
   font-size: 13px;
   letter-spacing: 2px;
-  color: var(--solana);
+  color: var(--pump);
 }
 .section-badge {
   font-size: 10px;
@@ -382,7 +389,7 @@ body {
   border-radius: 10px;
   padding: 15px;
   margin-bottom: 12px;
-  border-left: 4px solid var(--solana);
+  border-left: 4px solid var(--pump);
   transition: all 0.3s;
 }
 .pos-card:hover { background: var(--bg4); }
@@ -419,7 +426,7 @@ body {
   font-size: 16px;
   font-weight: 700;
   overflow: hidden;
-  border: 2px solid var(--solana);
+  border: 2px solid var(--pump);
 }
 .pos-logo img {
   width: 100%;
@@ -436,7 +443,7 @@ body {
 }
 .pos-chain {
   font-size: 10px;
-  color: var(--solana);
+  color: var(--pump);
   margin-top: 2px;
 }
 .trade-type {
@@ -448,6 +455,7 @@ body {
 .trade-type.quick { background: rgba(0,212,255,0.2); color: var(--cyan); }
 .trade-type.long { background: rgba(168,85,247,0.2); color: var(--purple); }
 .trade-type.moon { background: rgba(255,107,157,0.2); color: var(--pink); }
+.trade-type.pump { background: rgba(0,229,255,0.2); color: var(--pump); }
 
 .pos-pnl { text-align: right; }
 .pos-pnl-value { font-size: 20px; font-weight: 700; }
@@ -480,7 +488,7 @@ body {
 }
 .pos-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--solana), var(--cyan));
+  background: linear-gradient(90deg, var(--pump), var(--solana));
   border-radius: 3px;
   transition: width 0.3s;
 }
@@ -502,6 +510,8 @@ body {
 .pos-tag.trailing { background: rgba(255,149,0,0.2); color: var(--orange); }
 .pos-tag.secured { background: rgba(0,255,136,0.2); color: var(--green); }
 .pos-tag.moon { background: rgba(255,107,157,0.3); color: var(--pink); }
+.pos-tag.pump { background: rgba(0,229,255,0.2); color: var(--pump); }
+.pos-tag.trending { background: rgba(255,215,0,0.2); color: var(--yellow); }
 
 .pos-actions {
   display: flex;
@@ -522,10 +532,11 @@ body {
   text-decoration: none;
 }
 .pos-action-btn:hover {
-  border-color: var(--solana);
-  color: var(--solana);
+  border-color: var(--pump);
+  color: var(--pump);
 }
 .pos-action-btn.dex { border-color: var(--solana); color: var(--solana); }
+.pos-action-btn.pump { border-color: var(--pump); color: var(--pump); }
 .pos-action-btn.close { border-color: var(--red); color: var(--red); }
 
 .history-item {
@@ -543,7 +554,7 @@ body {
 }
 .history-item:hover { 
   background: var(--bg4); 
-  border-color: var(--solana);
+  border-color: var(--pump);
 }
 .history-time { color: var(--text2); font-size: 10px; }
 .history-token { color: var(--text); font-weight: 600; }
@@ -581,6 +592,7 @@ body {
 .log-text .purple { color: var(--purple); }
 .log-text .orange { color: var(--orange); }
 .log-text .solana { color: var(--solana); }
+.log-text .pump { color: var(--pump); }
 
 .empty {
   text-align: center;
@@ -593,10 +605,10 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--solana); }
+::-webkit-scrollbar-thumb:hover { background: var(--pump); }
 
 @media (max-width: 768px) {
-  .header h1 { font-size: 20px; }
+  .header h1 { font-size: 18px; }
   .pnl-grid { grid-template-columns: repeat(2, 1fr); }
   .trades-row, .bottom-row { grid-template-columns: 1fr; }
   .settings-grid { grid-template-columns: 1fr; }
@@ -609,9 +621,9 @@ body {
 <body>
 
 <header class="header">
-  <h1>☀️ SOLANA MEGA SNIPER v7.1</h1>
-  <p>🚀 100X Token Discovery • Deep DEX Search • Re-Trade Enabled • Smart Trailing • DCA Out</p>
-  <span class="version-badge">SOLANA ONLY • MEGA SCANNER</span>
+  <h1>🚀 SOLANA SNIPER v7.2 - PUMP.FUN EDITION</h1>
+  <p>🔥 Pump.fun New Listings + Trending • DexScreener Deep Search • 100x Token Discovery</p>
+  <span class="version-badge">PUMP.FUN + DEXSCREENER • MEGA SCANNER</span>
   <span class="mode-badge" id="modeBadge">🔴 STOPPED</span>
 </header>
 
@@ -623,7 +635,7 @@ body {
     </div>
     <div class="pnl-box">
       <div class="pnl-label">💵 BALANCE</div>
-      <div class="pnl-value solana" id="balance">$10,000</div>
+      <div class="pnl-value pump" id="balance">$10,000</div>
     </div>
     <div class="pnl-box highlight">
       <div class="pnl-label">🔒 SECURED</div>
@@ -638,16 +650,16 @@ body {
       <div class="pnl-value green" id="bestTrade">$0</div>
     </div>
     <div class="pnl-box">
-      <div class="pnl-label">⚡ QUICK</div>
-      <div class="pnl-value cyan" id="quickCount">0</div>
+      <div class="pnl-label">🎰 PUMP.FUN</div>
+      <div class="pnl-value pump" id="pumpCount">0</div>
     </div>
     <div class="pnl-box">
-      <div class="pnl-label">🌙 LONG</div>
-      <div class="pnl-value purple" id="longCount">0</div>
+      <div class="pnl-label">📈 DEX</div>
+      <div class="pnl-value solana" id="dexCount">0</div>
     </div>
     <div class="pnl-box">
-      <div class="pnl-label">🌕 MOON</div>
-      <div class="pnl-value" style="color:var(--pink)" id="moonCount">0</div>
+      <div class="pnl-label">🔥 TRENDING</div>
+      <div class="pnl-value yellow" id="trendingCount">0</div>
     </div>
     <div class="pnl-box">
       <div class="pnl-label">📈 TRADES</div>
@@ -655,7 +667,7 @@ body {
     </div>
     <div class="pnl-box">
       <div class="pnl-label">🔍 SCANNED</div>
-      <div class="pnl-value solana" id="totalScanned">0</div>
+      <div class="pnl-value pump" id="totalScanned">0</div>
     </div>
   </div>
 </div>
@@ -671,7 +683,7 @@ body {
 
 <div class="modal" id="settingsModal">
   <div class="modal-content">
-    <div class="modal-title">☀️ SOLANA MEGA SCANNER SETTINGS</div>
+    <div class="modal-title">🚀 PUMP.FUN SNIPER SETTINGS</div>
     
     <div class="setting-group">
       <div class="setting-group-title">💰 TRADING</div>
@@ -682,7 +694,7 @@ body {
         </div>
         <div class="setting">
           <label>MIN SCORE</label>
-          <input type="number" id="minScore" value="65" min="40" max="95">
+          <input type="number" id="minScore" value="60" min="40" max="95">
           <span class="setting-hint">Lower = more trades</span>
         </div>
       </div>
@@ -733,7 +745,7 @@ body {
       <div class="settings-grid">
         <div class="setting">
           <label>MIN MC ($)</label>
-          <input type="number" id="minMC" value="20000" min="5000">
+          <input type="number" id="minMC" value="15000" min="5000">
         </div>
         <div class="setting">
           <label>MAX MC ($)</label>
@@ -741,7 +753,7 @@ body {
         </div>
         <div class="setting">
           <label>MIN LIQUIDITY ($)</label>
-          <input type="number" id="minLiquidity" value="8000" min="3000">
+          <input type="number" id="minLiquidity" value="5000" min="2000">
         </div>
         <div class="setting">
           <label>MAX HOLD (min)</label>
@@ -760,13 +772,13 @@ body {
   <div class="scanner-bar">
     <div class="scanner-info">
       <div class="scanner-dot" id="scannerDot"></div>
-      <div class="scanner-text" id="scannerText">Click START to begin SOLANA MEGA SCAN</div>
+      <div class="scanner-text" id="scannerText">Click START to begin PUMP.FUN + DEX MEGA SCAN</div>
     </div>
     <div class="scanner-stats">
       <div class="scanner-stat">Uptime: <span id="uptimeDisplay">--:--</span></div>
-      <div class="scanner-stat">Scanned: <span id="scannedCount">0</span></div>
-      <div class="scanner-stat">Opportunities: <span id="oppsCount">0</span></div>
-      <div class="scanner-stat">Cache: <span id="cacheCount">0</span></div>
+      <div class="scanner-stat pump">Pump.fun: <span id="pumpScanned">0</span></div>
+      <div class="scanner-stat dex">DEX: <span id="dexScanned">0</span></div>
+      <div class="scanner-stat">Opps: <span id="oppsCount">0</span></div>
       <div class="scanner-stat">Phase: <span id="scanPhase">-</span></div>
     </div>
   </div>
@@ -825,11 +837,15 @@ body {
 
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
-// SOLANA MEGA SNIPER v7.1 - 100X TOKEN DISCOVERY
+// SOLANA SNIPER v7.2 - PUMP.FUN EDITION
+// Pump.fun New Listings + Trending + DexScreener Deep Search
 // ══════════════════════════════════════════════════════════════════════════════
 
 const $ = id => document.getElementById(id);
-const AI_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/chat';
+
+// API ENDPOINTS
+const PUMP_API = 'https://frontend-api-v3.pump.fun';
+const DEX_API = 'https://api.dexscreener.com';
 
 // STATE
 const INITIAL_BALANCE = 10000;
@@ -846,17 +862,16 @@ let isRunning = false;
 let scanInterval = null;
 let updateInterval = null;
 let sessionStartTime = null;
-let totalScannedSession = 0;
+let pumpScannedTotal = 0;
+let dexScannedTotal = 0;
 
-// CACHE - 3 minutes pour permettre re-trading rapide
+// CACHE - 3 minutes
 const analyzedCache = new Map();
 const CACHE_DURATION = 3 * 60 * 1000;
 
 function getCachedAnalysis(address) {
   const cached = analyzedCache.get(address);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.result;
-  }
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) return cached.result;
   analyzedCache.delete(address);
   return null;
 }
@@ -864,15 +879,12 @@ function getCachedAnalysis(address) {
 function setCachedAnalysis(address, result) {
   analyzedCache.set(address, { result, timestamp: Date.now() });
   if (analyzedCache.size > 5000) {
-    const entries = [...analyzedCache.entries()].sort((a, b) => a[1].timestamp - b[1].timestamp).slice(0, 2000);
-    entries.forEach(([k]) => analyzedCache.delete(k));
+    [...analyzedCache.entries()].sort((a, b) => a[1].timestamp - b[1].timestamp).slice(0, 2000).forEach(([k]) => analyzedCache.delete(k));
   }
-  $('cacheCount').textContent = analyzedCache.size;
 }
 
 function clearCache() {
   analyzedCache.clear();
-  $('cacheCount').textContent = '0';
   addLog('🗑️', 'Cache cleared');
 }
 
@@ -898,7 +910,7 @@ function renderLogs() {
 function getSettings() {
   return {
     positionSize: parseInt($('positionSize')?.value) || 100,
-    minScore: parseInt($('minScore')?.value) || 65,
+    minScore: parseInt($('minScore')?.value) || 60,
     trailActivation: parseInt($('trailActivation')?.value) || 10,
     trailDistance: parseInt($('trailDistance')?.value) || 20,
     dcaEnabled: $('dcaEnabled')?.checked ?? true,
@@ -906,9 +918,9 @@ function getSettings() {
     dca1Sell: parseInt($('dca1Sell')?.value) || 35,
     dca2Pct: parseInt($('dca2Pct')?.value) || 40,
     dca2Sell: parseInt($('dca2Sell')?.value) || 35,
-    minMC: parseInt($('minMC')?.value) || 20000,
+    minMC: parseInt($('minMC')?.value) || 15000,
     maxMC: parseInt($('maxMC')?.value) || 15000000,
-    minLiquidity: parseInt($('minLiquidity')?.value) || 8000,
+    minLiquidity: parseInt($('minLiquidity')?.value) || 5000,
     maxHold: parseInt($('maxHold')?.value) || 30
   };
 }
@@ -921,16 +933,17 @@ function startBot() {
   if (isRunning) { stopBot(); return; }
   isRunning = true;
   sessionStartTime = Date.now();
-  totalScannedSession = 0;
+  pumpScannedTotal = 0;
+  dexScannedTotal = 0;
   
   $('startBtn').textContent = '⏹ STOP';
-  $('modeBadge').textContent = '☀️ SCANNING SOLANA';
+  $('modeBadge').textContent = '🚀 SCANNING';
   $('modeBadge').className = 'mode-badge active';
   $('scannerDot').classList.add('active');
-  addLog('🚀', '<span class="solana">SOLANA MEGA SCANNER STARTED</span>');
+  addLog('🚀', '<span class="pump">PUMP.FUN + DEX MEGA SCANNER STARTED</span>');
   
-  megaScanSolana();
-  scanInterval = setInterval(megaScanSolana, 25000); // Scan every 25 seconds
+  megaScan();
+  scanInterval = setInterval(megaScan, 20000); // Scan every 20 seconds
   updateInterval = setInterval(updatePositions, 4000);
   setInterval(updateUptime, 1000);
 }
@@ -967,7 +980,8 @@ function resetBot() {
   history = [];
   logs = [];
   analyzedCache.clear();
-  totalScannedSession = 0;
+  pumpScannedTotal = 0;
+  dexScannedTotal = 0;
   updateUI();
   renderPositions();
   renderHistory();
@@ -982,342 +996,309 @@ function closeAllPositions() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// MEGA SCAN SOLANA - 100X MORE TOKENS
+// MEGA SCAN - PUMP.FUN + DEXSCREENER
 // ══════════════════════════════════════════════════════════════════════════════
-async function megaScanSolana() {
+async function megaScan() {
   if (!isRunning) return;
   
   const settings = getSettings();
-  const allPairs = new Map();
+  const allTokens = new Map();
   let phase = 0;
   
   const updatePhase = (name) => {
     phase++;
     $('scanPhase').textContent = `${phase}: ${name}`;
-    $('scannerText').textContent = `🔍 Phase ${phase}: ${name} (${allPairs.size} tokens)`;
+    $('scannerText').textContent = `🔍 Phase ${phase}: ${name} (${allTokens.size} tokens)`;
   };
 
   // ═══════════════════════════════════════════════════════════════
-  // PHASE 1: Latest token profiles (newest Solana tokens)
+  // PUMP.FUN SOURCES (Multiple endpoints)
   // ═══════════════════════════════════════════════════════════════
-  updatePhase('New Tokens');
+  
+  // 1. PUMP.FUN - New listings (coins/latest)
+  updatePhase('Pump.fun New Listings');
   try {
-    const res = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(10000) });
-    const data = await res.json();
-    if (Array.isArray(data)) {
-      data.filter(t => t.chainId === 'solana').slice(0, 300).forEach(t => {
-        if (t.tokenAddress) allPairs.set(t.tokenAddress, { address: t.tokenAddress, source: 'new', boost: 18 });
-      });
+    const res = await fetch(`${PUMP_API}/coins/latest?limit=100&offset=0&includeNsfw=false`, { 
+      signal: AbortSignal.timeout(8000),
+      headers: { 'Accept': 'application/json' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        data.forEach(c => {
+          if (c.mint) {
+            allTokens.set(c.mint, { 
+              address: c.mint, 
+              source: 'pump-new', 
+              boost: 25, 
+              pumpData: c,
+              name: c.name,
+              symbol: c.symbol,
+              imageUri: c.image_uri || c.imageUri
+            });
+          }
+        });
+        addLog('🎰', `<span class="pump">Pump.fun New:</span> ${data.length} tokens`);
+      }
+    }
+  } catch(e) { console.log('Pump new error:', e); }
+
+  // 2. PUMP.FUN - King of the hill (trending)
+  updatePhase('Pump.fun Trending');
+  try {
+    const res = await fetch(`${PUMP_API}/coins/king-of-the-hill?includeNsfw=false`, { 
+      signal: AbortSignal.timeout(8000),
+      headers: { 'Accept': 'application/json' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        data.forEach(c => {
+          if (c.mint && !allTokens.has(c.mint)) {
+            allTokens.set(c.mint, { 
+              address: c.mint, 
+              source: 'pump-king', 
+              boost: 30, 
+              pumpData: c,
+              name: c.name,
+              symbol: c.symbol,
+              imageUri: c.image_uri || c.imageUri,
+              isTrending: true
+            });
+          }
+        });
+        addLog('👑', `<span class="yellow">Pump.fun King:</span> ${data.length} tokens`);
+      }
+    }
+  } catch(e) { console.log('Pump king error:', e); }
+
+  // 3. PUMP.FUN - Featured/Promoted
+  updatePhase('Pump.fun Featured');
+  try {
+    const res = await fetch(`${PUMP_API}/coins/featured?limit=50`, { 
+      signal: AbortSignal.timeout(8000),
+      headers: { 'Accept': 'application/json' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        data.forEach(c => {
+          if (c.mint && !allTokens.has(c.mint)) {
+            allTokens.set(c.mint, { 
+              address: c.mint, 
+              source: 'pump-featured', 
+              boost: 28, 
+              pumpData: c,
+              name: c.name,
+              symbol: c.symbol,
+              imageUri: c.image_uri || c.imageUri
+            });
+          }
+        });
+      }
     }
   } catch(e) {}
 
+  // 4. PUMP.FUN - Sort by various metrics
+  const pumpSorts = [
+    { sort: 'last_trade_timestamp', name: 'Recent Trades' },
+    { sort: 'market_cap', name: 'By MC' },
+    { sort: 'created_timestamp', name: 'Newest' }
+  ];
+  
+  for (const sortOpt of pumpSorts) {
+    updatePhase(`Pump.fun ${sortOpt.name}`);
+    try {
+      const res = await fetch(`${PUMP_API}/coins?offset=0&limit=100&sort=${sortOpt.sort}&order=DESC&includeNsfw=false`, { 
+        signal: AbortSignal.timeout(8000),
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          data.forEach(c => {
+            if (c.mint && !allTokens.has(c.mint)) {
+              allTokens.set(c.mint, { 
+                address: c.mint, 
+                source: `pump-${sortOpt.sort}`, 
+                boost: 22, 
+                pumpData: c,
+                name: c.name,
+                symbol: c.symbol,
+                imageUri: c.image_uri || c.imageUri
+              });
+            }
+          });
+        }
+      }
+    } catch(e) {}
+  }
+
+  // 5. PUMP.FUN - Multiple pages of new coins
+  updatePhase('Pump.fun Deep Scan');
+  for (let offset = 100; offset <= 500; offset += 100) {
+    try {
+      const res = await fetch(`${PUMP_API}/coins?offset=${offset}&limit=100&sort=created_timestamp&order=DESC&includeNsfw=false`, { 
+        signal: AbortSignal.timeout(6000),
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          data.forEach(c => {
+            if (c.mint && !allTokens.has(c.mint)) {
+              allTokens.set(c.mint, { 
+                address: c.mint, 
+                source: 'pump-deep', 
+                boost: 18, 
+                pumpData: c,
+                name: c.name,
+                symbol: c.symbol,
+                imageUri: c.image_uri || c.imageUri
+              });
+            }
+          });
+        }
+      }
+    } catch(e) {}
+  }
+
+  const pumpCount = allTokens.size;
+  pumpScannedTotal += pumpCount;
+  $('pumpScanned').textContent = pumpScannedTotal;
+
   // ═══════════════════════════════════════════════════════════════
-  // PHASE 2: Top boosted tokens
+  // DEXSCREENER SOURCES
   // ═══════════════════════════════════════════════════════════════
-  updatePhase('Boosted');
+
+  // 6. DexScreener - New profiles
+  updatePhase('DexScreener New');
   try {
-    const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(10000) });
+    const res = await fetch(`${DEX_API}/token-profiles/latest/v1`, { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      data.filter(t => t.chainId === 'solana').slice(0, 300).forEach(t => {
-        if (t.tokenAddress && !allPairs.has(t.tokenAddress)) {
-          allPairs.set(t.tokenAddress, { address: t.tokenAddress, source: 'boosted', boost: 22 });
+      data.filter(t => t.chainId === 'solana').slice(0, 200).forEach(t => {
+        if (t.tokenAddress && !allTokens.has(t.tokenAddress)) {
+          allTokens.set(t.tokenAddress, { address: t.tokenAddress, source: 'dex-new', boost: 18 });
         }
       });
     }
   } catch(e) {}
 
-  // ═══════════════════════════════════════════════════════════════
-  // PHASE 3: Latest boosts
-  // ═══════════════════════════════════════════════════════════════
-  updatePhase('Latest Boosts');
+  // 7. DexScreener - Boosted
+  updatePhase('DexScreener Boosted');
   try {
-    const res = await fetch('https://api.dexscreener.com/token-boosts/latest/v1', { signal: AbortSignal.timeout(10000) });
+    const res = await fetch(`${DEX_API}/token-boosts/top/v1`, { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      data.filter(t => t.chainId === 'solana').slice(0, 300).forEach(t => {
-        if (t.tokenAddress && !allPairs.has(t.tokenAddress)) {
-          allPairs.set(t.tokenAddress, { address: t.tokenAddress, source: 'boost-new', boost: 20 });
+      data.filter(t => t.chainId === 'solana').slice(0, 200).forEach(t => {
+        if (t.tokenAddress && !allTokens.has(t.tokenAddress)) {
+          allTokens.set(t.tokenAddress, { address: t.tokenAddress, source: 'dex-boost', boost: 22 });
         }
       });
     }
   } catch(e) {}
 
-  // ═══════════════════════════════════════════════════════════════
-  // PHASE 4: Solana search variations
-  // ═══════════════════════════════════════════════════════════════
-  const solanaQueries = [
-    'solana', 'sol', 'raydium', 'jupiter', 'orca', 'meteora', 'pump', 'pumpfun',
-    'solana pump', 'solana new', 'solana hot', 'solana trending', 'solana gem',
-    'sol meme', 'sol pump', 'sol moon', 'sol degen', 'sol new'
+  // 8. DexScreener - Keyword searches (massive list)
+  const keywords = [
+    // Pump.fun specific
+    'pump', 'pumpfun', 'pump.fun', 'bonding', 'graduated', 'raydium',
+    // Meme essentials
+    'pepe', 'wojak', 'doge', 'shib', 'cat', 'dog', 'frog', 'ape', 'monkey',
+    'moon', 'rocket', 'gem', 'degen', 'chad', 'based', 'giga', 'mega',
+    // Celebrities
+    'trump', 'elon', 'musk', 'biden', 'kanye', 'drake', 'tate', 'rogan',
+    // Animals
+    'bear', 'bull', 'wolf', 'lion', 'tiger', 'whale', 'shark', 'panda',
+    'bird', 'eagle', 'owl', 'bunny', 'hamster', 'koala', 'penguin',
+    // Crypto
+    'ai', 'gpt', 'agent', 'bot', 'solana', 'sol', 'jupiter', 'orca',
+    'defi', 'nft', 'web3', 'meta', 'virtual', 'pixel', 'retro',
+    // Wealth
+    'rich', 'money', 'gold', 'diamond', 'lambo', 'yacht', 'million',
+    // Food
+    'pizza', 'burger', 'sushi', 'coffee', 'beer', 'banana', 'peach',
+    // Trending
+    'sigma', 'skibidi', 'rizz', 'ohio', 'gyatt', 'mewing', 'goat',
+    'fire', 'lit', 'based', 'bussin', 'cap', 'slay', 'vibe',
+    // Random
+    'baby', 'mini', 'super', 'ultra', 'turbo', 'king', 'queen', 'god',
+    'ninja', 'samurai', 'pirate', 'wizard', 'dragon', 'phoenix'
   ];
   
-  updatePhase('Solana DEX Search');
-  for (const q of solanaQueries) {
-    try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(q)}`, { signal: AbortSignal.timeout(5000) });
-      const data = await res.json();
-      if (data.pairs) {
-        data.pairs.filter(p => p.chainId === 'solana').slice(0, 150).forEach(p => {
-          const addr = p.baseToken?.address;
-          if (addr && !allPairs.has(addr)) {
-            allPairs.set(addr, { address: addr, source: 'sol-search', boost: 15, pair: p });
-          }
-        });
-      }
-    } catch(e) {}
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // PHASE 5: MASSIVE KEYWORD SEARCH (300+ keywords for Solana memes)
-  // ═══════════════════════════════════════════════════════════════
-  const megaKeywords = [
-    // ═══ MEME CULTURE ESSENTIALS ═══
-    'pepe', 'wojak', 'apu', 'sminem', 'bobo', 'mumu', 'peepo', 'spurdo', 'gondola',
-    'doge', 'shib', 'shiba', 'inu', 'floki', 'bonk', 'wif', 'popcat', 'nyan', 'bongo',
-    'cheems', 'cate', 'mew', 'meow', 'kitty', 'neko', 'grumpy', 'keyboard',
-    'moon', 'pump', 'gem', 'degen', 'based', 'chad', 'giga', 'ultra', 'mega', 'hyper',
-    'cope', 'kek', 'wagmi', 'ngmi', 'gm', 'gn', 'ser', 'fren', 'anon', 'wen', 'lambo',
-    'rekt', 'hodl', 'fud', 'fomo', 'yolo', 'diamond', 'hands', 'paper', 'ape', 'apeing',
-    'wojak', 'soyjak', 'doomer', 'bloomer', 'zoomer', 'boomer', 'coomer', 'consoomer',
-    'stonks', 'tendies', 'wife', 'boyfriend', 'girlfriend', 'wife boyfriend',
-    
-    // ═══ CELEBRITIES & PUBLIC FIGURES ═══
-    'trump', 'elon', 'musk', 'biden', 'obama', 'kanye', 'ye', 'drake', 'snoop',
-    'eminem', 'rogan', 'joe', 'tate', 'andrew', 'alex', 'jones', 'tucker', 'xi',
-    'putin', 'kim', 'jong', 'zuck', 'bezos', 'gates', 'bill', 'buffet', 'warren',
-    'sam', 'bankman', 'vitalik', 'cz', 'sbf', 'gary', 'gensler', 'powell', 'jerome',
-    'taylor', 'swift', 'kardashian', 'kylie', 'kendall', 'rihanna', 'beyonce',
-    'lebron', 'messi', 'ronaldo', 'neymar', 'curry', 'durant', 'brady', 'mahomes',
-    'pewdiepie', 'mrbeast', 'logan', 'paul', 'jake', 'ksi', 'sidemen', 'ninja',
-    'pokimane', 'xqc', 'mizkif', 'asmongold', 'hasan', 'ludwig', 'dream', 'tommyinnit',
-    
-    // ═══ ANIMALS (ALL TYPES) ═══
-    'cat', 'dog', 'frog', 'toad', 'panda', 'monkey', 'ape', 'gorilla', 'chimp', 'kong',
-    'lion', 'tiger', 'wolf', 'fox', 'bear', 'bull', 'whale', 'shark', 'fish', 'dolphin',
-    'dragon', 'phoenix', 'bird', 'owl', 'eagle', 'hawk', 'raven', 'crow', 'parrot',
-    'rat', 'mouse', 'hamster', 'guinea', 'pig', 'cow', 'duck', 'goose', 'chicken', 'hen',
-    'snake', 'lizard', 'gecko', 'turtle', 'tortoise', 'bunny', 'rabbit', 'squirrel',
-    'deer', 'elk', 'moose', 'horse', 'pony', 'unicorn', 'zebra', 'giraffe', 'elephant',
-    'hippo', 'rhino', 'croc', 'alligator', 'koala', 'kangaroo', 'sloth', 'penguin',
-    'seal', 'otter', 'beaver', 'raccoon', 'skunk', 'hedgehog', 'bat', 'bee', 'ant',
-    'spider', 'scorpion', 'crab', 'lobster', 'octopus', 'squid', 'jellyfish', 'starfish',
-    
-    // ═══ CRYPTO & TECH ═══
-    'ai', 'gpt', 'claude', 'chatgpt', 'openai', 'anthropic', 'agent', 'bot', 'auto',
-    'neural', 'brain', 'smart', 'quantum', 'cyber', 'digital', 'virtual', 'meta',
-    'nft', 'web3', 'defi', 'dao', 'dex', 'cex', 'swap', 'bridge', 'stake', 'yield',
-    'sol', 'solana', 'raydium', 'jupiter', 'orca', 'marinade', 'lido', 'jito',
-    'layer', 'chain', 'block', 'hash', 'node', 'validator', 'rpc', 'api', 'sdk',
-    'pixel', 'voxel', 'neon', 'retro', 'arcade', '8bit', '16bit', 'nintendo', 'sega',
-    
-    // ═══ WEALTH & LUXURY ═══
-    'rich', 'wealth', 'money', 'cash', 'dollar', 'euro', 'yen', 'pound', 'buck',
-    'gold', 'silver', 'platinum', 'diamond', 'ruby', 'emerald', 'sapphire', 'pearl',
-    'rocket', 'lambo', 'ferrari', 'porsche', 'bugatti', 'rolls', 'royce', 'bentley',
-    'yacht', 'jet', 'mansion', 'palace', 'castle', 'throne', 'crown', 'kingdom',
-    'million', 'billion', 'trillion', 'infinity', 'unlimited', 'endless', 'forever',
-    'profit', 'gains', 'win', 'winner', 'jackpot', 'lotto', 'lottery', 'prize',
-    
-    // ═══ POWER & MYTHOLOGY ═══
-    'king', 'queen', 'prince', 'princess', 'emperor', 'empress', 'czar', 'kaiser',
-    'god', 'goddess', 'zeus', 'thor', 'odin', 'loki', 'hades', 'poseidon', 'apollo',
-    'jesus', 'buddha', 'allah', 'shiva', 'vishnu', 'krishna', 'ganesh', 'hanuman',
-    'devil', 'satan', 'lucifer', 'demon', 'angel', 'seraph', 'cherub', 'archangel',
-    'wizard', 'witch', 'mage', 'sorcerer', 'warlock', 'necro', 'shaman', 'druid',
-    'ninja', 'samurai', 'warrior', 'knight', 'paladin', 'berserker', 'gladiator',
-    'pirate', 'viking', 'spartan', 'roman', 'greek', 'egyptian', 'aztec', 'mayan',
-    'alpha', 'sigma', 'beta', 'omega', 'gamma', 'delta', 'epsilon', 'theta', 'lambda',
-    
-    // ═══ FOOD & DRINKS ═══
-    'pizza', 'burger', 'hotdog', 'taco', 'burrito', 'sushi', 'ramen', 'noodle',
-    'steak', 'bacon', 'egg', 'cheese', 'bread', 'toast', 'waffle', 'pancake',
-    'coffee', 'tea', 'beer', 'wine', 'vodka', 'whiskey', 'rum', 'tequila', 'sake',
-    'banana', 'apple', 'orange', 'lemon', 'lime', 'grape', 'cherry', 'strawberry',
-    'peach', 'mango', 'pineapple', 'coconut', 'watermelon', 'avocado', 'tomato',
-    'cookie', 'cake', 'donut', 'candy', 'chocolate', 'ice', 'cream', 'pudding',
-    
-    // ═══ PLACES & COUNTRIES ═══
-    'usa', 'america', 'american', 'china', 'chinese', 'japan', 'japanese', 'korea', 'korean',
-    'india', 'indian', 'russia', 'russian', 'brazil', 'brazilian', 'mexico', 'mexican',
-    'uk', 'british', 'france', 'french', 'germany', 'german', 'italy', 'italian', 'spain',
-    'australia', 'aussie', 'canada', 'canadian', 'africa', 'african', 'europe', 'european',
-    'tokyo', 'london', 'paris', 'dubai', 'vegas', 'miami', 'la', 'nyc', 'ny', 'sf',
-    'mars', 'moon', 'venus', 'jupiter', 'saturn', 'pluto', 'neptune', 'uranus', 'mercury',
-    
-    // ═══ ACTIONS & VERBS ═══
-    'buy', 'sell', 'trade', 'swap', 'flip', 'ape', 'snipe', 'farm', 'mine', 'mint',
-    'run', 'fly', 'jump', 'climb', 'swim', 'dive', 'surf', 'skate', 'ride', 'drive',
-    'launch', 'boost', 'burn', 'send', 'receive', 'drop', 'airdrop', 'claim', 'stake',
-    'fight', 'battle', 'war', 'attack', 'defend', 'win', 'lose', 'kill', 'slay', 'destroy',
-    
-    // ═══ MODIFIERS & ADJECTIVES ═══
-    'baby', 'mini', 'micro', 'nano', 'tiny', 'small', 'little', 'big', 'giant', 'huge',
-    'new', 'old', 'ancient', 'modern', 'future', 'retro', 'vintage', 'classic', 'neo',
-    'hot', 'cold', 'fire', 'ice', 'water', 'earth', 'air', 'wind', 'storm', 'thunder',
-    'safe', 'fair', 'real', 'true', 'fake', 'scam', 'legit', 'based', 'cringe', 'epic',
-    'fast', 'slow', 'quick', 'speed', 'turbo', 'nitro', 'boost', 'power', 'force', 'energy',
-    'dark', 'light', 'bright', 'shadow', 'glow', 'shine', 'sparkle', 'glitter', 'neon',
-    'red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'black', 'white', 'grey',
-    
-    // ═══ GAMING & POP CULTURE ═══
-    'game', 'gamer', 'gaming', 'esport', 'twitch', 'stream', 'youtube', 'tiktok',
-    'mario', 'luigi', 'zelda', 'link', 'pokemon', 'pikachu', 'sonic', 'mario', 'kirby',
-    'minecraft', 'fortnite', 'roblox', 'league', 'dota', 'csgo', 'valorant', 'apex',
-    'casino', 'poker', 'blackjack', 'roulette', 'slots', 'dice', 'bet', 'gamble',
-    'punk', 'rare', 'epic', 'legendary', 'mythic', 'common', 'uncommon', 'exotic',
-    'star', 'wars', 'trek', 'marvel', 'dc', 'batman', 'superman', 'spiderman', 'hulk',
-    
-    // ═══ NUMBERS & SYMBOLS ═══
-    'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
-    '1', '2', '3', '4', '5', '69', '420', '100', '1000', '777', '888', '999', '666',
-    'x', 'xx', 'xxx', 'z', 'zz', 'zzz', 'a', 'aa', 'aaa', 'o', 'oo', 'ooo',
-    
-    // ═══ SOLANA SPECIFIC ═══
-    'bonk', 'samo', 'orca', 'ray', 'srm', 'fida', 'mngo', 'step', 'saber', 'tulip',
-    'cope', 'rope', 'bop', 'slim', 'like', 'media', 'grape', 'dust', 'forge', 'aurory',
-    'defi', 'land', 'port', 'sunny', 'larix', 'port', 'jet', 'friktion', 'hubble',
-    'wormhole', 'portal', 'allbridge', 'mayan', 'celer', 'synapse', 'multichain',
-    
-    // ═══ RANDOM TRENDING ═══
-    'sigma', 'skibidi', 'rizz', 'ohio', 'gyatt', 'fanum', 'tax', 'mewing', 'mogging',
-    'goat', 'goated', 'bussin', 'cap', 'nocap', 'slay', 'vibe', 'ratio', 'sus', 'based',
-    'cringe', 'mid', 'fire', 'lit', 'bet', 'facts', 'lowkey', 'highkey', 'deadass', 'fr'
-  ];
+  const shuffledKeywords = [...keywords].sort(() => Math.random() - 0.5).slice(0, 80);
   
-  // Shuffle and use 200 keywords per scan
-  const shuffled = [...megaKeywords].sort(() => Math.random() - 0.5).slice(0, 200);
-  
-  updatePhase('Keyword Search');
-  let keywordsDone = 0;
-  
-  for (const keyword of shuffled) {
-    keywordsDone++;
-    if (keywordsDone % 20 === 0) {
-      $('scannerText').textContent = `🔍 Keywords ${keywordsDone}/${shuffled.length} (${allPairs.size} tokens)`;
+  updatePhase('DexScreener Keywords');
+  let kwDone = 0;
+  for (const kw of shuffledKeywords) {
+    kwDone++;
+    if (kwDone % 15 === 0) {
+      $('scannerText').textContent = `🔍 Keywords ${kwDone}/${shuffledKeywords.length} (${allTokens.size} tokens)`;
     }
-    
     try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(keyword)}`, { 
-        signal: AbortSignal.timeout(4000) 
-      });
-      const data = await res.json();
-      
-      if (data.pairs) {
-        data.pairs.filter(p => p.chainId === 'solana').slice(0, 120).forEach(p => {
-          const addr = p.baseToken?.address;
-          if (addr && !allPairs.has(addr)) {
-            allPairs.set(addr, { address: addr, source: 'keyword', boost: 10, pair: p });
-          }
-        });
-      }
-    } catch(e) {}
-    
-    // Delay every 40 keywords
-    if (keywordsDone % 40 === 0) await new Promise(r => setTimeout(r, 50));
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // PHASE 6: Combined searches (keyword + solana)
-  // ═══════════════════════════════════════════════════════════════
-  const combinedQueries = [
-    'solana meme', 'solana cat', 'solana dog', 'solana pepe', 'solana trump',
-    'solana ai', 'solana elon', 'solana degen', 'solana moon', 'solana 100x',
-    'sol cat', 'sol dog', 'sol meme', 'sol ai', 'sol trump', 'sol elon',
-    'raydium new', 'raydium pump', 'jupiter new', 'meteora new', 'orca new',
-    'pump fun', 'pumpfun', 'pump.fun', 'moonshot', 'memecoin solana'
-  ];
-  
-  updatePhase('Combined Search');
-  for (const q of combinedQueries) {
-    try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(q)}`, { 
-        signal: AbortSignal.timeout(5000) 
-      });
-      const data = await res.json();
-      if (data.pairs) {
-        data.pairs.filter(p => p.chainId === 'solana').slice(0, 100).forEach(p => {
-          const addr = p.baseToken?.address;
-          if (addr && !allPairs.has(addr)) {
-            allPairs.set(addr, { address: addr, source: 'combined', boost: 14, pair: p });
-          }
-        });
-      }
-    } catch(e) {}
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // PHASE 7: Letter/Number pattern searches
-  // ═══════════════════════════════════════════════════════════════
-  const patterns = 'abcdefghijklmnopqrstuvwxyz0123456789'.split('');
-  
-  updatePhase('Pattern Search');
-  for (const char of patterns.slice(0, 20)) {
-    try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${char}`, { 
-        signal: AbortSignal.timeout(4000) 
-      });
+      const res = await fetch(`${DEX_API}/latest/dex/search?q=${encodeURIComponent(kw)}`, { signal: AbortSignal.timeout(4000) });
       const data = await res.json();
       if (data.pairs) {
         data.pairs.filter(p => p.chainId === 'solana').slice(0, 80).forEach(p => {
           const addr = p.baseToken?.address;
-          if (addr && !allPairs.has(addr)) {
-            allPairs.set(addr, { address: addr, source: 'pattern', boost: 5, pair: p });
+          if (addr && !allTokens.has(addr)) {
+            allTokens.set(addr, { address: addr, source: 'dex-kw', boost: 12, pair: p });
           }
         });
       }
     } catch(e) {}
+    if (kwDone % 20 === 0) await new Promise(r => setTimeout(r, 30));
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // PHASE 8: DEX-specific searches
-  // ═══════════════════════════════════════════════════════════════
-  const dexQueries = [
-    'raydium', 'jupiter', 'orca', 'meteora', 'lifinity', 'aldrin', 'serum',
-    'openbook', 'phoenix', 'drift', 'mango', 'zeta', 'friktion', 'psyoptions'
+  // 9. DexScreener - Solana specific searches
+  updatePhase('DexScreener Solana');
+  const solanaQueries = [
+    'solana meme', 'sol new', 'raydium new', 'jupiter swap', 'orca sol',
+    'solana ai', 'solana trump', 'solana elon', 'solana degen', 'sol pump'
   ];
   
-  updatePhase('DEX Search');
-  for (const dex of dexQueries) {
+  for (const q of solanaQueries) {
     try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${dex}`, { 
-        signal: AbortSignal.timeout(5000) 
-      });
+      const res = await fetch(`${DEX_API}/latest/dex/search?q=${encodeURIComponent(q)}`, { signal: AbortSignal.timeout(5000) });
       const data = await res.json();
       if (data.pairs) {
         data.pairs.filter(p => p.chainId === 'solana').slice(0, 100).forEach(p => {
           const addr = p.baseToken?.address;
-          if (addr && !allPairs.has(addr)) {
-            allPairs.set(addr, { address: addr, source: 'dex', boost: 12, pair: p });
+          if (addr && !allTokens.has(addr)) {
+            allTokens.set(addr, { address: addr, source: 'dex-sol', boost: 15, pair: p });
           }
         });
       }
     } catch(e) {}
   }
 
+  const dexCount = allTokens.size - pumpCount;
+  dexScannedTotal += dexCount;
+  $('dexScanned').textContent = dexScannedTotal;
+  $('totalScanned').textContent = pumpScannedTotal + dexScannedTotal;
+
   // ═══════════════════════════════════════════════════════════════
-  // ENRICHMENT & FILTERING
+  // ENRICHMENT - Get DexScreener data for all tokens
   // ═══════════════════════════════════════════════════════════════
-  $('scannerText').textContent = `⚙️ Enriching ${allPairs.size} tokens...`;
+  $('scannerText').textContent = `⚙️ Enriching ${allTokens.size} tokens...`;
   $('scanPhase').textContent = 'Enriching';
   
   const enriched = [];
-  const candidates = Array.from(allPairs.values());
+  const candidates = Array.from(allTokens.values());
   let enrichCount = 0;
   
   for (const cand of candidates) {
     enrichCount++;
-    if (enrichCount % 300 === 0) {
+    if (enrichCount % 200 === 0) {
       $('scannerText').textContent = `⚙️ Enriching ${enrichCount}/${candidates.length}...`;
     }
     
     try {
       let pair = cand.pair;
       
+      // If no pair data, fetch from DexScreener
       if (!pair) {
-        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cand.address}`, { 
-          signal: AbortSignal.timeout(3000) 
-        });
+        const res = await fetch(`${DEX_API}/latest/dex/tokens/${cand.address}`, { signal: AbortSignal.timeout(3000) });
         const data = await res.json();
         if (data.pairs) {
           pair = data.pairs.find(p => p.chainId === 'solana');
@@ -1330,19 +1311,18 @@ async function megaScanSolana() {
         
         if (mc >= settings.minMC && mc <= settings.maxMC && liq >= settings.minLiquidity) {
           pair._source = cand.source;
-          pair._boost = cand.boost;
+          pair._boost = cand.boost || 0;
+          pair._pumpData = cand.pumpData;
+          pair._isTrending = cand.isTrending;
+          pair._imageUri = cand.imageUri;
           enriched.push(pair);
         }
       }
     } catch(e) {}
     
-    if (enrichCount % 100 === 0) await new Promise(r => setTimeout(r, 30));
+    if (enrichCount % 80 === 0) await new Promise(r => setTimeout(r, 25));
   }
-  
-  totalScannedSession += enriched.length;
-  $('scannedCount').textContent = totalScannedSession;
-  $('totalScanned').textContent = totalScannedSession;
-  
+
   // ═══════════════════════════════════════════════════════════════
   // SCORING & OPPORTUNITIES
   // ═══════════════════════════════════════════════════════════════
@@ -1360,12 +1340,14 @@ async function megaScanSolana() {
   $('scannerText').textContent = `✅ ${opportunities.length} opportunities from ${enriched.length} tokens`;
   $('scanPhase').textContent = 'Complete';
   
-  addLog('🔍', `Found <span class="solana">${opportunities.length}</span> opps from <span class="yellow">${enriched.length}</span> tokens`);
-  
+  const pumpOpps = opportunities.filter(o => o.pair._source?.startsWith('pump')).length;
+  const dexOpps = opportunities.length - pumpOpps;
+  addLog('🔍', `Found <span class="pump">${pumpOpps} Pump</span> + <span class="solana">${dexOpps} DEX</span> = <span class="yellow">${opportunities.length}</span> opps`);
+
   // ═══════════════════════════════════════════════════════════════
-  // TRADE EXECUTION - NO HISTORY BLOCK
+  // TRADE EXECUTION
   // ═══════════════════════════════════════════════════════════════
-  const topOpps = opportunities.slice(0, 150);
+  const topOpps = opportunities.slice(0, 100);
   const activeAddresses = new Set(positions.map(p => p.address));
   const tradingNow = new Set();
   let tradesOpened = 0;
@@ -1378,7 +1360,6 @@ async function megaScanSolana() {
     
     if (!addr || activeAddresses.has(addr) || tradingNow.has(addr)) continue;
     
-    // Check cache for SKIP only
     const cached = getCachedAnalysis(addr);
     if (cached === 'SKIP') continue;
     
@@ -1400,22 +1381,20 @@ async function megaScanSolana() {
       continue;
     }
     
-    // Execute trade based on score
-    if (opp.score >= 75) {
+    // Execute trade
+    if (opp.score >= 70) {
       const mc = parseFloat(opp.pair.marketCap) || 0;
+      const isPump = opp.pair._source?.startsWith('pump');
+      const isTrending = opp.pair._isTrending;
       const tradeType = mc < 150000 ? 'LONG' : 'QUICK';
+      
       tradingNow.add(addr);
       activeAddresses.add(addr);
-      await executeTrade(opp.pair, opp.score, tradeType);
-      tradesOpened++;
-    } else if (cached && (cached.includes('QUICK') || cached.includes('LONG'))) {
-      tradingNow.add(addr);
-      activeAddresses.add(addr);
-      await executeTrade(opp.pair, opp.score, cached.includes('LONG') ? 'LONG' : 'QUICK');
+      await executeTrade(opp.pair, opp.score, tradeType, isPump, isTrending);
       tradesOpened++;
     }
     
-    await new Promise(r => setTimeout(r, 80));
+    await new Promise(r => setTimeout(r, 60));
   }
   
   if (tradesOpened > 0) {
@@ -1439,46 +1418,51 @@ function calculateScore(pair, settings) {
   const sells1h = pair.txns?.h1?.sells || 0;
   
   const total5m = buys5m + sells5m;
-  const total1h = buys1h + sells1h;
   const buyRatio5m = total5m > 0 ? (buys5m / total5m) * 100 : 50;
   
   const boost = pair._boost || 0;
+  const isPump = pair._source?.startsWith('pump');
+  const isTrending = pair._isTrending;
   const symbol = pair.baseToken?.symbol || '';
   
-  let score = 25 + boost;
+  let score = 20 + boost;
+  
+  // Pump.fun bonus
+  if (isPump) score += 8;
+  if (isTrending) score += 12;
   
   // Name filter
   if (symbol.length < 2) return 0;
   if (/^\d+$/.test(symbol)) score -= 20;
   
   // MC scoring
-  if (mc >= 80000 && mc <= 800000) score += 25;
-  else if (mc >= 50000 && mc < 80000) score += 18;
-  else if (mc >= 800000 && mc <= 2000000) score += 12;
-  else if (mc >= 30000 && mc < 50000) score += 10;
+  if (mc >= 50000 && mc <= 500000) score += 25;
+  else if (mc >= 30000 && mc < 50000) score += 18;
+  else if (mc >= 500000 && mc <= 2000000) score += 12;
+  else if (mc >= 15000 && mc < 30000) score += 10;
   else if (mc > 2000000) score -= 5;
-  else if (mc < 30000) score -= 10;
+  else if (mc < 15000) score -= 10;
   
   // Buy ratio
-  if (buyRatio5m >= 40 && buyRatio5m < 65) score += 12;
-  else if (buyRatio5m >= 30 && total5m >= 5) score += 15;
+  if (buyRatio5m >= 35 && buyRatio5m < 70) score += 12;
+  else if (buyRatio5m >= 25 && total5m >= 5) score += 15;
   else if (buyRatio5m >= 80) score -= 10;
   
   // Liquidity
   const liqRatio = mc > 0 ? (liq / mc) * 100 : 0;
-  if (liq < 6000) return 0;
-  if (liq < 12000) score -= 15;
-  if (liq >= 30000) score += 10;
-  if (liqRatio >= 5 && liqRatio <= 25) score += 10;
-  else if (liqRatio < 3) score -= 12;
+  if (liq < 4000) return 0;
+  if (liq < 8000) score -= 12;
+  if (liq >= 25000) score += 10;
+  if (liqRatio >= 5 && liqRatio <= 25) score += 8;
+  else if (liqRatio < 3) score -= 10;
   
   // Momentum
-  if (chg5m > 2 && chg5m < 35) score += 12;
-  if (chg1h > 5 && chg1h < 80) score += 10;
-  if (chg5m > 80) score -= 15;
-  if (chg1h > 150) score -= 12;
-  if (chg5m < -25) score -= 12;
-  if (chg1h < -40) score -= 10;
+  if (chg5m > 2 && chg5m < 40) score += 12;
+  if (chg1h > 5 && chg1h < 100) score += 10;
+  if (chg5m > 100) score -= 15;
+  if (chg1h > 200) score -= 12;
+  if (chg5m < -30) score -= 12;
+  if (chg1h < -50) score -= 10;
   
   // Volume
   const volRatio = mc > 0 ? (vol24h / mc) : 0;
@@ -1486,8 +1470,7 @@ function calculateScore(pair, settings) {
   if (volRatio > 0.5) score += 5;
   
   // Activity
-  if (total5m >= 4 && total5m <= 50) score += 10;
-  if (total1h >= 15 && total1h <= 250) score += 5;
+  if (total5m >= 3 && total5m <= 60) score += 10;
   
   // Trend
   if (chg5m > 0 && chg1h > 0) score += 5;
@@ -1502,7 +1485,7 @@ function calculateScore(pair, settings) {
 // ══════════════════════════════════════
 // TRADING
 // ══════════════════════════════════════
-async function executeTrade(pair, score, tradeType) {
+async function executeTrade(pair, score, tradeType, isPump, isTrending) {
   const settings = getSettings();
   const size = settings.positionSize;
   
@@ -1512,7 +1495,7 @@ async function executeTrade(pair, score, tradeType) {
   const address = pair.baseToken?.address;
   const pairAddress = pair.pairAddress;
   const entryPrice = parseFloat(pair.priceUsd) || 0;
-  const logo = pair.info?.imageUrl || '';
+  const logo = pair._imageUri || pair.info?.imageUrl || '';
   
   if (!address || entryPrice === 0) return;
   if (positions.find(p => p.address === address)) return;
@@ -1526,11 +1509,14 @@ async function executeTrade(pair, score, tradeType) {
     entryPrice,
     currentPrice: entryPrice,
     dexUrl: pair.url || `https://dexscreener.com/solana/${pairAddress}`,
+    pumpUrl: `https://pump.fun/coin/${address}`,
     entryLiquidity: parseFloat(pair.liquidity?.usd) || 0,
     initialSize: size,
     currentSize: size,
     score,
     tradeType,
+    isPump,
+    isTrending,
     pnl: 0,
     pnlPct: 0,
     highestPnlPct: 0,
@@ -1548,13 +1534,15 @@ async function executeTrade(pair, score, tradeType) {
   positions.push(position);
   balance -= size;
   
-  addLog('🎯', `<span class="solana">${position.label}</span> $${esc(symbol)} @ $${fP(entryPrice)} — Score: ${score}`);
+  const sourceTag = isPump ? '<span class="pump">PUMP</span>' : '<span class="solana">DEX</span>';
+  const trendTag = isTrending ? ' <span class="yellow">🔥</span>' : '';
+  addLog('🎯', `${sourceTag}${trendTag} $${esc(symbol)} @ $${fP(entryPrice)} — Score: ${score}`);
+  
   updateUI();
   renderPositions();
 }
 
 function partialSell(pos, sellPercent, dcaLevel) {
-  const settings = getSettings();
   const sellAmount = pos.currentSize * (sellPercent / 100);
   const pnlForSold = sellAmount * (pos.pnlPct / 100);
   
@@ -1601,7 +1589,9 @@ function closeTrade(pos, reason) {
     address: pos.address,
     pairAddress: pos.pairAddress,
     dexUrl: pos.dexUrl,
+    pumpUrl: pos.pumpUrl,
     tradeType: pos.tradeType,
+    isPump: pos.isPump,
     score: pos.score,
     pnl: finalPnl,
     pnlPct: pos.pnlPct,
@@ -1641,17 +1631,15 @@ async function updatePositions() {
     const pos = positions[i];
     
     try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/solana/${pos.pairAddress}`, { 
-        signal: AbortSignal.timeout(5000) 
-      });
+      const res = await fetch(`${DEX_API}/latest/dex/pairs/solana/${pos.pairAddress}`, { signal: AbortSignal.timeout(5000) });
       const data = await res.json();
       
       if (!data.pair) continue;
       
       const newPrice = parseFloat(data.pair.priceUsd) || pos.currentPrice;
+      const priceChange = (newPrice - pos.entryPrice) / pos.entryPrice * 100;
       
       // Rug detection
-      const priceChange = (newPrice - pos.entryPrice) / pos.entryPrice * 100;
       if (priceChange <= -85) {
         pos.pnlPct = -100;
         closeTrade(pos, 'RUG');
@@ -1693,7 +1681,6 @@ async function updatePositions() {
       if (pos.trailingActivated) {
         if (pos.pnlPct > pos.trailingHigh) pos.trailingHigh = pos.pnlPct;
         
-        // Dynamic trail
         let trailDist = settings.trailDistance;
         if (pos.trailingHigh >= 100) trailDist = Math.max(8, trailDist * 0.5);
         else if (pos.trailingHigh >= 50) trailDist = Math.max(10, trailDist * 0.7);
@@ -1734,9 +1721,9 @@ function updateUI() {
   $('bestTrade').textContent = '+$' + bestTrade.toFixed(0);
   $('totalTrades').textContent = totalTrades;
   
-  $('quickCount').textContent = positions.filter(p => p.tradeType === 'QUICK').length;
-  $('longCount').textContent = positions.filter(p => p.tradeType === 'LONG').length;
-  $('moonCount').textContent = positions.filter(p => p.tradeType === 'MOON').length;
+  $('pumpCount').textContent = positions.filter(p => p.isPump).length;
+  $('dexCount').textContent = positions.filter(p => !p.isPump).length;
+  $('trendingCount').textContent = positions.filter(p => p.isTrending).length;
 }
 
 function renderPositions() {
@@ -1768,9 +1755,13 @@ function renderCard(pos) {
   let progressClass = holdPct > 85 ? 'danger' : holdPct > 65 ? 'warning' : '';
   
   let tags = '';
+  if (pos.isPump) tags += `<span class="pos-tag pump">🎰 PUMP.FUN</span>`;
+  if (pos.isTrending) tags += `<span class="pos-tag trending">🔥 TRENDING</span>`;
   if (pos.isMoonBag) tags += `<span class="pos-tag moon">🌕 FREE</span>`;
   if (pos.trailingActivated) tags += `<span class="pos-tag trailing">📈 +${pos.trailingHigh.toFixed(0)}%</span>`;
   if (pos.dcaSecured > 0) tags += `<span class="pos-tag secured">🔒 +$${pos.dcaSecured.toFixed(0)}</span>`;
+  
+  const sourceIcon = pos.isPump ? '🎰' : '📊';
   
   return `<div class="pos-card ${cardClass}">
     <div class="pos-header">
@@ -1778,7 +1769,7 @@ function renderCard(pos) {
         <div class="pos-logo">${pos.logo ? `<img src="${pos.logo}" onerror="this.parentElement.textContent='${pos.symbol[0]}'">` : pos.symbol[0]}</div>
         <div>
           <div class="pos-symbol">$${esc(pos.symbol)} <span class="trade-type ${typeClass}">${pos.label}</span></div>
-          <div class="pos-chain">☀️ Solana • Score: ${pos.score}</div>
+          <div class="pos-chain">${sourceIcon} ${pos.isPump ? 'Pump.fun' : 'DexScreener'} • Score: ${pos.score}</div>
         </div>
       </div>
       <div class="pos-pnl">
@@ -1797,6 +1788,7 @@ function renderCard(pos) {
     <div class="pos-actions">
       <button onclick="manualCloseTrade('${pos.address}')" class="pos-action-btn close">❌ Close</button>
       <a href="${pos.dexUrl}" target="_blank" class="pos-action-btn dex">📊 DEX</a>
+      ${pos.isPump ? `<a href="${pos.pumpUrl}" target="_blank" class="pos-action-btn pump">🎰 Pump</a>` : ''}
     </div>
   </div>`;
 }
@@ -1812,7 +1804,7 @@ function renderHistory() {
   $('historyContainer').innerHTML = history.slice(0, 100).map(t => {
     const isWin = t.pnl >= 0;
     const time = new Date(t.closeTime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-    const icon = t.tradeType === 'MOON' ? '🌕' : t.tradeType === 'LONG' ? '🌙' : '⚡';
+    const icon = t.isPump ? '🎰' : '📊';
     let reasonClass = t.reason === 'TRAIL' ? 'trail' : t.reason === 'TIMEOUT' ? 'timeout' : t.reason.includes('RUG') || t.reason.includes('LIQ') ? 'rug' : 'tp';
     
     return `<div class="history-item" onclick="window.open('${t.dexUrl}', '_blank')">
@@ -1826,7 +1818,7 @@ function renderHistory() {
 }
 
 // STORAGE
-const STORAGE_KEY = 'solana_sniper_v71';
+const STORAGE_KEY = 'solana_sniper_v72_pump';
 
 function saveToStorage() {
   try {
@@ -1860,7 +1852,7 @@ function exportData() {
   }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `solana_sniper_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `pump_sniper_${new Date().toISOString().slice(0,10)}.json`;
   a.click();
 }
 
@@ -1871,8 +1863,8 @@ loadFromStorage();
 updateUI();
 renderPositions();
 renderHistory();
-addLog('☀️', '<span class="solana">SOLANA MEGA SNIPER v7.1</span> — 100x Token Discovery!');
-addLog('ℹ️', '300+ keywords • 8 scan phases • Re-trading enabled • Solana ONLY');
+addLog('🚀', '<span class="pump">SOLANA SNIPER v7.2 - PUMP.FUN EDITION</span>');
+addLog('ℹ️', 'Pump.fun: New listings, Trending, King of Hill + DexScreener Deep Scan');
 </script>
 </body>
 </html>
