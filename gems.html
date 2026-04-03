@@ -1,609 +1,206 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=0.85, minimum-scale=0.85, maximum-scale=0.85, user-scalable=no">
-<title>Find the GEM — DexScreener AI</title>
+<title>💎 GEM DETECTOR — DexScreener AI</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg: #060a10;
-  --bg2: #0b1018;
-  --bg3: #101822;
-  --card: #111a26;
-  --card-border: rgba(255,255,255,0.06);
-  --text: #e2e8f0;
-  --text2: #94a3b8;
-  --text3: #64748b;
-  --cyan: #00d4ff;
-  --green: #00ff88;
-  --red: #ff3b4f;
-  --yellow: #ffaa00;
-  --purple: #a855f7;
-  --gold: #ffd700;
-  --mono: 'JetBrains Mono', monospace;
-  --sans: 'DM Sans', sans-serif;
+–bg: #060a10;
+–bg2: #0b1018;
+–bg3: #101822;
+–card: #111a26;
+–card-border: rgba(255,255,255,0.06);
+–text: #e2e8f0;
+–text2: #94a3b8;
+–text3: #64748b;
+–cyan: #00d4ff;
+–cyan-dim: rgba(0,212,255,0.12);
+–green: #00ff88;
+–green-dim: rgba(0,255,136,0.1);
+–red: #ff3b4f;
+–red-dim: rgba(255,59,79,0.1);
+–yellow: #ffaa00;
+–purple: #a855f7;
+–gold: #ffd700;
+–mono: ‘JetBrains Mono’, monospace;
+–sans: ‘DM Sans’, sans-serif;
 }
 
-* { margin:0; padding:0; box-sizing:border-box; touch-action: pan-x pan-y; }
-html, body { min-height:100%; background: var(--bg); color: var(--text); font-family: var(--sans); }
+- { margin:0; padding:0; box-sizing:border-box; }
+  html, body { min-height:100%; background:var(–bg); color:var(–text); font-family:var(–sans); }
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(–card-border); border-radius:5px; }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 6px; }
-
-/* ── HEADER / NAV ── */
+/* NAV */
 .nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 24px;
-  background: rgba(6, 10, 16, 0.95);
-  border-bottom: 1px solid var(--card-border);
-  backdrop-filter: blur(10px);
+position:fixed; top:0; left:0; right:0; z-index:1000;
+display:flex; align-items:center; justify-content:space-between;
+padding:12px 20px;
+background:rgba(6,10,16,0.95); border-bottom:1px solid var(–card-border);
+backdrop-filter:blur(10px);
 }
-.nav-logo {
-  display: flex; align-items: center; gap: 10px;
-  text-decoration: none; color: #fff;
-  font-family: var(--mono); font-weight: 700; font-size: 13px;
-}
-.nav-logo img { height: 28px; }
-.nav-links { display: flex; gap: 24px; }
-.nav-links a {
-  font-family: var(--mono); font-size: 11px; font-weight: 500;
-  color: var(--text2); text-decoration: none; letter-spacing: 0.5px;
-  transition: color .15s;
-}
-.nav-links a:hover, .nav-links a.active { color: var(--cyan); }
-.nav-menu-btn {
-  display: none; background: var(--card); border: 1px solid var(--card-border);
-  color: #fff; font-size: 18px; padding: 6px 10px; border-radius: 6px; cursor: pointer;
-}
-.nav-mobile-menu {
-  display: none; position: fixed; top: 53px; left: 0; right: 0;
-  background: var(--bg); border-bottom: 1px solid var(--card-border);
-  flex-direction: column; padding: 12px; z-index: 999;
-}
-.nav-mobile-menu.open { display: flex; }
-.nav-mobile-menu a {
-  padding: 12px 16px; color: var(--text); text-decoration: none;
-  font-family: var(--mono); font-size: 12px; border-radius: 8px;
-}
-.nav-mobile-menu a:hover { background: var(--card); color: var(--cyan); }
-.nav-mobile-menu a.active { color: var(--cyan); }
-@media (max-width: 900px) {
-  .nav-links { display: none; }
-  .nav-menu-btn { display: block; }
-}
+.nav-logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; font-family:var(–mono); font-weight:700; font-size:13px; }
+.nav-logo img { height:28px; border-radius:6px; }
+.nav-links { display:flex; gap:18px; }
+.nav-links a { font-family:var(–mono); font-size:11px; font-weight:500; color:var(–text2); text-decoration:none; letter-spacing:.5px; transition:color .15s; }
+.nav-links a:hover, .nav-links a.active { color:var(–cyan); }
+.nav-menu-btn { display:none; background:var(–card); border:1px solid var(–card-border); color:#fff; font-size:18px; padding:6px 10px; border-radius:6px; cursor:pointer; }
+.nav-mobile { display:none; position:fixed; top:53px; left:0; right:0; background:var(–bg); border-bottom:1px solid var(–card-border); flex-direction:column; padding:12px; z-index:999; }
+.nav-mobile.open { display:flex; }
+.nav-mobile a { padding:12px 16px; color:var(–text); text-decoration:none; font-family:var(–mono); font-size:12px; border-radius:8px; }
+.nav-mobile a:hover { background:var(–card); color:var(–cyan); }
+.nav-mobile a.active { color:var(–cyan); }
+@media(max-width:900px) { .nav-links{display:none;} .nav-menu-btn{display:block;} }
 
-/* ── CONTAINER ── */
-.container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 24px;
-  padding-top: 77px;
-}
+.container { max-width:900px; margin:0 auto; padding:20px; padding-top:72px; position:relative; z-index:1; }
 
-/* ── HERO SECTION ── */
-.hero {
-  text-align: center;
-  padding: 60px 20px;
-  background: linear-gradient(180deg, rgba(168,85,247,0.08) 0%, transparent 100%);
-  border-radius: 24px;
-  margin-bottom: 30px;
-  border: 1px solid rgba(168,85,247,0.15);
+/* SCANNER STATUS BAR */
+.scanner-bar {
+background:var(–card); border:1px solid var(–card-border); border-radius:12px;
+padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
 }
-.hero-icon {
-  font-size: 64px;
-  margin-bottom: 20px;
-  animation: float 3s ease-in-out infinite;
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-.hero-title {
-  font-family: var(--mono);
-  font-size: 36px;
-  font-weight: 800;
-  letter-spacing: 3px;
-  background: linear-gradient(135deg, var(--gold), var(--yellow), var(--cyan));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 12px;
-}
-.hero-subtitle {
-  font-size: 16px;
-  color: var(--text2);
-  margin-bottom: 30px;
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.6;
-}
-.hunt-btn {
-  padding: 20px 60px;
-  background: linear-gradient(135deg, var(--gold), var(--yellow));
-  border: none;
-  border-radius: 16px;
-  color: #000;
-  font-family: var(--mono);
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 8px 40px rgba(255,215,0,0.3);
-}
-.hunt-btn:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 12px 50px rgba(255,215,0,0.5);
-}
-.hunt-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-.hunt-btn-icon {
-  font-size: 24px;
-}
+.scanner-dot { width:10px; height:10px; border-radius:50%; background:var(–red); flex-shrink:0; }
+.scanner-dot.active { background:var(–green); animation:blink 1s infinite; }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+.scanner-text { font-family:var(–mono); font-size:11px; color:var(–text2); flex:1; min-width:0; }
+.scanner-stats { display:flex; gap:16px; font-family:var(–mono); font-size:10px; color:var(–text3); flex-wrap:wrap; }
+.scanner-stats span { color:var(–cyan); font-weight:600; }
 
-/* ── FILTERS INFO ── */
-.filters-info {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  margin-top: 30px;
-}
-.filter-badge {
-  background: var(--bg3);
-  border: 1px solid var(--card-border);
-  border-radius: 10px;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  color: var(--text2);
-}
-.filter-badge-icon {
-  font-size: 18px;
-}
-.filter-badge-text {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text);
-}
+/* Removed controls — auto-start */
 
-/* ── PROGRESS SECTION ── */
-.progress-section {
-  display: none;
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: 16px;
-  padding: 30px;
-  margin-bottom: 24px;
-}
-.progress-section.active {
-  display: block;
-}
-.progress-title {
-  font-family: var(--mono);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  color: var(--cyan);
-  margin-bottom: 20px;
-  text-align: center;
-}
-.progress-bar-wrap {
-  background: var(--bg);
-  border-radius: 12px;
-  height: 24px;
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-.progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--purple), var(--cyan), var(--gold));
-  background-size: 200% 100%;
-  animation: progressGlow 2s linear infinite;
-  border-radius: 12px;
-  transition: width 0.3s;
-  width: 0%;
-}
-@keyframes progressGlow {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
-}
-.progress-status {
-  text-align: center;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--text2);
-}
-.progress-stats {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  margin-top: 20px;
-  flex-wrap: wrap;
-}
-.progress-stat {
-  text-align: center;
-}
-.progress-stat-num {
-  font-family: var(--mono);
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--cyan);
-}
-.progress-stat-label {
-  font-size: 11px;
-  color: var(--text3);
-  margin-top: 4px;
-}
+/* Section style handled inline */
 
-/* ── RESULTS SECTION ── */
-.results-section {
-  display: none;
-}
-.results-section.active {
-  display: block;
-}
-.results-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-.results-title {
-  font-family: var(--mono);
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: 3px;
-  color: var(--gold);
-  margin-bottom: 8px;
-}
-.results-subtitle {
-  font-size: 14px;
-  color: var(--text2);
-}
-
-/* ── GEM CARDS ── */
-.gems-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-}
+/* GEM CARDS */
+.gems-grid { display:flex; flex-direction:column; gap:12px; }
 .gem-card {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: 16px;
-  padding: 20px;
-  position: relative;
-  transition: all 0.2s;
+background:var(–card); border:1px solid var(–card-border); border-radius:14px;
+padding:16px; position:relative; transition:all .25s;
 }
-.gem-card:hover {
-  border-color: var(--gold);
-  transform: translateY(-2px);
-}
-.gem-card.top-3 {
-  border-color: rgba(255,215,0,0.3);
-  background: linear-gradient(135deg, rgba(255,215,0,0.05), transparent);
-}
+.gem-card:hover { border-color:rgba(255,215,0,.3); transform:translateY(-1px); }
+.gem-card.top3 { border-color:rgba(255,215,0,.25); background:linear-gradient(135deg, rgba(255,215,0,.04), transparent); }
+.gem-card.new-entry { animation:slideIn .4s ease; }
+@keyframes slideIn { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+
 .gem-rank {
-  position: absolute;
-  top: -10px;
-  left: 20px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--mono);
-  font-size: 14px;
-  font-weight: 700;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+position:absolute; top:-8px; left:16px; width:32px; height:32px; border-radius:50%;
+display:flex; align-items:center; justify-content:center;
+font-family:var(–mono); font-size:12px; font-weight:700;
+box-shadow:0 3px 12px rgba(0,0,0,.4);
 }
-.gem-rank.gold { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; }
-.gem-rank.silver { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); color: #000; }
-.gem-rank.bronze { background: linear-gradient(135deg, #cd7f32, #b87333); color: #000; }
-.gem-rank.normal { background: var(--bg3); color: var(--text); }
+.gem-rank.r1 { background:linear-gradient(135deg,#ffd700,#ffaa00); color:#000; }
+.gem-rank.r2 { background:linear-gradient(135deg,#c0c0c0,#a0a0a0); color:#000; }
+.gem-rank.r3 { background:linear-gradient(135deg,#cd7f32,#b87333); color:#000; }
+.gem-rank.rn { background:var(–bg3); color:var(–text2); }
 
-.gem-score {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 700;
+.gem-score-badge {
+position:absolute; top:12px; right:14px; padding:4px 10px; border-radius:6px;
+font-family:var(–mono); font-size:11px; font-weight:700;
 }
-.gem-score.high { background: var(--green); color: #000; }
-.gem-score.medium { background: var(--yellow); color: #000; }
-.gem-score.low { background: var(--red); color: #fff; }
+.gem-score-badge.high { background:var(–green); color:#000; }
+.gem-score-badge.med { background:var(–yellow); color:#000; }
+.gem-score-badge.low { background:var(–text3); color:#fff; }
 
-.gem-header {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 16px;
-  margin-top: 10px;
-}
+.gem-head { display:flex; align-items:center; gap:12px; margin:6px 0 12px; }
 .gem-logo {
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
-  background: var(--bg3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--mono);
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--cyan);
-  overflow: hidden;
+width:44px; height:44px; border-radius:10px; background:var(–bg3);
+display:flex; align-items:center; justify-content:center;
+font-family:var(–mono); font-size:18px; font-weight:700; color:var(–cyan); overflow:hidden;
 }
-.gem-logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.gem-info {
-  flex: 1;
-}
-.gem-symbol {
-  font-family: var(--mono);
-  font-size: 18px;
-  font-weight: 700;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.gem-chain {
-  font-size: 9px;
-  padding: 2px 6px;
-  background: var(--bg);
-  border-radius: 4px;
-  color: var(--text3);
-}
-.gem-name {
-  font-size: 12px;
-  color: var(--text2);
-  margin-top: 4px;
-}
-.gem-badges {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-}
+.gem-logo img { width:100%; height:100%; object-fit:cover; }
+.gem-sym { font-family:var(–mono); font-size:16px; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px; }
+.gem-chain-tag { font-size:9px; padding:2px 6px; background:var(–bg); border-radius:4px; color:var(–text3); }
+.gem-name { font-size:11px; color:var(–text2); margin-top:2px; }
+.gem-badges { display:flex; gap:5px; margin-top:5px; flex-wrap:wrap; }
 .gem-badge {
-  font-size: 8px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: var(--mono);
-  font-weight: 600;
+font-size:8px; padding:2px 6px; border-radius:4px; font-family:var(–mono); font-weight:600;
 }
-.gem-badge.new { background: var(--green-dim, rgba(0,255,136,0.15)); border: 1px solid var(--green); color: var(--green); }
-.gem-badge.boosted { background: rgba(168,85,247,0.15); border: 1px solid var(--purple); color: var(--purple); }
-.gem-badge.trending { background: rgba(0,212,255,0.15); border: 1px solid var(--cyan); color: var(--cyan); }
-.gem-badge.cto { background: rgba(255,170,0,0.15); border: 1px solid var(--yellow); color: var(--yellow); }
-.gem-badge.potential { background: linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,212,255,0.2)); border: 1px solid var(--green); color: var(--green); font-weight: 700; }
-.gem-badge.ai-pick { background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(0,212,255,0.3)); border: 1px solid var(--purple); color: #fff; font-weight: 700; animation: pulse 2s infinite; }
-.gem-badge.ai-ranked { background: rgba(168,85,247,0.2); border: 1px solid var(--purple); color: var(--purple); font-weight: 600; }
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-.gem-confidence {
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 600;
-  margin-top: 4px;
-  letter-spacing: 0.5px;
-}
-.gem-card.ai-pick-card {
-  border: 2px solid var(--purple);
-  background: linear-gradient(135deg, rgba(168,85,247,0.1), transparent);
-}
+.gem-badge.fresh { background:var(–green-dim); border:1px solid var(–green); color:var(–green); }
+.gem-badge.boosted { background:rgba(168,85,247,.15); border:1px solid var(–purple); color:var(–purple); }
+.gem-badge.safe { background:var(–green-dim); border:1px solid var(–green); color:var(–green); }
+.gem-badge.warn { background:rgba(255,170,0,.15); border:1px solid var(–yellow); color:var(–yellow); }
+.gem-badge.cto { background:rgba(255,170,0,.15); border:1px solid var(–yellow); color:var(–yellow); }
 
 .gem-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 14px;
+display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:12px;
 }
-.gem-stat {
-  background: var(--bg);
-  padding: 10px;
-  border-radius: 8px;
-  text-align: center;
-}
-.gem-stat-label {
-  font-size: 9px;
-  color: var(--text3);
-  margin-bottom: 4px;
-  font-family: var(--mono);
-  letter-spacing: 0.5px;
-}
-.gem-stat-value {
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 600;
-}
-.gem-stat-value.green { color: var(--green); }
-.gem-stat-value.red { color: var(--red); }
-.gem-stat-value.yellow { color: var(--yellow); }
+.gem-stat { background:var(–bg); padding:8px; border-radius:6px; text-align:center; }
+.gem-stat-l { font-size:8px; color:var(–text3); font-family:var(–mono); letter-spacing:.5px; margin-bottom:3px; }
+.gem-stat-v { font-family:var(–mono); font-size:12px; font-weight:600; }
+.gem-stat-v.green { color:var(–green); }
+.gem-stat-v.red { color:var(–red); }
+.gem-stat-v.yellow { color:var(–yellow); }
 
-.gem-metrics {
-  display: flex;
-  gap: 12px;
-  padding: 12px 0;
-  border-top: 1px solid var(--card-border);
-  border-bottom: 1px solid var(--card-border);
-  margin-bottom: 14px;
+.gem-foot {
+display:flex; align-items:center; justify-content:space-between; padding-top:10px;
+border-top:1px solid var(–card-border); font-size:10px;
 }
-.gem-metric {
-  flex: 1;
-  text-align: center;
+.gem-rug { color:var(–text2); display:flex; align-items:center; gap:4px; }
+.gem-links { display:flex; gap:5px; }
+.gem-link {
+width:26px; height:26px; border-radius:5px; background:var(–bg); border:1px solid var(–card-border);
+display:flex; align-items:center; justify-content:center; color:var(–text2); text-decoration:none;
+font-size:11px; transition:all .15s;
 }
-.gem-metric-label {
-  font-size: 9px;
-  color: var(--text3);
+.gem-link:hover { border-color:var(–cyan); color:var(–cyan); }
+.gem-link.off { opacity:.3; pointer-events:none; }
+.gem-open {
+padding:8px 14px; border-radius:6px; font-family:var(–mono); font-size:10px; font-weight:700;
+background:linear-gradient(135deg,var(–gold),var(–yellow)); border:none; color:#000;
+cursor:pointer; transition:all .15s; letter-spacing:.5px;
 }
-.gem-metric-value {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text);
-  margin-top: 2px;
-}
+.gem-open:hover { transform:scale(1.03); box-shadow:0 3px 12px rgba(255,215,0,.3); }
 
-.gem-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.gem-footer-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.gem-rug {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--text2);
-}
-.gem-socials {
-  display: flex;
-  gap: 6px;
-}
-.gem-social {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: var(--bg);
-  border: 1px solid var(--card-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text2);
-  text-decoration: none;
-  font-size: 12px;
-  transition: all 0.15s;
-}
-.gem-social:hover {
-  border-color: var(--cyan);
-  color: var(--cyan);
-  transform: translateY(-1px);
-}
-.gem-social.disabled {
-  opacity: 0.3;
-  pointer-events: none;
-}
-.gem-actions {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.gem-btn {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
-  border: 1px solid var(--card-border);
-  background: var(--bg3);
-  color: var(--text);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  justify-content: center;
-}
-.gem-btn:hover {
-  border-color: var(--cyan);
-  color: var(--cyan);
-}
-.gem-btn.app {
-  background: linear-gradient(135deg, var(--gold), var(--yellow));
-  border: none;
-  color: #000;
-}
-.gem-btn.app:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 15px rgba(255,215,0,0.3);
-}
+/* EMPTY */
+.empty { text-align:center; padding:60px 20px; color:var(–text3); }
+.empty-icon { font-size:48px; margin-bottom:16px; }
+.empty-text { font-family:var(–mono); font-size:12px; letter-spacing:1px; }
 
-/* ── RESET ── */
-.reset-btn {
-  display: block;
-  width: 100%;
-  max-width: 400px;
-  margin: 30px auto 0;
-  padding: 16px;
-  background: var(--bg3);
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  color: var(--text2);
-  font-family: var(--mono);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s;
+/* LOG */
+.log-section {
+margin-top:20px; background:var(–card); border:1px solid var(–card-border);
+border-radius:12px; overflow:hidden;
 }
-.reset-btn:hover {
-  border-color: var(--gold);
-  color: var(--gold);
+.log-header {
+padding:12px 16px; border-bottom:1px solid var(–card-border); background:var(–bg3);
+font-family:var(–mono); font-size:11px; letter-spacing:1.5px; color:var(–cyan);
+display:flex; justify-content:space-between; align-items:center;
 }
+.log-content { max-height:200px; overflow-y:auto; padding:10px; }
+.log-item { display:flex; gap:8px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,.03); font-size:10px; }
+.log-time { color:var(–text3); min-width:50px; font-family:var(–mono); font-size:9px; }
+.log-text { color:var(–text2); line-height:1.4; }
+.log-text .g { color:var(–green); } .log-text .r { color:var(–red); } .log-text .c { color:var(–cyan); }
+.log-text .y { color:var(–yellow); } .log-text .p { color:var(–purple); } .log-text .go { color:var(–gold); }
 
-/* ── DISCLAIMER ── */
-.disclaimer {
-  text-align: center;
-  padding: 20px;
-  font-size: 11px;
-  color: var(--text3);
-}
+/* DISCLAIMER */
+.disclaimer { text-align:center; padding:20px; font-size:10px; color:var(–text3); margin-top:20px; }
 
-/* ── MOBILE ── */
-@media (max-width: 768px) {
-  .container { padding: 16px; padding-top: 77px; }
-  .hero { padding: 40px 16px; }
-  .hero-icon { font-size: 48px; }
-  .hero-title { font-size: 24px; }
-  .hero-subtitle { font-size: 14px; }
-  .hunt-btn { padding: 16px 40px; font-size: 14px; }
-  .filters-info { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .filter-badge { padding: 10px 12px; }
-  .filter-badge-text { font-size: 10px; }
-  .gems-grid { grid-template-columns: 1fr; }
-  .gem-card { padding: 16px; }
-  .gem-stats { grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .gem-stat { padding: 8px; }
-  .gem-stat-value { font-size: 11px; }
-  .progress-stats { gap: 20px; }
-  .progress-stat-num { font-size: 20px; }
+@media(max-width:768px) {
+.container { padding:14px; padding-top:68px; }
+.gem-stats { grid-template-columns:repeat(3,1fr); gap:4px; }
+.gem-stat { padding:6px; }
+.gem-stat-v { font-size:10px; }
+.scanner-bar { flex-direction:column; align-items:flex-start; gap:8px; }
 }
 </style>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 </head>
 <body>
 
-<!-- NAV -->
+<!-- Ambient glow — same as Scene Remixer -->
+
+<div style="position:fixed;top:-40%;left:50%;transform:translateX(-50%);width:120%;height:60%;background:radial-gradient(ellipse at center,rgba(0,212,255,0.04) 0%,transparent 70%);pointer-events:none;z-index:0;"></div>
+
 <nav class="nav">
   <a href="./index.html" class="nav-logo">
-    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="Logo">
+    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="">
     <span>DEXSCREENER AI</span>
   </a>
   <div class="nav-links">
@@ -612,784 +209,512 @@ html, body { min-height:100%; background: var(--bg); color: var(--text); font-fa
     <a href="./gems.html" class="active">Gems</a>
     <a href="./sniper.html">Sniper</a>
     <a href="./og-detector.html">OG Detector</a>
-    <a href="./telegram-bot.html">Telegram Bot</a>
     <a href="./extension.html">Extension</a>
     <a href="./promote.html">Promote</a>
     <a href="./litepaper.html">Litepaper</a>
     <a href="https://t.me/dexscreeneraitoken" target="_blank">Telegram</a>
     <a href="https://x.com/dexscreenerai" target="_blank">Twitter</a>
   </div>
-  <button class="nav-menu-btn" onclick="document.getElementById('mobileMenu').classList.toggle('open'); this.textContent = this.textContent === '☰' ? '✕' : '☰'">☰</button>
+  <button class="nav-menu-btn" onclick="document.getElementById('mob').classList.toggle('open');this.textContent=this.textContent==='☰'?'✕':'☰'">☰</button>
 </nav>
-<div class="nav-mobile-menu" id="mobileMenu">
-  <a href="./index.html">🏠 App</a>
-  <a href="./compare.html">⚖️ Compare</a>
-  <a href="./gems.html" class="active">💎 Gems</a>
-  <a href="./sniper.html">🎯 Sniper</a>
-  <a href="./og-detector.html">🔍 OG Detector</a>
-  <a href="./telegram-bot.html">🤖 Telegram Bot</a>
-  <a href="./extension.html">🧩 Extension</a>
-  <a href="./promote.html">⭐ Promote</a>
-  <a href="./litepaper.html">📄 Litepaper</a>
+<div class="nav-mobile" id="mob">
+  <a href="./index.html">🏠 App</a><a href="./compare.html">⚖️ Compare</a>
+  <a href="./gems.html" class="active">💎 Gems</a><a href="./sniper.html">🎯 Sniper</a>
+  <a href="./og-detector.html">🔍 OG Detector</a><a href="./extension.html">🧩 Extension</a>
+  <a href="./promote.html">⭐ Promote</a><a href="./litepaper.html">📄 Litepaper</a>
   <a href="https://t.me/dexscreeneraitoken" target="_blank">💬 Telegram</a>
   <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
 </div>
 
-<!-- CONTAINER -->
 <div class="container">
-  
-  <!-- HERO SECTION -->
-  <div class="hero" id="heroSection">
-    <div class="hero-icon">💎</div>
-    <h1 class="hero-title">FIND THE GEM</h1>
-    <p class="hero-subtitle">
-      AI scans 12+ sources, applies strict filters, and shows ONLY HIGH POTENTIAL gems.
-    </p>
-    <button class="hunt-btn" id="huntBtn" onclick="startHunt()">
-      <span class="hunt-btn-icon">🔍</span>
-      <span>HUNT FOR GEMS</span>
-    </button>
-    
-    <div class="filters-info">
-      <div class="filter-badge">
-        <span class="filter-badge-icon">📊</span>
-        <div>
-          <div class="filter-badge-text">12+ Data Sources</div>
-          <div style="font-size:10px;color:var(--text3)">Latest, Boosted, Trending...</div>
-        </div>
+
+  <!-- Header — matches Scene Remixer DEXAI design -->
+
+  <div style="padding:20px 0 16px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:40px;height:40px;border-radius:10px;background:var(--cyan-dim);border:1px solid rgba(0,212,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span style="font-size:20px;">💎</span>
       </div>
-      <div class="filter-badge">
-        <span class="filter-badge-icon">🎯</span>
-        <div>
-          <div class="filter-badge-text">MC $10K - $10M</div>
-          <div style="font-size:10px;color:var(--text3)">Micro & Low Cap Only</div>
-        </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#fff;letter-spacing:2px;">GEM DETECTOR</div>
+        <div style="font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--cyan);margin-top:1px;font-weight:600;">DEXSCREENER AI STUDIO</div>
       </div>
-      <div class="filter-badge">
-        <span class="filter-badge-icon">💧</span>
-        <div>
-          <div class="filter-badge-text">Liquidity > $5K</div>
-          <div style="font-size:10px;color:var(--text3)">Safe to Trade</div>
-        </div>
-      </div>
-      <div class="filter-badge">
-        <span class="filter-badge-icon">📈</span>
-        <div>
-          <div class="filter-badge-text">Buy Ratio > 50%</div>
-          <div style="font-size:10px;color:var(--text3)">Strong Accumulation</div>
-        </div>
-      </div>
-      <div class="filter-badge">
-        <span class="filter-badge-icon">🔒</span>
-        <div>
-          <div class="filter-badge-text">No Rug Risks</div>
-          <div style="font-size:10px;color:var(--text3)">Danger Tokens Excluded</div>
-        </div>
-      </div>
-      <div class="filter-badge">
-        <span class="filter-badge-icon">🟢</span>
-        <div>
-          <div class="filter-badge-text">HIGH POTENTIAL Only</div>
-          <div style="font-size:10px;color:var(--text3)">Score 55+ Required</div>
-        </div>
-      </div>
+    </div>
+    <p style="color:var(--text2);font-size:12px;margin:12px 0 0;">Auto-scanning 12+ sources · Top 10 gems live · Scores update in real-time</p>
+    <div style="height:1px;background:linear-gradient(90deg,rgba(0,212,255,0.27),transparent);margin-top:16px;"></div>
+  </div>
+
+  <!-- Scanner Status -->
+
+  <div class="scanner-bar">
+    <div class="scanner-dot active" id="dot"></div>
+    <div class="scanner-text" id="status">🚀 Initializing scanner...</div>
+    <div class="scanner-stats">
+      Scanned: <span id="sScanned">0</span> &nbsp;
+      Passed: <span id="sPassed">0</span> &nbsp;
+      Cycles: <span id="sCycles">0</span> &nbsp;
+      Uptime: <span id="sUptime">--</span>
     </div>
   </div>
-  
-  <!-- PROGRESS SECTION -->
-  <div class="progress-section" id="progressSection">
-    <div class="progress-title">🔍 HUNTING FOR GEMS...</div>
-    <div class="progress-bar-wrap">
-      <div class="progress-bar" id="progressBar"></div>
-    </div>
-    <div class="progress-status" id="progressStatus">Initializing scanner...</div>
-    <div class="progress-stats">
-      <div class="progress-stat">
-        <div class="progress-stat-num" id="statSources">0</div>
-        <div class="progress-stat-label">Sources Scanned</div>
-      </div>
-      <div class="progress-stat">
-        <div class="progress-stat-num" id="statTokens">0</div>
-        <div class="progress-stat-label">Tokens Found</div>
-      </div>
-      <div class="progress-stat">
-        <div class="progress-stat-num" id="statFiltered">0</div>
-        <div class="progress-stat-label">Passed Filters</div>
-      </div>
-    </div>
+
+  <!-- Section Label — same style as scene remixer -->
+
+  <div style="font-family:var(--mono);font-size:9px;letter-spacing:2.5px;color:var(--cyan);margin-bottom:12px;font-weight:600;display:flex;align-items:center;gap:8px;">
+    <span>TOP 10 GEMS</span>
+    <div style="flex:1;height:1px;background:rgba(255,255,255,0.06);"></div>
+    <span style="color:var(--gold);font-size:9px;" id="gemCount">0</span><span style="color:var(--text3);font-size:9px;">/10</span>
   </div>
-  
-  <!-- RESULTS SECTION -->
-  <div class="results-section" id="resultsSection">
-    <div class="results-header">
-      <h2 class="results-title">🚀 POTENTIAL MULTIPLIERS</h2>
-      <p class="results-subtitle">🤖 AI ranked by x2-x100 potential • Best buys first</p>
-    </div>
-    
-    <div class="gems-grid" id="gemsGrid"></div>
-    
-    <button class="reset-btn" onclick="resetHunt()">🔄 Hunt Again</button>
-    
-    <div class="disclaimer">
-      ⚠️ DYOR — This is not financial advice. Always verify on-chain data before investing.<br>
-      Crypto is highly volatile. Never invest more than you can afford to lose.
-    </div>
+
+  <!-- Gems List -->
+
+  <div class="gems-grid" id="gemsGrid">
+    <div class="empty"><div class="empty-icon">💎</div><div class="empty-text">Start scanning to find gems...</div></div>
   </div>
-  
+
+  <!-- Log -->
+
+  <div class="log-section">
+    <div class="log-header">
+      <span>SCANNER LOG</span>
+      <span style="font-size:9px;color:var(--green);">● live</span>
+    </div>
+    <div class="log-content" id="logBox"></div>
+  </div>
+
+  <div style="text-align:center;padding:32px 0 16px;border-top:1px solid rgba(255,255,255,0.06);margin-top:24px;">
+    <span style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:2px;">POWERED BY DEXSCREENER AI × RUGCHECK</span>
+    <p style="font-size:9px;color:var(--text3);margin-top:8px;">⚠️ DYOR — Not financial advice. Always verify on-chain data.</p>
+  </div>
 </div>
 
 <script>
+const $=id=>document.getElementById(id);
+const fN=n=>n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toFixed(0);
+const fP=p=>p===0?'$0':p<.00000001?'$'+p.toExponential(2):p<.0001?'$'+p.toFixed(8):p<.01?'$'+p.toFixed(6):p<1?'$'+p.toFixed(4):p<1000?'$'+p.toFixed(2):'$'+fN(p);
+const esc=s=>(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const now=()=>new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
 // ═══════════════════════════════════════════
-// HELPERS
+// STATE
 // ═══════════════════════════════════════════
-const $ = id => document.getElementById(id);
+let gems = [];          // Top 10
+const MAX_GEMS = 10;
+let running = false;
+let scanTimer = null;
+let uptimeTimer = null;
+let startTime = null;
+let cycles = 0;
+let totalScanned = 0;
+let totalPassed = 0;
+let logs = [];
+const seenAddresses = new Set();
+const validChains = ['solana','ethereum','base','bsc','arbitrum','polygon','avalanche'];
 
-function fN(n) {
-  if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
-  if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
-  if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
-  return n.toFixed(0);
-}
-
-function fP(p) {
-  if (p === 0) return '$0';
-  if (p < 0.00000001) return '$' + p.toExponential(2);
-  if (p < 0.0001) return '$' + p.toFixed(8);
-  if (p < 0.01) return '$' + p.toFixed(6);
-  if (p < 1) return '$' + p.toFixed(4);
-  if (p < 1000) return '$' + p.toFixed(2);
-  return '$' + fN(p);
-}
-
-function esc(s) {
-  if (!s) return '';
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function updateProgress(pct, status) {
-  $('progressBar').style.width = pct + '%';
-  $('progressStatus').textContent = status;
-}
-
-function updateStats(sources, tokens, filtered) {
-  $('statSources').textContent = sources;
-  $('statTokens').textContent = tokens;
-  $('statFiltered').textContent = filtered;
+// ═══════════════════════════════════════════
+// LOG
+// ═══════════════════════════════════════════
+function log(icon, text) {
+  logs.unshift({t:now(), icon, text});
+  if(logs.length>100) logs.pop();
+  $('logBox').innerHTML = logs.slice(0,40).map(l=>
+    `<div class="log-item"><span class="log-time">${l.t}</span><span>${l.icon}</span><span class="log-text">${l.text}</span></div>`
+  ).join('');
 }
 
 // ═══════════════════════════════════════════
-// MAIN HUNT FUNCTION
+// CONTROLS
 // ═══════════════════════════════════════════
-async function startHunt() {
-  $('huntBtn').disabled = true;
-  $('heroSection').style.display = 'none';
-  $('progressSection').classList.add('active');
-  $('resultsSection').classList.remove('active');
-  
-  const allCandidates = new Map(); // Use Map for deduplication
-  let sourcesScanned = 0;
-  let totalTokensFound = 0;
-  
-  const validChains = ['solana', 'ethereum', 'base', 'bsc', 'arbitrum', 'polygon', 'avalanche'];
-  
+function start() {
+  running=true; startTime=Date.now();
+  $('dot').classList.add('active');
+  log('🚀','<span class="g">Auto-scanner started</span> — Hunting for gems...');
+  scan();
+  uptimeTimer=setInterval(updateUptime,1000);
+}
+function updateUptime() {
+  if(!startTime) return;
+  const s=Math.floor((Date.now()-startTime)/1000);
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
+  $('sUptime').textContent=h>0?`${h}h${m}m`:`${m}m${ss}s`;
+}
+
+// ═══════════════════════════════════════════
+// SCORING (from Sniper — no AI needed)
+// ═══════════════════════════════════════════
+function scoreToken(pair, source) {
+  const mc=parseFloat(pair.marketCap)||0;
+  const liq=parseFloat(pair.liquidity?.usd)||0;
+  const vol=parseFloat(pair.volume?.h24)||0;
+  const chg5m=parseFloat(pair.priceChange?.m5)||0;
+  const chg1h=parseFloat(pair.priceChange?.h1)||0;
+  const chg6h=parseFloat(pair.priceChange?.h6)||0;
+  const chg24h=parseFloat(pair.priceChange?.h24)||0;
+  const b24=pair.txns?.h24?.buys||0, s24=pair.txns?.h24?.sells||0;
+  const b5=pair.txns?.m5?.buys||0, s5=pair.txns?.m5?.sells||0;
+  const b1h=pair.txns?.h1?.buys||0, s1h=pair.txns?.h1?.sells||0;
+  const t24=b24+s24, t5=b5+s5, t1h=b1h+s1h;
+  const br24=t24>0?(b24/t24)*100:50;
+  const br5=t5>0?(b5/t5)*100:50;
+  const br1h=t1h>0?(b1h/t1h)*100:50;
+  const age=pair.pairCreatedAt?(Date.now()-pair.pairCreatedAt)/3600000:999;
+  const sym=pair.baseToken?.symbol||'';
+
+  // Hard filters
+  if(mc>10000000||mc<5000) return -1;
+  if(liq<3000) return -1;
+  if(t24<30) return -1;
+  if(br24<45) return -1;
+  if(chg1h<-35) return -1;
+  if(sym.length<2) return -1;
+  if(s5===0&&s1h===0&&b5>5&&b1h>10) return -1; // honeypot
+
+  let score=20;
+
+  // Source bonus
+  if(source==='boosted') score+=10;
+  else if(source==='gainer') score+=7;
+  else if(source==='new') score+=5;
+
+  // MC — low cap = more multiplier potential
+  if(mc>=5000&&mc<20000) score+=25;
+  else if(mc>=20000&&mc<50000) score+=22;
+  else if(mc>=50000&&mc<100000) score+=18;
+  else if(mc>=100000&&mc<300000) score+=14;
+  else if(mc>=300000&&mc<1000000) score+=8;
+  else if(mc>=1000000&&mc<=5000000) score+=3;
+
+  // Buy pressure
+  if(br5>=60) score+=12;
+  else if(br5>=50) score+=6;
+  else if(br5<35&&t5>=5) score-=8;
+
+  if(br24>=55) score+=5;
+
+  // Liquidity ratio
+  const lr=mc>0?(liq/mc)*100:0;
+  if(lr>10) score+=12;
+  else if(lr>5) score+=7;
+  else if(lr>2) score+=3;
+  else if(lr<1) score-=10;
+
+  // Momentum
+  if(chg5m>5&&chg5m<50) score+=8;
+  if(chg1h>10&&chg1h<100) score+=10;
+  else if(chg1h>0) score+=4;
+  if(chg5m>80) score-=10;
+  if(chg1h>150) score-=10;
+  if(chg5m<-20) score-=8;
+
+  // Age
+  if(age>=4&&age<24) score+=12;
+  else if(age>=24&&age<72) score+=8;
+  else if(age>=72&&age<168) score+=4;
+  else if(age<4) score+=3;
+
+  // Volume
+  const vr=mc>0?(vol/mc):0;
+  if(vr>3) score+=8;
+  else if(vr>1) score+=5;
+  else if(vr>.3) score+=2;
+
+  // Activity
+  if(t24>500) score+=6;
+  else if(t24>200) score+=4;
+  else if(t24>100) score+=2;
+
+  // Trend consistency
+  if(chg5m>0&&chg1h>0) score+=4;
+  if(chg5m>0&&chg1h>0&&chg6h>0) score+=4;
+  if(chg24h<-20&&chg1h>10) score+=6; // reversal
+
+  // CTO
+  const isCTO=pair.info?.socials?.some(s=>s.url?.includes('/community'))||
+    (pair.info?.description||'').toLowerCase().includes('cto');
+  if(isCTO) score+=4;
+
+  return Math.min(100, Math.max(0, Math.round(score)));
+}
+
+// ═══════════════════════════════════════════
+// RUGCHECK
+// ═══════════════════════════════════════════
+const rugCache={};
+async function checkRug(addr) {
+  if(rugCache[addr]) return rugCache[addr];
   try {
-    // ═══ PHASE 1: MULTI-SOURCE FETCH (10+ sources) ═══
-    updateProgress(3, 'Scanning latest token profiles...');
-    
-    // Source 1: Latest profiles
-    try {
-      const res = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(10000) });
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        for (const t of data.slice(0, 50)) {
-          if (t.tokenAddress && validChains.includes(t.chainId)) {
-            allCandidates.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'new', icon: t.icon, desc: t.description });
-            totalTokensFound++;
-          }
-        }
-      }
-      sourcesScanned++;
-      updateStats(sourcesScanned, totalTokensFound, 0);
-    } catch(e) { console.log('Source 1 failed'); }
-    
-    updateProgress(8, 'Scanning boosted tokens...');
-    
-    // Source 2: Boosted tokens
-    try {
-      const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(10000) });
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        for (const t of data.slice(0, 40)) {
-          if (t.tokenAddress && validChains.includes(t.chainId) && !allCandidates.has(t.tokenAddress)) {
-            allCandidates.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'boosted', icon: t.icon, boost: t.amount });
-            totalTokensFound++;
-          }
-        }
-      }
-      sourcesScanned++;
-      updateStats(sourcesScanned, totalTokensFound, 0);
-    } catch(e) { console.log('Source 2 failed'); }
-    
-    updateProgress(10, 'Scanning top gainers per chain...');
-    
-    // Source 3: Top gainers per chain (get trending/pumping tokens)
-    const chainSlugs = ['solana', 'ethereum', 'bsc', 'base', 'arbitrum'];
-    for (const chain of chainSlugs) {
-      try {
-        // Search for trending pairs on each chain
-        const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${chain}`, { signal: AbortSignal.timeout(6000) });
-        const data = await res.json();
-        if (data.pairs) {
-          // Sort by 1h change to get gainers
-          const gainers = data.pairs
-            .filter(p => p.chainId === chain && parseFloat(p.priceChange?.h1) > 5)
-            .sort((a, b) => (parseFloat(b.priceChange?.h1) || 0) - (parseFloat(a.priceChange?.h1) || 0))
-            .slice(0, 30);
-          
-          for (const p of gainers) {
-            const addr = p.baseToken?.address;
-            if (addr && !allCandidates.has(addr)) {
-              allCandidates.set(addr, { 
-                address: addr, 
-                chain: p.chainId, 
-                source: 'gainer', 
-                pair: p,
-                icon: p.info?.imageUrl 
-              });
-              totalTokensFound++;
-            }
-          }
-        }
-        sourcesScanned++;
-      } catch(e) { /* Skip */ }
-    }
-    updateStats(sourcesScanned, totalTokensFound, 0);
-    
-    updateProgress(15, 'Searching trending keywords...');
-    
-    // Source 3+: MASSIVE search queries (letters, numbers, crypto terms)
-    const searchQueries = [
-      // Hot crypto terms
-      'moon', 'pump', 'gem', 'degen', 'pepe', 'ai', 'meme', 'inu', 'wojak', 'based',
-      'trump', 'elon', 'cat', 'dog', 'frog', 'baby', 'doge', 'shib', 'bonk', 'wif',
-      'lambo', 'rich', 'gold', 'diamond', '100x', 'rocket', 'bull', 'bear', 'ape',
-      'chad', 'giga', 'mega', 'super', 'king', 'queen', 'god', 'devil', 'angel',
-      // ALL letters (catches most tokens)
-      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-      // Numbers and combos
-      '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-      '69', '420', '1000', '100', '10', '777', '666', '999',
-      // Crypto culture
-      'sol', 'eth', 'btc', 'nft', 'defi', 'web3', 'meta', 'verse', 'pixel', 'punk',
-      'rare', 'epic', 'legend', 'titan', 'alpha', 'beta', 'omega', 'sigma',
-      'safe', 'fair', 'new', 'next', 'hot', 'fire', 'burn', 'stake',
-      // Meme culture
-      'pepe', 'wojak', 'cope', 'seethe', 'kek', 'lol', 'lmao', 'rekt', 'wagmi', 'ngmi',
-      'wen', 'ser', 'fren', 'anon', 'noob', 'whale', 'shrimp', 'crab',
-      // Animals
-      'cat', 'dog', 'frog', 'ape', 'bear', 'bull', 'fish', 'bird', 'lion', 'tiger',
-      'wolf', 'fox', 'rat', 'bat', 'pig', 'cow', 'duck', 'goat', 'snake', 'dragon',
-      // Colors
-      'red', 'blue', 'green', 'gold', 'pink', 'black', 'white', 'purple',
-      // Emotions
-      'happy', 'sad', 'angry', 'love', 'hate', 'fear', 'hope', 'dream',
-      // Actions
-      'buy', 'sell', 'hold', 'pump', 'dump', 'send', 'moon', 'rug', 'flip'
-    ];
-    
-    // Shuffle to get variety each time
-    const shuffled = searchQueries.sort(() => Math.random() - 0.5);
-    // Take 70 queries for more coverage
-    const queriesToRun = shuffled.slice(0, 70);
-    
-    for (let i = 0; i < queriesToRun.length; i++) {
-      const query = queriesToRun[i];
-      updateProgress(15 + (i * 0.4), `Searching "${query}"...`);
-      
-      try {
-        const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${query}`, { signal: AbortSignal.timeout(5000) });
-        const data = await res.json();
-        if (data.pairs) {
-          // Take more results per query
-          for (const p of data.pairs.slice(0, 60)) {
-            const addr = p.baseToken?.address;
-            if (addr && validChains.includes(p.chainId) && !allCandidates.has(addr)) {
-              allCandidates.set(addr, { 
-                address: addr, 
-                chain: p.chainId, 
-                source: 'search', 
-                pair: p,
-                icon: p.info?.imageUrl 
-              });
-              totalTokensFound++;
-            }
-          }
-        }
-        sourcesScanned++;
-        if (i % 5 === 0) updateStats(sourcesScanned, totalTokensFound, 0);
-      } catch(e) { /* Skip failed */ }
-      
-      // Small delay to avoid rate limiting
-      if (i % 8 === 7) await new Promise(r => setTimeout(r, 150));
-    }
-    
-    updateProgress(42, `Enriching ${allCandidates.size} candidates...`);
-    
-    // ═══ PHASE 2: ENRICH WITH FULL DATA ═══
-    const enriched = [];
-    const candidates = Array.from(allCandidates.values());
-    let processed = 0;
-    const maxToProcess = 350; // Process many more tokens for better gem hunting
-    
-    for (const cand of candidates.slice(0, maxToProcess)) {
-      processed++;
-      if (processed % 15 === 0) {
-        updateProgress(42 + Math.floor((processed / Math.min(maxToProcess, candidates.length)) * 30), 
-          `Analyzing token ${processed}/${Math.min(maxToProcess, candidates.length)}...`);
-      }
-      
-      try {
-        let pair = cand.pair;
-        
-        if (!pair) {
-          const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cand.address}`, { signal: AbortSignal.timeout(4000) });
-          const dexData = await dexRes.json();
-          if (dexData.pairs && dexData.pairs.length > 0) {
-            pair = dexData.pairs.sort((a, b) => (parseFloat(b.liquidity?.usd) || 0) - (parseFloat(a.liquidity?.usd) || 0))[0];
-          }
-        }
-        
-        if (!pair) continue;
-        
-        const buys = pair.txns?.h24?.buys || 0;
-        const sells = pair.txns?.h24?.sells || 0;
-        const total = buys + sells;
-        const buyRatio = total > 0 ? buys / total : 0.5;
-        const liq = parseFloat(pair.liquidity?.usd) || 0;
-        const vol = parseFloat(pair.volume?.h24) || 0;
-        const mc = parseFloat(pair.marketCap) || 0;
-        const chg5m = parseFloat(pair.priceChange?.m5) || 0;
-        const chg1h = parseFloat(pair.priceChange?.h1) || 0;
-        const chg6h = parseFloat(pair.priceChange?.h6) || 0;
-        const chg24h = parseFloat(pair.priceChange?.h24) || 0;
-        const age = pair.pairCreatedAt ? (Date.now() - new Date(pair.pairCreatedAt).getTime()) / 3600000 : 999;
-        
-        // ═══ FILTERS FOR MULTIPLIER POTENTIAL ═══
-        if (mc > 10000000) continue; // Max 10M
-        if (mc < 5000) continue; // Min 5K (allow micro caps)
-        if (liq < 3000) continue; // Min 3K liq
-        if (buyRatio < 0.48) continue; // Min 48% buyers
-        if (chg1h < -30) continue; // Skip hard dumps
-        if (total < 30) continue; // Min 30 txns
-        
-        // ═══ GEM SCORE CALCULATION ═══
-        let score = 0;
-        
-        // Buy pressure (max 25)
-        score += Math.min(25, (buyRatio - 0.5) * 50);
-        
-        // Market cap - PRIORITIZE LOW CAP for multiplier potential (max 25)
-        // Lower MC = more room to grow = higher multiplier potential
-        if (mc >= 5000 && mc < 20000) score += 25;       // 5K-20K = ULTRA moonshot
-        else if (mc >= 20000 && mc < 50000) score += 23; // 20K-50K = moonshot
-        else if (mc >= 50000 && mc < 100000) score += 20; // 50K-100K = excellent
-        else if (mc >= 100000 && mc < 200000) score += 16; // 100K-200K = great
-        else if (mc >= 200000 && mc < 500000) score += 12; // 200K-500K = good
-        else if (mc >= 500000 && mc <= 1000000) score += 8; // 500K-1M = decent
-        else if (mc > 1000000 && mc <= 5000000) score += 4;  // 1M-5M = limited
-        
-        // Liquidity ratio (max 15)
-        const liqRatio = mc > 0 ? (liq / mc) : 0;
-        if (liqRatio > 0.1) score += 15;
-        else if (liqRatio > 0.05) score += 10;
-        else if (liqRatio > 0.02) score += 5;
-        
-        // Momentum - reward positive, penalize negative (max 20)
-        if (chg1h > 10 && chg1h < 100) score += 12;
-        else if (chg1h > 5) score += 8;
-        else if (chg1h > 0) score += 4;
-        else if (chg1h < -10) score -= 5;
-        
-        if (chg24h > 20 && chg24h < 500) score += 8;
-        else if (chg24h > 0) score += 4;
-        else if (chg24h < -20) score -= 5;
-        
-        // Age - prefer newer tokens for multiplier (max 15)
-        if (age >= 6 && age < 24) score += 15;   // 6-24h = moonshot
-        else if (age >= 24 && age < 72) score += 12; // 1-3 days
-        else if (age >= 72 && age < 168) score += 8; // 3-7 days
-        else if (age >= 168 && age < 720) score += 5; // 1-4 weeks
-        else if (age < 6) score += 5; // Ultra new
-        
-        // Activity (max 10)
-        if (total > 1000) score += 10;
-        else if (total > 500) score += 8;
-        else if (total > 200) score += 5;
-        else if (total > 100) score += 3;
-        
-        // Volume to liq ratio = trading interest (max 10)
-        const volLiqRatio = liq > 0 ? (vol / liq) : 0;
-        if (volLiqRatio > 5) score += 10;
-        else if (volLiqRatio > 2) score += 7;
-        else if (volLiqRatio > 1) score += 4;
-        
-        // Source bonus (max 8)
-        if (cand.source === 'boosted') score += 8;
-        else if (cand.source === 'gainer') score += 6;
-        else if (cand.source === 'new') score += 4;
-        
-        // Check for CTO (community takeover)
-        const isCTO = pair.info?.socials?.some(s => s.type === 'twitter' && s.url?.includes('/community')) ||
-                      (pair.info?.description || '').toLowerCase().includes('cto');
-        if (isCTO) score += 5;
-        
-        // Rugcheck (all chains)
-        let rugStatus = 'unknown';
-        let rugRisks = [];
-        try {
-          const rugRes = await fetch(`https://api.rugcheck.xyz/v1/tokens/${cand.address}/report/summary`, { signal: AbortSignal.timeout(3000) });
-          if (rugRes.ok) {
-            const rug = await rugRes.json();
-            rugRisks = (rug.risks || []).map(r => r.name || r.description || 'Unknown');
-            const risksLower = rugRisks.map(r => r.toLowerCase());
+    const r=await fetch(`https://api.rugcheck.xyz/v1/tokens/${addr}/report/summary`,{signal:AbortSignal.timeout(4000)});
+    if(!r.ok) return null;
+    const d=await r.json();
+    rugCache[addr]=d;
+    return d;
+  } catch(e) { return null; }
+}
 
-            // Honeypot or mint = SKIP
-            if (risksLower.some(r => r.includes('honeypot') || r.includes('honey pot'))) continue;
-            if (rug.mintAuthority || risksLower.some(r => r.includes('mint') && r.includes('enabl'))) continue;
+function parseRug(d) {
+  if(!d||!d.risks) return {status:'unknown',risks:[]};
+  const names=(d.risks||[]).map(r=>(r.name||r.description||'').toLowerCase());
+  if(names.some(n=>n.includes('honeypot')||n.includes('honey pot'))) return {status:'danger',risks:['Honeypot']};
+  if(d.mintAuthority||names.some(n=>n.includes('mint')&&n.includes('enabl'))) return {status:'danger',risks:['Mint enabled']};
+  if(names.some(n=>n.includes('rug')||n.includes('scam'))) return {status:'danger',risks:['Rug risk']};
+  if(d.risks.length===0) return {status:'good',risks:[]};
+  if(d.risks.length<=2) return {status:'warn',risks:d.risks.map(r=>r.name||'')};
+  return {status:'danger',risks:d.risks.map(r=>r.name||'').slice(0,3)};
+}
 
-            // Freeze = heavy penalty
-            if (rug.freezeAuthority || risksLower.some(r => r.includes('freeze') && r.includes('enabl'))) {
-              score -= 15;
-              rugStatus = 'warning';
-            }
-            // Rug/scam flag
-            else if (risksLower.some(r => r.includes('rug') || r.includes('scam'))) {
-              continue; // SKIP
-            }
-            // Clean
-            else if (rugRisks.length === 0) {
-              score += 15;
-              rugStatus = 'good';
-            }
-            // Few risks
-            else if (rugRisks.length <= 2) {
-              rugStatus = 'warning';
-              score -= 5;
-            }
-            // Too many risks
-            else {
-              continue; // SKIP
-            }
+// ═══════════════════════════════════════════
+// SCAN CYCLE
+// ═══════════════════════════════════════════
+async function scan() {
+  if(!running) return;
+  cycles++;
+  $('sCycles').textContent=cycles;
+  const allPairs=new Map();
 
-            // Concentrated holders penalty
-            if (risksLower.some(r => r.includes('top 10') || r.includes('concentrated'))) score -= 10;
-          }
-        } catch(e) {}
-        
-        enriched.push({
-          symbol: pair.baseToken?.symbol || '???',
-          name: pair.baseToken?.name || '',
-          chain: pair.chainId || 'unknown',
-          price: parseFloat(pair.priceUsd) || 0,
-          mc, liq, vol,
-          chg5m, chg1h, chg6h, chg24h,
-          buys, sells,
-          buyRatio: Math.round(buyRatio * 100),
-          txns: total,
-          age: Math.round(age),
-          score: Math.max(0, Math.min(100, Math.round(score))),
-          rugStatus, rugRisks,
-          source: cand.source,
-          isCTO,
-          logo: pair.info?.imageUrl || cand.icon || '',
-          address: cand.address,
-          pairAddress: pair.pairAddress || '',
-          twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || '',
-          website: pair.info?.websites?.[0]?.url || '',
-          telegram: pair.info?.socials?.find(s => s.type === 'telegram')?.url || '',
-          description: cand.desc || pair.info?.description || ''
+  // SOURCE 1: Latest profiles
+  try {
+    $('status').textContent='📡 Scanning new tokens...';
+    const r=await fetch('https://api.dexscreener.com/token-profiles/latest/v1',{signal:AbortSignal.timeout(8000)});
+    const d=await r.json();
+    if(Array.isArray(d)) d.slice(0,60).forEach(t=>{
+      if(t.tokenAddress&&validChains.includes(t.chainId)) allPairs.set(t.tokenAddress,{addr:t.tokenAddress,chain:t.chainId,src:'new',icon:t.icon});
+    });
+  } catch(e){}
+
+  // SOURCE 2: Top boosted
+  try {
+    $('status').textContent=`📡 ${allPairs.size} tokens — Boosted...`;
+    const r=await fetch('https://api.dexscreener.com/token-boosts/top/v1',{signal:AbortSignal.timeout(8000)});
+    const d=await r.json();
+    if(Array.isArray(d)) d.slice(0,50).forEach(t=>{
+      if(t.tokenAddress&&validChains.includes(t.chainId)&&!allPairs.has(t.tokenAddress))
+        allPairs.set(t.tokenAddress,{addr:t.tokenAddress,chain:t.chainId,src:'boosted',icon:t.icon});
+    });
+  } catch(e){}
+
+  // SOURCE 3: Gainers per chain
+  try {
+    for(const chain of ['solana','base','ethereum']) {
+      const r=await fetch(`https://api.dexscreener.com/latest/dex/search?q=${chain}`,{signal:AbortSignal.timeout(5000)});
+      const d=await r.json();
+      if(d.pairs) d.pairs.filter(p=>p.chainId===chain&&parseFloat(p.priceChange?.h1)>5)
+        .sort((a,b)=>(parseFloat(b.priceChange?.h1)||0)-(parseFloat(a.priceChange?.h1)||0))
+        .slice(0,40).forEach(p=>{
+          const a=p.baseToken?.address;
+          if(a&&!allPairs.has(a)) allPairs.set(a,{addr:a,chain:p.chainId,src:'gainer',pair:p,icon:p.info?.imageUrl});
         });
-        
-        updateStats(sourcesScanned, totalTokensFound, enriched.length);
-        
-      } catch(e) { /* skip */ }
     }
-    
-    updateProgress(75, 'Filtering HIGH POTENTIAL only...');
-    
-    // Sort by score and filter HIGH POTENTIAL only (score >= 55)
-    enriched.sort((a, b) => b.score - a.score);
-    const highPotentialGems = enriched.filter(g => {
-      // Must have decent score
-      if (g.score < 50) return false;
-      // Must not be dumping hard
-      if (g.chg1h < -20) return false;
-      // Must have good rug status (not danger)
-      if (g.rugStatus === 'danger') return false;
-      // Must have decent buy ratio
-      if (g.buyRatio < 48) return false;
-      return true;
-    });
-    
-    // Display many gems
-    const topGems = highPotentialGems.slice(0, 60);
-    
-    if (topGems.length === 0) {
-      $('progressSection').classList.remove('active');
-      $('heroSection').style.display = 'block';
-      alert('No HIGH POTENTIAL gems found right now. Market conditions may be unfavorable. Try again later!');
-      return;
-    }
-    
-    // ═══ PHASE 3: AI RANKING FOR MULTIPLIER POTENTIAL ═══
-    updateProgress(80, 'AI ranking by multiplier potential...');
-    
-    let aiRanking = [];
-    
+  } catch(e){}
+
+  // SOURCE 4: Keyword search (30 random)
+  const kws=['moon','pump','gem','pepe','ai','meme','doge','bonk','wif','cat','dog','frog','trump','elon',
+    'bull','gold','diamond','rocket','king','god','alpha','sigma','safe','fire','burn','sol','eth','base',
+    'baby','mega','super','rich','lambo','whale','ape','dragon','degen','chad','giga','angel',
+    'a','b','c','d','e','x','z','1','69','420','100','777'];
+  const shuffled=[...kws].sort(()=>Math.random()-.5).slice(0,30);
+
+  for(let i=0;i<shuffled.length;i++) {
+    $('status').textContent=`🔍 ${allPairs.size} tokens — "${shuffled[i]}"...`;
     try {
-      // Send top 30 to AI for ranking
-      const gemsForAI = topGems.slice(0, 30);
-      const gemsContext = gemsForAI.map((g, i) => `${g.symbol}: MC=$${fN(g.mc)} Liq=$${fN(g.liq)} Buy=${g.buyRatio}% 1h=${g.chg1h > 0 ? '+' : ''}${g.chg1h.toFixed(0)}% 24h=${g.chg24h > 0 ? '+' : ''}${g.chg24h.toFixed(0)}%`).join('\n');
-      
-      const prompt = `You are a crypto gem hunter expert. Rank these tokens by MULTIPLIER POTENTIAL (best chance to 2x, 5x, 10x, 100x NOW).
+      const r=await fetch(`https://api.dexscreener.com/latest/dex/search?q=${shuffled[i]}`,{signal:AbortSignal.timeout(4000)});
+      const d=await r.json();
+      if(d.pairs) d.pairs.slice(0,50).forEach(p=>{
+        const a=p.baseToken?.address;
+        if(a&&validChains.includes(p.chainId)&&!allPairs.has(a))
+          allPairs.set(a,{addr:a,chain:p.chainId,src:'search',pair:p,icon:p.info?.imageUrl});
+      });
+    } catch(e){}
+    if(i%10===9) await new Promise(r=>setTimeout(r,100));
+  }
 
-PRIORITIZE:
-1. LOW MC ($10K-$300K) = Maximum room to grow
-2. HIGH BUY PRESSURE (>55%) = Whales accumulating
-3. POSITIVE 1H MOMENTUM = Trend starting NOW
-4. GOOD LIQUIDITY (>5% of MC) = Can sustain pump
+  // ENRICH & SCORE
+  $('status').textContent=`⚙️ Scoring ${allPairs.size} tokens...`;
+  const candidates=Array.from(allPairs.values());
+  let scored=[];
+  let scannedThisCycle=0;
 
-${gemsContext}
+  for(const cand of candidates) {
+    scannedThisCycle++;
+    if(scannedThisCycle%80===0) $('status').textContent=`⚙️ ${scannedThisCycle}/${candidates.length}...`;
 
-Rank from HIGHEST multiplier potential to LOWEST.
-Reply with ONLY symbols separated by commas. Example: PEPE,BONK,WIF
-No explanations, just symbols.`;
-
-      const aiRes = await askAI(prompt);
-      if (aiRes && aiRes.answer) {
-        // Parse AI ranking - extract symbols
-        const answer = aiRes.answer.replace(/\s/g, '').toUpperCase();
-        const symbols = answer.split(',').map(s => s.replace(/[^A-Z0-9]/g, '')).filter(s => s.length > 0);
-        
-        if (symbols.length > 0) {
-          aiRanking = symbols;
-          console.log('AI Ranking:', aiRanking);
-        }
+    try {
+      let pair=cand.pair;
+      if(!pair) {
+        const r=await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cand.addr}`,{signal:AbortSignal.timeout(3000)});
+        const d=await r.json();
+        if(d.pairs&&d.pairs[0]) pair=d.pairs.sort((a,b)=>(parseFloat(b.liquidity?.usd)||0)-(parseFloat(a.liquidity?.usd)||0))[0];
       }
-    } catch(e) {
-      console.log('AI ranking failed:', e);
+      if(!pair) continue;
+
+      const s=scoreToken(pair,cand.src);
+      if(s>=55) {
+        scored.push({pair,score:s,src:cand.src,icon:cand.icon||pair.info?.imageUrl||''});
+      }
+    } catch(e){}
+    if(scannedThisCycle%30===29) await new Promise(r=>setTimeout(r,30));
+  }
+
+  totalScanned+=scannedThisCycle;
+  totalPassed+=scored.length;
+  $('sScanned').textContent=totalScanned;
+  $('sPassed').textContent=totalPassed;
+
+  // RUGCHECK top candidates
+  scored.sort((a,b)=>b.score-a.score);
+  const top=scored.slice(0,30);
+
+  $('status').textContent=`🔒 Rugchecking ${top.length} candidates...`;
+  const clean=[];
+
+  for(const t of top) {
+    const addr=t.pair.baseToken?.address;
+    if(!addr) continue;
+    const rug=await checkRug(addr);
+    const r=parseRug(rug);
+    if(r.status==='danger') continue;
+    clean.push({...t,rugStatus:r.status,rugRisks:r.risks});
+  }
+
+  log('🔍',`Cycle ${cycles}: <span class="c">${scannedThisCycle}</span> scanned, <span class="g">${clean.length}</span> passed all filters`);
+
+  // UPDATE TOP 10
+  let changed=false;
+  for(const c of clean) {
+    const addr=c.pair.baseToken?.address;
+    const existing=gems.findIndex(g=>g.address===addr);
+
+    if(existing>=0) {
+      // Update score if higher
+      if(c.score>gems[existing].score) {
+        gems[existing]=buildGem(c);
+        changed=true;
+      }
+    } else if(gems.length<MAX_GEMS) {
+      gems.push(buildGem(c));
+      changed=true;
+      log('💎',`<span class="go">NEW GEM</span> $${esc(c.pair.baseToken?.symbol)} — Score ${c.score}`);
+    } else {
+      // Replace lowest if this is better
+      const lowest=gems.reduce((min,g,i)=>g.score<min.score?{score:g.score,idx:i}:min,{score:999,idx:-1});
+      if(c.score>lowest.score) {
+        const old=gems[lowest.idx];
+        gems[lowest.idx]=buildGem(c);
+        changed=true;
+        log('🔄',`<span class="go">UPGRADE</span> $${esc(c.pair.baseToken?.symbol)} (${c.score}) replaced $${esc(old.symbol)} (${old.score})`);
+      }
     }
-    
-    updateProgress(95, 'Rendering results...');
-    
-    // ═══ PHASE 4: RENDER ═══
-    renderResults(topGems, aiRanking);
-    
-    updateProgress(100, 'Complete!');
-    
-    setTimeout(() => {
-      $('progressSection').classList.remove('active');
-      $('resultsSection').classList.add('active');
-    }, 500);
-    
-  } catch (err) {
-    console.error('Hunt failed:', err);
-    $('progressSection').classList.remove('active');
-    $('heroSection').style.display = 'block';
-    alert('Hunt failed: ' + err.message);
-  } finally {
-    $('huntBtn').disabled = false;
   }
+
+  if(changed) {
+    gems.sort((a,b)=>b.score-a.score);
+    renderGems();
+  }
+
+  $('status').textContent=`✅ Top ${gems.length} gems live — Next scan in 45s...`;
+
+  // Schedule next cycle
+  if(running) scanTimer=setTimeout(scan, 45000);
 }
 
-async function askAI(prompt) {
-  try {
-    const res = await fetch('https://dexscreener-telegram-bot-production.up.railway.app/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: prompt }),
-      signal: AbortSignal.timeout(30000)
-    });
-    return await res.json();
-  } catch (e) {
-    return { error: true, message: e.message };
-  }
+function buildGem(c) {
+  const p=c.pair;
+  const mc=parseFloat(p.marketCap)||0;
+  const liq=parseFloat(p.liquidity?.usd)||0;
+  const vol=parseFloat(p.volume?.h24)||0;
+  const age=p.pairCreatedAt?(Date.now()-p.pairCreatedAt)/3600000:999;
+  const b24=p.txns?.h24?.buys||0, s24=p.txns?.h24?.sells||0;
+  const br=b24+s24>0?Math.round(b24/(b24+s24)*100):50;
+  const isCTO=p.info?.socials?.some(s=>s.url?.includes('/community'))||
+    (p.info?.description||'').toLowerCase().includes('cto');
+
+  return {
+    symbol: p.baseToken?.symbol||'???',
+    name: (p.baseToken?.name||'').slice(0,30),
+    chain: p.chainId||'unknown',
+    address: p.baseToken?.address,
+    pairAddress: p.pairAddress,
+    price: parseFloat(p.priceUsd)||0,
+    mc, liq, vol,
+    chg5m: parseFloat(p.priceChange?.m5)||0,
+    chg1h: parseFloat(p.priceChange?.h1)||0,
+    chg6h: parseFloat(p.priceChange?.h6)||0,
+    chg24h: parseFloat(p.priceChange?.h24)||0,
+    buyRatio: br,
+    txns: b24+s24,
+    age: Math.round(age),
+    score: c.score,
+    src: c.src,
+    isCTO,
+    logo: c.icon||'',
+    rugStatus: c.rugStatus||'unknown',
+    twitter: p.info?.socials?.find(s=>s.type==='twitter')?.url||'',
+    website: p.info?.websites?.[0]?.url||'',
+    telegram: p.info?.socials?.find(s=>s.type==='telegram')?.url||'',
+    lastUpdate: Date.now()
+  };
 }
 
-function renderResults(gems, aiRanking) {
-  // Sort gems by AI ranking if available
-  if (aiRanking && aiRanking.length > 0) {
-    gems.sort((a, b) => {
-      const aSymbol = a.symbol.toUpperCase();
-      const bSymbol = b.symbol.toUpperCase();
-      const aIndex = aiRanking.indexOf(aSymbol);
-      const bIndex = aiRanking.indexOf(bSymbol);
-      
-      // If both are in AI ranking, sort by AI order
-      if (aIndex !== -1 && bIndex !== -1) {
-        return aIndex - bIndex;
-      }
-      // If only one is in AI ranking, prioritize it
-      if (aIndex !== -1) return -1;
-      if (bIndex !== -1) return 1;
-      // If neither, sort by score
-      return b.score - a.score;
-    });
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+function renderGems() {
+  $('gemCount').textContent=gems.length;
+  if(gems.length===0) {
+    $('gemsGrid').innerHTML='<div class="empty"><div class="empty-icon">💎</div><div class="empty-text">Scanning... gems will appear here</div></div>';
+    return;
   }
-  
-  // Gem cards
-  let cardsHtml = '';
-  
-  gems.forEach((g, i) => {
-    const rank = i + 1;
-    const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'normal';
-    const isTop3 = rank <= 3;
-    const isAIRanked = aiRanking && aiRanking.includes(g.symbol.toUpperCase());
-    const aiPosition = aiRanking ? aiRanking.indexOf(g.symbol.toUpperCase()) + 1 : 0;
-    const chg24hColor = g.chg24h >= 0 ? 'green' : 'red';
-    const chg1hColor = g.chg1h >= 0 ? 'green' : 'red';
-    const buyColor = g.buyRatio >= 60 ? 'green' : g.buyRatio >= 55 ? '' : 'yellow';
-    const rugIcon = g.rugStatus === 'good' ? '✅' : g.rugStatus === 'warning' ? '⚠️' : '❓';
-    
-    // Confidence based on score
-    const confidence = g.score >= 75 ? 'VERY HIGH' : g.score >= 65 ? 'HIGH' : g.score >= 55 ? 'GOOD' : 'MODERATE';
-    const confidenceColor = g.score >= 75 ? '#00ff88' : g.score >= 65 ? '#00d4ff' : g.score >= 55 ? '#ffaa00' : '#94a3b8';
-    
-    let badges = '';
-    if (rank === 1 && isAIRanked) badges += '<span class="gem-badge ai-pick">🤖 AI #1</span>';
-    else if (isAIRanked && aiPosition <= 3) badges += `<span class="gem-badge ai-ranked">🤖 AI #${aiPosition}</span>`;
-    if (g.age < 48) badges += '<span class="gem-badge new">🆕 FRESH</span>';
-    if (g.source === 'boosted') badges += '<span class="gem-badge boosted">🚀 BOOSTED</span>';
-    if (g.isCTO) badges += '<span class="gem-badge cto">👥 CTO</span>';
-    
-    cardsHtml += `<div class="gem-card ${isTop3 ? 'top-3' : ''} ${rank === 1 && isAIRanked ? 'ai-pick-card' : ''}">
-      <div class="gem-rank ${rankClass}">#${rank}</div>
-      <div class="gem-score high" style="background:${confidenceColor}">${g.score}</div>
-      
-      <div class="gem-header">
-        <div class="gem-logo">
-          ${g.logo ? `<img src="${g.logo}" onerror="this.style.display='none';this.parentElement.textContent='${g.symbol.charAt(0)}'">` : g.symbol.charAt(0)}
-        </div>
-        <div class="gem-info">
-          <div class="gem-symbol">
-            $${esc(g.symbol)}
-            <span class="gem-chain">${g.chain}</span>
-          </div>
-          <div class="gem-name">${esc(g.name.slice(0, 25))}</div>
-          <div class="gem-confidence" style="color:${confidenceColor}">Confidence: ${confidence}</div>
-          ${badges ? `<div class="gem-badges">${badges}</div>` : ''}
+
+  $('gemsGrid').innerHTML=gems.map((g,i)=>{
+    const rank=i+1;
+    const rc=rank===1?'r1':rank===2?'r2':rank===3?'r3':'rn';
+    const sc=g.score>=75?'high':g.score>=60?'med':'low';
+    const c1h=g.chg1h>=0?'green':'red';
+    const c24h=g.chg24h>=0?'green':'red';
+    const cbr=g.buyRatio>=60?'green':g.buyRatio>=50?'':'yellow';
+    const rugIcon=g.rugStatus==='good'?'✅':g.rugStatus==='warn'?'⚠️':'❓';
+
+    let badges='';
+    if(g.age<48) badges+=`<span class="gem-badge fresh">🆕 ${g.age}h</span>`;
+    if(g.src==='boosted') badges+=`<span class="gem-badge boosted">🚀 BOOST</span>`;
+    if(g.rugStatus==='good') badges+=`<span class="gem-badge safe">✅ SAFE</span>`;
+    else if(g.rugStatus==='warn') badges+=`<span class="gem-badge warn">⚠️ WARN</span>`;
+    if(g.isCTO) badges+=`<span class="gem-badge cto">👥 CTO</span>`;
+
+    return `<div class="gem-card ${rank<=3?'top3':''}">
+      <div class="gem-rank ${rc}">#${rank}</div>
+      <div class="gem-score-badge ${sc}">${g.score}</div>
+      <div class="gem-head">
+        <div class="gem-logo">${g.logo?`<img src="${g.logo}" onerror="this.style.display='none';this.parentElement.textContent='${g.symbol.charAt(0)}'">`:g.symbol.charAt(0)}</div>
+        <div>
+          <div class="gem-sym">$${esc(g.symbol)} <span class="gem-chain-tag">${g.chain}</span></div>
+          <div class="gem-name">${esc(g.name)}</div>
+          ${badges?`<div class="gem-badges">${badges}</div>`:''}
         </div>
       </div>
-      
       <div class="gem-stats">
-        <div class="gem-stat">
-          <div class="gem-stat-label">MCAP</div>
-          <div class="gem-stat-value">$${fN(g.mc)}</div>
-        </div>
-        <div class="gem-stat">
-          <div class="gem-stat-label">LIQ</div>
-          <div class="gem-stat-value">$${fN(g.liq)}</div>
-        </div>
-        <div class="gem-stat">
-          <div class="gem-stat-label">VOL 24H</div>
-          <div class="gem-stat-value">$${fN(g.vol)}</div>
-        </div>
-        <div class="gem-stat">
-          <div class="gem-stat-label">1H</div>
-          <div class="gem-stat-value ${chg1hColor}">${g.chg1h > 0 ? '+' : ''}${g.chg1h.toFixed(1)}%</div>
-        </div>
-        <div class="gem-stat">
-          <div class="gem-stat-label">24H</div>
-          <div class="gem-stat-value ${chg24hColor}">${g.chg24h > 0 ? '+' : ''}${g.chg24h.toFixed(1)}%</div>
-        </div>
-        <div class="gem-stat">
-          <div class="gem-stat-label">BUYERS</div>
-          <div class="gem-stat-value ${buyColor}">${g.buyRatio}%</div>
-        </div>
+        <div class="gem-stat"><div class="gem-stat-l">MCAP</div><div class="gem-stat-v">$${fN(g.mc)}</div></div>
+        <div class="gem-stat"><div class="gem-stat-l">LIQ</div><div class="gem-stat-v">$${fN(g.liq)}</div></div>
+        <div class="gem-stat"><div class="gem-stat-l">VOL 24H</div><div class="gem-stat-v">$${fN(g.vol)}</div></div>
+        <div class="gem-stat"><div class="gem-stat-l">1H</div><div class="gem-stat-v ${c1h}">${g.chg1h>0?'+':''}${g.chg1h.toFixed(1)}%</div></div>
+        <div class="gem-stat"><div class="gem-stat-l">24H</div><div class="gem-stat-v ${c24h}">${g.chg24h>0?'+':''}${g.chg24h.toFixed(1)}%</div></div>
+        <div class="gem-stat"><div class="gem-stat-l">BUYERS</div><div class="gem-stat-v ${cbr}">${g.buyRatio}%</div></div>
       </div>
-      
-      <div class="gem-metrics">
-        <div class="gem-metric">
-          <div class="gem-metric-label">Txns 24h</div>
-          <div class="gem-metric-value">${g.txns}</div>
+      <div class="gem-foot">
+        <div class="gem-rug">${rugIcon} ${g.rugStatus}</div>
+        <div class="gem-links">
+          <a href="${g.twitter||'#'}" target="_blank" class="gem-link ${!g.twitter?'off':''}">𝕏</a>
+          <a href="${g.telegram||'#'}" target="_blank" class="gem-link ${!g.telegram?'off':''}">✈</a>
+          <a href="${g.website||'#'}" target="_blank" class="gem-link ${!g.website?'off':''}">🌐</a>
         </div>
-        <div class="gem-metric">
-          <div class="gem-metric-label">Age</div>
-          <div class="gem-metric-value">${g.age}h</div>
-        </div>
-        <div class="gem-metric">
-          <div class="gem-metric-label">Price</div>
-          <div class="gem-metric-value">${fP(g.price)}</div>
-        </div>
-      </div>
-      
-      <div class="gem-footer">
-        <div class="gem-footer-row">
-          <div class="gem-rug">${rugIcon} Rug: ${g.rugStatus}</div>
-          <div class="gem-socials">
-            <a href="${g.twitter || '#'}" target="_blank" class="gem-social ${!g.twitter ? 'disabled' : ''}" title="Twitter">𝕏</a>
-            <a href="${g.telegram || '#'}" target="_blank" class="gem-social ${!g.telegram ? 'disabled' : ''}" title="Telegram">✈️</a>
-            <a href="${g.website || '#'}" target="_blank" class="gem-social ${!g.website ? 'disabled' : ''}" title="Website">🌐</a>
-          </div>
-        </div>
-        <div class="gem-actions">
-          <button class="gem-btn app" onclick="openAppNewTab('${g.address}', '${g.chain}')">🏠 Open in App</button>
-          <button class="gem-btn" onclick="downloadGemCard(this)" style="background:var(--purple);color:#fff;border-color:var(--purple)">📸 Share</button>
-        </div>
+        <button class="gem-open" onclick="window.open('https://dexscreener.com/${g.chain}/${g.pairAddress}','_blank')">📊 DEX</button>
+        <button class="gem-open" onclick="window.open('index.html?ca=${g.address}&action=analyze','_blank')" style="background:linear-gradient(135deg,var(--cyan),#0090b3)">🏠 APP</button>
       </div>
     </div>`;
-  });
-  
-  $('gemsGrid').innerHTML = cardsHtml;
+  }).join('');
 }
 
-function resetHunt() {
-  $('resultsSection').classList.remove('active');
-  $('heroSection').style.display = 'block';
-  $('gemsGrid').innerHTML = '';
-  updateProgress(0, 'Ready');
-  updateStats(0, 0, 0);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function openAppNewTab(address, chain) {
-  window.open(`index.html?ca=${address}&action=analyze`, '_blank');
-}
-
-async function downloadGemCard(btn) {
-  const card = btn.closest('.gem-card');
-  if (!card) return;
-  btn.textContent = '⏳...';
-  btn.disabled = true;
-  try {
-    // Add watermark temporarily
-    const watermark = document.createElement('div');
-    watermark.style.cssText = 'text-align:center;padding:8px;font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:1px;border-top:1px solid var(--card-border);margin-top:8px';
-    watermark.textContent = '🔍 dexscreenerai.com';
-    card.appendChild(watermark);
-
-    const canvas = await html2canvas(card, {
-      backgroundColor: '#060a10',
-      scale: 2,
-      useCORS: true,
-      logging: false
-    });
-
-    card.removeChild(watermark);
-
-    const link = document.createElement('a');
-    const symbol = card.querySelector('.gem-symbol')?.textContent?.trim() || 'gem';
-    link.download = `DexAI_Gem_${symbol.replace('$','')}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  } catch(e) {
-    console.error('Screenshot failed:', e);
-    alert('Screenshot failed. Try again.');
-  }
-  btn.textContent = '📸 Share';
-  btn.disabled = false;
-}
+// AUTO-START on page load
+log('💎','Gem Detector initialized — Auto-scanning now...');
+start();
 </script>
 
 </body>
