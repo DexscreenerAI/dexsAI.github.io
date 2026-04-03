@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚡ SOLANA SNIPER v8.0 - ULTIMATE SERVER EDITION</title>
+<title>⚡ SOLANA SNIPER v8.0 - HELIUS ACTIF</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -491,11 +491,11 @@ color: var(--text2);
 <body>
 
 <header class="header">
-  <h1>⚡ SOLANA SNIPER v8.0 - ULTIMATE SERVER EDITION</h1>
-  <p>🔥 SERVER MODE • Helius Real-Time • Pump.fun • DexScreener • Holder Analysis • Bonding Curve • Smart Money</p>
-  <span class="version-badge">SERVER MODE — ALL USERS SEE SAME DATA</span>
+  <h1>⚡ SOLANA SNIPER v8.0 - HELIUS ACTIF</h1>
+  <p>🔥 Helius RPC • Pump.fun • DexScreener • Holder Analysis • Bonding Curve • Smart Money</p>
+  <span class="version-badge">HELIUS SCAN ACTIF — TOKENS VÉRIFIÉS</span>
   <span class="mode-badge" id="modeBadge">🔴 STOPPED</span>
-  <span class="ws-badge disconnected" id="wsBadge">SERVER: ...</span>
+  <span class="ws-badge disconnected" id="wsBadge">LOCAL MODE</span>
 </header>
 
 <div class="pnl-banner">
@@ -553,8 +553,7 @@ color: var(--text2);
 
 <div class="controls">
   <button class="ctrl-btn" id="startBtn" onclick="toggleSniper()">▶ START SNIPER</button>
-  <button class="ctrl-btn secondary" onclick="testServerConnection()">🔌 TEST SERVER</button>
-  <button class="ctrl-btn secondary" onclick="forceLocalScan()">🔍 FORCE SCAN</button>
+  <button class="ctrl-btn secondary" onclick="forceScan()">🔍 FORCE SCAN</button>
   <button class="ctrl-btn secondary" onclick="exportData()">📤 EXPORT</button>
 </div>
 
@@ -562,7 +561,7 @@ color: var(--text2);
   <div class="scanner-bar">
     <div class="scanner-info">
       <div class="scanner-dot" id="scannerDot"></div>
-      <div class="scanner-text" id="scannerText">🌐 Connecting to server...</div>
+      <div class="scanner-text" id="scannerText">🌐 Ready - Click START</div>
     </div>
     <div class="scanner-stats">
       <div class="scanner-stat helius">Helius: <span id="heliusScanned">0</span></div>
@@ -617,12 +616,11 @@ color: var(--text2);
 
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
-// SOLANA SNIPER v8.0 - ULTIMATE SERVER EDITION
-// Fusion: Server connection + Mega scan (Helius, Pump.fun, DexScreener)
+// SOLANA SNIPER v8.0 - HELIUS ACTIF
+// Scan complet: Helius RPC + Pump.fun API + DexScreener API
 // ══════════════════════════════════════════════════════════════════════════════
 
 const $ = id => document.getElementById(id);
-const SNIPER_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/sniper';
 
 // API Keys
 const HELIUS_KEY = 'e2f9fdd3-dffc-40b8-abb7-3fb07aadeb55';
@@ -639,12 +637,14 @@ let positions = [];
 let history = [];
 let logs = [];
 let isRunning = false;
-let serverConnected = false;
 let sessionStartTime = null;
+
+// SCAN COUNTERS (corrigés)
 let heliusScannedTotal = 0;
 let pumpScannedTotal = 0;
 let dexScannedTotal = 0;
 let safeTokensFound = 0;
+
 let scanInterval = null;
 let updateInterval = null;
 let localScanning = false;
@@ -659,18 +659,13 @@ const SETTINGS = {
   minScore: 55,
   trailActivation: 10,
   trailDistance: 20,
-  dcaEnabled: true,
-  dca1Pct: 15,
-  dca1Sell: 35,
-  dca2Pct: 40,
-  dca2Sell: 35,
   minMC: 10000,
   maxMC: 15000000,
   minLiquidity: 4000,
   maxHold: 30
 };
 
-// Mega Keywords for scanning
+// Keywords pour DexScreener
 const MEGA_KEYWORDS = [
   'pepe', 'wojak', 'doge', 'shib', 'bonk', 'wif', 'popcat', 'mew', 'cat', 'dog', 'frog',
   'moon', 'pump', 'gem', 'degen', 'based', 'chad', 'giga', 'mega', 'ultra', 'hyper',
@@ -692,16 +687,6 @@ function addLog(icon, text) {
   logs.unshift(entry);
   if (logs.length > 400) logs.pop();
   renderLogs();
-  
-  // Broadcast to server
-  if (serverConnected) {
-    fetch(`${SNIPER_API}/log`, { 
-      method: 'POST', 
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(entry),
-      signal: AbortSignal.timeout(3000)
-    }).catch(() => {});
-  }
 }
 
 function renderLogs() {
@@ -711,110 +696,46 @@ function renderLogs() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// SERVER CONNECTION
+// SCAN HELIUS RPC - Nouveaux tokens via getProgramAccounts
 // ══════════════════════════════════════════════════════════════════════════════
 
-async function fetchServerStatus() {
+async function scanHeliusNewTokens() {
   try {
-    const res = await fetch(`${SNIPER_API}/status`, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const state = await res.json();
-
-    if (!serverConnected) {
-      serverConnected = true;
-      $('wsBadge').textContent = 'SERVER: LIVE';
-      $('wsBadge').className = 'ws-badge connected';
-      addLog('🌐', '<span class="green">Connected to server!</span>');
-    }
-
-    // Sync state from server (if server has data)
-    if (state.positions && state.positions.length > 0) {
-      balance = state.balance || balance;
-      totalPnL = state.totalPnL || totalPnL;
-      securedPnL = state.securedPnL || securedPnL;
-      totalTrades = state.totalTrades || totalTrades;
-      wins = state.wins || wins;
-      bestTrade = state.bestTrade || bestTrade;
-      positions = state.positions || [];
-      history = state.history || [];
-    }
+    addLog('🔭', '<span class="helius">Scan Helius RPC...</span>');
     
-    isRunning = state.isRunning || false;
-
-    if (isRunning) {
-      if (!sessionStartTime) sessionStartTime = Date.now();
-      $('startBtn').textContent = '⏹ STOP SNIPER';
-      $('modeBadge').textContent = '⚡ LIVE';
-      $('modeBadge').className = 'mode-badge active';
-      $('scannerDot').classList.add('active');
-      $('scannerText').textContent = `🔍 Scanning... ${positions.length} positions`;
-    } else {
-      sessionStartTime = null;
-      $('startBtn').textContent = '▶ START SNIPER';
-      $('modeBadge').textContent = '🔴 STOPPED';
-      $('modeBadge').className = 'mode-badge';
-      $('scannerDot').classList.remove('active');
-      $('scannerText').textContent = 'Click START to begin scanning';
-    }
-
-    $('totalScanned').textContent = (heliusScannedTotal + pumpScannedTotal + dexScannedTotal);
-    updateUI();
-    renderPositions();
-    renderHistory();
-
-  } catch (e) {
-    if (serverConnected) {
-      serverConnected = false;
-      $('wsBadge').textContent = 'SERVER: OFF';
-      $('wsBadge').className = 'ws-badge disconnected';
-      addLog('❌', '<span class="red">Server disconnected</span>');
-    }
-  }
-}
-
-async function toggleSniper() {
-  try {
-    const endpoint = isRunning ? '/stop' : '/start';
-    addLog('⏳', `Sending ${endpoint.slice(1)} command...`);
+    const response = await fetch(`https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'getProgramAccounts',
+        params: [
+          PUMP_PROGRAM,
+          {
+            encoding: 'jsonParsed',
+            filters: [{ dataSize: 82 }] // Taille typique des comptes de tokens Pump.fun
+          }
+        ]
+      })
+    });
     
-    const res = await fetch(SNIPER_API + endpoint, { method: 'POST', signal: AbortSignal.timeout(8000) });
-    const data = await res.json();
-    
-    if (data.success) {
-      addLog('✅', `<span class="green">Sniper ${endpoint === '/start' ? 'STARTED' : 'STOPPED'}!</span>`);
-      if (endpoint === '/start') {
-        startLocalScanning();
-      } else {
-        stopLocalScanning();
-      }
-      setTimeout(fetchServerStatus, 500);
-    } else {
-      addLog('⚠️', data.message || 'Command failed');
+    const data = await response.json();
+    if (data.result && Array.isArray(data.result)) {
+      const tokens = data.result.slice(0, 100);
+      heliusScannedTotal = tokens.length;
+      $('heliusScanned').textContent = heliusScannedTotal;
+      addLog('🔭', `<span class="helius">Helius: ${tokens.length} tokens trouvés</span>`);
+      return tokens;
     }
-  } catch (e) {
-    addLog('❌', `<span class="red">Command failed:</span> ${e.message}`);
-    // Fallback: start local scanning even if server fails
-    if (!isRunning) startLocalScanning();
+  } catch(e) {
+    addLog('⚠️', `<span class="red">Helius RPC error:</span> ${e.message}`);
   }
-}
-
-async function testServerConnection() {
-  addLog('🔌', 'Testing server connection...');
-  try {
-    const res = await fetch(`${SNIPER_API}/status`, { signal: AbortSignal.timeout(5000) });
-    if (res.ok) {
-      const state = await res.json();
-      addLog('✅', `<span class="green">Server OK!</span> Running: ${state.isRunning ? 'YES' : 'NO'}`);
-    } else {
-      addLog('❌', '<span class="red">Server error</span>');
-    }
-  } catch (e) {
-    addLog('❌', `<span class="red">Cannot reach server:</span> ${e.message}`);
-  }
+  return [];
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// LOCAL MEGA SCANNING (PUMP.FUN + DEXSCREENER + HELIUS)
+// HOLDER DISTRIBUTION via Helius
 // ══════════════════════════════════════════════════════════════════════════════
 
 async function getHolderDistribution(tokenAddress) {
@@ -843,6 +764,10 @@ async function getHolderDistribution(tokenAddress) {
   return { totalHolders: 0, top10Pct: 100, isDistributed: false };
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// BONDING CURVE via Pump.fun API
+// ══════════════════════════════════════════════════════════════════════════════
+
 async function getBondingCurveProgress(tokenAddress) {
   try {
     const res = await fetch(`https://frontend-api-v3.pump.fun/coins/${tokenAddress}`, { 
@@ -861,6 +786,10 @@ async function getBondingCurveProgress(tokenAddress) {
   return { progress: 0, completed: false, hasSocials: false };
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// CALCUL SCORE
+// ══════════════════════════════════════════════════════════════════════════════
+
 function calculateScore(pair, holders, bondingCurve) {
   let score = 30;
   
@@ -871,37 +800,34 @@ function calculateScore(pair, holders, bondingCurve) {
   const buys5m = pair.txns?.m5?.buys || 0;
   const sells5m = pair.txns?.m5?.sells || 0;
   
-  // Honeypot check
   if (sells5m === 0 && buys5m > 8) return 0;
   
-  // MC scoring
   if (mc >= 30000 && mc <= 300000) score += 20;
   else if (mc >= 15000 && mc < 30000) score += 12;
   else if (mc >= 300000 && mc <= 1000000) score += 10;
   
-  // Liquidity
   if (liq >= 15000) score += 12;
   else if (liq >= 8000) score += 8;
   
-  // Buy ratio
   const total5m = buys5m + sells5m;
   const buyRatio = total5m > 0 ? (buys5m / total5m) * 100 : 50;
   if (buyRatio >= 40 && buyRatio < 75) score += 10;
   
-  // Momentum
   if (chg5m > 3 && chg5m < 50) score += 8;
   if (chg1h > 5 && chg1h < 100) score += 6;
   
-  // Holder distribution
   if (holders.isDistributed) score += 15;
   else if (holders.top10Pct > 60) score -= 10;
   
-  // Bonding curve
   if (bondingCurve.progress >= 20 && bondingCurve.progress < 90) score += 12;
   if (bondingCurve.hasSocials) score += 10;
   
   return Math.min(100, Math.max(0, Math.round(score)));
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// EXECUTE TRADE
+// ══════════════════════════════════════════════════════════════════════════════
 
 async function executeTrade(pair, score, tradeType, isPump) {
   if (balance < SETTINGS.positionSize) return false;
@@ -949,20 +875,14 @@ async function executeTrade(pair, score, tradeType, isPump) {
   const sourceTag = isPump ? '<span class="pump">🎰 PUMP</span>' : '<span class="solana">📈 DEX</span>';
   addLog('🎯', `${sourceTag} $${esc(symbol)} Score:${score} @ $${fP(entryPrice)}`);
   
-  // Sync to server
-  if (serverConnected) {
-    fetch(`${SNIPER_API}/trade/open`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ position }),
-      signal: AbortSignal.timeout(3000)
-    }).catch(() => {});
-  }
-  
   updateUI();
   renderPositions();
   return true;
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CLOSE TRADE
+// ══════════════════════════════════════════════════════════════════════════════
 
 function closeTrade(pos, reason) {
   if (!positions.find(p => p.id === pos.id)) return;
@@ -1001,6 +921,10 @@ function closeTrade(pos, reason) {
   renderHistory();
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// UPDATE POSITIONS
+// ══════════════════════════════════════════════════════════════════════════════
+
 async function updatePositions() {
   if (positions.length === 0) return;
   
@@ -1014,7 +938,6 @@ async function updatePositions() {
       const newPrice = parseFloat(data.pair.priceUsd) || pos.currentPrice;
       const priceChange = (newPrice - pos.entryPrice) / pos.entryPrice * 100;
       
-      // Rug detection
       if (priceChange <= -85) {
         closeTrade(pos, 'RUG');
         continue;
@@ -1034,7 +957,6 @@ async function updatePositions() {
       
       const holdTime = (Date.now() - pos.entryTime) / 60000;
       
-      // Trailing stop
       if (pos.pnlPct >= SETTINGS.trailActivation && !pos.trailingActivated) {
         pos.trailingActivated = true;
         pos.trailingHigh = pos.pnlPct;
@@ -1053,7 +975,6 @@ async function updatePositions() {
         }
       }
       
-      // Timeout
       if (!pos.isMoonBag && holdTime >= pos.maxHold) {
         closeTrade(pos, 'TIMEOUT');
         continue;
@@ -1067,7 +988,7 @@ async function updatePositions() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// MEGA SCAN FUNCTION
+// MEGA SCAN COMPLET (Helius + Pump + DexScreener)
 // ══════════════════════════════════════════════════════════════════════════════
 
 async function megaScan() {
@@ -1076,11 +997,21 @@ async function megaScan() {
   localScanning = true;
   const allTokens = new Map();
   
-  addLog('🔍', '<span class="helius">Starting MEGA SCAN...</span>');
-  $('scannerText').textContent = '🔍 MEGA SCAN - Collecting tokens...';
+  addLog('🔍', '<span class="helius">Starting COMPLETE MEGA SCAN...</span>');
+  $('scannerText').textContent = '🔍 MEGA SCAN - Phase 1/6';
   
-  // PHASE 1: Pump.fun latest coins
-  $('scanPhase').textContent = '1: Pump.fun';
+  // PHASE 1: Helius RPC Scan (NOUVEAU - CORRIGÉ)
+  $('scanPhase').textContent = '1: Helius RPC';
+  const heliusTokens = await scanHeliusNewTokens();
+  for (const token of heliusTokens) {
+    const address = token.pubkey;
+    if (address && !allTokens.has(address)) {
+      allTokens.set(address, { address, source: 'helius', boost: 35 });
+    }
+  }
+  
+  // PHASE 2: Pump.fun latest coins
+  $('scanPhase').textContent = '2: Pump.fun';
   try {
     const res = await fetch('https://frontend-api-v3.pump.fun/coins/latest?limit=200', { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
@@ -1096,7 +1027,7 @@ async function megaScan() {
     }
   } catch(e) {}
   
-  // PHASE 2: Pump.fun KOTH
+  // PHASE 3: Pump.fun KOTH
   try {
     const res = await fetch('https://frontend-api-v3.pump.fun/coins/king-of-the-hill?includeNsfw=false', { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
@@ -1109,8 +1040,8 @@ async function megaScan() {
     }
   } catch(e) {}
   
-  // PHASE 3: DexScreener New Profiles
-  $('scanPhase').textContent = '2: DexScreener New';
+  // PHASE 4: DexScreener New Profiles
+  $('scanPhase').textContent = '3: DexScreener New';
   try {
     const res = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
@@ -1123,8 +1054,8 @@ async function megaScan() {
     }
   } catch(e) {}
   
-  // PHASE 4: DexScreener Boosted
-  $('scanPhase').textContent = '3: DexScreener Boosted';
+  // PHASE 5: DexScreener Boosted
+  $('scanPhase').textContent = '4: DexScreener Boosted';
   try {
     const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
@@ -1137,8 +1068,8 @@ async function megaScan() {
     }
   } catch(e) {}
   
-  // PHASE 5: Keyword search (100 keywords)
-  $('scanPhase').textContent = '4: Keyword Search';
+  // PHASE 6: Keyword search
+  $('scanPhase').textContent = '5: Keyword Search';
   const shuffledKeywords = [...MEGA_KEYWORDS].sort(() => Math.random() - 0.5).slice(0, 100);
   let kwDone = 0;
   
@@ -1162,24 +1093,25 @@ async function megaScan() {
     if (kwDone % 30 === 0) await new Promise(r => setTimeout(r, 30));
   }
   
+  // Mise à jour des compteurs
   dexScannedTotal = allTokens.size - pumpScannedTotal;
   $('dexScanned').textContent = dexScannedTotal;
-  $('heliusScanned').textContent = heliusScannedTotal;
+  // heliusScannedTotal déjà mis à jour dans scanHeliusNewTokens()
   
-  addLog('📊', `<span class="solana">Total tokens:</span> ${allTokens.size} (Pump:${pumpScannedTotal} DEX:${dexScannedTotal})`);
+  addLog('📊', `<span class="solana">Total tokens:</span> ${allTokens.size} (Helius:${heliusScannedTotal} Pump:${pumpScannedTotal} DEX:${dexScannedTotal})`);
   
-  // PHASE 6: Analyze
-  $('scanPhase').textContent = '5: Analyzing';
+  // PHASE 7: Analyse
+  $('scanPhase').textContent = '6: Analyzing';
   $('scannerText').textContent = `⚙️ Analyzing ${allTokens.size} tokens...`;
   
   const opportunities = [];
   const candidates = Array.from(allTokens.values());
   let analyzed = 0;
   
-  for (const cand of candidates.slice(0, 400)) {
+  for (const cand of candidates.slice(0, 500)) {
     analyzed++;
     if (analyzed % 50 === 0) {
-      $('scannerText').textContent = `⚙️ Analyzing ${analyzed}/${Math.min(400, candidates.length)}...`;
+      $('scannerText').textContent = `⚙️ Analyzing ${analyzed}/${Math.min(500, candidates.length)}...`;
     }
     
     if (analyzedCache.has(cand.address)) {
@@ -1208,12 +1140,9 @@ async function megaScan() {
         continue;
       }
       
-      // Get holders and bonding curve
-      const [holders, bondingCurve] = await Promise.all([
-        getHolderDistribution(cand.address),
-        getBondingCurveProgress(cand.address)
-      ]);
-      
+      // Analyse Helius des holders
+      const holders = await getHolderDistribution(cand.address);
+      const bondingCurve = await getBondingCurveProgress(cand.address);
       const score = calculateScore(pair, holders, bondingCurve);
       
       if (score >= SETTINGS.minScore) {
@@ -1236,11 +1165,11 @@ async function megaScan() {
   opportunities.sort((a, b) => b.score - a.score);
   addLog('🔍', `Found <span class="green">${opportunities.length}</span> opportunities`);
   
-  // PHASE 7: Execute trades
-  $('scanPhase').textContent = '6: Trading';
+  // PHASE 8: Execution trades
+  $('scanPhase').textContent = '7: Trading';
   let tradesOpened = 0;
   
-  for (const opp of opportunities.slice(0, 50)) {
+  for (const opp of opportunities.slice(0, 30)) {
     if (balance < SETTINGS.positionSize) break;
     
     const addr = opp.pair.baseToken?.address;
@@ -1263,17 +1192,20 @@ async function megaScan() {
   localScanning = false;
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// START / STOP
+// ══════════════════════════════════════════════════════════════════════════════
+
 function startLocalScanning() {
   if (scanInterval) clearInterval(scanInterval);
   if (updateInterval) clearInterval(updateInterval);
   
   isRunning = true;
   sessionStartTime = Date.now();
-  addLog('🚀', '<span class="helius">SNIPER STARTED — MEGA SCAN ACTIVE</span>');
+  addLog('🚀', '<span class="helius">SNIPER STARTED — SCAN ACTIF</span>');
   
-  // Initial scan after 3 seconds
   setTimeout(() => megaScan(), 3000);
-  scanInterval = setInterval(() => megaScan(), 35000);
+  scanInterval = setInterval(() => megaScan(), 45000);
   updateInterval = setInterval(() => updatePositions(), 5000);
   setInterval(() => {
     if (sessionStartTime) {
@@ -1283,6 +1215,11 @@ function startLocalScanning() {
       $('uptimeDisplay').textContent = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
     }
   }, 1000);
+  
+  $('modeBadge').textContent = '⚡ LIVE';
+  $('modeBadge').className = 'mode-badge active';
+  $('scannerDot').classList.add('active');
+  $('scannerText').textContent = '🔍 Scanning...';
 }
 
 function stopLocalScanning() {
@@ -1292,9 +1229,22 @@ function stopLocalScanning() {
   scanInterval = null;
   updateInterval = null;
   addLog('⏹️', 'Sniper stopped');
+  
+  $('modeBadge').textContent = '🔴 STOPPED';
+  $('modeBadge').className = 'mode-badge';
+  $('scannerDot').classList.remove('active');
+  $('scannerText').textContent = 'Click START to begin scanning';
 }
 
-function forceLocalScan() {
+function toggleSniper() {
+  if (isRunning) {
+    stopLocalScanning();
+  } else {
+    startLocalScanning();
+  }
+}
+
+function forceScan() {
   if (!isRunning) {
     addLog('⚠️', 'Start sniper first');
     return;
@@ -1316,6 +1266,7 @@ function updateUI() {
   $('winRate').textContent = (totalTrades > 0 ? ((wins / totalTrades) * 100).toFixed(0) : '--') + '%';
   $('bestTrade').textContent = '+$' + bestTrade.toFixed(0);
   $('totalTrades').textContent = totalTrades;
+  $('totalScanned').textContent = heliusScannedTotal + pumpScannedTotal + dexScannedTotal;
   
   $('realtimeCount').textContent = positions.length;
   $('pumpCount').textContent = positions.filter(p => p.isPump).length;
@@ -1417,7 +1368,7 @@ function exportData() {
   const blob = new Blob([JSON.stringify({ balance, totalPnL, securedPnL, totalTrades, wins, bestTrade, history, positions }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `sniper_ultimate_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `sniper_helius_${new Date().toISOString().slice(0,10)}.json`;
   a.click();
 }
 
@@ -1425,12 +1376,9 @@ function exportData() {
 // INIT
 // ══════════════════════════════════════════════════════════════════════════════
 
-addLog('⚡', '<span class="helius">SOLANA SNIPER v8.0 - ULTIMATE SERVER EDITION</span>');
-addLog('ℹ️', 'Server mode + Mega scan (Pump.fun + DexScreener + Holder analysis)');
-addLog('🔌', 'Connecting to server...');
-
-fetchServerStatus();
-setInterval(fetchServerStatus, 8000);
+addLog('⚡', '<span class="helius">SOLANA SNIPER v8.0 - HELIUS ACTIF</span>');
+addLog('ℹ️', 'Scan complet: Helius RPC + Pump.fun + DexScreener');
+addLog('🔭', '<span class="helius">Helius API prête</span>');
 </script>
 </body>
-</html> 
+</html>
