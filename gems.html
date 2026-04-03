@@ -206,7 +206,8 @@ function renderGemCard(g,i){
   let badges='';
   if(g.age<48)badges+=`<span style="font-size:7px;padding:2px 5px;border-radius:3px;font-family:${C.m};font-weight:600;background:${C.gd};border:1px solid ${C.gr};color:${C.gr};">🆕 ${g.age}h</span>`;
   if(g.src==='boosted')badges+=`<span style="font-size:7px;padding:2px 5px;border-radius:3px;font-family:${C.m};font-weight:600;background:rgba(168,85,247,.15);border:1px solid ${C.pu};color:${C.pu};">🚀 BOOST</span>`;
-  if(g.rugStatus==='good')badges+=`<span style="font-size:7px;padding:2px 5px;border-radius:3px;font-family:${C.m};font-weight:600;background:${C.gd};border:1px solid ${C.gr};color:${C.gr};">✅ SAFE</span>`;
+  if(g.rugStatus==='good')badges+=`<span style="font-size:7px;padding:2px 5px;border-radius:3px;font-family:${C.m};font-weight:600;background:${C.gd};border:1px solid ${C.gr};color:${C.gr};">✅ RUGCHECK OK</span>`;
+  else if(g.rugStatus==='warn')badges+=`<span style="font-size:7px;padding:2px 5px;border-radius:3px;font-family:${C.m};font-weight:600;background:rgba(255,170,0,.15);border:1px solid ${C.yl};color:${C.yl};">⚠️ CAUTION</span>`;
   if(g.isCTO)badges+=`<span style="font-size:7px;padding:2px 5px;border-radius:3px;font-family:${C.m};font-weight:600;background:rgba(255,170,0,.15);border:1px solid ${C.yl};color:${C.yl};">👥 CTO</span>`;
 
   return `<div style="background:${C.card};border:1px solid ${isTop3?'rgba(255,215,0,0.2)':C.cb};border-radius:12px;padding:14px;margin-bottom:10px;position:relative;${isTop3?'background:linear-gradient(135deg,rgba(255,215,0,0.04),transparent);':''}animation:fadeIn .3s ease;">
@@ -232,7 +233,7 @@ function renderGemCard(g,i){
     </div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid ${C.cb};font-size:10px;">
-      <span style="color:${C.t2};">${rug} ${g.rugStatus}</span>
+      <span style="color:${C.t2};">${rug} ${g.rugStatus}${g.rugReason?' · '+esc(g.rugReason):''}</span>
       <div style="display:flex;gap:4px;">
         <a href="${g.twitter||'#'}" target="_blank" style="width:24px;height:24px;border-radius:4px;background:${C.bg};border:1px solid ${C.cb};display:flex;align-items:center;justify-content:center;color:${g.twitter?C.t2:C.t3};text-decoration:none;font-size:10px;${g.twitter?'':'opacity:.3;pointer-events:none;'}">𝕏</a>
         <a href="${g.telegram||'#'}" target="_blank" style="width:24px;height:24px;border-radius:4px;background:${C.bg};border:1px solid ${C.cb};display:flex;align-items:center;justify-content:center;color:${g.telegram?C.t2:C.t3};text-decoration:none;font-size:10px;${g.telegram?'':'opacity:.3;pointer-events:none;'}">✈</a>
@@ -266,21 +267,24 @@ function scoreToken(pair,src){
   const age=pair.pairCreatedAt?(Date.now()-pair.pairCreatedAt)/3600000:999;
   const sym=pair.baseToken?.symbol||'';
 
-  if(mc>10000000||mc<5000)return-1;
-  if(liq<3000)return-1;
+  if(mc>10000000||mc<25000)return-1;
+  if(liq<5000)return-1;
   if(t24<30)return-1;
   if(br<45)return-1;
   if(c1<-35)return-1;
   if(sym.length<2)return-1;
-  if(s5===0&&s1===0&&b5>5&&b1>10)return-1;
+  if(s5===0&&s1===0&&b5>3&&b1>5)return-1; // honeypot: 0 sells
+  if(s24===0&&b24>15)return-1; // honeypot: 0 sells 24h
+  const br1h=t5>0?(b5/t5)*100:50;
+  if(br1h>97&&t5>8)return-1; // honeypot: ~100% buy ratio
 
   let sc=20;
   if(src==='boosted')sc+=10;else if(src==='gainer')sc+=7;else if(src==='new')sc+=5;
 
-  if(mc>=5000&&mc<20000)sc+=25;
-  else if(mc<50000)sc+=22;
-  else if(mc<100000)sc+=18;
-  else if(mc<300000)sc+=14;
+  if(mc>=25000&&mc<50000)sc+=25;
+  else if(mc<100000)sc+=22;
+  else if(mc<200000)sc+=18;
+  else if(mc<500000)sc+=14;
   else if(mc<1000000)sc+=8;
   else if(mc<=5000000)sc+=3;
 
@@ -312,25 +316,71 @@ function scoreToken(pair,src){
 }
 
 // ═══════════════════════════════════════════
-// RUGCHECK
+// RUGCHECK + HONEYPOT DETECTION
 // ═══════════════════════════════════════════
 async function checkRug(addr){
   if(rugCache[addr])return rugCache[addr];
   try{
-    const r=await fetch(`https://api.rugcheck.xyz/v1/tokens/${addr}/report/summary`,{signal:AbortSignal.timeout(4000)});
+    const r=await fetch(`https://api.rugcheck.xyz/v1/tokens/${addr}/report/summary`,{signal:AbortSignal.timeout(5000)});
     if(!r.ok)return null;
     const d=await r.json();rugCache[addr]=d;return d;
   }catch(e){return null;}
 }
 function parseRug(d){
   if(!d||!d.risks)return{status:'unknown',risks:[]};
-  const n=(d.risks||[]).map(r=>(r.name||r.description||'').toLowerCase());
-  if(n.some(x=>x.includes('honeypot')))return{status:'danger'};
-  if(d.mintAuthority||n.some(x=>x.includes('mint')&&x.includes('enabl')))return{status:'danger'};
-  if(n.some(x=>x.includes('rug')||x.includes('scam')))return{status:'danger'};
-  if(d.risks.length===0)return{status:'good'};
-  if(d.risks.length<=2)return{status:'warn'};
-  return{status:'danger'};
+  const risks=(d.risks||[]);
+  const names=risks.map(r=>(r.name||r.description||'').toLowerCase());
+
+  // HONEYPOT — instant reject
+  if(names.some(x=>x.includes('honeypot')||x.includes('honey pot')))return{status:'danger',reason:'Honeypot'};
+
+  // MINT AUTHORITY — can mint infinite tokens
+  if(d.mintAuthority||names.some(x=>x.includes('mint')&&(x.includes('enabl')||x.includes('authority'))))return{status:'danger',reason:'Mint enabled'};
+
+  // FREEZE AUTHORITY — can freeze your tokens
+  if(d.freezeAuthority||names.some(x=>x.includes('freeze')&&(x.includes('enabl')||x.includes('authority'))))return{status:'danger',reason:'Freeze enabled'};
+
+  // TRANSFER FEE — hidden tax
+  if(names.some(x=>x.includes('transfer fee')||x.includes('tax')))return{status:'danger',reason:'Transfer fee'};
+
+  // BLACKLIST — can block your wallet
+  if(names.some(x=>x.includes('blacklist')||x.includes('blocklist')))return{status:'danger',reason:'Blacklist'};
+
+  // RUG/SCAM flag
+  if(names.some(x=>x.includes('rug')||x.includes('scam')))return{status:'danger',reason:'Rug/scam'};
+
+  // Too many risks
+  if(risks.length>3)return{status:'danger',reason:risks.length+' risks'};
+
+  // Concentrated holders
+  if(names.some(x=>x.includes('top 10')||x.includes('concentrated')||x.includes('single holder')))return{status:'warn',reason:'Concentrated'};
+
+  // Clean
+  if(risks.length===0)return{status:'good',reason:'Clean'};
+  if(risks.length<=2)return{status:'warn',reason:risks.map(r=>r.name||'').join(', ')};
+  return{status:'danger',reason:'Multiple risks'};
+}
+
+// Extra honeypot detection from on-chain data
+function isHoneypot(pair){
+  const b5=pair.txns?.m5?.buys||0, s5=pair.txns?.m5?.sells||0;
+  const b1=pair.txns?.h1?.buys||0, s1=pair.txns?.h1?.sells||0;
+  const b24=pair.txns?.h24?.buys||0, s24=pair.txns?.h24?.sells||0;
+
+  // Zero sells with many buys = classic honeypot
+  if(s5===0&&s1===0&&b5>5&&b1>10)return{hp:true,reason:'0 sells (honeypot)'};
+  if(s24===0&&b24>20)return{hp:true,reason:'0 sells 24h'};
+
+  // 100% buy ratio with volume = suspicious
+  const t5=b5+s5,t1=b1+s1;
+  if(t5>10&&s5===0)return{hp:true,reason:'100% buy 5m'};
+  if(t1>30&&s1<=1)return{hp:true,reason:'~100% buy 1h'};
+
+  // Very high buy ratio with decent volume = likely honeypot
+  const br1=t1>0?(b1/t1)*100:50;
+  if(br1>98&&t1>20)return{hp:true,reason:'98%+ buy ratio'};
+
+  return{hp:false};
 }
 
 // ═══════════════════════════════════════════
@@ -347,42 +397,81 @@ async function scan(){
   try{setStatus('📡 New tokens...');
     const r=await fetch('https://api.dexscreener.com/token-profiles/latest/v1',{signal:AbortSignal.timeout(8000)});
     const d=await r.json();
-    if(Array.isArray(d))d.slice(0,60).forEach(t=>{if(t.tokenAddress&&valid.includes(t.chainId))all.set(t.tokenAddress,{addr:t.tokenAddress,chain:t.chainId,src:'new',icon:t.icon});});
+    if(Array.isArray(d))d.slice(0,100).forEach(t=>{if(t.tokenAddress&&valid.includes(t.chainId))all.set(t.tokenAddress,{addr:t.tokenAddress,chain:t.chainId,src:'new',icon:t.icon});});
   }catch(e){}
 
   // Source 2: Boosted
   try{setStatus(`📡 ${all.size} — Boosted...`);
     const r=await fetch('https://api.dexscreener.com/token-boosts/top/v1',{signal:AbortSignal.timeout(8000)});
     const d=await r.json();
-    if(Array.isArray(d))d.slice(0,50).forEach(t=>{if(t.tokenAddress&&valid.includes(t.chainId)&&!all.has(t.tokenAddress))all.set(t.tokenAddress,{addr:t.tokenAddress,chain:t.chainId,src:'boosted',icon:t.icon});});
+    if(Array.isArray(d))d.slice(0,80).forEach(t=>{if(t.tokenAddress&&valid.includes(t.chainId)&&!all.has(t.tokenAddress))all.set(t.tokenAddress,{addr:t.tokenAddress,chain:t.chainId,src:'boosted',icon:t.icon});});
   }catch(e){}
 
-  // Source 3: Gainers
-  try{for(const ch of['solana','base','ethereum']){
+  // Source 2b: Latest boosts
+  try{setStatus(`📡 ${all.size} — Latest boosts...`);
+    const r=await fetch('https://api.dexscreener.com/token-boosts/latest/v1',{signal:AbortSignal.timeout(8000)});
+    const d=await r.json();
+    if(Array.isArray(d))d.slice(0,80).forEach(t=>{if(t.tokenAddress&&valid.includes(t.chainId)&&!all.has(t.tokenAddress))all.set(t.tokenAddress,{addr:t.tokenAddress,chain:t.chainId,src:'boosted',icon:t.icon});});
+  }catch(e){}
+
+  // Source 3: Gainers per chain
+  try{for(const ch of['solana','base','ethereum','bsc','arbitrum']){
     const r=await fetch(`https://api.dexscreener.com/latest/dex/search?q=${ch}`,{signal:AbortSignal.timeout(5000)});
     const d=await r.json();
     if(d.pairs)d.pairs.filter(p=>p.chainId===ch&&parseFloat(p.priceChange?.h1)>5)
       .sort((a,b)=>(parseFloat(b.priceChange?.h1)||0)-(parseFloat(a.priceChange?.h1)||0))
-      .slice(0,40).forEach(p=>{const a=p.baseToken?.address;if(a&&!all.has(a))all.set(a,{addr:a,chain:p.chainId,src:'gainer',pair:p,icon:p.info?.imageUrl});});
+      .slice(0,60).forEach(p=>{const a=p.baseToken?.address;if(a&&!all.has(a))all.set(a,{addr:a,chain:p.chainId,src:'gainer',pair:p,icon:p.info?.imageUrl});});
   }}catch(e){}
 
-  // Source 4: Keywords
-  const kws=['moon','pump','gem','pepe','ai','meme','doge','bonk','wif','cat','dog','frog','trump','elon',
-    'bull','gold','diamond','rocket','king','alpha','sigma','safe','fire','sol','eth','base',
-    'baby','mega','super','rich','whale','ape','dragon','degen','chad','giga',
-    'a','b','c','d','e','x','z','1','69','420','100','777'];
-  const sh=[...kws].sort(()=>Math.random()-.5).slice(0,25);
+  // Source 4: MASSIVE keyword search (60 random from 150+)
+  const kws=[
+    // Meme culture
+    'moon','pump','gem','degen','pepe','wojak','based','chad','giga','mega','ultra',
+    'trump','elon','musk','biden','kanye','drake','snoop','tate',
+    // Animals
+    'cat','dog','frog','inu','shib','doge','bonk','wif','popcat','neiro',
+    'panda','monkey','ape','lion','wolf','fox','bear','bull','whale','rat',
+    'dragon','phoenix','bird','fish','pig','cow','duck','goat','snake','tiger',
+    // Crypto
+    'ai','gpt','agent','bot','meme','nft','web3','defi','dao','token',
+    'sol','eth','btc','base','matic','avax','arb',
+    // Vibes
+    'rich','gold','diamond','rocket','lambo','million','billion','cash','money',
+    'king','queen','god','jesus','devil','angel','titan',
+    'alpha','sigma','beta','omega','safe','fair','new','hot','fire','burn',
+    // Culture
+    'cope','kek','wagmi','ngmi','gm','ser','fren','anon','rekt','noob',
+    'wen','moon','mars','pluto','galaxy','space','star','sun',
+    // Actions
+    'buy','sell','hold','pump','dump','send','flip','stake',
+    // Colors
+    'red','blue','green','pink','black','white','purple',
+    // Food
+    'pizza','burger','taco','sushi','bread','cheese','banana','apple',
+    // Random trending
+    'baby','mini','micro','nano','pixel','punk','rare','epic','legend',
+    'turbo','fast','speed','power','max','pro','elite','prime',
+    'usa','america','china','japan','korea','india','europe','world',
+    'game','play','win','bet','casino','poker','slot',
+    'love','hate','happy','sad','angry','fear','hope','dream',
+    // All letters
+    'a','b','c','d','e','f','g','h','i','j','k','l','m',
+    'n','o','p','q','r','s','t','u','v','w','x','y','z',
+    // Numbers
+    '1','2','3','4','5','10','69','100','420','777','999','1000','10000'
+  ];
+  const sh=[...kws].sort(()=>Math.random()-.5).slice(0,60);
 
   for(let i=0;i<sh.length;i++){
-    setStatus(`🔍 ${all.size} — "${sh[i]}"...`);
+    setStatus(`🔍 ${all.size} tokens — "${sh[i]}"...`);
     try{const r=await fetch(`https://api.dexscreener.com/latest/dex/search?q=${sh[i]}`,{signal:AbortSignal.timeout(4000)});
       const d=await r.json();
-      if(d.pairs)d.pairs.slice(0,50).forEach(p=>{const a=p.baseToken?.address;if(a&&valid.includes(p.chainId)&&!all.has(a))all.set(a,{addr:a,chain:p.chainId,src:'search',pair:p,icon:p.info?.imageUrl});});
+      if(d.pairs)d.pairs.slice(0,70).forEach(p=>{const a=p.baseToken?.address;if(a&&valid.includes(p.chainId)&&!all.has(a))all.set(a,{addr:a,chain:p.chainId,src:'search',pair:p,icon:p.info?.imageUrl});});
     }catch(e){}
-    if(i%8===7)await new Promise(r=>setTimeout(r,100));
+    if(i%10===9)await new Promise(r=>setTimeout(r,80));
   }
 
-  // Score
+  // Score & honeypot pre-check
   setStatus(`⚙️ Scoring ${all.size}...`);
   const cands=Array.from(all.values());
   let scored=[];
@@ -393,6 +482,11 @@ async function scan(){
       let pair=cands[i].pair;
       if(!pair){const r=await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cands[i].addr}`,{signal:AbortSignal.timeout(3000)});const d=await r.json();if(d.pairs&&d.pairs[0])pair=d.pairs.sort((a,b)=>(parseFloat(b.liquidity?.usd)||0)-(parseFloat(a.liquidity?.usd)||0))[0];}
       if(!pair)continue;
+
+      // Honeypot check BEFORE scoring
+      const hp=isHoneypot(pair);
+      if(hp.hp)continue;
+
       const s=scoreToken(pair,cands[i].src);
       if(s>=55)scored.push({pair,score:s,src:cands[i].src,icon:cands[i].icon||pair.info?.imageUrl||''});
     }catch(e){}
@@ -402,18 +496,24 @@ async function scan(){
   totalScanned+=cands.length;
   totalPassed+=scored.length;
 
-  // Rugcheck top
+  // Rugcheck top 40 candidates
   scored.sort((a,b)=>b.score-a.score);
-  const top=scored.slice(0,25);
-  setStatus(`🔒 Rugchecking ${top.length}...`);
+  const top=scored.slice(0,40);
+  setStatus(`🔒 Rugcheck + Honeypot on ${top.length} tokens...`);
   const clean=[];
 
   for(const t of top){
     const addr=t.pair.baseToken?.address;if(!addr)continue;
+    const sym=t.pair.baseToken?.symbol||'?';
+
+    // Rugcheck API
     const rug=await checkRug(addr);
     const r=parseRug(rug);
-    if(r.status==='danger')continue;
-    clean.push({...t,rugStatus:r.status});
+    if(r.status==='danger'){
+      log('🚫',`<span style="color:${C.rd}">${esc(sym)}</span> rejected: ${r.reason}`);
+      continue;
+    }
+    clean.push({...t,rugStatus:r.status,rugReason:r.reason||''});
   }
 
   log('🔍',`Cycle ${cycles}: <span style="color:${C.cy}">${cands.length}</span> scanned, <span style="color:${C.gr}">${clean.length}</span> passed`);
@@ -458,7 +558,7 @@ function buildGem(c){
     chg1h:parseFloat(p.priceChange?.h1)||0,chg24h:parseFloat(p.priceChange?.h24)||0,
     buyRatio:b+s>0?Math.round(b/(b+s)*100):50,txns:b+s,age:Math.round(age),
     score:c.score,src:c.src,isCTO,logo:c.icon||'',
-    rugStatus:c.rugStatus||'unknown',
+    rugStatus:c.rugStatus||'unknown',rugReason:c.rugReason||'',
     twitter:p.info?.socials?.find(x=>x.type==='twitter')?.url||'',
     website:p.info?.websites?.[0]?.url||'',
     telegram:p.info?.socials?.find(x=>x.type==='telegram')?.url||''
