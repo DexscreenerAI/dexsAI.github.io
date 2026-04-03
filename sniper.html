@@ -1351,35 +1351,192 @@ async function megaScan() {
   $('pumpScanned').textContent = pumpScannedTotal;
 
   // ═══════════════════════════════════════════════════════════════
-  // PHASE 3: DEXSCREENER
+  // PHASE 3: DEXSCREENER - NEW PROFILES
   // ═══════════════════════════════════════════════════════════════
-  updatePhase('DexScreener');
+  updatePhase('DexScreener New');
   
   try {
     const res = await fetch(`${DEX_API}/token-profiles/latest/v1`, { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      data.filter(t => t.chainId === 'solana').slice(0, 150).forEach(t => {
+      data.filter(t => t.chainId === 'solana').slice(0, 250).forEach(t => {
         if (t.tokenAddress && !allTokens.has(t.tokenAddress)) {
-          allTokens.set(t.tokenAddress, { address: t.tokenAddress, source: 'dex', boost: 18 });
+          allTokens.set(t.tokenAddress, { address: t.tokenAddress, source: 'dex-new', boost: 20 });
         }
       });
     }
   } catch(e) {}
+
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 4: DEXSCREENER - BOOSTED TOKENS
+  // ═══════════════════════════════════════════════════════════════
+  updatePhase('DexScreener Boosted');
   
-  // Keywords search
-  const keywords = ['pump', 'meme', 'pepe', 'trump', 'elon', 'ai', 'cat', 'dog', 'moon', 'degen', 'based', 'sol'];
-  const shuffled = keywords.sort(() => Math.random() - 0.5).slice(0, 8);
+  try {
+    const res = await fetch(`${DEX_API}/token-boosts/top/v1`, { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      data.filter(t => t.chainId === 'solana').slice(0, 200).forEach(t => {
+        if (t.tokenAddress && !allTokens.has(t.tokenAddress)) {
+          allTokens.set(t.tokenAddress, { address: t.tokenAddress, source: 'dex-boost', boost: 24 });
+        }
+      });
+    }
+  } catch(e) {}
+
+  // Latest boosts
+  try {
+    const res = await fetch(`${DEX_API}/token-boosts/latest/v1`, { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      data.filter(t => t.chainId === 'solana').slice(0, 200).forEach(t => {
+        if (t.tokenAddress && !allTokens.has(t.tokenAddress)) {
+          allTokens.set(t.tokenAddress, { address: t.tokenAddress, source: 'dex-boost-new', boost: 22 });
+        }
+      });
+    }
+  } catch(e) {}
+
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 5: DEXSCREENER - MEGA KEYWORD SEARCH (150+ keywords)
+  // ═══════════════════════════════════════════════════════════════
+  updatePhase('DexScreener Keywords');
   
-  for (const kw of shuffled) {
+  const megaKeywords = [
+    // MEME ESSENTIALS
+    'pepe', 'wojak', 'apu', 'doge', 'shib', 'bonk', 'wif', 'popcat', 'mew', 'cat', 'dog', 'frog',
+    'moon', 'pump', 'gem', 'degen', 'based', 'chad', 'giga', 'mega', 'ultra', 'hyper',
+    'cope', 'wagmi', 'ngmi', 'hodl', 'diamond', 'ape', 'monkey', 'gorilla',
+    // CELEBRITIES
+    'trump', 'elon', 'musk', 'biden', 'kanye', 'drake', 'tate', 'rogan', 'snoop',
+    'taylor', 'swift', 'mrbeast', 'pewdiepie', 'logan', 'paul', 'ksi',
+    // AI & TECH
+    'ai', 'gpt', 'claude', 'agent', 'bot', 'neural', 'quantum', 'cyber', 'meta',
+    'nft', 'web3', 'defi', 'dao', 'pixel', 'retro', 'virtual',
+    // ANIMALS
+    'bear', 'bull', 'wolf', 'lion', 'tiger', 'whale', 'shark', 'panda', 'koala',
+    'bird', 'eagle', 'owl', 'bunny', 'hamster', 'penguin', 'dragon', 'phoenix',
+    // SOLANA SPECIFIC
+    'sol', 'solana', 'raydium', 'jupiter', 'orca', 'meteora', 'jito',
+    'pump.fun', 'pumpfun', 'bonding', 'graduated',
+    // WEALTH
+    'rich', 'money', 'gold', 'diamond', 'lambo', 'yacht', 'million', 'billion',
+    'rocket', 'profit', 'gains', 'jackpot', 'winner',
+    // FOOD
+    'pizza', 'burger', 'sushi', 'coffee', 'beer', 'banana', 'peach', 'mango',
+    // TRENDING
+    'sigma', 'skibidi', 'rizz', 'ohio', 'gyatt', 'mewing', 'goat', 'bussin',
+    'fire', 'lit', 'based', 'vibe', 'slay', 'cap', 'nocap',
+    // MYTHOLOGY
+    'god', 'devil', 'angel', 'demon', 'zeus', 'thor', 'wizard', 'ninja', 'samurai',
+    'king', 'queen', 'emperor', 'alpha', 'sigma', 'omega',
+    // MODIFIERS
+    'baby', 'mini', 'micro', 'super', 'turbo', 'nitro', 'power', 'force',
+    'new', 'hot', 'fast', 'quick', 'safe', 'fair', 'real', 'true',
+    // COLORS & ELEMENTS
+    'red', 'blue', 'green', 'black', 'white', 'gold', 'silver', 'neon',
+    'fire', 'ice', 'water', 'earth', 'storm', 'thunder', 'dark', 'light',
+    // GAMING
+    'game', 'gamer', 'esport', 'twitch', 'stream', 'mario', 'sonic', 'pokemon',
+    'minecraft', 'fortnite', 'roblox', 'casino', 'poker', 'dice',
+    // COUNTRIES
+    'usa', 'america', 'china', 'japan', 'korea', 'india', 'russia', 'brazil',
+    'uk', 'france', 'germany', 'australia', 'africa', 'europe', 'asia',
+    // PLACES
+    'tokyo', 'london', 'paris', 'dubai', 'vegas', 'miami', 'mars', 'moon'
+  ];
+  
+  // Shuffle and use 100 keywords per scan
+  const shuffledKeywords = [...megaKeywords].sort(() => Math.random() - 0.5).slice(0, 100);
+  let kwDone = 0;
+  
+  for (const kw of shuffledKeywords) {
+    kwDone++;
+    if (kwDone % 20 === 0) {
+      $('scannerText').textContent = `🔍 Keywords ${kwDone}/${shuffledKeywords.length} (${allTokens.size} tokens)`;
+    }
+    
     try {
-      const res = await fetch(`${DEX_API}/latest/dex/search?q=${kw}`, { signal: AbortSignal.timeout(4000) });
+      const res = await fetch(`${DEX_API}/latest/dex/search?q=${encodeURIComponent(kw)}`, { signal: AbortSignal.timeout(4000) });
       const data = await res.json();
       if (data.pairs) {
-        data.pairs.filter(p => p.chainId === 'solana').slice(0, 50).forEach(p => {
+        data.pairs.filter(p => p.chainId === 'solana').slice(0, 80).forEach(p => {
           const addr = p.baseToken?.address;
           if (addr && !allTokens.has(addr)) {
             allTokens.set(addr, { address: addr, source: 'dex-kw', boost: 12, pair: p });
+          }
+        });
+      }
+    } catch(e) {}
+    
+    if (kwDone % 25 === 0) await new Promise(r => setTimeout(r, 40));
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 6: DEXSCREENER - SOLANA SPECIFIC SEARCHES
+  // ═══════════════════════════════════════════════════════════════
+  updatePhase('DexScreener Solana');
+  
+  const solanaQueries = [
+    'solana meme', 'solana pump', 'solana new', 'solana hot', 'solana gem',
+    'sol meme', 'sol pump', 'sol new', 'sol degen', 'sol ai',
+    'raydium new', 'raydium pump', 'jupiter new', 'orca new', 'meteora new',
+    'pump fun', 'pumpfun', 'bonding curve', 'graduated solana', 'memecoin solana'
+  ];
+  
+  for (const q of solanaQueries) {
+    try {
+      const res = await fetch(`${DEX_API}/latest/dex/search?q=${encodeURIComponent(q)}`, { signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      if (data.pairs) {
+        data.pairs.filter(p => p.chainId === 'solana').slice(0, 100).forEach(p => {
+          const addr = p.baseToken?.address;
+          if (addr && !allTokens.has(addr)) {
+            allTokens.set(addr, { address: addr, source: 'dex-sol', boost: 16, pair: p });
+          }
+        });
+      }
+    } catch(e) {}
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 7: DEXSCREENER - DEX SPECIFIC SEARCHES
+  // ═══════════════════════════════════════════════════════════════
+  updatePhase('DexScreener DEX Search');
+  
+  const dexQueries = ['raydium', 'jupiter', 'orca', 'meteora', 'lifinity', 'phoenix', 'drift', 'mango'];
+  
+  for (const dex of dexQueries) {
+    try {
+      const res = await fetch(`${DEX_API}/latest/dex/search?q=${dex}`, { signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      if (data.pairs) {
+        data.pairs.filter(p => p.chainId === 'solana').slice(0, 80).forEach(p => {
+          const addr = p.baseToken?.address;
+          if (addr && !allTokens.has(addr)) {
+            allTokens.set(addr, { address: addr, source: 'dex-dex', boost: 14, pair: p });
+          }
+        });
+      }
+    } catch(e) {}
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 8: DEXSCREENER - PATTERN SEARCHES (a-z, 0-9)
+  // ═══════════════════════════════════════════════════════════════
+  updatePhase('DexScreener Patterns');
+  
+  const patterns = 'abcdefghijklmnopqrstuvwxyz'.split('').slice(0, 15);
+  
+  for (const char of patterns) {
+    try {
+      const res = await fetch(`${DEX_API}/latest/dex/search?q=${char}`, { signal: AbortSignal.timeout(4000) });
+      const data = await res.json();
+      if (data.pairs) {
+        data.pairs.filter(p => p.chainId === 'solana').slice(0, 60).forEach(p => {
+          const addr = p.baseToken?.address;
+          if (addr && !allTokens.has(addr)) {
+            allTokens.set(addr, { address: addr, source: 'dex-pattern', boost: 8, pair: p });
           }
         });
       }
@@ -1388,7 +1545,10 @@ async function megaScan() {
   
   dexScannedTotal = allTokens.size - heliusScannedTotal - pumpScannedTotal;
   $('dexScanned').textContent = dexScannedTotal;
+  
+  addLog('📊', `<span class="solana">DexScreener:</span> ${dexScannedTotal} tokens scanned`);
   $('totalScanned').textContent = allTokens.size;
+  addLog('🔍', `Total: <span class="helius">${heliusScannedTotal}</span> Helius + <span class="pump">${pumpScannedTotal}</span> Pump + <span class="solana">${dexScannedTotal}</span> DEX = <span class="yellow">${allTokens.size}</span>`);
 
   // ═══════════════════════════════════════════════════════════════
   // ENRICHMENT & ANALYSIS
@@ -1400,10 +1560,13 @@ async function megaScan() {
   const candidates = Array.from(allTokens.values());
   let analyzed = 0;
   
-  for (const cand of candidates.slice(0, 200)) {
+  // Sort by boost to prioritize better sources
+  candidates.sort((a, b) => (b.boost || 0) - (a.boost || 0));
+  
+  for (const cand of candidates.slice(0, 350)) {
     analyzed++;
-    if (analyzed % 30 === 0) {
-      $('scannerText').textContent = `⚙️ Analyzing ${analyzed}/${Math.min(200, candidates.length)}...`;
+    if (analyzed % 40 === 0) {
+      $('scannerText').textContent = `⚙️ Analyzing ${analyzed}/${Math.min(350, candidates.length)}...`;
     }
     
     // Skip if in cache
@@ -1467,7 +1630,7 @@ async function megaScan() {
   // ═══════════════════════════════════════════════════════════════
   // TRADE EXECUTION
   // ═══════════════════════════════════════════════════════════════
-  const topOpps = opportunities.slice(0, 50);
+  const topOpps = opportunities.slice(0, 100);
   let tradesOpened = 0;
   
   for (const opp of topOpps) {
