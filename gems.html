@@ -3,200 +3,52 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=0.85, minimum-scale=0.85, maximum-scale=0.85, user-scalable=no">
-<title>💎 GEM DETECTOR — DexScreener AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GEM DETECTOR — DexScreener AI</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
-
-:root {
-–bg: #060a10;
-–bg2: #0b1018;
-–bg3: #101822;
-–card: #111a26;
-–card-border: rgba(255,255,255,0.06);
-–text: #e2e8f0;
-–text2: #94a3b8;
-–text3: #64748b;
-–cyan: #00d4ff;
-–cyan-dim: rgba(0,212,255,0.12);
-–green: #00ff88;
-–green-dim: rgba(0,255,136,0.1);
-–red: #ff3b4f;
-–red-dim: rgba(255,59,79,0.1);
-–yellow: #ffaa00;
-–purple: #a855f7;
-–gold: #ffd700;
-–mono: ‘JetBrains Mono’, monospace;
-–sans: ‘DM Sans’, sans-serif;
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{
+  min-height:100vh;
+  background:#060a10;
+  color:#dfe4ed;
+  font-family:'DM Sans',sans-serif;
+  -webkit-font-smoothing:antialiased;
 }
-
-- { margin:0; padding:0; box-sizing:border-box; }
-  html, body { min-height:100%; background:var(–bg); color:var(–text); font-family:var(–sans); }
-  ::-webkit-scrollbar { width:5px; }
-  ::-webkit-scrollbar-track { background:transparent; }
-  ::-webkit-scrollbar-thumb { background:var(–card-border); border-radius:5px; }
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#1a2636;border-radius:4px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 
 /* NAV */
-.nav {
-position:fixed; top:0; left:0; right:0; z-index:1000;
-display:flex; align-items:center; justify-content:space-between;
-padding:12px 20px;
-background:rgba(6,10,16,0.95); border-bottom:1px solid var(–card-border);
-backdrop-filter:blur(10px);
+.nav{
+position:fixed;top:0;left:0;right:0;z-index:100;
+display:flex;align-items:center;justify-content:space-between;
+padding:12px 20px;background:rgba(6,10,16,0.95);
+border-bottom:1px solid #1a2636;backdrop-filter:blur(10px);
 }
-.nav-logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; font-family:var(–mono); font-weight:700; font-size:13px; }
-.nav-logo img { height:28px; border-radius:6px; }
-.nav-links { display:flex; gap:18px; }
-.nav-links a { font-family:var(–mono); font-size:11px; font-weight:500; color:var(–text2); text-decoration:none; letter-spacing:.5px; transition:color .15s; }
-.nav-links a:hover, .nav-links a.active { color:var(–cyan); }
-.nav-menu-btn { display:none; background:var(–card); border:1px solid var(–card-border); color:#fff; font-size:18px; padding:6px 10px; border-radius:6px; cursor:pointer; }
-.nav-mobile { display:none; position:fixed; top:53px; left:0; right:0; background:var(–bg); border-bottom:1px solid var(–card-border); flex-direction:column; padding:12px; z-index:999; }
-.nav-mobile.open { display:flex; }
-.nav-mobile a { padding:12px 16px; color:var(–text); text-decoration:none; font-family:var(–mono); font-size:12px; border-radius:8px; }
-.nav-mobile a:hover { background:var(–card); color:var(–cyan); }
-.nav-mobile a.active { color:var(–cyan); }
-@media(max-width:900px) { .nav-links{display:none;} .nav-menu-btn{display:block;} }
-
-.container { max-width:900px; margin:0 auto; padding:20px; padding-top:72px; position:relative; z-index:1; }
-
-/* SCANNER STATUS BAR */
-.scanner-bar {
-background:var(–card); border:1px solid var(–card-border); border-radius:12px;
-padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
-}
-.scanner-dot { width:10px; height:10px; border-radius:50%; background:var(–red); flex-shrink:0; }
-.scanner-dot.active { background:var(–green); animation:blink 1s infinite; }
-@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
-.scanner-text { font-family:var(–mono); font-size:11px; color:var(–text2); flex:1; min-width:0; }
-.scanner-stats { display:flex; gap:16px; font-family:var(–mono); font-size:10px; color:var(–text3); flex-wrap:wrap; }
-.scanner-stats span { color:var(–cyan); font-weight:600; }
-
-/* Removed controls — auto-start */
-
-/* Section style handled inline */
-
-/* GEM CARDS */
-.gems-grid { display:flex; flex-direction:column; gap:12px; }
-.gem-card {
-background:var(–card); border:1px solid var(–card-border); border-radius:14px;
-padding:16px; position:relative; transition:all .25s;
-}
-.gem-card:hover { border-color:rgba(255,215,0,.3); transform:translateY(-1px); }
-.gem-card.top3 { border-color:rgba(255,215,0,.25); background:linear-gradient(135deg, rgba(255,215,0,.04), transparent); }
-.gem-card.new-entry { animation:slideIn .4s ease; }
-@keyframes slideIn { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
-
-.gem-rank {
-position:absolute; top:-8px; left:16px; width:32px; height:32px; border-radius:50%;
-display:flex; align-items:center; justify-content:center;
-font-family:var(–mono); font-size:12px; font-weight:700;
-box-shadow:0 3px 12px rgba(0,0,0,.4);
-}
-.gem-rank.r1 { background:linear-gradient(135deg,#ffd700,#ffaa00); color:#000; }
-.gem-rank.r2 { background:linear-gradient(135deg,#c0c0c0,#a0a0a0); color:#000; }
-.gem-rank.r3 { background:linear-gradient(135deg,#cd7f32,#b87333); color:#000; }
-.gem-rank.rn { background:var(–bg3); color:var(–text2); }
-
-.gem-score-badge {
-position:absolute; top:12px; right:14px; padding:4px 10px; border-radius:6px;
-font-family:var(–mono); font-size:11px; font-weight:700;
-}
-.gem-score-badge.high { background:var(–green); color:#000; }
-.gem-score-badge.med { background:var(–yellow); color:#000; }
-.gem-score-badge.low { background:var(–text3); color:#fff; }
-
-.gem-head { display:flex; align-items:center; gap:12px; margin:6px 0 12px; }
-.gem-logo {
-width:44px; height:44px; border-radius:10px; background:var(–bg3);
-display:flex; align-items:center; justify-content:center;
-font-family:var(–mono); font-size:18px; font-weight:700; color:var(–cyan); overflow:hidden;
-}
-.gem-logo img { width:100%; height:100%; object-fit:cover; }
-.gem-sym { font-family:var(–mono); font-size:16px; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px; }
-.gem-chain-tag { font-size:9px; padding:2px 6px; background:var(–bg); border-radius:4px; color:var(–text3); }
-.gem-name { font-size:11px; color:var(–text2); margin-top:2px; }
-.gem-badges { display:flex; gap:5px; margin-top:5px; flex-wrap:wrap; }
-.gem-badge {
-font-size:8px; padding:2px 6px; border-radius:4px; font-family:var(–mono); font-weight:600;
-}
-.gem-badge.fresh { background:var(–green-dim); border:1px solid var(–green); color:var(–green); }
-.gem-badge.boosted { background:rgba(168,85,247,.15); border:1px solid var(–purple); color:var(–purple); }
-.gem-badge.safe { background:var(–green-dim); border:1px solid var(–green); color:var(–green); }
-.gem-badge.warn { background:rgba(255,170,0,.15); border:1px solid var(–yellow); color:var(–yellow); }
-.gem-badge.cto { background:rgba(255,170,0,.15); border:1px solid var(–yellow); color:var(–yellow); }
-
-.gem-stats {
-display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:12px;
-}
-.gem-stat { background:var(–bg); padding:8px; border-radius:6px; text-align:center; }
-.gem-stat-l { font-size:8px; color:var(–text3); font-family:var(–mono); letter-spacing:.5px; margin-bottom:3px; }
-.gem-stat-v { font-family:var(–mono); font-size:12px; font-weight:600; }
-.gem-stat-v.green { color:var(–green); }
-.gem-stat-v.red { color:var(–red); }
-.gem-stat-v.yellow { color:var(–yellow); }
-
-.gem-foot {
-display:flex; align-items:center; justify-content:space-between; padding-top:10px;
-border-top:1px solid var(–card-border); font-size:10px;
-}
-.gem-rug { color:var(–text2); display:flex; align-items:center; gap:4px; }
-.gem-links { display:flex; gap:5px; }
-.gem-link {
-width:26px; height:26px; border-radius:5px; background:var(–bg); border:1px solid var(–card-border);
-display:flex; align-items:center; justify-content:center; color:var(–text2); text-decoration:none;
-font-size:11px; transition:all .15s;
-}
-.gem-link:hover { border-color:var(–cyan); color:var(–cyan); }
-.gem-link.off { opacity:.3; pointer-events:none; }
-.gem-open {
-padding:8px 14px; border-radius:6px; font-family:var(–mono); font-size:10px; font-weight:700;
-background:linear-gradient(135deg,var(–gold),var(–yellow)); border:none; color:#000;
-cursor:pointer; transition:all .15s; letter-spacing:.5px;
-}
-.gem-open:hover { transform:scale(1.03); box-shadow:0 3px 12px rgba(255,215,0,.3); }
-
-/* EMPTY */
-.empty { text-align:center; padding:60px 20px; color:var(–text3); }
-.empty-icon { font-size:48px; margin-bottom:16px; }
-.empty-text { font-family:var(–mono); font-size:12px; letter-spacing:1px; }
-
-/* LOG */
-.log-section {
-margin-top:20px; background:var(–card); border:1px solid var(–card-border);
-border-radius:12px; overflow:hidden;
-}
-.log-header {
-padding:12px 16px; border-bottom:1px solid var(–card-border); background:var(–bg3);
-font-family:var(–mono); font-size:11px; letter-spacing:1.5px; color:var(–cyan);
-display:flex; justify-content:space-between; align-items:center;
-}
-.log-content { max-height:200px; overflow-y:auto; padding:10px; }
-.log-item { display:flex; gap:8px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,.03); font-size:10px; }
-.log-time { color:var(–text3); min-width:50px; font-family:var(–mono); font-size:9px; }
-.log-text { color:var(–text2); line-height:1.4; }
-.log-text .g { color:var(–green); } .log-text .r { color:var(–red); } .log-text .c { color:var(–cyan); }
-.log-text .y { color:var(–yellow); } .log-text .p { color:var(–purple); } .log-text .go { color:var(–gold); }
-
-/* DISCLAIMER */
-.disclaimer { text-align:center; padding:20px; font-size:10px; color:var(–text3); margin-top:20px; }
-
-@media(max-width:768px) {
-.container { padding:14px; padding-top:68px; }
-.gem-stats { grid-template-columns:repeat(3,1fr); gap:4px; }
-.gem-stat { padding:6px; }
-.gem-stat-v { font-size:10px; }
-.scanner-bar { flex-direction:column; align-items:flex-start; gap:8px; }
-}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;}
+.nav-logo img{height:28px;border-radius:6px;}
+.nav-logo span{font-family:‘JetBrains Mono’,monospace;font-weight:700;font-size:13px;letter-spacing:1px;}
+.nav-links{display:flex;gap:18px;}
+.nav-links a{font-family:‘JetBrains Mono’,monospace;font-size:11px;color:#64748b;text-decoration:none;letter-spacing:.5px;}
+.nav-links a:hover,.nav-links a.on{color:#00d4ff;}
+.nav-ham{display:none;background:#111a26;border:1px solid #1a2636;color:#fff;font-size:18px;padding:6px 10px;border-radius:6px;cursor:pointer;}
+.mob-menu{display:none;position:fixed;top:53px;left:0;right:0;background:#060a10;border-bottom:1px solid #1a2636;flex-direction:column;padding:12px;z-index:99;}
+.mob-menu.open{display:flex;}
+.mob-menu a{padding:12px 16px;color:#dfe4ed;text-decoration:none;font-family:‘JetBrains Mono’,monospace;font-size:12px;border-radius:8px;}
+.mob-menu a:hover{background:#111a26;color:#00d4ff;}
+@media(max-width:900px){.nav-links{display:none;}.nav-ham{display:block;}}
 </style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 </head>
 <body>
 
-<!-- Ambient glow — same as Scene Remixer -->
-
-<div style="position:fixed;top:-40%;left:50%;transform:translateX(-50%);width:120%;height:60%;background:radial-gradient(ellipse at center,rgba(0,212,255,0.04) 0%,transparent 70%);pointer-events:none;z-index:0;"></div>
+<!-- NAV -->
 
 <nav class="nav">
   <a href="./index.html" class="nav-logo">
@@ -205,516 +57,421 @@ display:flex; justify-content:space-between; align-items:center;
   </a>
   <div class="nav-links">
     <a href="./index.html">App</a>
-    <a href="./compare.html">Compare</a>
-    <a href="./gems.html" class="active">Gems</a>
+    <a href="./gems.html" class="on">Gems</a>
     <a href="./sniper.html">Sniper</a>
-    <a href="./og-detector.html">OG Detector</a>
     <a href="./extension.html">Extension</a>
     <a href="./promote.html">Promote</a>
     <a href="./litepaper.html">Litepaper</a>
     <a href="https://t.me/dexscreeneraitoken" target="_blank">Telegram</a>
     <a href="https://x.com/dexscreenerai" target="_blank">Twitter</a>
   </div>
-  <button class="nav-menu-btn" onclick="document.getElementById('mob').classList.toggle('open');this.textContent=this.textContent==='☰'?'✕':'☰'">☰</button>
+  <button class="nav-ham" onclick="document.getElementById('mob').classList.toggle('open')">☰</button>
 </nav>
-<div class="nav-mobile" id="mob">
-  <a href="./index.html">🏠 App</a><a href="./compare.html">⚖️ Compare</a>
-  <a href="./gems.html" class="active">💎 Gems</a><a href="./sniper.html">🎯 Sniper</a>
-  <a href="./og-detector.html">🔍 OG Detector</a><a href="./extension.html">🧩 Extension</a>
-  <a href="./promote.html">⭐ Promote</a><a href="./litepaper.html">📄 Litepaper</a>
-  <a href="https://t.me/dexscreeneraitoken" target="_blank">💬 Telegram</a>
-  <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
+<div class="mob-menu" id="mob">
+  <a href="./index.html">🏠 App</a>
+  <a href="./gems.html" style="color:#00d4ff">💎 Gems</a>
+  <a href="./sniper.html">🎯 Sniper</a>
+  <a href="./extension.html">🧩 Extension</a>
+  <a href="./promote.html">⭐ Promote</a>
+  <a href="./litepaper.html">📄 Litepaper</a>
 </div>
 
-<div class="container">
+<!-- APP — rendered by JS like Scene Remixer -->
 
-  <!-- Header — matches Scene Remixer DEXAI design -->
-
-  <div style="padding:20px 0 16px;">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <div style="width:40px;height:40px;border-radius:10px;background:var(--cyan-dim);border:1px solid rgba(0,212,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <span style="font-size:20px;">💎</span>
-      </div>
-      <div>
-        <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#fff;letter-spacing:2px;">GEM DETECTOR</div>
-        <div style="font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--cyan);margin-top:1px;font-weight:600;">DEXSCREENER AI STUDIO</div>
-      </div>
-    </div>
-    <p style="color:var(--text2);font-size:12px;margin:12px 0 0;">Auto-scanning 12+ sources · Top 10 gems live · Scores update in real-time</p>
-    <div style="height:1px;background:linear-gradient(90deg,rgba(0,212,255,0.27),transparent);margin-top:16px;"></div>
-  </div>
-
-  <!-- Scanner Status -->
-
-  <div class="scanner-bar">
-    <div class="scanner-dot active" id="dot"></div>
-    <div class="scanner-text" id="status">🚀 Initializing scanner...</div>
-    <div class="scanner-stats">
-      Scanned: <span id="sScanned">0</span> &nbsp;
-      Passed: <span id="sPassed">0</span> &nbsp;
-      Cycles: <span id="sCycles">0</span> &nbsp;
-      Uptime: <span id="sUptime">--</span>
-    </div>
-  </div>
-
-  <!-- Section Label — same style as scene remixer -->
-
-  <div style="font-family:var(--mono);font-size:9px;letter-spacing:2.5px;color:var(--cyan);margin-bottom:12px;font-weight:600;display:flex;align-items:center;gap:8px;">
-    <span>TOP 10 GEMS</span>
-    <div style="flex:1;height:1px;background:rgba(255,255,255,0.06);"></div>
-    <span style="color:var(--gold);font-size:9px;" id="gemCount">0</span><span style="color:var(--text3);font-size:9px;">/10</span>
-  </div>
-
-  <!-- Gems List -->
-
-  <div class="gems-grid" id="gemsGrid">
-    <div class="empty"><div class="empty-icon">💎</div><div class="empty-text">Start scanning to find gems...</div></div>
-  </div>
-
-  <!-- Log -->
-
-  <div class="log-section">
-    <div class="log-header">
-      <span>SCANNER LOG</span>
-      <span style="font-size:9px;color:var(--green);">● live</span>
-    </div>
-    <div class="log-content" id="logBox"></div>
-  </div>
-
-  <div style="text-align:center;padding:32px 0 16px;border-top:1px solid rgba(255,255,255,0.06);margin-top:24px;">
-    <span style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:2px;">POWERED BY DEXSCREENER AI × RUGCHECK</span>
-    <p style="font-size:9px;color:var(--text3);margin-top:8px;">⚠️ DYOR — Not financial advice. Always verify on-chain data.</p>
-  </div>
-</div>
+<div id="app"></div>
 
 <script>
 const $=id=>document.getElementById(id);
 const fN=n=>n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toFixed(0);
-const fP=p=>p===0?'$0':p<.00000001?'$'+p.toExponential(2):p<.0001?'$'+p.toFixed(8):p<.01?'$'+p.toFixed(6):p<1?'$'+p.toFixed(4):p<1000?'$'+p.toFixed(2):'$'+fN(p);
-const esc=s=>(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const now=()=>new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const fP=p=>p===0?'$0':p<.0001?'$'+p.toFixed(8):p<.01?'$'+p.toFixed(6):p<1?'$'+p.toFixed(4):'$'+p.toFixed(2);
+const esc=s=>(s||'').replace(/</g,'&lt;');
+const ts=()=>new Date().toLocaleTimeString('en-US',{hour12:false});
+
+// Design tokens — exact match scene remixer
+const C={
+  bg:'#060a10',bg2:'#0b1018',bg3:'#101822',
+  card:'#111a26',cb:'#1a2636',
+  cy:'#00d4ff',cd:'rgba(0,212,255,0.12)',
+  gr:'#00ff88',gd:'rgba(0,255,136,0.1)',
+  rd:'#ff3b4f',yl:'#ffaa00',pu:'#a855f7',go:'#ffd700',
+  t:'#dfe4ed',t2:'rgba(255,255,255,0.5)',t3:'rgba(255,255,255,0.22)',
+  m:"'JetBrains Mono',monospace",s:"'DM Sans',sans-serif"
+};
 
 // ═══════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════
-let gems = [];          // Top 10
-const MAX_GEMS = 10;
-let running = false;
-let scanTimer = null;
-let uptimeTimer = null;
-let startTime = null;
-let cycles = 0;
-let totalScanned = 0;
-let totalPassed = 0;
-let logs = [];
-const seenAddresses = new Set();
-const validChains = ['solana','ethereum','base','bsc','arbitrum','polygon','avalanche'];
+let gems=[];
+const MAX=10;
+let running=true, cycles=0, totalScanned=0, totalPassed=0, startTime=Date.now();
+let logs=[];
+const valid=['solana','ethereum','base','bsc','arbitrum','polygon','avalanche'];
+const rugCache={};
 
-// ═══════════════════════════════════════════
-// LOG
-// ═══════════════════════════════════════════
-function log(icon, text) {
-  logs.unshift({t:now(), icon, text});
-  if(logs.length>100) logs.pop();
-  $('logBox').innerHTML = logs.slice(0,40).map(l=>
-    `<div class="log-item"><span class="log-time">${l.t}</span><span>${l.icon}</span><span class="log-text">${l.text}</span></div>`
-  ).join('');
+function log(icon,text){
+  logs.unshift({t:ts(),icon,text});
+  if(logs.length>80)logs.pop();
+  render();
+}
+
+function secLabel(t,extra=''){
+  return `<div style="font-family:${C.m};font-size:9px;letter-spacing:2.5px;color:${C.cy};margin:20px 0 10px;font-weight:600;display:flex;align-items:center;gap:8px;"><span>${t}</span><div style="flex:1;height:1px;background:${C.cb};"></div>${extra}</div>`;
 }
 
 // ═══════════════════════════════════════════
-// CONTROLS
+// RENDER — same pattern as Scene Remixer
 // ═══════════════════════════════════════════
-function start() {
-  running=true; startTime=Date.now();
-  $('dot').classList.add('active');
-  log('🚀','<span class="g">Auto-scanner started</span> — Hunting for gems...');
-  scan();
-  uptimeTimer=setInterval(updateUptime,1000);
+function render(){
+  const elapsed=Math.floor((Date.now()-startTime)/1000);
+  const mm=Math.floor(elapsed/60),ss=elapsed%60;
+  const uptime=mm>0?`${mm}m${ss}s`:`${ss}s`;
+
+  $('app').innerHTML=`
+  <div style="min-height:100vh;background:${C.bg};color:${C.t};font-family:${C.s};position:relative;">
+    <div style="position:fixed;top:-40%;left:50%;transform:translateX(-50%);width:120%;height:60%;background:radial-gradient(ellipse at center,rgba(0,212,255,0.04) 0%,transparent 70%);pointer-events:none;z-index:0;"></div>
+    <div style="position:relative;z-index:1;max-width:520px;margin:0 auto;padding:0 16px 60px;padding-top:64px;">
+
+      <!-- HEADER -->
+      <div style="padding:20px 0 16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:10px;background:${C.cd};border:1px solid rgba(0,212,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">💎</div>
+          <div>
+            <div style="font-family:${C.m};font-size:18px;font-weight:700;color:#fff;letter-spacing:2px;">GEM DETECTOR</div>
+            <div style="font-family:${C.m};font-size:8px;letter-spacing:3px;color:${C.cy};margin-top:1px;font-weight:600;">DEXSCREENER AI STUDIO</div>
+          </div>
+        </div>
+        <p style="color:${C.t2};font-size:12px;margin:12px 0 0;">Auto-scanning 12+ sources · Top 10 gems · Scores update live</p>
+        <div style="height:1px;background:linear-gradient(90deg,${C.cy}44,transparent);margin-top:16px;"></div>
+      </div>
+
+      <!-- SCANNER BAR -->
+      <div style="background:${C.card};border:1px solid ${C.cb};border-radius:10px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="width:8px;height:8px;border-radius:50%;background:${C.gr};animation:blink 1s infinite;flex-shrink:0;"></div>
+        <div style="flex:1;min-width:0;font-family:${C.m};font-size:11px;color:${C.t2};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="statusText">Initializing...</div>
+        <div style="display:flex;gap:14px;font-family:${C.m};font-size:9px;color:${C.t3};flex-wrap:wrap;">
+          <span>Scanned <span style="color:${C.cy};font-weight:600;">${totalScanned}</span></span>
+          <span>Passed <span style="color:${C.gr};font-weight:600;">${totalPassed}</span></span>
+          <span>Cycle <span style="color:${C.yl};font-weight:600;">${cycles}</span></span>
+          <span style="color:${C.t2};">${uptime}</span>
+        </div>
+      </div>
+
+      <!-- TOP 10 SECTION -->
+      ${secLabel('TOP 10 GEMS',`<span style="color:${C.go};font-size:10px;font-weight:700;">${gems.length}</span><span style="color:${C.t3};font-size:9px;">/10</span>`)}
+
+      ${gems.length===0?`
+        <div style="text-align:center;padding:50px 20px;">
+          <div style="font-size:48px;margin-bottom:16px;opacity:0.6;">💎</div>
+          <div style="font-family:${C.m};font-size:11px;color:${C.t3};letter-spacing:1px;">Scanning... gems will appear here</div>
+          <div style="margin-top:16px;width:20px;height:20px;border:2px solid ${C.cy};border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;margin:16px auto 0;"></div>
+        </div>
+      `:gems.map((g,i)=>renderGemCard(g,i)).join('')}
+
+      <!-- LOG -->
+      ${secLabel('SCANNER LOG',`<span style="color:${C.gr};font-size:9px;">● live</span>`)}
+      <div style="background:${C.card};border:1px solid ${C.cb};border-radius:10px;max-height:180px;overflow-y:auto;padding:10px;">
+        ${logs.slice(0,30).map(l=>`
+          <div style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:10px;">
+            <span style="color:${C.t3};min-width:48px;font-family:${C.m};font-size:9px;">${l.t}</span>
+            <span>${l.icon}</span>
+            <span style="color:${C.t2};line-height:1.4;">${l.text}</span>
+          </div>
+        `).join('')}
+        ${logs.length===0?`<div style="text-align:center;color:${C.t3};font-size:10px;padding:12px;">Waiting...</div>`:''}
+      </div>
+
+      <!-- FOOTER -->
+      <div style="text-align:center;padding:28px 0 12px;border-top:1px solid ${C.cb};margin-top:24px;">
+        <span style="font-family:${C.m};font-size:9px;color:${C.t3};letter-spacing:2px;">POWERED BY DEXSCREENER AI × RUGCHECK</span>
+        <p style="font-size:9px;color:${C.t3};margin-top:6px;">⚠️ DYOR — Not financial advice. Always verify on-chain data.</p>
+      </div>
+
+    </div>
+  </div>`;
 }
-function updateUptime() {
-  if(!startTime) return;
-  const s=Math.floor((Date.now()-startTime)/1000);
-  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
-  $('sUptime').textContent=h>0?`${h}h${m}m`:`${m}m${ss}s`;
+
+function renderGemCard(g,i){
+  const rank=i+1;
+  const rc=rank===1?`background:linear-gradient(135deg,#ffd700,#ffaa00);color:#000`
+    :rank===2?`background:linear-gradient(135deg,#c0c0c0,#a0a0a0);color:#000`
+    :rank===3?`background:linear-gradient(135deg,#cd7f32,#b87333);color:#000`
+    :`background:${C.bg3};color:${C.t2}`;
+  const sc=g.score>=75?C.gr:g.score>=60?C.yl:C.t3;
+  const c1=g.chg1h>=0?C.gr:C.rd;
+  const c24=g.chg24h>=0?C.gr:C.rd;
+  const cbr=g.buyRatio>=60?C.gr:g.buyRatio>=50?C.t:C.yl;
+  const rug=g.rugStatus==='good'?'✅':g.rugStatus==='warn'?'⚠️':'❓';
+  const isTop3=rank<=3;
+
+  let badges='';
+  if(g.age<48)badges+=`<span style="font-size:7px;padding:2px 5px;border-radius:3px;font-family:${C.m};font-weight:600;background:${C.gd};border:1px solid ${C.gr};color:${C.gr};">🆕 ${g.age}h</span>`;
+  if(g.src==='boosted')badges+=`<span style="font-size:7px;padding:2px 5px;border-radius:3px;font-family:${C.m};font-weight:600;background:rgba(168,85,247,.15);border:1px solid ${C.pu};color:${C.pu};">🚀 BOOST</span>`;
+  if(g.rugStatus==='good')badges+=`<span style="font-size:7px;padding:2px 5px;border-radius:3px;font-family:${C.m};font-weight:600;background:${C.gd};border:1px solid ${C.gr};color:${C.gr};">✅ SAFE</span>`;
+  if(g.isCTO)badges+=`<span style="font-size:7px;padding:2px 5px;border-radius:3px;font-family:${C.m};font-weight:600;background:rgba(255,170,0,.15);border:1px solid ${C.yl};color:${C.yl};">👥 CTO</span>`;
+
+  return `<div style="background:${C.card};border:1px solid ${isTop3?'rgba(255,215,0,0.2)':C.cb};border-radius:12px;padding:14px;margin-bottom:10px;position:relative;${isTop3?'background:linear-gradient(135deg,rgba(255,215,0,0.04),transparent);':''}animation:fadeIn .3s ease;">
+    <div style="position:absolute;top:-8px;left:14px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:${C.m};font-size:11px;font-weight:700;${rc};box-shadow:0 3px 10px rgba(0,0,0,.4);">#${rank}</div>
+    <div style="position:absolute;top:10px;right:12px;padding:3px 8px;border-radius:5px;background:${sc};color:#000;font-family:${C.m};font-size:10px;font-weight:700;">${g.score}</div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin:4px 0 10px;">
+      <div style="width:40px;height:40px;border-radius:8px;background:${C.bg3};display:flex;align-items:center;justify-content:center;font-family:${C.m};font-size:16px;font-weight:700;color:${C.cy};overflow:hidden;">${g.logo?`<img src="${g.logo}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.textContent='${g.symbol.charAt(0)}'">`:g.symbol.charAt(0)}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:${C.m};font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:6px;">$${esc(g.symbol)} <span style="font-size:8px;padding:2px 5px;background:${C.bg};border-radius:3px;color:${C.t3};">${g.chain}</span></div>
+        <div style="font-size:10px;color:${C.t2};margin-top:1px;">${esc(g.name)}</div>
+        ${badges?`<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;">${badges}</div>`:''}
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:10px;">
+      <div style="background:${C.bg};padding:7px;border-radius:5px;text-align:center;"><div style="font-size:7px;color:${C.t3};font-family:${C.m};letter-spacing:.5px;margin-bottom:2px;">MCAP</div><div style="font-family:${C.m};font-size:11px;font-weight:600;">$${fN(g.mc)}</div></div>
+      <div style="background:${C.bg};padding:7px;border-radius:5px;text-align:center;"><div style="font-size:7px;color:${C.t3};font-family:${C.m};letter-spacing:.5px;margin-bottom:2px;">LIQ</div><div style="font-family:${C.m};font-size:11px;font-weight:600;">$${fN(g.liq)}</div></div>
+      <div style="background:${C.bg};padding:7px;border-radius:5px;text-align:center;"><div style="font-size:7px;color:${C.t3};font-family:${C.m};letter-spacing:.5px;margin-bottom:2px;">VOL 24H</div><div style="font-family:${C.m};font-size:11px;font-weight:600;">$${fN(g.vol)}</div></div>
+      <div style="background:${C.bg};padding:7px;border-radius:5px;text-align:center;"><div style="font-size:7px;color:${C.t3};font-family:${C.m};letter-spacing:.5px;margin-bottom:2px;">1H</div><div style="font-family:${C.m};font-size:11px;font-weight:600;color:${c1};">${g.chg1h>0?'+':''}${g.chg1h.toFixed(1)}%</div></div>
+      <div style="background:${C.bg};padding:7px;border-radius:5px;text-align:center;"><div style="font-size:7px;color:${C.t3};font-family:${C.m};letter-spacing:.5px;margin-bottom:2px;">24H</div><div style="font-family:${C.m};font-size:11px;font-weight:600;color:${c24};">${g.chg24h>0?'+':''}${g.chg24h.toFixed(1)}%</div></div>
+      <div style="background:${C.bg};padding:7px;border-radius:5px;text-align:center;"><div style="font-size:7px;color:${C.t3};font-family:${C.m};letter-spacing:.5px;margin-bottom:2px;">BUYERS</div><div style="font-family:${C.m};font-size:11px;font-weight:600;color:${cbr};">${g.buyRatio}%</div></div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid ${C.cb};font-size:10px;">
+      <span style="color:${C.t2};">${rug} ${g.rugStatus}</span>
+      <div style="display:flex;gap:4px;">
+        <a href="${g.twitter||'#'}" target="_blank" style="width:24px;height:24px;border-radius:4px;background:${C.bg};border:1px solid ${C.cb};display:flex;align-items:center;justify-content:center;color:${g.twitter?C.t2:C.t3};text-decoration:none;font-size:10px;${g.twitter?'':'opacity:.3;pointer-events:none;'}">𝕏</a>
+        <a href="${g.telegram||'#'}" target="_blank" style="width:24px;height:24px;border-radius:4px;background:${C.bg};border:1px solid ${C.cb};display:flex;align-items:center;justify-content:center;color:${g.telegram?C.t2:C.t3};text-decoration:none;font-size:10px;${g.telegram?'':'opacity:.3;pointer-events:none;'}">✈</a>
+        <a href="${g.website||'#'}" target="_blank" style="width:24px;height:24px;border-radius:4px;background:${C.bg};border:1px solid ${C.cb};display:flex;align-items:center;justify-content:center;color:${g.website?C.t2:C.t3};text-decoration:none;font-size:10px;${g.website?'':'opacity:.3;pointer-events:none;'}">🌐</a>
+      </div>
+      <div style="display:flex;gap:4px;">
+        <button onclick="window.open('https://dexscreener.com/${g.chain}/${g.pairAddress}','_blank')" style="padding:6px 10px;border-radius:5px;font-family:${C.m};font-size:9px;font-weight:700;background:${C.cd};color:${C.cy};border:1px solid rgba(0,212,255,0.25);cursor:pointer;letter-spacing:.5px;">📊 DEX</button>
+        <button onclick="window.open('index.html?ca=${g.address}&action=analyze','_blank')" style="padding:6px 10px;border-radius:5px;font-family:${C.m};font-size:9px;font-weight:700;background:linear-gradient(135deg,${C.go},${C.yl});color:#000;border:none;cursor:pointer;letter-spacing:.5px;">🏠 APP</button>
+      </div>
+    </div>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════
-// SCORING (from Sniper — no AI needed)
+// SCORING — from Sniper (no AI needed)
 // ═══════════════════════════════════════════
-function scoreToken(pair, source) {
+function scoreToken(pair,src){
   const mc=parseFloat(pair.marketCap)||0;
   const liq=parseFloat(pair.liquidity?.usd)||0;
   const vol=parseFloat(pair.volume?.h24)||0;
-  const chg5m=parseFloat(pair.priceChange?.m5)||0;
-  const chg1h=parseFloat(pair.priceChange?.h1)||0;
-  const chg6h=parseFloat(pair.priceChange?.h6)||0;
-  const chg24h=parseFloat(pair.priceChange?.h24)||0;
-  const b24=pair.txns?.h24?.buys||0, s24=pair.txns?.h24?.sells||0;
-  const b5=pair.txns?.m5?.buys||0, s5=pair.txns?.m5?.sells||0;
-  const b1h=pair.txns?.h1?.buys||0, s1h=pair.txns?.h1?.sells||0;
-  const t24=b24+s24, t5=b5+s5, t1h=b1h+s1h;
-  const br24=t24>0?(b24/t24)*100:50;
+  const c5=parseFloat(pair.priceChange?.m5)||0;
+  const c1=parseFloat(pair.priceChange?.h1)||0;
+  const c6=parseFloat(pair.priceChange?.h6)||0;
+  const c24=parseFloat(pair.priceChange?.h24)||0;
+  const b24=pair.txns?.h24?.buys||0,s24=pair.txns?.h24?.sells||0;
+  const b5=pair.txns?.m5?.buys||0,s5=pair.txns?.m5?.sells||0;
+  const b1=pair.txns?.h1?.buys||0,s1=pair.txns?.h1?.sells||0;
+  const t24=b24+s24,t5=b5+s5;
+  const br=t24>0?(b24/t24)*100:50;
   const br5=t5>0?(b5/t5)*100:50;
-  const br1h=t1h>0?(b1h/t1h)*100:50;
   const age=pair.pairCreatedAt?(Date.now()-pair.pairCreatedAt)/3600000:999;
   const sym=pair.baseToken?.symbol||'';
 
-  // Hard filters
-  if(mc>10000000||mc<5000) return -1;
-  if(liq<3000) return -1;
-  if(t24<30) return -1;
-  if(br24<45) return -1;
-  if(chg1h<-35) return -1;
-  if(sym.length<2) return -1;
-  if(s5===0&&s1h===0&&b5>5&&b1h>10) return -1; // honeypot
+  if(mc>10000000||mc<5000)return-1;
+  if(liq<3000)return-1;
+  if(t24<30)return-1;
+  if(br<45)return-1;
+  if(c1<-35)return-1;
+  if(sym.length<2)return-1;
+  if(s5===0&&s1===0&&b5>5&&b1>10)return-1;
 
-  let score=20;
+  let sc=20;
+  if(src==='boosted')sc+=10;else if(src==='gainer')sc+=7;else if(src==='new')sc+=5;
 
-  // Source bonus
-  if(source==='boosted') score+=10;
-  else if(source==='gainer') score+=7;
-  else if(source==='new') score+=5;
+  if(mc>=5000&&mc<20000)sc+=25;
+  else if(mc<50000)sc+=22;
+  else if(mc<100000)sc+=18;
+  else if(mc<300000)sc+=14;
+  else if(mc<1000000)sc+=8;
+  else if(mc<=5000000)sc+=3;
 
-  // MC — low cap = more multiplier potential
-  if(mc>=5000&&mc<20000) score+=25;
-  else if(mc>=20000&&mc<50000) score+=22;
-  else if(mc>=50000&&mc<100000) score+=18;
-  else if(mc>=100000&&mc<300000) score+=14;
-  else if(mc>=300000&&mc<1000000) score+=8;
-  else if(mc>=1000000&&mc<=5000000) score+=3;
+  if(br5>=60)sc+=12;else if(br5>=50)sc+=6;else if(br5<35&&t5>=5)sc-=8;
+  if(br>=55)sc+=5;
 
-  // Buy pressure
-  if(br5>=60) score+=12;
-  else if(br5>=50) score+=6;
-  else if(br5<35&&t5>=5) score-=8;
-
-  if(br24>=55) score+=5;
-
-  // Liquidity ratio
   const lr=mc>0?(liq/mc)*100:0;
-  if(lr>10) score+=12;
-  else if(lr>5) score+=7;
-  else if(lr>2) score+=3;
-  else if(lr<1) score-=10;
+  if(lr>10)sc+=12;else if(lr>5)sc+=7;else if(lr>2)sc+=3;else if(lr<1)sc-=10;
 
-  // Momentum
-  if(chg5m>5&&chg5m<50) score+=8;
-  if(chg1h>10&&chg1h<100) score+=10;
-  else if(chg1h>0) score+=4;
-  if(chg5m>80) score-=10;
-  if(chg1h>150) score-=10;
-  if(chg5m<-20) score-=8;
+  if(c5>5&&c5<50)sc+=8;
+  if(c1>10&&c1<100)sc+=10;else if(c1>0)sc+=4;
+  if(c5>80)sc-=10;if(c1>150)sc-=10;if(c5<-20)sc-=8;
 
-  // Age
-  if(age>=4&&age<24) score+=12;
-  else if(age>=24&&age<72) score+=8;
-  else if(age>=72&&age<168) score+=4;
-  else if(age<4) score+=3;
+  if(age>=4&&age<24)sc+=12;else if(age<72)sc+=8;else if(age<168)sc+=4;else if(age<4)sc+=3;
 
-  // Volume
   const vr=mc>0?(vol/mc):0;
-  if(vr>3) score+=8;
-  else if(vr>1) score+=5;
-  else if(vr>.3) score+=2;
+  if(vr>3)sc+=8;else if(vr>1)sc+=5;else if(vr>.3)sc+=2;
 
-  // Activity
-  if(t24>500) score+=6;
-  else if(t24>200) score+=4;
-  else if(t24>100) score+=2;
+  if(t24>500)sc+=6;else if(t24>200)sc+=4;else if(t24>100)sc+=2;
 
-  // Trend consistency
-  if(chg5m>0&&chg1h>0) score+=4;
-  if(chg5m>0&&chg1h>0&&chg6h>0) score+=4;
-  if(chg24h<-20&&chg1h>10) score+=6; // reversal
+  if(c5>0&&c1>0)sc+=4;
+  if(c5>0&&c1>0&&c6>0)sc+=4;
+  if(c24<-20&&c1>10)sc+=6;
 
-  // CTO
-  const isCTO=pair.info?.socials?.some(s=>s.url?.includes('/community'))||
-    (pair.info?.description||'').toLowerCase().includes('cto');
-  if(isCTO) score+=4;
+  const isCTO=pair.info?.socials?.some(s=>s.url?.includes('/community'))||(pair.info?.description||'').toLowerCase().includes('cto');
+  if(isCTO)sc+=4;
 
-  return Math.min(100, Math.max(0, Math.round(score)));
+  return Math.min(100,Math.max(0,Math.round(sc)));
 }
 
 // ═══════════════════════════════════════════
 // RUGCHECK
 // ═══════════════════════════════════════════
-const rugCache={};
-async function checkRug(addr) {
-  if(rugCache[addr]) return rugCache[addr];
-  try {
+async function checkRug(addr){
+  if(rugCache[addr])return rugCache[addr];
+  try{
     const r=await fetch(`https://api.rugcheck.xyz/v1/tokens/${addr}/report/summary`,{signal:AbortSignal.timeout(4000)});
-    if(!r.ok) return null;
-    const d=await r.json();
-    rugCache[addr]=d;
-    return d;
-  } catch(e) { return null; }
+    if(!r.ok)return null;
+    const d=await r.json();rugCache[addr]=d;return d;
+  }catch(e){return null;}
 }
-
-function parseRug(d) {
-  if(!d||!d.risks) return {status:'unknown',risks:[]};
-  const names=(d.risks||[]).map(r=>(r.name||r.description||'').toLowerCase());
-  if(names.some(n=>n.includes('honeypot')||n.includes('honey pot'))) return {status:'danger',risks:['Honeypot']};
-  if(d.mintAuthority||names.some(n=>n.includes('mint')&&n.includes('enabl'))) return {status:'danger',risks:['Mint enabled']};
-  if(names.some(n=>n.includes('rug')||n.includes('scam'))) return {status:'danger',risks:['Rug risk']};
-  if(d.risks.length===0) return {status:'good',risks:[]};
-  if(d.risks.length<=2) return {status:'warn',risks:d.risks.map(r=>r.name||'')};
-  return {status:'danger',risks:d.risks.map(r=>r.name||'').slice(0,3)};
+function parseRug(d){
+  if(!d||!d.risks)return{status:'unknown',risks:[]};
+  const n=(d.risks||[]).map(r=>(r.name||r.description||'').toLowerCase());
+  if(n.some(x=>x.includes('honeypot')))return{status:'danger'};
+  if(d.mintAuthority||n.some(x=>x.includes('mint')&&x.includes('enabl')))return{status:'danger'};
+  if(n.some(x=>x.includes('rug')||x.includes('scam')))return{status:'danger'};
+  if(d.risks.length===0)return{status:'good'};
+  if(d.risks.length<=2)return{status:'warn'};
+  return{status:'danger'};
 }
 
 // ═══════════════════════════════════════════
 // SCAN CYCLE
 // ═══════════════════════════════════════════
-async function scan() {
-  if(!running) return;
+async function scan(){
+  if(!running)return;
   cycles++;
-  $('sCycles').textContent=cycles;
-  const allPairs=new Map();
+  const all=new Map();
 
-  // SOURCE 1: Latest profiles
-  try {
-    $('status').textContent='📡 Scanning new tokens...';
+  const setStatus=t=>{const e=document.getElementById('statusText');if(e)e.textContent=t;};
+
+  // Source 1: Latest profiles
+  try{setStatus('📡 New tokens...');
     const r=await fetch('https://api.dexscreener.com/token-profiles/latest/v1',{signal:AbortSignal.timeout(8000)});
     const d=await r.json();
-    if(Array.isArray(d)) d.slice(0,60).forEach(t=>{
-      if(t.tokenAddress&&validChains.includes(t.chainId)) allPairs.set(t.tokenAddress,{addr:t.tokenAddress,chain:t.chainId,src:'new',icon:t.icon});
-    });
-  } catch(e){}
+    if(Array.isArray(d))d.slice(0,60).forEach(t=>{if(t.tokenAddress&&valid.includes(t.chainId))all.set(t.tokenAddress,{addr:t.tokenAddress,chain:t.chainId,src:'new',icon:t.icon});});
+  }catch(e){}
 
-  // SOURCE 2: Top boosted
-  try {
-    $('status').textContent=`📡 ${allPairs.size} tokens — Boosted...`;
+  // Source 2: Boosted
+  try{setStatus(`📡 ${all.size} — Boosted...`);
     const r=await fetch('https://api.dexscreener.com/token-boosts/top/v1',{signal:AbortSignal.timeout(8000)});
     const d=await r.json();
-    if(Array.isArray(d)) d.slice(0,50).forEach(t=>{
-      if(t.tokenAddress&&validChains.includes(t.chainId)&&!allPairs.has(t.tokenAddress))
-        allPairs.set(t.tokenAddress,{addr:t.tokenAddress,chain:t.chainId,src:'boosted',icon:t.icon});
-    });
-  } catch(e){}
+    if(Array.isArray(d))d.slice(0,50).forEach(t=>{if(t.tokenAddress&&valid.includes(t.chainId)&&!all.has(t.tokenAddress))all.set(t.tokenAddress,{addr:t.tokenAddress,chain:t.chainId,src:'boosted',icon:t.icon});});
+  }catch(e){}
 
-  // SOURCE 3: Gainers per chain
-  try {
-    for(const chain of ['solana','base','ethereum']) {
-      const r=await fetch(`https://api.dexscreener.com/latest/dex/search?q=${chain}`,{signal:AbortSignal.timeout(5000)});
-      const d=await r.json();
-      if(d.pairs) d.pairs.filter(p=>p.chainId===chain&&parseFloat(p.priceChange?.h1)>5)
-        .sort((a,b)=>(parseFloat(b.priceChange?.h1)||0)-(parseFloat(a.priceChange?.h1)||0))
-        .slice(0,40).forEach(p=>{
-          const a=p.baseToken?.address;
-          if(a&&!allPairs.has(a)) allPairs.set(a,{addr:a,chain:p.chainId,src:'gainer',pair:p,icon:p.info?.imageUrl});
-        });
-    }
-  } catch(e){}
+  // Source 3: Gainers
+  try{for(const ch of['solana','base','ethereum']){
+    const r=await fetch(`https://api.dexscreener.com/latest/dex/search?q=${ch}`,{signal:AbortSignal.timeout(5000)});
+    const d=await r.json();
+    if(d.pairs)d.pairs.filter(p=>p.chainId===ch&&parseFloat(p.priceChange?.h1)>5)
+      .sort((a,b)=>(parseFloat(b.priceChange?.h1)||0)-(parseFloat(a.priceChange?.h1)||0))
+      .slice(0,40).forEach(p=>{const a=p.baseToken?.address;if(a&&!all.has(a))all.set(a,{addr:a,chain:p.chainId,src:'gainer',pair:p,icon:p.info?.imageUrl});});
+  }}catch(e){}
 
-  // SOURCE 4: Keyword search (30 random)
+  // Source 4: Keywords
   const kws=['moon','pump','gem','pepe','ai','meme','doge','bonk','wif','cat','dog','frog','trump','elon',
-    'bull','gold','diamond','rocket','king','god','alpha','sigma','safe','fire','burn','sol','eth','base',
-    'baby','mega','super','rich','lambo','whale','ape','dragon','degen','chad','giga','angel',
+    'bull','gold','diamond','rocket','king','alpha','sigma','safe','fire','sol','eth','base',
+    'baby','mega','super','rich','whale','ape','dragon','degen','chad','giga',
     'a','b','c','d','e','x','z','1','69','420','100','777'];
-  const shuffled=[...kws].sort(()=>Math.random()-.5).slice(0,30);
+  const sh=[...kws].sort(()=>Math.random()-.5).slice(0,25);
 
-  for(let i=0;i<shuffled.length;i++) {
-    $('status').textContent=`🔍 ${allPairs.size} tokens — "${shuffled[i]}"...`;
-    try {
-      const r=await fetch(`https://api.dexscreener.com/latest/dex/search?q=${shuffled[i]}`,{signal:AbortSignal.timeout(4000)});
+  for(let i=0;i<sh.length;i++){
+    setStatus(`🔍 ${all.size} — "${sh[i]}"...`);
+    try{const r=await fetch(`https://api.dexscreener.com/latest/dex/search?q=${sh[i]}`,{signal:AbortSignal.timeout(4000)});
       const d=await r.json();
-      if(d.pairs) d.pairs.slice(0,50).forEach(p=>{
-        const a=p.baseToken?.address;
-        if(a&&validChains.includes(p.chainId)&&!allPairs.has(a))
-          allPairs.set(a,{addr:a,chain:p.chainId,src:'search',pair:p,icon:p.info?.imageUrl});
-      });
-    } catch(e){}
-    if(i%10===9) await new Promise(r=>setTimeout(r,100));
+      if(d.pairs)d.pairs.slice(0,50).forEach(p=>{const a=p.baseToken?.address;if(a&&valid.includes(p.chainId)&&!all.has(a))all.set(a,{addr:a,chain:p.chainId,src:'search',pair:p,icon:p.info?.imageUrl});});
+    }catch(e){}
+    if(i%8===7)await new Promise(r=>setTimeout(r,100));
   }
 
-  // ENRICH & SCORE
-  $('status').textContent=`⚙️ Scoring ${allPairs.size} tokens...`;
-  const candidates=Array.from(allPairs.values());
+  // Score
+  setStatus(`⚙️ Scoring ${all.size}...`);
+  const cands=Array.from(all.values());
   let scored=[];
-  let scannedThisCycle=0;
 
-  for(const cand of candidates) {
-    scannedThisCycle++;
-    if(scannedThisCycle%80===0) $('status').textContent=`⚙️ ${scannedThisCycle}/${candidates.length}...`;
-
-    try {
-      let pair=cand.pair;
-      if(!pair) {
-        const r=await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cand.addr}`,{signal:AbortSignal.timeout(3000)});
-        const d=await r.json();
-        if(d.pairs&&d.pairs[0]) pair=d.pairs.sort((a,b)=>(parseFloat(b.liquidity?.usd)||0)-(parseFloat(a.liquidity?.usd)||0))[0];
-      }
-      if(!pair) continue;
-
-      const s=scoreToken(pair,cand.src);
-      if(s>=55) {
-        scored.push({pair,score:s,src:cand.src,icon:cand.icon||pair.info?.imageUrl||''});
-      }
-    } catch(e){}
-    if(scannedThisCycle%30===29) await new Promise(r=>setTimeout(r,30));
+  for(let i=0;i<cands.length;i++){
+    if(i%60===0)setStatus(`⚙️ ${i}/${cands.length}...`);
+    try{
+      let pair=cands[i].pair;
+      if(!pair){const r=await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cands[i].addr}`,{signal:AbortSignal.timeout(3000)});const d=await r.json();if(d.pairs&&d.pairs[0])pair=d.pairs.sort((a,b)=>(parseFloat(b.liquidity?.usd)||0)-(parseFloat(a.liquidity?.usd)||0))[0];}
+      if(!pair)continue;
+      const s=scoreToken(pair,cands[i].src);
+      if(s>=55)scored.push({pair,score:s,src:cands[i].src,icon:cands[i].icon||pair.info?.imageUrl||''});
+    }catch(e){}
+    if(i%25===24)await new Promise(r=>setTimeout(r,30));
   }
 
-  totalScanned+=scannedThisCycle;
+  totalScanned+=cands.length;
   totalPassed+=scored.length;
-  $('sScanned').textContent=totalScanned;
-  $('sPassed').textContent=totalPassed;
 
-  // RUGCHECK top candidates
+  // Rugcheck top
   scored.sort((a,b)=>b.score-a.score);
-  const top=scored.slice(0,30);
-
-  $('status').textContent=`🔒 Rugchecking ${top.length} candidates...`;
+  const top=scored.slice(0,25);
+  setStatus(`🔒 Rugchecking ${top.length}...`);
   const clean=[];
 
-  for(const t of top) {
-    const addr=t.pair.baseToken?.address;
-    if(!addr) continue;
+  for(const t of top){
+    const addr=t.pair.baseToken?.address;if(!addr)continue;
     const rug=await checkRug(addr);
     const r=parseRug(rug);
-    if(r.status==='danger') continue;
-    clean.push({...t,rugStatus:r.status,rugRisks:r.risks});
+    if(r.status==='danger')continue;
+    clean.push({...t,rugStatus:r.status});
   }
 
-  log('🔍',`Cycle ${cycles}: <span class="c">${scannedThisCycle}</span> scanned, <span class="g">${clean.length}</span> passed all filters`);
+  log('🔍',`Cycle ${cycles}: <span style="color:${C.cy}">${cands.length}</span> scanned, <span style="color:${C.gr}">${clean.length}</span> passed`);
 
-  // UPDATE TOP 10
+  // Update top 10
   let changed=false;
-  for(const c of clean) {
+  for(const c of clean){
     const addr=c.pair.baseToken?.address;
-    const existing=gems.findIndex(g=>g.address===addr);
+    const ei=gems.findIndex(g=>g.address===addr);
 
-    if(existing>=0) {
-      // Update score if higher
-      if(c.score>gems[existing].score) {
-        gems[existing]=buildGem(c);
-        changed=true;
-      }
-    } else if(gems.length<MAX_GEMS) {
-      gems.push(buildGem(c));
-      changed=true;
-      log('💎',`<span class="go">NEW GEM</span> $${esc(c.pair.baseToken?.symbol)} — Score ${c.score}`);
-    } else {
-      // Replace lowest if this is better
-      const lowest=gems.reduce((min,g,i)=>g.score<min.score?{score:g.score,idx:i}:min,{score:999,idx:-1});
-      if(c.score>lowest.score) {
-        const old=gems[lowest.idx];
-        gems[lowest.idx]=buildGem(c);
-        changed=true;
-        log('🔄',`<span class="go">UPGRADE</span> $${esc(c.pair.baseToken?.symbol)} (${c.score}) replaced $${esc(old.symbol)} (${old.score})`);
+    if(ei>=0){
+      if(c.score>gems[ei].score){gems[ei]=buildGem(c);changed=true;}
+    }else if(gems.length<MAX){
+      gems.push(buildGem(c));changed=true;
+      log('💎',`<span style="color:${C.go}">NEW</span> $${esc(c.pair.baseToken?.symbol)} — Score ${c.score}`);
+    }else{
+      const low=gems.reduce((m,g,i)=>g.score<m.s?{s:g.score,i}:m,{s:999,i:-1});
+      if(c.score>low.s){
+        const old=gems[low.i];
+        gems[low.i]=buildGem(c);changed=true;
+        log('🔄',`<span style="color:${C.go}">UPGRADE</span> $${esc(c.pair.baseToken?.symbol)} (${c.score}) ← $${esc(old.symbol)} (${old.score})`);
       }
     }
   }
 
-  if(changed) {
-    gems.sort((a,b)=>b.score-a.score);
-    renderGems();
-  }
-
-  $('status').textContent=`✅ Top ${gems.length} gems live — Next scan in 45s...`;
-
-  // Schedule next cycle
-  if(running) scanTimer=setTimeout(scan, 45000);
+  if(changed){gems.sort((a,b)=>b.score-a.score);}
+  render();
+  setStatus(`✅ ${gems.length} gems live — Next in 45s`);
+  if(running)setTimeout(scan,45000);
 }
 
-function buildGem(c) {
+function buildGem(c){
   const p=c.pair;
-  const mc=parseFloat(p.marketCap)||0;
-  const liq=parseFloat(p.liquidity?.usd)||0;
-  const vol=parseFloat(p.volume?.h24)||0;
+  const mc=parseFloat(p.marketCap)||0,liq=parseFloat(p.liquidity?.usd)||0,vol=parseFloat(p.volume?.h24)||0;
   const age=p.pairCreatedAt?(Date.now()-p.pairCreatedAt)/3600000:999;
-  const b24=p.txns?.h24?.buys||0, s24=p.txns?.h24?.sells||0;
-  const br=b24+s24>0?Math.round(b24/(b24+s24)*100):50;
-  const isCTO=p.info?.socials?.some(s=>s.url?.includes('/community'))||
-    (p.info?.description||'').toLowerCase().includes('cto');
-
-  return {
-    symbol: p.baseToken?.symbol||'???',
-    name: (p.baseToken?.name||'').slice(0,30),
-    chain: p.chainId||'unknown',
-    address: p.baseToken?.address,
-    pairAddress: p.pairAddress,
-    price: parseFloat(p.priceUsd)||0,
-    mc, liq, vol,
-    chg5m: parseFloat(p.priceChange?.m5)||0,
-    chg1h: parseFloat(p.priceChange?.h1)||0,
-    chg6h: parseFloat(p.priceChange?.h6)||0,
-    chg24h: parseFloat(p.priceChange?.h24)||0,
-    buyRatio: br,
-    txns: b24+s24,
-    age: Math.round(age),
-    score: c.score,
-    src: c.src,
-    isCTO,
-    logo: c.icon||'',
-    rugStatus: c.rugStatus||'unknown',
-    twitter: p.info?.socials?.find(s=>s.type==='twitter')?.url||'',
-    website: p.info?.websites?.[0]?.url||'',
-    telegram: p.info?.socials?.find(s=>s.type==='telegram')?.url||'',
-    lastUpdate: Date.now()
+  const b=p.txns?.h24?.buys||0,s=p.txns?.h24?.sells||0;
+  const isCTO=p.info?.socials?.some(x=>x.url?.includes('/community'))||(p.info?.description||'').toLowerCase().includes('cto');
+  return{
+    symbol:p.baseToken?.symbol||'???',name:(p.baseToken?.name||'').slice(0,30),
+    chain:p.chainId||'unknown',address:p.baseToken?.address,pairAddress:p.pairAddress,
+    price:parseFloat(p.priceUsd)||0,mc,liq,vol,
+    chg1h:parseFloat(p.priceChange?.h1)||0,chg24h:parseFloat(p.priceChange?.h24)||0,
+    buyRatio:b+s>0?Math.round(b/(b+s)*100):50,txns:b+s,age:Math.round(age),
+    score:c.score,src:c.src,isCTO,logo:c.icon||'',
+    rugStatus:c.rugStatus||'unknown',
+    twitter:p.info?.socials?.find(x=>x.type==='twitter')?.url||'',
+    website:p.info?.websites?.[0]?.url||'',
+    telegram:p.info?.socials?.find(x=>x.type==='telegram')?.url||''
   };
 }
 
 // ═══════════════════════════════════════════
-// RENDER
+// AUTO-START
 // ═══════════════════════════════════════════
-function renderGems() {
-  $('gemCount').textContent=gems.length;
-  if(gems.length===0) {
-    $('gemsGrid').innerHTML='<div class="empty"><div class="empty-icon">💎</div><div class="empty-text">Scanning... gems will appear here</div></div>';
-    return;
-  }
-
-  $('gemsGrid').innerHTML=gems.map((g,i)=>{
-    const rank=i+1;
-    const rc=rank===1?'r1':rank===2?'r2':rank===3?'r3':'rn';
-    const sc=g.score>=75?'high':g.score>=60?'med':'low';
-    const c1h=g.chg1h>=0?'green':'red';
-    const c24h=g.chg24h>=0?'green':'red';
-    const cbr=g.buyRatio>=60?'green':g.buyRatio>=50?'':'yellow';
-    const rugIcon=g.rugStatus==='good'?'✅':g.rugStatus==='warn'?'⚠️':'❓';
-
-    let badges='';
-    if(g.age<48) badges+=`<span class="gem-badge fresh">🆕 ${g.age}h</span>`;
-    if(g.src==='boosted') badges+=`<span class="gem-badge boosted">🚀 BOOST</span>`;
-    if(g.rugStatus==='good') badges+=`<span class="gem-badge safe">✅ SAFE</span>`;
-    else if(g.rugStatus==='warn') badges+=`<span class="gem-badge warn">⚠️ WARN</span>`;
-    if(g.isCTO) badges+=`<span class="gem-badge cto">👥 CTO</span>`;
-
-    return `<div class="gem-card ${rank<=3?'top3':''}">
-      <div class="gem-rank ${rc}">#${rank}</div>
-      <div class="gem-score-badge ${sc}">${g.score}</div>
-      <div class="gem-head">
-        <div class="gem-logo">${g.logo?`<img src="${g.logo}" onerror="this.style.display='none';this.parentElement.textContent='${g.symbol.charAt(0)}'">`:g.symbol.charAt(0)}</div>
-        <div>
-          <div class="gem-sym">$${esc(g.symbol)} <span class="gem-chain-tag">${g.chain}</span></div>
-          <div class="gem-name">${esc(g.name)}</div>
-          ${badges?`<div class="gem-badges">${badges}</div>`:''}
-        </div>
-      </div>
-      <div class="gem-stats">
-        <div class="gem-stat"><div class="gem-stat-l">MCAP</div><div class="gem-stat-v">$${fN(g.mc)}</div></div>
-        <div class="gem-stat"><div class="gem-stat-l">LIQ</div><div class="gem-stat-v">$${fN(g.liq)}</div></div>
-        <div class="gem-stat"><div class="gem-stat-l">VOL 24H</div><div class="gem-stat-v">$${fN(g.vol)}</div></div>
-        <div class="gem-stat"><div class="gem-stat-l">1H</div><div class="gem-stat-v ${c1h}">${g.chg1h>0?'+':''}${g.chg1h.toFixed(1)}%</div></div>
-        <div class="gem-stat"><div class="gem-stat-l">24H</div><div class="gem-stat-v ${c24h}">${g.chg24h>0?'+':''}${g.chg24h.toFixed(1)}%</div></div>
-        <div class="gem-stat"><div class="gem-stat-l">BUYERS</div><div class="gem-stat-v ${cbr}">${g.buyRatio}%</div></div>
-      </div>
-      <div class="gem-foot">
-        <div class="gem-rug">${rugIcon} ${g.rugStatus}</div>
-        <div class="gem-links">
-          <a href="${g.twitter||'#'}" target="_blank" class="gem-link ${!g.twitter?'off':''}">𝕏</a>
-          <a href="${g.telegram||'#'}" target="_blank" class="gem-link ${!g.telegram?'off':''}">✈</a>
-          <a href="${g.website||'#'}" target="_blank" class="gem-link ${!g.website?'off':''}">🌐</a>
-        </div>
-        <button class="gem-open" onclick="window.open('https://dexscreener.com/${g.chain}/${g.pairAddress}','_blank')">📊 DEX</button>
-        <button class="gem-open" onclick="window.open('index.html?ca=${g.address}&action=analyze','_blank')" style="background:linear-gradient(135deg,var(--cyan),#0090b3)">🏠 APP</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// AUTO-START on page load
-log('💎','Gem Detector initialized — Auto-scanning now...');
-start();
+render();
+log('💎','Gem Detector initialized');
+log('🚀','<span style="color:'+C.gr+'">Auto-scanner started</span>');
+scan();
 </script>
 
 </body>
