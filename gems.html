@@ -267,7 +267,7 @@ function scoreToken(pair,src){
   const age=pair.pairCreatedAt?(Date.now()-pair.pairCreatedAt)/3600000:999;
   const sym=pair.baseToken?.symbol||'';
 
-  if(mc>10000000||mc<25000)return-1;
+  if(mc>10000000||mc<10000)return-1;
   if(liq<5000)return-1;
   if(t24<30)return-1;
   if(br<45)return-1;
@@ -281,8 +281,9 @@ function scoreToken(pair,src){
   let sc=20;
   if(src==='boosted')sc+=10;else if(src==='gainer')sc+=7;else if(src==='new')sc+=5;
 
-  if(mc>=25000&&mc<50000)sc+=25;
-  else if(mc<100000)sc+=22;
+  if(mc>=10000&&mc<25000)sc+=25;
+  else if(mc>=25000&&mc<50000)sc+=23;
+  else if(mc<100000)sc+=20;
   else if(mc<200000)sc+=18;
   else if(mc<500000)sc+=14;
   else if(mc<1000000)sc+=8;
