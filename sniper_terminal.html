@@ -1531,7 +1531,8 @@ html, body {
   
   <!-- CONTROLS ROW -->
   <div class="controls-row">
-    <button class="ctrl-btn primary" id="startBtn" onclick="startBot()">▶ START</button>
+    <button class="ctrl-btn primary" id="startBtn" onclick="serverMode ? serverStartStop() : startBot()">▶ START</button>
+    <button class="ctrl-btn" id="serverModeBtn" onclick="toggleServerMode()">🌐 SERVER</button>
     <button class="ctrl-btn" onclick="openSettings()">⚙ SETTINGS</button>
     <button class="ctrl-btn" onclick="openStats()">📊 STATS</button>
     <button class="ctrl-btn" onclick="clearCache()">↻ CACHE</button>
@@ -1905,6 +1906,91 @@ html, body {
 
 const $ = id => document.getElementById(id);
 const AI_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/chat';
+const SNIPER_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/sniper';
+
+// ═══════════════════════════════════════════════════════
+// SERVER MODE — Connect to backend sniper engine
+// ═══════════════════════════════════════════════════════
+let serverMode = false;
+let serverPollInterval = null;
+
+async function toggleServerMode() {
+  serverMode = !serverMode;
+  const btn = $('serverModeBtn');
+  if (serverMode) {
+    btn.textContent = '🌐 SERVER: ON';
+    btn.classList.add('active');
+    addLog('🌐', '<span class="green">Server Mode ON</span> — Connected to backend sniper');
+    pollServerStatus();
+    serverPollInterval = setInterval(pollServerStatus, 5000);
+  } else {
+    btn.textContent = '🌐 SERVER';
+    btn.classList.remove('active');
+    if (serverPollInterval) clearInterval(serverPollInterval);
+    addLog('🌐', 'Server Mode OFF — Local mode');
+  }
+}
+
+async function pollServerStatus() {
+  try {
+    const res = await fetch(SNIPER_API + '/status', { signal: AbortSignal.timeout(5000) });
+    const state = await res.json();
+
+    // Update UI with server data
+    balance = state.balance || 0;
+    totalPnL = state.totalPnL || 0;
+    securedPnL = state.securedPnL || 0;
+    totalTrades = state.totalTrades || 0;
+    wins = state.wins || 0;
+    bestTrade = state.bestTrade || 0;
+    worstTrade = state.worstTrade || 0;
+    positions = state.positions || [];
+    history = state.history || [];
+    scannedTotal = state.scannedTotal || 0;
+    oppsTotal = state.oppsTotal || 0;
+    isRunning = state.isRunning || false;
+
+    // Update status badges
+    if (state.isRunning) {
+      $('modeBadge').textContent = 'LIVE';
+      $('modeBadge').className = 'status-badge live';
+      $('scannerDot').classList.add('active');
+      $('startBtn').textContent = '⏹ STOP';
+    } else {
+      $('modeBadge').textContent = 'STOPPED';
+      $('modeBadge').className = 'status-badge stopped';
+      $('scannerDot').classList.remove('active');
+      $('startBtn').textContent = '▶ START';
+    }
+
+    updateUI();
+    renderPositions();
+    renderHistory();
+
+    // Show server logs
+    if (state.logs && state.logs.length > 0) {
+      logs = state.logs.map(l => ({ time: l.time, icon: l.icon, text: l.text }));
+      renderLogs();
+    }
+  } catch (e) {
+    console.warn('Server poll error:', e.message);
+  }
+}
+
+async function serverStartStop() {
+  if (!serverMode) return;
+  try {
+    const endpoint = isRunning ? '/stop' : '/start';
+    const res = await fetch(SNIPER_API + endpoint, { method: 'POST', signal: AbortSignal.timeout(5000) });
+    const data = await res.json();
+    if (data.success) {
+      addLog('🌐', `Server sniper ${endpoint === '/start' ? 'started' : 'stopped'}`);
+      pollServerStatus();
+    }
+  } catch (e) {
+    addLog('❌', 'Server command failed: ' + e.message);
+  }
+}
 
 // ═══════════════════════════════════════════════════════
 // STATE
