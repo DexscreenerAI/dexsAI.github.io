@@ -59,7 +59,7 @@ let selectedStyle = "photorealistic";
 let results = [];               // [{img, sceneUrl, ts}]
 let loading = false, stepText = "", errText = "";
 let history = [];
-let showSelectGallery = false;
+let showSelectGallery = false; // unused, kept for compat
 let viewingResult = null;       // index in results to view full
 
 function allScenes() {
@@ -104,58 +104,30 @@ function render(){
 
         <!-- ═══ 01 CHARACTER ═══ -->
         <div>
-          ${secLabel("01 — CHARACTER")}
-          <div style="font-size:11px;color:${V.t2};margin-bottom:12px;">Upload an image or select one</div>
+          ${secLabel("01 — YOUR CHARACTER")}
+          <div style="font-size:11px;color:${V.t2};margin-bottom:12px;">Upload the person to insert into scenes</div>
           <input type="file" id="fileInput" accept="image/*" onchange="handleCharUpload(event)" style="display:none;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <!-- Upload -->
-            <div style="position:relative;">
-              <button onclick="document.getElementById('fileInput').click()" style="width:100%;padding:20px 10px;background:${charSource==='upload'&&charPreview?V.card:V.bg2};border:1px ${charSource==='upload'&&charPreview?'solid '+V.cy:'dashed '+V.cb};border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:${V.s};transition:all .2s;${charSource==='upload'&&charPreview?'box-shadow:0 0 16px '+V.cd:''}">
-                ${charSource==='upload'&&charPreview?`
-                  <img src="${charPreview}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid ${V.cb};">
-                  <span style="color:${V.gr};font-size:10px;font-family:${V.m};font-weight:600;">✓ UPLOADED</span>
-                  <span style="color:${V.t3};font-size:9px;font-family:${V.m};">TAP TO CHANGE</span>
-                `:`
-                  <div style="width:44px;height:44px;border-radius:10px;background:${V.card};border:1px solid ${V.cb};display:flex;align-items:center;justify-content:center;">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${V.t3}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  </div>
-                  <span style="color:${V.t2};font-size:11px;font-weight:600;">Upload Image</span>
-                  <span style="color:${V.t3};font-size:9px;font-family:${V.m};">PNG, JPG, WEBP</span>
-                `}
-              </button>
-              ${charSource==='upload'&&charPreview?`<button onclick="clearChar(event)" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:${V.rd};border:2px solid ${V.bg};color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:${V.m};font-weight:700;z-index:2;">✕</button>`:''}
+          ${charPreview?`
+          <div style="position:relative;display:flex;align-items:center;gap:12px;background:${V.card};border:1px solid ${V.cy};border-radius:8px;padding:10px;box-shadow:0 0 16px ${V.cd};">
+            <img src="${charPreview}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid ${V.cb};">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:12px;color:${V.t};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${charFile?esc(charFile.name):''}</div>
+              <div style="font-size:10px;color:${V.gr};font-family:${V.m};margin-top:2px;">✓ READY</div>
             </div>
-            <!-- Select -->
-            <div style="position:relative;">
-              <button onclick="toggleCharGallery()" style="width:100%;padding:20px 10px;background:${charSource==='select'&&charPreview?V.card:V.bg2};border:1px ${charSource==='select'&&charPreview?'solid '+V.cy:'dashed '+V.cb};border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:${V.s};transition:all .2s;${charSource==='select'&&charPreview?'box-shadow:0 0 16px '+V.cd:''}">
-                ${charSource==='select'&&charPreview?`
-                  <img src="${charPreview}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid ${V.cb};">
-                  <span style="color:${V.gr};font-size:10px;font-family:${V.m};font-weight:600;">✓ SELECTED</span>
-                  <span style="color:${V.t3};font-size:9px;font-family:${V.m};">TAP TO CHANGE</span>
-                `:`
-                  <div style="width:44px;height:44px;border-radius:10px;background:${V.card};border:1px solid ${V.cb};display:flex;align-items:center;justify-content:center;">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${V.t3}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                  </div>
-                  <span style="color:${V.t2};font-size:11px;font-weight:600;">Select Image</span>
-                  <span style="color:${V.t3};font-size:9px;font-family:${V.m};">FROM GALLERY</span>
-                `}
-              </button>
-              ${charSource==='select'&&charPreview?`<button onclick="clearChar(event)" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:${V.rd};border:2px solid ${V.bg};color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:${V.m};font-weight:700;z-index:2;">✕</button>`:''}
-            </div>
+            <button onclick="document.getElementById('fileInput').click()" style="background:${V.bg2};border:1px solid ${V.cb};color:${V.t2};padding:8px 10px;cursor:pointer;border-radius:6px;display:flex;align-items:center;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+            <button onclick="clearChar(event)" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:${V.rd};border:2px solid ${V.bg};color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:${V.m};font-weight:700;z-index:2;">✕</button>
           </div>
-          ${showSelectGallery?`
-          <div style="margin-top:10px;background:${V.card};border:1px solid ${V.cb};border-radius:8px;padding:10px;animation:fadeUp .25s ease;">
-            <div style="font-family:${V.m};font-size:8px;letter-spacing:2px;color:${V.t3};margin-bottom:8px;">CHOOSE A CHARACTER</div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
-              ${CATALOG.map((url,i)=>{
-                const sel=charSource==='select'&&charPreview===url;
-                return `<div onclick="selectChar('${url}')" style="position:relative;cursor:pointer;border-radius:6px;overflow:hidden;border:${sel?`2px solid ${V.cy}`:`1px solid ${V.cb}`};aspect-ratio:1;transition:all .2s;${sel?'box-shadow:0 0 12px '+V.cd:''}">
-                  <img src="${url}" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(0.85);">
-                  ${sel?`<div style="position:absolute;top:4px;right:4px;background:${V.cy};border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>`:''}
-                </div>`;
-              }).join('')}
+          `:`
+          <button onclick="document.getElementById('fileInput').click()" style="width:100%;padding:28px 16px;background:${V.bg2};border:1px dashed ${V.cb};border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:${V.s};transition:all .2s;">
+            <div style="width:48px;height:48px;border-radius:12px;background:${V.card};border:1px solid ${V.cb};display:flex;align-items:center;justify-content:center;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${V.t3}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             </div>
-          </div>`:''}
+            <span style="color:${V.t2};font-size:12px;font-weight:600;">Upload your character</span>
+            <span style="color:${V.t3};font-size:9px;font-family:${V.m};">PNG, JPG, WEBP</span>
+          </button>
+          `}
         </div>
 
         <!-- ═══ 02 SCENES (multi-select + upload) ═══ -->
@@ -295,10 +267,10 @@ function handleSceneUpload(e){
   e.target.value='';
 }
 
-// Character
+// Character — upload only
 function handleCharUpload(e){
   const f=e.target.files[0]; if(!f)return;
-  charFile=f; charSource='upload'; showSelectGallery=false; results=[];
+  charFile=f; charSource='upload'; charPreview=null; results=[];
   const r=new FileReader();
   r.onload=ev=>{ charPreview=ev.target.result; render(); };
   r.readAsDataURL(f);
@@ -306,20 +278,8 @@ function handleCharUpload(e){
 
 function clearChar(e){
   e.stopPropagation();
-  charPreview=null; charFile=null; charSource=null; results=[]; showSelectGallery=false;
+  charPreview=null; charFile=null; charSource=null; results=[];
   render();
-}
-
-function toggleCharGallery(){ showSelectGallery=!showSelectGallery; render(); }
-
-function selectChar(url){
-  if(charPreview===url&&charSource==='select'){
-    charPreview=null; charSource=null; charFile=null; showSelectGallery=false;
-  } else {
-    charPreview=url; charSource='select'; showSelectGallery=false;
-    charFile={name:'selected.jpg',type:'image/jpeg'};
-  }
-  results=[]; render();
 }
 
 function pickStyle(id){ selectedStyle=id; results=[]; render(); }
@@ -352,15 +312,10 @@ async function generate(){
   const style = STYLES.find(s=>s.id===selectedStyle);
   const total = pickedScenes.length;
 
-  // Build character content once
-  let charContent;
-  if(charSource==='select'){
-    charContent = {type:"image",source:{type:"url",url:charPreview}};
-  } else {
-    const b64=charPreview.split(",")[1];
-    const mt=charFile.type||"image/jpeg";
-    charContent = {type:"image",source:{type:"base64",media_type:mt,data:b64}};
-  }
+  // Build character content (always uploaded base64)
+  const charB64 = charPreview.split(",")[1];
+  const charMt = charFile.type || "image/jpeg";
+  const charContent = {type:"image",source:{type:"base64",media_type:charMt,data:charB64}};
 
   try {
     for(let si=0; si<total; si++){
