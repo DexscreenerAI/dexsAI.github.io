@@ -1,0 +1,2976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNIPER // TERMINAL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-dark: #0a0c0f;
+  --bg-panel: #0d1117;
+  --bg-card: #131920;
+  --bg-hover: #1a222d;
+  --border: #1e2a3a;
+  --border-bright: #2d4a5e;
+  --green: #00ff88;
+  --green-dim: rgba(0, 255, 136, 0.15);
+  --green-glow: rgba(0, 255, 136, 0.4);
+  --red: #ff4757;
+  --red-dim: rgba(255, 71, 87, 0.15);
+  --cyan: #00d4ff;
+  --cyan-dim: rgba(0, 212, 255, 0.15);
+  --yellow: #ffd93d;
+  --yellow-dim: rgba(255, 217, 61, 0.15);
+  --purple: #a855f7;
+  --purple-dim: rgba(168, 85, 247, 0.15);
+  --orange: #ff9f43;
+  --pink: #ff6b9d;
+  --text: #e2e8f0;
+  --text-dim: #64748b;
+  --text-muted: #475569;
+  --mono: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+html, body {
+  font-family: var(--mono);
+  background: var(--bg-dark);
+  color: var(--text);
+  font-size: 11px;
+  line-height: 1.4;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════
+   TOP BAR - Stats Row
+   ═══════════════════════════════════════════════════════ */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-dark) 100%);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-text {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--green);
+  text-shadow: 0 0 10px var(--green-glow);
+}
+
+.logo-slash {
+  color: var(--text-dim);
+}
+
+.top-stats {
+  display: flex;
+  gap: 20px;
+}
+
+.top-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.top-stat-label {
+  font-size: 8px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.top-stat-value {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.top-stat-value.green { color: var(--green); text-shadow: 0 0 8px var(--green-glow); }
+.top-stat-value.red { color: var(--red); }
+.top-stat-value.cyan { color: var(--cyan); }
+.top-stat-value.yellow { color: var(--yellow); }
+
+.status-badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.status-badge.live {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid var(--green);
+  animation: pulse-glow 2s infinite;
+}
+
+.status-badge.stopped {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+
+.status-badge.demo {
+  background: var(--yellow-dim);
+  color: var(--yellow);
+  border: 1px solid var(--yellow);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px var(--green-glow); }
+  50% { box-shadow: 0 0 15px var(--green-glow); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   MAIN GRID LAYOUT
+   ═══════════════════════════════════════════════════════ */
+.main-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  grid-template-rows: auto auto 1fr;
+  gap: 1px;
+  background: var(--border);
+  min-height: calc(100vh - 50px);
+}
+
+@media (max-width: 1400px) {
+  .main-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   PANEL COMPONENT
+   ═══════════════════════════════════════════════════════ */
+.panel {
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-dark);
+  min-height: 32px;
+}
+
+.panel-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+
+.panel-title::before {
+  content: '// ';
+  color: var(--green);
+}
+
+.panel-badge {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+.panel-badge.green { background: var(--green-dim); color: var(--green); }
+.panel-badge.red { background: var(--red-dim); color: var(--red); }
+.panel-badge.cyan { background: var(--cyan-dim); color: var(--cyan); }
+.panel-badge.yellow { background: var(--yellow-dim); color: var(--yellow); }
+.panel-badge.purple { background: var(--purple-dim); color: var(--purple); }
+
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.panel-content::-webkit-scrollbar { width: 4px; }
+.panel-content::-webkit-scrollbar-track { background: var(--bg-dark); }
+.panel-content::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+/* ═══════════════════════════════════════════════════════
+   CONTROLS PANEL
+   ═══════════════════════════════════════════════════════ */
+.controls-row {
+  grid-column: 1 / -1;
+  background: var(--bg-panel);
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.ctrl-btn {
+  padding: 8px 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1px solid var(--border-bright);
+  border-radius: 2px;
+  background: var(--bg-card);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ctrl-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.ctrl-btn.primary {
+  background: var(--green-dim);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.ctrl-btn.primary:hover {
+  background: var(--green);
+  color: var(--bg-dark);
+  box-shadow: 0 0 15px var(--green-glow);
+}
+
+.ctrl-btn.danger {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.ctrl-btn.danger:hover {
+  background: var(--red);
+  color: white;
+}
+
+.ctrl-btn.warning {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCANNER PANEL (Left Column)
+   ═══════════════════════════════════════════════════════ */
+.scanner-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--cyan);
+  margin-bottom: 6px;
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+
+.scanner-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--cyan);
+}
+
+.scanner-item.high-score {
+  border-left-color: var(--green);
+}
+
+.scanner-item.medium-score {
+  border-left-color: var(--yellow);
+}
+
+.scanner-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scanner-token {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 11px;
+}
+
+.scanner-edge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+.scanner-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 9px;
+  color: var(--text-dim);
+}
+
+.scanner-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.scanner-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.scanner-btn {
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg-dark);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.scanner-btn.buy {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.scanner-btn.buy:hover {
+  background: var(--green);
+  color: var(--bg-dark);
+}
+
+.scanner-btn:hover {
+  background: var(--bg-hover);
+}
+
+/* ═══════════════════════════════════════════════════════
+   POSITIONS PANEL (Center)
+   ═══════════════════════════════════════════════════════ */
+.positions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+}
+
+@media (max-width: 1200px) {
+  .positions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.position-card {
+  background: var(--bg-card);
+  padding: 12px;
+  border-left: 3px solid var(--cyan);
+  transition: all 0.15s;
+}
+
+.position-card:hover {
+  background: var(--bg-hover);
+}
+
+.position-card.profit {
+  border-left-color: var(--green);
+  background: linear-gradient(90deg, rgba(0,255,136,0.03) 0%, var(--bg-card) 100%);
+}
+
+.position-card.loss {
+  border-left-color: var(--red);
+  background: linear-gradient(90deg, rgba(255,71,87,0.03) 0%, var(--bg-card) 100%);
+}
+
+.position-card.moon {
+  border-left-color: var(--pink);
+  background: linear-gradient(90deg, rgba(255,107,157,0.05) 0%, var(--bg-card) 100%);
+}
+
+.position-card.trailing {
+  border-left-color: var(--orange);
+}
+
+.pos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.pos-token-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pos-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: var(--bg-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.pos-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pos-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pos-symbol {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pos-type {
+  font-size: 8px;
+  padding: 2px 5px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+.pos-type.quick { background: var(--cyan-dim); color: var(--cyan); }
+.pos-type.long { background: var(--purple-dim); color: var(--purple); }
+.pos-type.moon { background: rgba(255,107,157,0.2); color: var(--pink); }
+
+.pos-chain {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.pos-pnl {
+  text-align: right;
+}
+
+.pos-pnl-value {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.pos-pnl-value.green { color: var(--green); text-shadow: 0 0 8px var(--green-glow); }
+.pos-pnl-value.red { color: var(--red); }
+
+.pos-pnl-pct {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.pos-pnl-pct.green { color: var(--green); }
+.pos-pnl-pct.red { color: var(--red); }
+
+.pos-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.pos-stat {
+  background: var(--bg-dark);
+  padding: 6px;
+  border-radius: 2px;
+  text-align: center;
+}
+
+.pos-stat-label {
+  font-size: 7px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.pos-stat-value {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pos-stat-value.green { color: var(--green); }
+.pos-stat-value.red { color: var(--red); }
+.pos-stat-value.orange { color: var(--orange); }
+.pos-stat-value.cyan { color: var(--cyan); }
+
+.pos-progress {
+  height: 3px;
+  background: var(--bg-dark);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.pos-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--cyan));
+  transition: width 0.3s;
+}
+
+.pos-progress-bar.warning {
+  background: linear-gradient(90deg, var(--yellow), var(--orange));
+}
+
+.pos-progress-bar.danger {
+  background: linear-gradient(90deg, var(--orange), var(--red));
+}
+
+.pos-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin: 6px 0;
+}
+
+.pos-tag {
+  font-size: 7px;
+  padding: 2px 5px;
+  border-radius: 2px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pos-tag.trailing { background: rgba(255,159,67,0.2); color: var(--orange); }
+.pos-tag.secured { background: var(--green-dim); color: var(--green); }
+.pos-tag.dca { background: var(--purple-dim); color: var(--purple); }
+
+.pos-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.pos-action-btn {
+  padding: 5px 8px;
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg-dark);
+  color: var(--text-dim);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.1s;
+}
+
+.pos-action-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.pos-action-btn.close {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.pos-action-btn.close:hover {
+  background: var(--red);
+  color: white;
+}
+
+.pos-action-btn.dex {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+/* ═══════════════════════════════════════════════════════
+   LIVE MARKETS PANEL (Right Column)
+   ═══════════════════════════════════════════════════════ */
+.market-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  transition: background 0.1s;
+}
+
+.market-item:hover {
+  background: var(--bg-hover);
+}
+
+.market-name {
+  color: var(--text);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.market-mc {
+  color: var(--text-dim);
+  font-size: 9px;
+}
+
+.market-price {
+  font-weight: 600;
+  min-width: 35px;
+  text-align: right;
+}
+
+.market-price.green { color: var(--green); }
+.market-price.red { color: var(--red); }
+
+.market-change {
+  font-size: 9px;
+  font-weight: 600;
+  min-width: 45px;
+  text-align: right;
+}
+
+.market-change.green { color: var(--green); }
+.market-change.red { color: var(--red); }
+
+.market-bar {
+  width: 60px;
+  height: 4px;
+  background: var(--bg-dark);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.market-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.market-bar-fill.green { background: var(--green); }
+.market-bar-fill.red { background: var(--red); }
+
+/* ═══════════════════════════════════════════════════════
+   HISTORY PANEL
+   ═══════════════════════════════════════════════════════ */
+.history-item {
+  display: grid;
+  grid-template-columns: 50px 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.history-item:hover {
+  background: var(--bg-hover);
+  transform: translateX(2px);
+}
+
+.history-time {
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.history-token {
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.history-reason {
+  font-size: 8px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.history-reason.tp { background: var(--green-dim); color: var(--green); }
+.history-reason.trail { background: rgba(255,159,67,0.2); color: var(--orange); }
+.history-reason.sl { background: var(--red-dim); color: var(--red); }
+.history-reason.timeout { background: var(--yellow-dim); color: var(--yellow); }
+.history-reason.momentum { background: var(--cyan-dim); color: var(--cyan); }
+.history-reason.rug { background: rgba(255,0,0,0.3); color: #ff0000; }
+
+.history-pnl {
+  font-weight: 700;
+  font-size: 11px;
+  min-width: 60px;
+  text-align: right;
+}
+
+.history-pnl.green { color: var(--green); }
+.history-pnl.red { color: var(--red); }
+
+/* ═══════════════════════════════════════════════════════
+   ACTIVITY LOG
+   ═══════════════════════════════════════════════════════ */
+.log-item {
+  display: flex;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.log-time {
+  color: var(--text-muted);
+  min-width: 50px;
+  font-size: 9px;
+}
+
+.log-icon {
+  min-width: 16px;
+}
+
+.log-text {
+  color: var(--text-dim);
+  flex: 1;
+}
+
+.log-text .green { color: var(--green); }
+.log-text .red { color: var(--red); }
+.log-text .cyan { color: var(--cyan); }
+.log-text .yellow { color: var(--yellow); }
+.log-text .purple { color: var(--purple); }
+.log-text .orange { color: var(--orange); }
+.log-text .pink { color: var(--pink); }
+
+/* ═══════════════════════════════════════════════════════
+   PNL CURVE MINI CHART
+   ═══════════════════════════════════════════════════════ */
+.pnl-curve {
+  padding: 10px;
+  background: var(--bg-card);
+  border-radius: 4px;
+  margin: 8px;
+}
+
+.pnl-curve-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.pnl-curve-title {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pnl-curve-title::before {
+  content: '// ';
+  color: var(--green);
+}
+
+.pnl-curve-value {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pnl-curve-value.green { color: var(--green); }
+.pnl-curve-value.red { color: var(--red); }
+
+.pnl-chart {
+  height: 60px;
+  background: var(--bg-dark);
+  border-radius: 2px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 4px;
+  overflow: hidden;
+}
+
+.pnl-bar {
+  flex: 1;
+  min-width: 3px;
+  max-width: 8px;
+  border-radius: 1px 1px 0 0;
+  transition: height 0.3s;
+}
+
+.pnl-bar.green { background: var(--green); }
+.pnl-bar.red { background: var(--red); }
+
+/* ═══════════════════════════════════════════════════════
+   LEADERBOARD
+   ═══════════════════════════════════════════════════════ */
+.leaderboard-item {
+  display: grid;
+  grid-template-columns: 24px 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+}
+
+.leaderboard-rank {
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.leaderboard-rank.gold { color: #ffd700; }
+.leaderboard-rank.silver { color: #c0c0c0; }
+.leaderboard-rank.bronze { color: #cd7f32; }
+
+.leaderboard-name {
+  color: var(--text);
+  font-weight: 500;
+  font-family: var(--mono);
+}
+
+.leaderboard-pnl {
+  font-weight: 700;
+}
+
+.leaderboard-pnl.green { color: var(--green); }
+.leaderboard-pnl.red { color: var(--red); }
+
+.leaderboard-trades {
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SETTINGS MODAL
+   ═══════════════════════════════════════════════════════ */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal.show { display: flex; }
+
+.modal-content {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-bright);
+  border-radius: 4px;
+  padding: 20px;
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--text);
+}
+
+.modal-title::before {
+  content: '// ';
+  color: var(--green);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.modal-close:hover {
+  color: var(--red);
+}
+
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.settings-tab {
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.settings-tab:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.settings-tab.active {
+  background: var(--cyan-dim);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.settings-panel {
+  display: none;
+}
+
+.settings-panel.active {
+  display: block;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.setting {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.setting.full {
+  grid-column: 1 / -1;
+}
+
+.setting label {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.setting input,
+.setting select {
+  padding: 8px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.setting input:focus,
+.setting select:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.setting-hint {
+  font-size: 8px;
+  color: var(--text-muted);
+}
+
+.setting-group {
+  grid-column: 1 / -1;
+  padding: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin: 8px 0;
+}
+
+.setting-group-title {
+  font-size: 10px;
+  color: var(--cyan);
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setting-group-title::before {
+  content: '//';
+  color: var(--green);
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--green);
+}
+
+.checkbox-row label {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.chain-checkboxes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chain-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.chain-checkbox:hover {
+  border-color: var(--cyan);
+}
+
+.chain-checkbox input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--green);
+}
+
+.chain-label {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.chain-stat {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 5px;
+  border-radius: 2px;
+  background: var(--bg-card);
+}
+
+.chain-stat.green { color: var(--green); }
+.chain-stat.red { color: var(--red); }
+
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* ═══════════════════════════════════════════════════════
+   EMPTY STATE
+   ═══════════════════════════════════════════════════════ */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCANNER STATUS BAR
+   ═══════════════════════════════════════════════════════ */
+.scanner-status-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: var(--bg-dark);
+  border-bottom: 1px solid var(--border);
+  font-size: 9px;
+}
+
+.scanner-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scanner-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+.scanner-dot.active {
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green-glow);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.scanner-text {
+  color: var(--text-dim);
+}
+
+.scanner-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.scanner-stat {
+  color: var(--text-muted);
+}
+
+.scanner-stat span {
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .top-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .top-stats {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .positions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .controls-row {
+    justify-content: center;
+  }
+  
+  .pos-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     TOP BAR
+     ═══════════════════════════════════════════════════════ -->
+<div class="top-bar">
+  <div class="logo">
+    <span class="logo-text">SNIPER<span class="logo-slash">//</span>TERMINAL</span>
+  </div>
+  
+  <div class="top-stats">
+    <div class="top-stat">
+      <span class="top-stat-label">NET PNL</span>
+      <span class="top-stat-value green" id="totalPnl">+$0.00</span>
+    </div>
+    <div class="top-stat">
+      <span class="top-stat-label">BALANCE</span>
+      <span class="top-stat-value cyan" id="balance">$10,000</span>
+    </div>
+    <div class="top-stat">
+      <span class="top-stat-label">SECURED</span>
+      <span class="top-stat-value green" id="securedPnl">$0</span>
+    </div>
+    <div class="top-stat">
+      <span class="top-stat-label">WIN%</span>
+      <span class="top-stat-value yellow" id="winRate">--%</span>
+    </div>
+    <div class="top-stat">
+      <span class="top-stat-label">TRADES</span>
+      <span class="top-stat-value" id="totalTrades">0</span>
+    </div>
+    <div class="top-stat">
+      <span class="top-stat-label">QUICK</span>
+      <span class="top-stat-value cyan" id="quickCount">0</span>
+    </div>
+    <div class="top-stat">
+      <span class="top-stat-label">LONG</span>
+      <span class="top-stat-value" style="color:var(--purple)" id="longCount">0</span>
+    </div>
+    <div class="top-stat">
+      <span class="top-stat-label">MOON</span>
+      <span class="top-stat-value" style="color:var(--pink)" id="moonCount">0</span>
+    </div>
+  </div>
+  
+  <div class="status-badges">
+    <span class="status-badge stopped" id="modeBadge">STOPPED</span>
+    <span class="status-badge demo">DEMO</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN GRID
+     ═══════════════════════════════════════════════════════ -->
+<div class="main-grid">
+  
+  <!-- CONTROLS ROW -->
+  <div class="controls-row">
+    <button class="ctrl-btn primary" id="startBtn" onclick="startBot()">▶ START</button>
+    <button class="ctrl-btn" onclick="openSettings()">⚙ SETTINGS</button>
+    <button class="ctrl-btn" onclick="openStats()">📊 STATS</button>
+    <button class="ctrl-btn" onclick="clearCache()">↻ CACHE</button>
+    <button class="ctrl-btn" onclick="exportData()">↑ EXPORT</button>
+    <button class="ctrl-btn" onclick="document.getElementById('importFile').click()">↓ IMPORT</button>
+    <input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display:none">
+    <button class="ctrl-btn warning" onclick="closeAllPositions()">⚠ CLOSE ALL</button>
+    <button class="ctrl-btn danger" onclick="resetBot()">✕ RESET</button>
+  </div>
+  
+  <!-- SCANNER STATUS -->
+  <div class="scanner-status-bar">
+    <div class="scanner-info">
+      <div class="scanner-dot" id="scannerDot"></div>
+      <span class="scanner-text" id="scannerText">Click START to begin</span>
+    </div>
+    <div class="scanner-stats">
+      <span class="scanner-stat">Scanned: <span id="scannedCount">0</span></span>
+      <span class="scanner-stat">Opps: <span id="oppsCount">0</span></span>
+      <span class="scanner-stat">Cache: <span id="cacheCount">0</span></span>
+      <span class="scanner-stat">Last: <span id="lastScan">--:--</span></span>
+    </div>
+  </div>
+  
+  <!-- LEFT COLUMN: SCANNER -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">OPPORTUNITY SCANNER</span>
+      <span class="panel-badge cyan" id="scannerBadge">0 FOUND</span>
+    </div>
+    <div class="panel-content" id="scannerContainer">
+      <div class="empty">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-text">SCANNING FOR OPPORTUNITIES...</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- CENTER: POSITIONS -->
+  <div class="panel" style="grid-row: span 2;">
+    <div class="panel-header">
+      <span class="panel-title">ACTIVE POSITIONS</span>
+      <span class="panel-badge green" id="positionsBadge">0 OPEN</span>
+    </div>
+    <div class="panel-content" id="positionsContainer">
+      <div class="positions-grid" id="positionsGrid">
+        <div class="empty" style="grid-column: 1/-1;">
+          <div class="empty-icon">📈</div>
+          <div class="empty-text">NO ACTIVE POSITIONS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- RIGHT COLUMN: LIVE MARKETS + LEADERBOARD -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">TRADE HISTORY</span>
+      <span class="panel-badge yellow" id="historyBadge">0</span>
+    </div>
+    <div class="panel-content" id="historyContainer">
+      <div class="empty">
+        <div class="empty-icon">📜</div>
+        <div class="empty-text">NO TRADES YET</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- BOTTOM: ACTIVITY LOG -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">ACTIVITY LOG</span>
+      <span class="panel-badge cyan">LIVE</span>
+    </div>
+    <div class="panel-content" id="logContainer"></div>
+  </div>
+  
+  <!-- PNL CURVE -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">PNL CURVE</span>
+      <span class="panel-badge green" id="pnlCurveValue">+$0</span>
+    </div>
+    <div class="panel-content">
+      <div class="pnl-chart" id="pnlChart"></div>
+    </div>
+  </div>
+  
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal" id="settingsModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span class="modal-title">SETTINGS</span>
+      <button class="modal-close" onclick="closeSettings()">×</button>
+    </div>
+    
+    <div class="settings-tabs">
+      <div class="settings-tab active" onclick="showSettingsTab('basic')">💰 BASIC</div>
+      <div class="settings-tab" onclick="showSettingsTab('trailing')">📈 TRAILING</div>
+      <div class="settings-tab" onclick="showSettingsTab('dca')">💎 DCA</div>
+      <div class="settings-tab" onclick="showSettingsTab('exit')">🚪 EXIT</div>
+      <div class="settings-tab" onclick="showSettingsTab('filters')">🔍 FILTERS</div>
+    </div>
+    
+    <!-- BASIC TAB -->
+    <div class="settings-panel active" id="panel-basic">
+      <div class="settings-grid">
+        <div class="setting">
+          <label>POSITION SIZE ($)</label>
+          <input type="number" id="positionSize" value="100" min="10" max="10000">
+        </div>
+        <div class="setting">
+          <label>MIN SCORE</label>
+          <input type="number" id="minScore" value="80" min="50" max="95">
+          <span class="setting-hint">Lower = more trades, less quality</span>
+        </div>
+        <div class="setting full">
+          <label>CHAINS</label>
+          <div class="chain-checkboxes">
+            <label class="chain-checkbox">
+              <input type="checkbox" id="chainSolana" checked>
+              <span class="chain-label">☀️ SOLANA</span>
+              <span class="chain-stat green">+$209</span>
+            </label>
+            <label class="chain-checkbox">
+              <input type="checkbox" id="chainBase">
+              <span class="chain-label">🔵 BASE</span>
+              <span class="chain-stat red">-$187</span>
+            </label>
+            <label class="chain-checkbox">
+              <input type="checkbox" id="chainEthereum">
+              <span class="chain-label">💎 ETH</span>
+              <span class="chain-stat">-$4</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- TRAILING TAB -->
+    <div class="settings-panel" id="panel-trailing">
+      <div class="setting-group">
+        <div class="setting-group-title">SMART TRAILING STOP</div>
+        <div class="settings-grid">
+          <div class="setting">
+            <label>ACTIVATION (%)</label>
+            <input type="number" id="trailActivation" value="10" min="5" max="100">
+          </div>
+          <div class="setting">
+            <label>BASE DISTANCE (%)</label>
+            <input type="number" id="trailDistance" value="20" min="10" max="60">
+          </div>
+          <div class="setting">
+            <label>TIGHT DISTANCE (%)</label>
+            <input type="number" id="trailTight" value="10" min="5" max="30">
+          </div>
+          <div class="setting">
+            <label>TIGHTEN AT (%)</label>
+            <input type="number" id="trailTightenAt" value="40" min="20" max="200">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- DCA TAB -->
+    <div class="settings-panel" id="panel-dca">
+      <div class="setting-group">
+        <div class="setting-group-title">DCA OUT (PARTIAL TP)</div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="dcaEnabled" checked>
+          <label>Enable DCA Out</label>
+        </div>
+        <div class="settings-grid" style="margin-top:10px">
+          <div class="setting">
+            <label>1st TP at (%)</label>
+            <input type="number" id="dca1Pct" value="15" min="5" max="100">
+          </div>
+          <div class="setting">
+            <label>Sell (%)</label>
+            <input type="number" id="dca1Sell" value="35" min="10" max="60">
+          </div>
+          <div class="setting">
+            <label>2nd TP at (%)</label>
+            <input type="number" id="dca2Pct" value="40" min="20" max="200">
+          </div>
+          <div class="setting">
+            <label>Sell (%)</label>
+            <input type="number" id="dca2Sell" value="35" min="10" max="60">
+          </div>
+          <div class="setting">
+            <label>3rd TP at (%)</label>
+            <input type="number" id="dca3Pct" value="80" min="40" max="500">
+          </div>
+          <div class="setting">
+            <label>Sell (%)</label>
+            <input type="number" id="dca3Sell" value="20" min="10" max="60">
+          </div>
+        </div>
+        <div class="checkbox-row" style="margin-top:12px">
+          <input type="checkbox" id="moonBagEnabled" checked>
+          <label>🌕 Keep Moon Bag (remaining rides forever)</label>
+        </div>
+      </div>
+    </div>
+    
+    <!-- EXIT TAB -->
+    <div class="settings-panel" id="panel-exit">
+      <div class="setting-group">
+        <div class="setting-group-title">STOP LOSS</div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="slEnabled">
+          <label>Enable Stop Loss (⚠️ 0% win rate in data!)</label>
+        </div>
+        <div class="settings-grid" style="margin-top:10px">
+          <div class="setting">
+            <label>BASE SL (%)</label>
+            <input type="number" id="baseSL" value="25" min="10" max="50">
+          </div>
+          <div class="setting">
+            <label>MAX SL (%)</label>
+            <input type="number" id="maxSL" value="40" min="20" max="60">
+          </div>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-group-title">MOMENTUM EXIT</div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="momentumExitEnabled" checked>
+          <label>Enable Momentum Exit</label>
+        </div>
+        <div class="settings-grid" style="margin-top:10px">
+          <div class="setting">
+            <label>MIN BUY RATIO (%)</label>
+            <input type="number" id="momentumMinRatio" value="35" min="20" max="50">
+          </div>
+          <div class="setting">
+            <label>CHECK INTERVAL (sec)</label>
+            <input type="number" id="momentumInterval" value="60" min="30" max="300">
+          </div>
+          <div class="setting">
+            <label>MIN PROFIT TO CHECK (%)</label>
+            <input type="number" id="momentumMinProfit" value="5" min="0" max="30">
+          </div>
+          <div class="setting">
+            <label>BAD CHECKS TO EXIT</label>
+            <input type="number" id="momentumBadChecks" value="2" min="1" max="5">
+          </div>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-group-title">TIME LIMITS</div>
+        <div class="settings-grid">
+          <div class="setting">
+            <label>QUICK MAX HOLD (min)</label>
+            <input type="number" id="quickMaxHold" value="20" min="5" max="120">
+          </div>
+          <div class="setting">
+            <label>LONG MAX HOLD (hours)</label>
+            <input type="number" id="longMaxHold" value="6" min="1" max="48">
+          </div>
+          <div class="setting">
+            <label>QUICK EXTENSIONS</label>
+            <input type="number" id="quickExtensions" value="1" min="0" max="5">
+          </div>
+          <div class="setting">
+            <label>LONG EXTENSIONS</label>
+            <input type="number" id="longExtensions" value="3" min="0" max="10">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- FILTERS TAB -->
+    <div class="settings-panel" id="panel-filters">
+      <div class="setting-group">
+        <div class="setting-group-title">MARKET CAP</div>
+        <div class="settings-grid">
+          <div class="setting">
+            <label>MIN MC ($)</label>
+            <input type="number" id="minMC" value="50000" min="10000" max="500000">
+          </div>
+          <div class="setting">
+            <label>MAX MC ($)</label>
+            <input type="number" id="maxMC" value="5000000" min="100000" max="100000000">
+          </div>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-group-title">LIQUIDITY</div>
+        <div class="settings-grid">
+          <div class="setting">
+            <label>MIN LIQUIDITY ($)</label>
+            <input type="number" id="minLiquidity" value="20000" min="5000" max="100000">
+          </div>
+          <div class="setting">
+            <label>MIN LIQ/MC RATIO (%)</label>
+            <input type="number" id="minLiqRatio" value="8" min="3" max="30">
+          </div>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-group-title">ANTI-FOMO FILTERS</div>
+        <div class="settings-grid">
+          <div class="setting">
+            <label>MAX 5m PUMP (%)</label>
+            <input type="number" id="maxPump5m" value="100" min="20" max="500">
+          </div>
+          <div class="setting">
+            <label>MAX 1h PUMP (%)</label>
+            <input type="number" id="maxPump1h" value="200" min="50" max="1000">
+          </div>
+          <div class="setting">
+            <label>MAX 5m DUMP (%)</label>
+            <input type="number" id="maxDump5m" value="40" min="10" max="80">
+          </div>
+          <div class="setting">
+            <label>MAX 1h DUMP (%)</label>
+            <input type="number" id="maxDump1h" value="50" min="20" max="90">
+          </div>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-group-title">DETECTION</div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="whaleDetection" checked>
+          <label>Boost score for whale activity</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="volumeSpikeDetection" checked>
+          <label>Boost score for volume spikes</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="honeypotDetection" checked>
+          <label>Detect honeypot patterns</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="rugcheckEnabled" checked>
+          <label>Check Rugcheck.xyz (Solana)</label>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="ctrl-btn" onclick="resetSettings()">↺ DEFAULT</button>
+      <button class="ctrl-btn primary" onclick="closeSettings()">✓ SAVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATS MODAL -->
+<div class="modal" id="statsModal">
+  <div class="modal-content" style="max-width:900px">
+    <div class="modal-header">
+      <span class="modal-title">PERFORMANCE ANALYTICS</span>
+      <button class="modal-close" onclick="closeStats()">×</button>
+    </div>
+    <div id="statsContent" style="font-size:11px;line-height:1.5"></div>
+    <div class="modal-footer">
+      <button class="ctrl-btn" onclick="refreshStats()">↻ REFRESH</button>
+      <button class="ctrl-btn primary" onclick="closeStats()">✕ CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// SNIPER // TERMINAL - v6.7 POLY EDITION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const $ = id => document.getElementById(id);
+const AI_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/chat';
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const INITIAL_BALANCE = 10000;
+let balance = INITIAL_BALANCE;
+let totalPnL = 0;
+let securedPnL = 0;
+let totalTrades = 0;
+let wins = 0;
+let bestTrade = 0;
+let worstTrade = 0;
+let positions = [];
+let history = [];
+let logs = [];
+let pnlHistory = [];
+let isRunning = false;
+let scanInterval = null;
+let updateInterval = null;
+let momentumInterval = null;
+let sessionStartTime = null;
+let scannedTotal = 0;
+let oppsTotal = 0;
+let analyticsLog = [];
+
+// Cache
+const analyzedCache = new Map();
+const CACHE_DURATION = 20 * 60 * 1000;
+let lastCacheClear = Date.now();
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+const esc = s => (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const fN = n => n >= 1e9 ? (n/1e9).toFixed(2)+'B' : n >= 1e6 ? (n/1e6).toFixed(2)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : n.toFixed(0);
+const fP = p => p < 0.0001 ? p.toFixed(8) : p < 0.01 ? p.toFixed(6) : p < 1 ? p.toFixed(4) : p.toFixed(2);
+const getTime = () => new Date().toLocaleTimeString('en-US', { hour12: false });
+const getShortTime = () => new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+function getCachedAnalysis(address) {
+  if (Date.now() - lastCacheClear > 30 * 60 * 1000) {
+    analyzedCache.clear();
+    lastCacheClear = Date.now();
+    $('cacheCount').textContent = '0';
+    return null;
+  }
+  const cached = analyzedCache.get(address);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) return cached.result;
+  return null;
+}
+
+function setCachedAnalysis(address, result) {
+  analyzedCache.set(address, { result, timestamp: Date.now() });
+  if (analyzedCache.size > 1500) {
+    const entries = [...analyzedCache.entries()].sort((a, b) => a[1].timestamp - b[1].timestamp).slice(0, 400);
+    entries.forEach(([k]) => analyzedCache.delete(k));
+  }
+  $('cacheCount').textContent = analyzedCache.size;
+}
+
+function clearCache() {
+  const oldSize = analyzedCache.size;
+  analyzedCache.clear();
+  lastCacheClear = Date.now();
+  $('cacheCount').textContent = '0';
+  addLog('🗑️', `Cache cleared (${oldSize} entries)`);
+}
+
+// ═══════════════════════════════════════════════════════
+// SOUND
+// ═══════════════════════════════════════════════════════
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type = 'trade') {
+  const volume = 0.15;
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  gainNode.gain.value = volume;
+  
+  switch(type) {
+    case 'trade':
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      break;
+    case 'dca':
+      oscillator.frequency.value = 1000;
+      oscillator.type = 'sine';
+      break;
+    case 'win':
+      oscillator.frequency.value = 600;
+      oscillator.type = 'sine';
+      break;
+    case 'loss':
+      oscillator.frequency.value = 300;
+      oscillator.type = 'sawtooth';
+      break;
+  }
+  
+  gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + 0.2);
+}
+
+// ═══════════════════════════════════════════════════════
+// LOGGING
+// ═══════════════════════════════════════════════════════
+function addLog(icon, text) {
+  logs.unshift({ time: getTime(), icon, text });
+  if (logs.length > 150) logs.pop();
+  renderLogs();
+}
+
+function renderLogs() {
+  const container = $('logContainer');
+  container.innerHTML = logs.slice(0, 80).map(l => 
+    `<div class="log-item"><span class="log-time">${l.time}</span><span class="log-icon">${l.icon}</span><span class="log-text">${l.text}</span></div>`
+  ).join('');
+}
+
+function logAnalytics(type, data) {
+  analyticsLog.push({ timestamp: Date.now(), type, ...data });
+  if (analyticsLog.length > 5000) analyticsLog = analyticsLog.slice(-5000);
+}
+
+// ═══════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════
+function getSettings() {
+  const enabledChains = [];
+  if ($('chainSolana')?.checked) enabledChains.push('solana');
+  if ($('chainBase')?.checked) enabledChains.push('base');
+  if ($('chainEthereum')?.checked) enabledChains.push('ethereum');
+  
+  return {
+    positionSize: parseInt($('positionSize')?.value) || 100,
+    minScore: parseInt($('minScore')?.value) || 75,
+    chains: enabledChains.length > 0 ? enabledChains : ['solana'],
+    trailActivation: parseInt($('trailActivation')?.value) || 10,
+    trailDistance: parseInt($('trailDistance')?.value) || 20,
+    trailTight: parseInt($('trailTight')?.value) || 10,
+    trailTightenAt: parseInt($('trailTightenAt')?.value) || 40,
+    dcaEnabled: $('dcaEnabled')?.checked ?? true,
+    dca1Pct: parseInt($('dca1Pct')?.value) || 15,
+    dca1Sell: parseInt($('dca1Sell')?.value) || 35,
+    dca2Pct: parseInt($('dca2Pct')?.value) || 40,
+    dca2Sell: parseInt($('dca2Sell')?.value) || 35,
+    dca3Pct: parseInt($('dca3Pct')?.value) || 80,
+    dca3Sell: parseInt($('dca3Sell')?.value) || 20,
+    moonBagEnabled: $('moonBagEnabled')?.checked ?? true,
+    baseSL: parseInt($('baseSL')?.value) || 25,
+    maxSL: parseInt($('maxSL')?.value) || 40,
+    momentumExitEnabled: $('momentumExitEnabled')?.checked ?? true,
+    momentumMinRatio: parseInt($('momentumMinRatio')?.value) || 35,
+    momentumInterval: parseInt($('momentumInterval')?.value) || 60,
+    momentumMinProfit: parseInt($('momentumMinProfit')?.value) || 5,
+    momentumBadChecks: parseInt($('momentumBadChecks')?.value) || 2,
+    quickMaxHold: parseInt($('quickMaxHold')?.value) || 20,
+    longMaxHold: (parseInt($('longMaxHold')?.value) || 6) * 60,
+    quickExtensions: parseInt($('quickExtensions')?.value) || 1,
+    longExtensions: parseInt($('longExtensions')?.value) || 3,
+    minMC: parseInt($('minMC')?.value) || 50000,
+    maxMC: parseInt($('maxMC')?.value) || 5000000,
+    minLiquidity: parseInt($('minLiquidity')?.value) || 20000,
+    minLiqRatio: parseInt($('minLiqRatio')?.value) || 8,
+    maxPump5m: parseInt($('maxPump5m')?.value) || 100,
+    maxPump1h: parseInt($('maxPump1h')?.value) || 200,
+    maxDump5m: parseInt($('maxDump5m')?.value) || 40,
+    maxDump1h: parseInt($('maxDump1h')?.value) || 50,
+    whaleDetection: $('whaleDetection')?.checked ?? true,
+    volumeSpikeDetection: $('volumeSpikeDetection')?.checked ?? true,
+    rugcheckEnabled: $('rugcheckEnabled')?.checked ?? true,
+    honeypotDetection: $('honeypotDetection')?.checked ?? true,
+    slEnabled: $('slEnabled')?.checked ?? false
+  };
+}
+
+function openSettings() { $('settingsModal').classList.add('show'); }
+function closeSettings() { $('settingsModal').classList.remove('show'); }
+function openStats() { $('statsModal').classList.add('show'); refreshStats(); }
+function closeStats() { $('statsModal').classList.remove('show'); }
+
+function showSettingsTab(tabName) {
+  document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.settings-tab[onclick*="${tabName}"]`).classList.add('active');
+  $('panel-' + tabName).classList.add('active');
+}
+
+function resetSettings() {
+  $('positionSize').value = 100;
+  $('minScore').value = 80;
+  $('trailActivation').value = 10;
+  $('trailDistance').value = 20;
+  $('trailTight').value = 10;
+  $('trailTightenAt').value = 40;
+  $('dcaEnabled').checked = true;
+  $('dca1Pct').value = 15;
+  $('dca1Sell').value = 35;
+  $('dca2Pct').value = 40;
+  $('dca2Sell').value = 35;
+  $('dca3Pct').value = 80;
+  $('dca3Sell').value = 20;
+  $('moonBagEnabled').checked = true;
+  $('baseSL').value = 18;
+  $('maxSL').value = 30;
+  $('momentumExitEnabled').checked = true;
+  $('momentumMinRatio').value = 35;
+  $('momentumInterval').value = 60;
+  $('momentumMinProfit').value = 5;
+  $('momentumBadChecks').value = 2;
+  $('quickMaxHold').value = 20;
+  $('longMaxHold').value = 6;
+  $('quickExtensions').value = 1;
+  $('longExtensions').value = 3;
+  $('minMC').value = 50000;
+  $('maxMC').value = 5000000;
+  $('minLiquidity').value = 20000;
+  $('minLiqRatio').value = 8;
+  $('maxPump5m').value = 100;
+  $('maxPump1h').value = 200;
+  $('maxDump5m').value = 40;
+  $('maxDump1h').value = 50;
+}
+
+function refreshStats() {
+  const closedTrades = history;
+  if (closedTrades.length === 0) {
+    $('statsContent').innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">NO DATA YET</div></div>';
+    return;
+  }
+  
+  const winningTrades = closedTrades.filter(t => t.pnl > 0);
+  const losingTrades = closedTrades.filter(t => t.pnl <= 0);
+  const totalPnlCalc = closedTrades.reduce((sum, t) => sum + t.pnl, 0);
+  const winRate = (winningTrades.length / closedTrades.length * 100).toFixed(1);
+  const avgPnl = (totalPnlCalc / closedTrades.length).toFixed(2);
+  const avgWin = winningTrades.length > 0 ? (winningTrades.reduce((s,t) => s + t.pnl, 0) / winningTrades.length).toFixed(2) : '0';
+  const avgLoss = losingTrades.length > 0 ? (losingTrades.reduce((s,t) => s + t.pnl, 0) / losingTrades.length).toFixed(2) : '0';
+  
+  const byReason = {};
+  closedTrades.forEach(t => {
+    if (!byReason[t.reason]) byReason[t.reason] = { count: 0, totalPnl: 0, wins: 0 };
+    byReason[t.reason].count++;
+    byReason[t.reason].totalPnl += t.pnl;
+    if (t.pnl > 0) byReason[t.reason].wins++;
+  });
+  
+  $('statsContent').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;">
+      <div class="setting-group">
+        <div class="setting-group-title">OVERVIEW</div>
+        <table style="width:100%;font-size:10px">
+          <tr><td>Total Trades:</td><td style="text-align:right;color:var(--cyan)">${closedTrades.length}</td></tr>
+          <tr><td>Total P&L:</td><td style="text-align:right;color:${totalPnlCalc >= 0 ? 'var(--green)' : 'var(--red)'}">$${totalPnlCalc.toFixed(2)}</td></tr>
+          <tr><td>Win Rate:</td><td style="text-align:right;color:var(--yellow)">${winRate}%</td></tr>
+          <tr><td>Avg P&L:</td><td style="text-align:right">$${avgPnl}</td></tr>
+          <tr><td>Avg Win:</td><td style="text-align:right;color:var(--green)">$${avgWin}</td></tr>
+          <tr><td>Avg Loss:</td><td style="text-align:right;color:var(--red)">$${avgLoss}</td></tr>
+        </table>
+      </div>
+      <div class="setting-group">
+        <div class="setting-group-title">BY EXIT REASON</div>
+        <table style="width:100%;font-size:10px">
+          <tr style="color:var(--text-muted)"><td>Reason</td><td>Count</td><td>Win%</td><td>P&L</td></tr>
+          ${Object.entries(byReason).map(([r, d]) => `
+            <tr><td>${r}</td><td>${d.count}</td><td>${(d.wins/d.count*100).toFixed(0)}%</td><td>$${d.totalPnl.toFixed(0)}</td></tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
+// BOT CONTROL
+// ═══════════════════════════════════════════════════════
+function startBot() {
+  if (isRunning) { stopBot(); return; }
+  isRunning = true;
+  sessionStartTime = Date.now();
+  
+  $('startBtn').textContent = '⏹ STOP';
+  $('modeBadge').textContent = 'LIVE';
+  $('modeBadge').className = 'status-badge live';
+  $('scannerDot').classList.add('active');
+  addLog('🚀', '<span class="green">Bot started</span> — Scanning...');
+  
+  scan();
+  scanInterval = setInterval(scan, 40000);
+  updateInterval = setInterval(updatePositions, 5000);
+  
+  const settings = getSettings();
+  if (settings.momentumExitEnabled) {
+    momentumInterval = setInterval(checkMomentumExit, settings.momentumInterval * 1000);
+  }
+}
+
+function stopBot() {
+  isRunning = false;
+  $('startBtn').textContent = '▶ START';
+  $('modeBadge').textContent = 'STOPPED';
+  $('modeBadge').className = 'status-badge stopped';
+  $('scannerDot').classList.remove('active');
+  if (scanInterval) clearInterval(scanInterval);
+  if (updateInterval) clearInterval(updateInterval);
+  if (momentumInterval) clearInterval(momentumInterval);
+  addLog('⏹️', 'Bot stopped');
+}
+
+function resetBot() {
+  if (!confirm('Reset all data?')) return;
+  stopBot();
+  balance = INITIAL_BALANCE;
+  totalPnL = 0;
+  securedPnL = 0;
+  totalTrades = 0;
+  wins = 0;
+  bestTrade = 0;
+  worstTrade = 0;
+  positions = [];
+  history = [];
+  logs = [];
+  pnlHistory = [];
+  analyzedCache.clear();
+  scannedTotal = 0;
+  oppsTotal = 0;
+  updateUI();
+  renderPositions();
+  renderHistory();
+  renderLogs();
+  renderPnlChart();
+  addLog('🔄', 'Bot reset');
+}
+
+function closeAllPositions() {
+  if (positions.length === 0) return;
+  if (!confirm(`Close all ${positions.length} positions?`)) return;
+  for (const pos of [...positions]) closeTrade(pos, 'MANUAL');
+  addLog('⚠️', 'Closed all positions');
+}
+
+// ═══════════════════════════════════════════════════════
+// AI ANALYSIS
+// ═══════════════════════════════════════════════════════
+async function askAI(prompt) {
+  try {
+    const res = await fetch(AI_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: prompt }),
+      signal: AbortSignal.timeout(15000)
+    });
+    const data = await res.json();
+    return data.response || data.message || '';
+  } catch (e) { return ''; }
+}
+
+async function analyzeForEntry(pair) {
+  const symbol = pair.baseToken?.symbol || 'UNKNOWN';
+  const address = pair.baseToken?.address;
+  const cached = getCachedAnalysis(address);
+  if (cached) return cached;
+  
+  const mc = parseFloat(pair.marketCap) || 0;
+  const liq = parseFloat(pair.liquidity?.usd) || 0;
+  const chg5m = parseFloat(pair.priceChange?.m5) || 0;
+  const chg1h = parseFloat(pair.priceChange?.h1) || 0;
+  const buys5m = pair.txns?.m5?.buys || 0;
+  const sells5m = pair.txns?.m5?.sells || 0;
+  const buyRatio5m = (buys5m + sells5m) > 0 ? ((buys5m / (buys5m + sells5m)) * 100).toFixed(0) : 50;
+  
+  const prompt = `Memecoin sniper. Quick decision:
+$${symbol} | MC: $${fN(mc)} | Liq: $${fN(liq)}
+5m: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(0)}% | 1h: ${chg1h > 0 ? '+' : ''}${chg1h.toFixed(0)}%
+Buy ratio: ${buyRatio5m}%
+QUICK = scalp 15-30%, LONG = hold 50%+, SKIP = bad
+Reply ONE word: QUICK, LONG, or SKIP`;
+
+  const response = await askAI(prompt);
+  const result = response.toUpperCase();
+  setCachedAnalysis(address, result);
+  return result;
+}
+
+async function analyzeForContinue(pair, pnlPct) {
+  const symbol = pair.baseToken?.symbol || 'UNKNOWN';
+  const chg5m = parseFloat(pair.priceChange?.m5) || 0;
+  const buys5m = pair.txns?.m5?.buys || 0;
+  const sells5m = pair.txns?.m5?.sells || 0;
+  const buyRatio5m = (buys5m + sells5m) > 0 ? ((buys5m / (buys5m + sells5m)) * 100).toFixed(0) : 50;
+  
+  const prompt = `$${symbol} | P&L: ${pnlPct > 0 ? '+' : ''}${pnlPct.toFixed(0)}%
+5m: ${chg5m > 0 ? '+' : ''}${chg5m.toFixed(0)}% | Buy ratio: ${buyRatio5m}%
+HOLD or SELL? Reply ONE word.`;
+  return (await askAI(prompt)).toUpperCase();
+}
+
+// ═══════════════════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════════════════
+function isOverextended(pair) {
+  const settings = getSettings();
+  const chg5m = parseFloat(pair.priceChange?.m5) || 0;
+  const chg1h = parseFloat(pair.priceChange?.h1) || 0;
+  if (chg5m > settings.maxPump5m) return { skip: true, reason: `+${chg5m.toFixed(0)}% 5m` };
+  if (chg1h > settings.maxPump1h) return { skip: true, reason: `+${chg1h.toFixed(0)}% 1h` };
+  if (chg5m < -settings.maxDump5m) return { skip: true, reason: `${chg5m.toFixed(0)}% 5m` };
+  if (chg1h < -settings.maxDump1h) return { skip: true, reason: `${chg1h.toFixed(0)}% 1h` };
+  return { skip: false };
+}
+
+function getMomentumScore(pair) {
+  const buys5m = pair.txns?.m5?.buys || 0;
+  const sells5m = pair.txns?.m5?.sells || 0;
+  const total5m = buys5m + sells5m;
+  if (total5m < 3) return { good: true, ratio: 50 };
+  const ratio5m = (buys5m / total5m) * 100;
+  if (ratio5m < 20) return { good: false, reason: 'Heavy dump', ratio: ratio5m };
+  return { good: true, ratio: ratio5m };
+}
+
+function calculateAdaptiveSL(pair) {
+  const settings = getSettings();
+  const chg1h = Math.abs(parseFloat(pair.priceChange?.h1) || 0);
+  let sl = settings.baseSL;
+  if (chg1h > 80) sl = Math.min(sl * 2, settings.maxSL);
+  else if (chg1h > 50) sl = Math.min(sl * 1.7, settings.maxSL);
+  else if (chg1h > 30) sl = Math.min(sl * 1.4, settings.maxSL);
+  return Math.round(sl);
+}
+
+function calculateDynamicTrailDistance(pnlPct, settings) {
+  if (pnlPct >= 150) return Math.max(8, settings.trailTight * 0.6);
+  if (pnlPct >= 100) return Math.max(10, settings.trailTight * 0.8);
+  if (pnlPct >= settings.trailTightenAt) return settings.trailTight;
+  const progress = pnlPct / settings.trailTightenAt;
+  return settings.trailDistance - (settings.trailDistance - settings.trailTight) * progress * 0.5;
+}
+
+// Rugcheck cache
+const rugcheckCache = {};
+async function checkRugcheck(address) {
+  const cached = rugcheckCache[address];
+  if (cached && (Date.now() - cached.timestamp < 300000)) return cached.data;
+  try {
+    const response = await fetch(`https://api.rugcheck.xyz/v1/tokens/${address}/report/summary`, {
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    rugcheckCache[address] = { data, timestamp: Date.now() };
+    return data;
+  } catch (e) { return null; }
+}
+
+// ═══════════════════════════════════════════════════════
+// TRADING
+// ═══════════════════════════════════════════════════════
+async function executeTrade(pair, score, tradeType = 'QUICK') {
+  const settings = getSettings();
+  const size = settings.positionSize;
+  if (balance < size) return;
+  
+  const symbol = pair.baseToken?.symbol || 'UNKNOWN';
+  const chain = pair.chainId;
+  const address = pair.baseToken?.address;
+  const pairAddress = pair.pairAddress;
+  const entryPrice = parseFloat(pair.priceUsd) || 0;
+  const logo = pair.info?.imageUrl || '';
+  
+  if (entryPrice === 0 || !address) return;
+  if (positions.find(p => p.address === address || p.symbol === symbol)) return;
+  if (history.find(h => h.address === address)) return;
+  
+  // Honeypot check
+  const buys5m = pair.txns?.m5?.buys || 0;
+  const sells5m = pair.txns?.m5?.sells || 0;
+  const buys1h = pair.txns?.h1?.buys || 0;
+  const sells1h = pair.txns?.h1?.sells || 0;
+  if (sells5m === 0 && sells1h === 0 && buys5m > 5 && buys1h > 10) {
+    addLog('🍯', `<span class="red">HONEYPOT</span> $${esc(symbol)}`);
+    return;
+  }
+  
+  // Rugcheck (Solana)
+  if (chain === 'solana' && settings.rugcheckEnabled) {
+    const rugData = await checkRugcheck(address);
+    if (rugData?.risks?.some(r => r.level === 'danger')) {
+      addLog('⚠️', `<span class="red">RUGCHECK</span> $${esc(symbol)}`);
+      return;
+    }
+  }
+  
+  const adaptiveSL = calculateAdaptiveSL(pair);
+  const isLong = tradeType === 'LONG';
+  
+  const position = {
+    id: Date.now(),
+    symbol, chain, address, pairAddress, logo,
+    entryPrice, currentPrice: entryPrice,
+    dexUrl: pair.url || `https://dexscreener.com/${chain}/${pairAddress}`,
+    twitter: pair.info?.socials?.find(s => s.type === 'twitter')?.url || null,
+    entryMarketCap: parseFloat(pair.marketCap) || 0,
+    entryLiquidity: parseFloat(pair.liquidity?.usd) || 0,
+    initialSize: size, currentSize: size,
+    score, tradeType,
+    pnl: 0, pnlPct: 0, highestPnlPct: 0,
+    entryTime: Date.now(), extended: 0,
+    trailingActivated: false, trailingHigh: 0,
+    currentTrailDistance: settings.trailDistance,
+    dcaLevel: 0, dcaSecured: 0, isMoonBag: false,
+    stopLoss: adaptiveSL,
+    consecutiveBadMomentum: 0, lastBuyRatio: 50,
+    maxHold: isLong ? settings.longMaxHold : settings.quickMaxHold,
+    maxExtend: isLong ? settings.longExtensions : settings.quickExtensions,
+    label: isLong ? '🌙 LONG' : '⚡ QUICK'
+  };
+  
+  positions.push(position);
+  balance -= size;
+  
+  playSound('trade');
+  addLog('🎯', `<span class="cyan">${position.label}</span> $${esc(symbol)} @ $${fP(entryPrice)}`);
+  updateUI();
+  renderPositions();
+}
+
+function partialSell(pos, sellPercent, reason, dcaLevel) {
+  const settings = getSettings();
+  const sellAmount = pos.currentSize * (sellPercent / 100);
+  const pnlForSold = sellAmount * (pos.pnlPct / 100);
+  
+  pos.currentSize -= sellAmount;
+  pos.dcaSecured += pnlForSold;
+  pos.dcaLevel = dcaLevel;
+  
+  securedPnL += pnlForSold;
+  balance += sellAmount + pnlForSold;
+  
+  playSound('dca');
+  const emoji = dcaLevel === 1 ? '🥇' : dcaLevel === 2 ? '🥈' : '🥉';
+  addLog('💰', `${emoji} <span class="green">DCA ${dcaLevel}</span> $${esc(pos.symbol)} +$${pnlForSold.toFixed(2)}`);
+  
+  if (dcaLevel === 3 && settings.moonBagEnabled && pos.currentSize > 0) {
+    pos.isMoonBag = true;
+    pos.tradeType = 'MOON';
+    pos.label = '🌕 MOON';
+    addLog('🌕', `<span class="pink">MOON BAG</span> $${esc(pos.symbol)}`);
+  }
+  
+  updateUI();
+  renderPositions();
+}
+
+function closeTrade(pos, reason, pair = null) {
+  if (!positions.find(p => p.id === pos.id)) return;
+  
+  const remainingPnl = pos.currentSize * (pos.pnlPct / 100);
+  const finalPnl = remainingPnl + pos.dcaSecured;
+  
+  positions = positions.filter(p => p.id !== pos.id);
+  
+  totalPnL += finalPnl;
+  balance += pos.currentSize + remainingPnl;
+  totalTrades++;
+  
+  if (finalPnl > 0) {
+    wins++;
+    if (finalPnl > bestTrade) bestTrade = finalPnl;
+  } else {
+    if (finalPnl < worstTrade) worstTrade = finalPnl;
+  }
+  
+  // PNL history for chart
+  pnlHistory.push(finalPnl);
+  if (pnlHistory.length > 50) pnlHistory.shift();
+  
+  const holdMin = Math.floor((Date.now() - pos.entryTime) / 60000);
+  
+  history.unshift({
+    symbol: pos.symbol,
+    address: pos.address,
+    chain: pos.chain,
+    dexUrl: pos.dexUrl,
+    tradeType: pos.tradeType,
+    score: pos.score,
+    pnl: finalPnl,
+    pnlPct: pos.pnlPct,
+    highestPnlPct: pos.highestPnlPct,
+    dcaSecured: pos.dcaSecured,
+    dcaLevel: pos.dcaLevel,
+    trailingActivated: pos.trailingActivated,
+    trailingHigh: pos.trailingHigh,
+    reason,
+    closeTime: Date.now(),
+    holdMin
+  });
+  
+  const icon = finalPnl >= 0 ? '✅' : '❌';
+  const color = finalPnl >= 0 ? 'green' : 'red';
+  
+  playSound(finalPnl >= 0 ? 'win' : 'loss');
+  addLog(icon, `<span class="${color}">${reason}</span> $${esc(pos.symbol)} ${finalPnl >= 0 ? '+' : ''}$${finalPnl.toFixed(2)}`);
+  
+  saveToStorage();
+  updateUI();
+  renderPositions();
+  renderHistory();
+  renderPnlChart();
+}
+
+function manualCloseTrade(address) {
+  const pos = positions.find(p => p.address === address);
+  if (!pos) return;
+  if (confirm(`Close $${pos.symbol}?`)) {
+    closeTrade(pos, 'MANUAL', null);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// UPDATE POSITIONS
+// ═══════════════════════════════════════════════════════
+async function updatePositions() {
+  if (positions.length === 0) return;
+  const settings = getSettings();
+  
+  for (let i = positions.length - 1; i >= 0; i--) {
+    const pos = positions[i];
+    
+    try {
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${pos.chain}/${pos.pairAddress}`, { signal: AbortSignal.timeout(6000) });
+      const data = await res.json();
+      if (!data.pair) continue;
+      
+      const newPrice = parseFloat(data.pair.priceUsd) || pos.currentPrice;
+      const priceChange = (newPrice - pos.entryPrice) / pos.entryPrice * 100;
+      
+      // Rug detection
+      if (priceChange <= -80) {
+        pos.pnlPct = -100;
+        addLog('💀', `<span class="red">RUG</span> $${esc(pos.symbol)}`);
+        closeTrade(pos, 'RUG', data.pair);
+        continue;
+      }
+      
+      // Liq remove detection
+      const currentLiq = parseFloat(data.pair.liquidity?.usd) || 0;
+      if (pos.entryLiquidity && currentLiq < pos.entryLiquidity * 0.3) {
+        addLog('💀', `<span class="red">LIQ REMOVE</span> $${esc(pos.symbol)}`);
+        closeTrade(pos, 'LIQ REMOVE', data.pair);
+        continue;
+      }
+      
+      pos.currentPrice = newPrice;
+      const change = (newPrice - pos.entryPrice) / pos.entryPrice;
+      pos.pnlPct = change * 100;
+      pos.pnl = pos.currentSize * change + pos.dcaSecured;
+      
+      if (pos.pnlPct > pos.highestPnlPct) pos.highestPnlPct = pos.pnlPct;
+      
+      // Update momentum
+      const buys5m = data.pair.txns?.m5?.buys || 0;
+      const sells5m = data.pair.txns?.m5?.sells || 0;
+      const total5m = buys5m + sells5m;
+      pos.lastBuyRatio = total5m > 0 ? (buys5m / total5m) * 100 : 50;
+      
+      const holdTime = (Date.now() - pos.entryTime) / 60000;
+      
+      // SL check
+      if (settings.slEnabled && pos.pnlPct <= -pos.stopLoss && !pos.isMoonBag) {
+        closeTrade(pos, 'SL', data.pair);
+        continue;
+      }
+      
+      // DCA
+      if (settings.dcaEnabled && pos.dcaLevel < 3 && !pos.isMoonBag) {
+        if (pos.dcaLevel === 0 && pos.pnlPct >= settings.dca1Pct) partialSell(pos, settings.dca1Sell, 'DCA 1', 1);
+        else if (pos.dcaLevel === 1 && pos.pnlPct >= settings.dca2Pct) partialSell(pos, settings.dca2Sell, 'DCA 2', 2);
+        else if (pos.dcaLevel === 2 && pos.pnlPct >= settings.dca3Pct) partialSell(pos, settings.dca3Sell, 'DCA 3', 3);
+      }
+      
+      // Trailing
+      const trailActivationPct = pos.isMoonBag ? 10 : settings.trailActivation;
+      if (pos.pnlPct >= trailActivationPct && !pos.trailingActivated) {
+        pos.trailingActivated = true;
+        pos.trailingHigh = pos.pnlPct;
+        addLog('📈', `<span class="orange">TRAILING</span> $${esc(pos.symbol)} +${pos.pnlPct.toFixed(0)}%`);
+      }
+      
+      if (pos.trailingActivated) {
+        if (pos.pnlPct > pos.trailingHigh) pos.trailingHigh = pos.pnlPct;
+        pos.currentTrailDistance = calculateDynamicTrailDistance(pos.trailingHigh, settings);
+        if (pos.isMoonBag) pos.currentTrailDistance = Math.max(8, pos.currentTrailDistance * 0.7);
+        
+        const dropFromHigh = pos.trailingHigh - pos.pnlPct;
+        if (dropFromHigh >= pos.currentTrailDistance) {
+          closeTrade(pos, 'TRAIL', data.pair);
+          continue;
+        }
+      }
+      
+      // Timeout
+      if (!pos.isMoonBag && holdTime >= pos.maxHold) {
+        if (pos.extended < pos.maxExtend) {
+          const analysis = await analyzeForContinue(data.pair, pos.pnlPct);
+          if (analysis.includes('HOLD') && pos.pnlPct >= -5) {
+            pos.entryTime = Date.now();
+            pos.extended++;
+            addLog('🔄', `<span class="cyan">Extended</span> $${esc(pos.symbol)}`);
+          } else {
+            closeTrade(pos, 'TIMEOUT', data.pair);
+          }
+        } else {
+          closeTrade(pos, 'MAX TIME', data.pair);
+        }
+        continue;
+      }
+      
+    } catch (e) {}
+  }
+  
+  renderPositions();
+  updateUI();
+}
+
+async function checkMomentumExit() {
+  if (positions.length === 0) return;
+  const settings = getSettings();
+  if (!settings.momentumExitEnabled) return;
+  
+  for (let i = positions.length - 1; i >= 0; i--) {
+    const pos = positions[i];
+    if (pos.isMoonBag || pos.pnlPct < settings.momentumMinProfit) continue;
+    
+    try {
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${pos.chain}/${pos.pairAddress}`, { signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      if (!data.pair) continue;
+      
+      const buys5m = data.pair.txns?.m5?.buys || 0;
+      const sells5m = data.pair.txns?.m5?.sells || 0;
+      const total5m = buys5m + sells5m;
+      if (total5m < 5) continue;
+      
+      const buyRatio = (buys5m / total5m) * 100;
+      pos.lastBuyRatio = buyRatio;
+      
+      if (buyRatio < settings.momentumMinRatio) {
+        pos.consecutiveBadMomentum++;
+        if (pos.consecutiveBadMomentum >= settings.momentumBadChecks) {
+          closeTrade(pos, 'MOMENTUM', data.pair);
+        }
+      } else {
+        pos.consecutiveBadMomentum = 0;
+      }
+    } catch (e) {}
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// SCANNER
+// ═══════════════════════════════════════════════════════
+async function scan() {
+  if (!isRunning) return;
+  const settings = getSettings();
+  const chainList = Array.isArray(settings.chains) ? settings.chains : [settings.chains];
+  if (chainList.length === 0) {
+    addLog('⚠️', '<span class="red">No chains selected!</span>');
+    return;
+  }
+  
+  const allPairs = new Map();
+  
+  // Source 1: Latest profiles
+  try {
+    $('scannerText').textContent = 'Scanning new tokens...';
+    const res = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      for (const t of data.slice(0, 120)) {
+        if (t.tokenAddress && chainList.includes(t.chainId)) {
+          allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'new', boost: 12 });
+        }
+      }
+    }
+  } catch(e) {}
+
+  // Source 2: Top boosted
+  try {
+    const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      for (const t of data.slice(0, 120)) {
+        if (t.tokenAddress && chainList.includes(t.chainId) && !allPairs.has(t.tokenAddress)) {
+          allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'boosted', boost: 18 });
+        }
+      }
+    }
+  } catch(e) {}
+
+  // Source 3: Keyword search
+  const keywords = ['moon', 'pump', 'pepe', 'trump', 'elon', 'cat', 'dog', 'ai', 'meme', 'sol', 'base', 'eth', 'degen', 'gem'];
+  const shuffled = keywords.sort(() => Math.random() - 0.5).slice(0, 8);
+  
+  for (const q of shuffled) {
+    try {
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${q}`, { signal: AbortSignal.timeout(4000) });
+      const data = await res.json();
+      if (data.pairs) {
+        for (const p of data.pairs.slice(0, 50)) {
+          const addr = p.baseToken?.address;
+          if (addr && chainList.includes(p.chainId) && !allPairs.has(addr)) {
+            allPairs.set(addr, { address: addr, chain: p.chainId, source: 'search', boost: 0, pair: p });
+          }
+        }
+      }
+    } catch(e) {}
+    await new Promise(r => setTimeout(r, 50));
+  }
+  
+  $('scannerText').textContent = `Analyzing ${allPairs.size} tokens...`;
+  
+  // Enrich & filter
+  const enriched = [];
+  const candidates = Array.from(allPairs.values());
+  
+  for (const cand of candidates) {
+    try {
+      let pair = cand.pair;
+      if (!pair) {
+        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cand.address}`, { signal: AbortSignal.timeout(3000) });
+        const data = await res.json();
+        if (data.pairs?.[0]) pair = data.pairs[0];
+      }
+      
+      if (pair) {
+        const mc = parseFloat(pair.marketCap) || 0;
+        const liq = parseFloat(pair.liquidity?.usd) || 0;
+        const liqRatio = mc > 0 ? (liq / mc) * 100 : 0;
+        
+        if (mc >= settings.minMC && mc <= settings.maxMC && liq >= settings.minLiquidity && liqRatio >= settings.minLiqRatio) {
+          pair._source = cand.source;
+          pair._boost = cand.boost;
+          enriched.push(pair);
+        }
+      }
+    } catch(e) {}
+  }
+  
+  scannedTotal = enriched.length;
+  $('scannedCount').textContent = scannedTotal;
+  $('lastScan').textContent = getShortTime();
+  
+  // Score & filter
+  const opportunities = [];
+  for (const pair of enriched) {
+    const score = calculateScore(pair, settings);
+    if (score >= settings.minScore) opportunities.push({ pair, score });
+  }
+  
+  opportunities.sort((a, b) => b.score - a.score);
+  oppsTotal = opportunities.length;
+  $('oppsCount').textContent = oppsTotal;
+  $('scannerBadge').textContent = `${oppsTotal} FOUND`;
+  $('scannerText').textContent = `${oppsTotal} opportunities`;
+  
+  // Render scanner items
+  renderScanner(opportunities.slice(0, 10));
+  
+  addLog('🔍', `Found <span class="green">${oppsTotal}</span> from <span class="yellow">${scannedTotal}</span>`);
+  
+  // Trade selection
+  const topOpps = opportunities.slice(0, 20);
+  let tradesOpened = 0;
+  const tradingNow = new Set();
+  const existingAddresses = new Set(positions.map(p => p.address));
+  const existingSymbols = new Set(positions.map(p => p.symbol));
+  const historyAddresses = new Set(history.slice(0, 50).map(h => h.address));
+  
+  for (const opp of topOpps) {
+    if (balance < settings.positionSize) break;
+    
+    const addr = opp.pair.baseToken?.address;
+    const symbol = opp.pair.baseToken?.symbol || 'UNKNOWN';
+    
+    if (!addr) continue;
+    if (existingAddresses.has(addr) || existingSymbols.has(symbol)) continue;
+    if (tradingNow.has(addr) || historyAddresses.has(addr)) continue;
+    
+    const cached = getCachedAnalysis(addr);
+    if (cached?.includes('SKIP')) continue;
+    
+    const overCheck = isOverextended(opp.pair);
+    if (overCheck.skip) {
+      setCachedAnalysis(addr, 'SKIP');
+      continue;
+    }
+    
+    const momentumCheck = getMomentumScore(opp.pair);
+    if (!momentumCheck.good) {
+      setCachedAnalysis(addr, 'SKIP');
+      continue;
+    }
+    
+    try {
+      addLog('🤖', `Analyzing $${esc(symbol)}...`);
+      const analysis = await analyzeForEntry(opp.pair);
+      
+      if (analysis.includes('QUICK')) {
+        tradingNow.add(addr);
+        existingSymbols.add(symbol);
+        existingAddresses.add(addr);
+        await executeTrade(opp.pair, opp.score, 'QUICK');
+        tradesOpened++;
+      } else if (analysis.includes('LONG')) {
+        tradingNow.add(addr);
+        existingSymbols.add(symbol);
+        existingAddresses.add(addr);
+        await executeTrade(opp.pair, opp.score, 'LONG');
+        tradesOpened++;
+      }
+    } catch (e) {
+      if (opp.score >= 55) {
+        const mc = parseFloat(opp.pair.marketCap) || 0;
+        const tradeType = mc < 100000 ? 'LONG' : 'QUICK';
+        tradingNow.add(addr);
+        existingSymbols.add(symbol);
+        existingAddresses.add(addr);
+        await executeTrade(opp.pair, opp.score, tradeType);
+        tradesOpened++;
+      }
+    }
+    
+    await new Promise(r => setTimeout(r, 150));
+  }
+}
+
+function calculateScore(pair, settings) {
+  const mc = parseFloat(pair.marketCap) || 0;
+  const liq = parseFloat(pair.liquidity?.usd) || 0;
+  const chg5m = parseFloat(pair.priceChange?.m5) || 0;
+  const chg1h = parseFloat(pair.priceChange?.h1) || 0;
+  const buys5m = pair.txns?.m5?.buys || 0;
+  const sells5m = pair.txns?.m5?.sells || 0;
+  const buys1h = pair.txns?.h1?.buys || 0;
+  const sells1h = pair.txns?.h1?.sells || 0;
+  const total5m = buys5m + sells5m;
+  const buyRatio5m = total5m > 0 ? (buys5m / total5m) * 100 : 50;
+  const sourceBoost = pair._boost || 0;
+  const symbol = pair.baseToken?.symbol || '';
+  
+  let score = 20 + sourceBoost;
+  
+  // Token name filter
+  if (symbol.length < 2) return 0;
+  if (symbol.length < 3) score -= 25;
+  if (/^\d+$/.test(symbol)) score -= 30;
+  
+  // Market cap
+  if (mc >= 200000 && mc <= 1000000) score += 25;
+  else if (mc >= 30000 && mc < 50000) score += 12;
+  else if (mc >= 50000 && mc < 200000) score -= 3;
+  else if (mc > 2000000) score -= 5;
+  else if (mc < 10000) score -= 20;
+  
+  // Buy ratio (inverted - lower is better for entry)
+  if (buyRatio5m >= 80) score -= 12;
+  else if (buyRatio5m >= 60) score -= 5;
+  else if (buyRatio5m >= 40 && buyRatio5m < 60) score += 8;
+  else if (buyRatio5m < 40 && total5m >= 5) score += 15;
+  
+  // Liquidity
+  const liqRatio = mc > 0 ? (liq / mc) * 100 : 0;
+  if (liq < 10000) return 0;
+  if (liq < 15000) score -= 25;
+  if (liq < 20000) score -= 15;
+  if (liq >= 50000) score += 10;
+  if (liqRatio >= 8 && liqRatio <= 20) score += 10;
+  else if (liqRatio < 3) score -= 15;
+  
+  // Momentum
+  if (chg5m > 5 && chg5m < 25) score += 10;
+  if (chg5m >= 25 && chg5m < 50) score += 5;
+  if (chg1h > 10 && chg1h < 60) score += 8;
+  if (chg5m > 60) score -= 15;
+  if (chg1h > 120) score -= 12;
+  if (chg5m < -20) score -= 12;
+  if (chg1h < -30) score -= 10;
+  
+  // Trend
+  if (chg5m > 0 && chg1h > 0) score += 5;
+  
+  // Honeypot
+  if (sells5m === 0 && buys5m > 10) score -= 50;
+  if (sells1h === 0 && buys1h > 20) score -= 40;
+  if (buyRatio5m === 100 && sells5m === 0 && sells1h === 0) return 0;
+  
+  return Math.min(100, Math.max(0, Math.round(score)));
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════════════════
+function updateUI() {
+  const pnlEl = $('totalPnl');
+  pnlEl.textContent = (totalPnL >= 0 ? '+' : '') + '$' + totalPnL.toFixed(2);
+  pnlEl.className = 'top-stat-value ' + (totalPnL >= 0 ? 'green' : 'red');
+  
+  $('balance').textContent = '$' + balance.toFixed(0);
+  $('securedPnl').textContent = '+$' + securedPnL.toFixed(0);
+  $('winRate').textContent = (totalTrades > 0 ? ((wins / totalTrades) * 100).toFixed(0) : '--') + '%';
+  $('totalTrades').textContent = totalTrades;
+  
+  $('quickCount').textContent = positions.filter(p => p.tradeType === 'QUICK').length;
+  $('longCount').textContent = positions.filter(p => p.tradeType === 'LONG').length;
+  $('moonCount').textContent = positions.filter(p => p.tradeType === 'MOON').length;
+  
+  $('pnlCurveValue').textContent = (totalPnL >= 0 ? '+' : '') + '$' + totalPnL.toFixed(0);
+  $('pnlCurveValue').className = 'panel-badge ' + (totalPnL >= 0 ? 'green' : 'red');
+  
+  $('positionsBadge').textContent = positions.length + ' OPEN';
+}
+
+function renderScanner(opportunities) {
+  const container = $('scannerContainer');
+  if (opportunities.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">SCANNING...</div></div>';
+    return;
+  }
+  
+  container.innerHTML = opportunities.map(opp => {
+    const p = opp.pair;
+    const symbol = p.baseToken?.symbol || 'UNKNOWN';
+    const mc = parseFloat(p.marketCap) || 0;
+    const liq = parseFloat(p.liquidity?.usd) || 0;
+    const chg5m = parseFloat(p.priceChange?.m5) || 0;
+    const scoreClass = opp.score >= 85 ? 'high-score' : opp.score >= 70 ? 'medium-score' : '';
+    
+    return `<div class="scanner-item ${scoreClass}">
+      <div class="scanner-row">
+        <span class="scanner-token">$${esc(symbol)}</span>
+        <span class="scanner-edge">+${opp.score}</span>
+      </div>
+      <div class="scanner-meta">
+        <span>MC: $${fN(mc)}</span>
+        <span>LIQ: $${fN(liq)}</span>
+        <span style="color:${chg5m >= 0 ? 'var(--green)' : 'var(--red)'}">${chg5m >= 0 ? '+' : ''}${chg5m.toFixed(0)}%</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderPositions() {
+  const container = $('positionsGrid');
+  $('positionsBadge').textContent = positions.length + ' OPEN';
+  
+  if (positions.length === 0) {
+    container.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📈</div><div class="empty-text">NO ACTIVE POSITIONS</div></div>';
+    return;
+  }
+  
+  container.innerHTML = positions.map(pos => {
+    const isProfit = pos.pnl >= 0;
+    const holdMin = Math.floor((Date.now() - pos.entryTime) / 60000);
+    const holdPct = Math.min(100, (holdMin / pos.maxHold) * 100);
+    
+    let cardClass = isProfit ? 'profit' : 'loss';
+    if (pos.isMoonBag) cardClass = 'moon';
+    else if (pos.trailingActivated) cardClass += ' trailing';
+    
+    let typeClass = 'quick';
+    if (pos.isMoonBag) typeClass = 'moon';
+    else if (pos.tradeType === 'LONG') typeClass = 'long';
+    
+    let progressClass = '';
+    if (!pos.isMoonBag) {
+      if (holdPct > 85) progressClass = 'danger';
+      else if (holdPct > 65) progressClass = 'warning';
+    }
+    
+    const pnlColor = isProfit ? 'green' : 'red';
+    
+    let tags = '';
+    if (pos.isMoonBag) tags += '<span class="pos-tag" style="background:rgba(255,107,157,0.2);color:var(--pink)">🌕 FREE</span>';
+    if (pos.trailingActivated) tags += `<span class="pos-tag trailing">📈 ${pos.trailingHigh.toFixed(0)}%</span>`;
+    if (pos.dcaSecured > 0) tags += `<span class="pos-tag secured">🔒 +$${pos.dcaSecured.toFixed(0)}</span>`;
+    
+    return `<div class="position-card ${cardClass}">
+      <div class="pos-header">
+        <div class="pos-token-info">
+          <div class="pos-logo">${pos.logo ? `<img src="${pos.logo}" onerror="this.style.display='none'">` : pos.symbol.charAt(0)}</div>
+          <div class="pos-details">
+            <div class="pos-symbol">$${esc(pos.symbol)} <span class="pos-type ${typeClass}">${pos.label}</span></div>
+            <div class="pos-chain">${pos.chain} • Score: ${pos.score}</div>
+          </div>
+        </div>
+        <div class="pos-pnl">
+          <div class="pos-pnl-value ${pnlColor}">${isProfit ? '+' : ''}$${pos.pnl.toFixed(2)}</div>
+          <div class="pos-pnl-pct ${pnlColor}">${isProfit ? '+' : ''}${pos.pnlPct.toFixed(1)}%</div>
+        </div>
+      </div>
+      
+      <div class="pos-stats-row">
+        <div class="pos-stat">
+          <div class="pos-stat-label">SIZE</div>
+          <div class="pos-stat-value">$${pos.currentSize.toFixed(0)}</div>
+        </div>
+        <div class="pos-stat">
+          <div class="pos-stat-label">${pos.trailingActivated ? 'TRAIL' : 'SL'}</div>
+          <div class="pos-stat-value ${pos.trailingActivated ? 'orange' : 'red'}">${pos.trailingActivated ? `-${pos.currentTrailDistance.toFixed(0)}%` : `-${pos.stopLoss}%`}</div>
+        </div>
+        <div class="pos-stat">
+          <div class="pos-stat-label">PEAK</div>
+          <div class="pos-stat-value green">+${pos.highestPnlPct.toFixed(0)}%</div>
+        </div>
+        <div class="pos-stat">
+          <div class="pos-stat-label">TIME</div>
+          <div class="pos-stat-value">${holdMin}m</div>
+        </div>
+      </div>
+      
+      ${!pos.isMoonBag ? `<div class="pos-progress"><div class="pos-progress-bar ${progressClass}" style="width:${holdPct}%"></div></div>` : ''}
+      
+      ${tags ? `<div class="pos-tags">${tags}</div>` : ''}
+      
+      <div class="pos-actions">
+        <button onclick="manualCloseTrade('${pos.address}')" class="pos-action-btn close">CLOSE</button>
+        <a href="${pos.dexUrl}" target="_blank" class="pos-action-btn dex">DEX</a>
+        ${pos.twitter ? `<a href="${pos.twitter}" target="_blank" class="pos-action-btn">𝕏</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderHistory() {
+  const container = $('historyContainer');
+  $('historyBadge').textContent = history.length;
+  
+  if (history.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">📜</div><div class="empty-text">NO TRADES YET</div></div>';
+    return;
+  }
+  
+  container.innerHTML = history.slice(0, 30).map(trade => {
+    const isWin = trade.pnl >= 0;
+    const time = new Date(trade.closeTime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    const typeIcon = trade.tradeType === 'MOON' ? '🌕' : trade.tradeType === 'LONG' ? '🌙' : '⚡';
+    
+    let reasonClass = 'timeout';
+    if (trade.reason === 'SL') reasonClass = 'sl';
+    else if (trade.reason === 'TRAIL') reasonClass = 'trail';
+    else if (trade.reason === 'MOMENTUM') reasonClass = 'momentum';
+    else if (trade.reason.includes('DCA') || trade.reason === 'TP') reasonClass = 'tp';
+    else if (trade.reason === 'RUG' || trade.reason === 'LIQ REMOVE') reasonClass = 'rug';
+    
+    return `<div class="history-item" onclick="window.open('${trade.dexUrl}', '_blank')">
+      <span class="history-time">${time}</span>
+      <span class="history-token">${typeIcon} $${esc(trade.symbol)}</span>
+      <span class="history-reason ${reasonClass}">${trade.reason}</span>
+      <span class="history-pnl ${isWin ? 'green' : 'red'}">${isWin ? '+' : ''}$${trade.pnl.toFixed(2)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderPnlChart() {
+  const container = $('pnlChart');
+  if (pnlHistory.length === 0) {
+    container.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-text">NO DATA</div></div>';
+    return;
+  }
+  
+  const maxAbs = Math.max(...pnlHistory.map(Math.abs), 1);
+  
+  container.innerHTML = pnlHistory.map(pnl => {
+    const height = Math.abs(pnl) / maxAbs * 100;
+    const color = pnl >= 0 ? 'green' : 'red';
+    return `<div class="pnl-bar ${color}" style="height:${Math.max(2, height)}%"></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════════
+const STORAGE_KEY = 'sniper_terminal_v6_data';
+
+function saveToStorage() {
+  try {
+    const data = {
+      balance, totalPnL, securedPnL, totalTrades, wins, bestTrade, worstTrade,
+      history: history.slice(0, 500),
+      pnlHistory: pnlHistory.slice(-50),
+      analyticsLog: analyticsLog.slice(-3000),
+      savedAt: Date.now()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {}
+}
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      balance = data.balance || INITIAL_BALANCE;
+      totalPnL = data.totalPnL || 0;
+      securedPnL = data.securedPnL || 0;
+      totalTrades = data.totalTrades || 0;
+      wins = data.wins || 0;
+      bestTrade = data.bestTrade || 0;
+      worstTrade = data.worstTrade || 0;
+      history = data.history || [];
+      pnlHistory = data.pnlHistory || [];
+      analyticsLog = data.analyticsLog || [];
+      
+      addLog('💾', `<span class="cyan">Loaded</span> ${history.length} trades`);
+      updateUI();
+      renderHistory();
+      renderPnlChart();
+    }
+  } catch (e) {}
+}
+
+function exportData() {
+  const exportObj = {
+    exportDate: new Date().toISOString(),
+    version: 'v6.7-terminal',
+    state: { balance, totalPnL, securedPnL, totalTrades, wins, bestTrade, worstTrade },
+    settings: getSettings(),
+    history,
+    pnlHistory,
+    analyticsLog
+  };
+  
+  const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sniper_terminal_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  addLog('📤', `<span class="green">Exported</span> ${history.length} trades`);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.state) {
+        balance = data.state.balance || INITIAL_BALANCE;
+        totalPnL = data.state.totalPnL || 0;
+        securedPnL = data.state.securedPnL || 0;
+        totalTrades = data.state.totalTrades || 0;
+        wins = data.state.wins || 0;
+        bestTrade = data.state.bestTrade || 0;
+        worstTrade = data.state.worstTrade || 0;
+      }
+      if (data.history) history = data.history;
+      if (data.pnlHistory) pnlHistory = data.pnlHistory;
+      if (data.analyticsLog) analyticsLog = data.analyticsLog;
+      
+      updateUI();
+      renderHistory();
+      renderPnlChart();
+      addLog('📥', `<span class="green">Imported</span> ${history.length} trades`);
+    } catch (err) {
+      addLog('❌', `<span class="red">Import failed</span>`);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// Auto-save
+setInterval(saveToStorage, 30000);
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+loadFromStorage();
+updateUI();
+renderPositions();
+renderHistory();
+renderPnlChart();
+addLog('💻', '<span class="cyan">SNIPER//TERMINAL</span> v6.7 initialized');
+</script>
+</body>
+</html>
