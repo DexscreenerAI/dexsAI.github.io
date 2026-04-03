@@ -392,6 +392,29 @@ function viewHistImg(ts){
 }
 
 // ═══════════════════════════════════════════
+// IMAGE COMPRESSION — resize to max 800px, JPEG 0.6
+// Reduces payload from ~5MB to ~100KB
+// ═══════════════════════════════════════════
+function compressImage(dataUrl, maxSize=800, quality=0.6){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      let w=img.width, h=img.height;
+      if(w>h){ if(w>maxSize){h=Math.round(h*maxSize/w);w=maxSize;} }
+      else { if(h>maxSize){w=Math.round(w*maxSize/h);h=maxSize;} }
+      canvas.width=w; canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      const compressed=canvas.toDataURL('image/jpeg',quality);
+      resolve(compressed);
+    };
+    img.onerror=()=>resolve(dataUrl); // fallback to original
+    img.src=dataUrl;
+  });
+}
+
+// ═══════════════════════════════════════════
 // GENERATE — via Railway backend (no CORS)
 // ═══════════════════════════════════════════
 async function generate(){
@@ -401,11 +424,13 @@ async function generate(){
   const style = STYLES.find(s=>s.id===selectedStyle);
   const total = pickedScenes.length;
 
-  const charB64 = charPreview.split(",")[1];
-  const charMt = charFile.type || "image/jpeg";
-  const charContent = {type:"image",source:{type:"base64",media_type:charMt,data:charB64}};
-
   try {
+    // Compress character image once
+    stepText='Compressing images...'; render();
+    const compressedChar = await compressImage(charPreview);
+    const charB64 = compressedChar.split(",")[1];
+    const charContent = {type:"image",source:{type:"base64",media_type:"image/jpeg",data:charB64}};
+
     for(let si=0; si<total; si++){
       const sceneIdx = pickedScenes[si];
       const sceneUrl = scenes[sceneIdx];
@@ -413,10 +438,12 @@ async function generate(){
 
       let sceneContent;
       if(isDataUrl){
-        const sb64 = sceneUrl.split(",")[1];
-        const smt = sceneUrl.match(/data:([^;]+)/)?.[1] || "image/jpeg";
-        sceneContent = {type:"image",source:{type:"base64",media_type:smt,data:sb64}};
+        // Compress uploaded scenes too
+        const compressedScene = await compressImage(sceneUrl);
+        const sb64 = compressedScene.split(",")[1];
+        sceneContent = {type:"image",source:{type:"base64",media_type:"image/jpeg",data:sb64}};
       } else {
+        // Catalog scenes — use URL (no base64 needed)
         sceneContent = {type:"image",source:{type:"url",url:sceneUrl}};
       }
 
@@ -434,6 +461,10 @@ async function generate(){
           ]}]
         })
       });
+      if(!res.ok){
+        const txt=await res.text();
+        throw new Error(`Scene ${si+1}: Server ${res.status} — ${txt.slice(0,100)}`);
+      }
       const d=await res.json();
       if(d.error) throw new Error(`Scene ${si+1}: ${d.error.message || d.error}`);
       const prompt=(d.content||[]).map(c=>c.text||"").join("").trim();
