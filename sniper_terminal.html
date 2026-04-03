@@ -5,6 +5,151 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SNIPER // TERMINAL</title>
 <style>
+/* ═══════════════════════════════════════════════════════
+   NAVBAR
+   ═══════════════════════════════════════════════════════ */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: rgba(10,12,15,0.98);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  z-index: 1000;
+  gap: 8px;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-right: 12px;
+}
+
+.nav-logo img {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.nav-links::-webkit-scrollbar { height: 0; }
+
+.nav-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  padding: 6px 10px;
+  border-radius: 3px;
+  transition: all 0.1s;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.nav-link:hover {
+  color: var(--text);
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+
+.nav-link.active {
+  color: var(--cyan);
+  background: var(--cyan-dim);
+  border-color: var(--cyan);
+}
+
+.nav-socials {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.nav-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 12px;
+  transition: all 0.1s;
+}
+
+.nav-social:hover {
+  background: var(--cyan-dim);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+/* Mobile menu */
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+
+.mobile-menu {
+  display: none;
+  position: fixed;
+  top: 40px;
+  left: 0;
+  right: 0;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  padding: 8px;
+  z-index: 999;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.mobile-menu.open { display: flex; }
+
+.mobile-menu a {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 11px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  transition: background 0.1s;
+}
+
+.mobile-menu a:hover { background: var(--bg-card); }
+.mobile-menu a.active { color: var(--cyan); background: var(--cyan-dim); }
+
+@media (max-width: 900px) {
+  .nav-links { display: none; }
+  .mobile-menu-btn { display: block; }
+}
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -56,8 +201,9 @@ html, body {
   background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-dark) 100%);
   border-bottom: 1px solid var(--border);
   position: sticky;
-  top: 0;
+  top: 40px;
   z-index: 100;
+  margin-top: 40px;
 }
 
 .logo {
@@ -326,6 +472,29 @@ html, body {
   font-weight: 600;
   color: var(--text);
   font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scanner-token-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  background: var(--green-dim);
+  border: 1px solid var(--green);
+  color: var(--green);
+  text-decoration: none;
+  font-size: 10px;
+  transition: all 0.1s;
+}
+
+.scanner-token-link:hover {
+  background: var(--green);
+  color: var(--bg-dark);
 }
 
 .scanner-edge {
@@ -353,12 +522,13 @@ html, body {
 .scanner-actions {
   display: flex;
   gap: 4px;
+  margin-top: 4px;
 }
 
 .scanner-btn {
-  padding: 4px 8px;
+  padding: 5px 10px;
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 600;
   border: 1px solid var(--border);
   border-radius: 2px;
@@ -366,6 +536,7 @@ html, body {
   color: var(--text-dim);
   cursor: pointer;
   transition: all 0.1s;
+  text-decoration: none;
 }
 
 .scanner-btn.buy {
@@ -375,6 +546,16 @@ html, body {
 
 .scanner-btn.buy:hover {
   background: var(--green);
+  color: var(--bg-dark);
+}
+
+.scanner-btn.dex {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.scanner-btn.dex:hover {
+  background: var(--cyan);
   color: var(--bg-dark);
 }
 
@@ -1252,6 +1433,49 @@ html, body {
 <body>
 
 <!-- ═══════════════════════════════════════════════════════
+     NAVBAR
+     ═══════════════════════════════════════════════════════ -->
+<nav class="navbar">
+  <a href="./index.html" class="nav-logo">
+    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="Logo">
+    <span>DEXSCREENER AI</span>
+  </a>
+  <div class="nav-links">
+    <a href="./index.html" class="nav-link">App</a>
+    <a href="./compare.html" class="nav-link">Compare</a>
+    <a href="./gems.html" class="nav-link">Gems</a>
+    <a href="./sniper.html" class="nav-link active">Sniper</a>
+    <a href="./og-detector.html" class="nav-link">OG Detector</a>
+    <a href="./telegram-bot.html" class="nav-link">Telegram Bot</a>
+    <a href="./extension.html" class="nav-link">Extension</a>
+    <a href="./promote.html" class="nav-link">Promote</a>
+    <a href="./imagine.html" class="nav-link">Imagine</a>
+    <a href="./litepaper.html" class="nav-link">Litepaper</a>
+  </div>
+  <div class="nav-socials">
+    <a href="https://t.me/dexscreeneraitoken" target="_blank" class="nav-social" title="Telegram">💬</a>
+    <a href="https://x.com/dexscreenerai" target="_blank" class="nav-social" title="Twitter">𝕏</a>
+  </div>
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="./index.html">🏠 App</a>
+  <a href="./compare.html">⚖️ Compare</a>
+  <a href="./gems.html">💎 Gems</a>
+  <a href="./sniper.html" class="active">🎯 Sniper</a>
+  <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./telegram-bot.html">🤖 Telegram Bot</a>
+  <a href="./extension.html">🧩 Extension</a>
+  <a href="./promote.html">⭐ Promote</a>
+  <a href="./imagine.html">🎨 Imagine</a>
+  <a href="./litepaper.html">📄 Litepaper</a>
+  <a href="https://t.me/dexscreeneraitoken" target="_blank">💬 Telegram</a>
+  <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
      TOP BAR
      ═══════════════════════════════════════════════════════ -->
 <div class="top-bar">
@@ -1423,7 +1647,7 @@ html, body {
         </div>
         <div class="setting">
           <label>MIN SCORE</label>
-          <input type="number" id="minScore" value="80" min="50" max="95">
+          <input type="number" id="minScore" value="75" min="50" max="95">
           <span class="setting-hint">Lower = more trades, less quality</span>
         </div>
         <div class="setting full">
@@ -1706,9 +1930,9 @@ let scannedTotal = 0;
 let oppsTotal = 0;
 let analyticsLog = [];
 
-// Cache
+// Cache - 10 min instead of 20 (more retrades)
 const analyzedCache = new Map();
-const CACHE_DURATION = 20 * 60 * 1000;
+const CACHE_DURATION = 10 * 60 * 1000;
 let lastCacheClear = Date.now();
 
 // ═══════════════════════════════════════════════════════
@@ -1970,7 +2194,7 @@ function startBot() {
   addLog('🚀', '<span class="green">Bot started</span> — Scanning...');
   
   scan();
-  scanInterval = setInterval(scan, 40000);
+  scanInterval = setInterval(scan, 30000); // Scan every 30s instead of 40s
   updateInterval = setInterval(updatePositions, 5000);
   
   const settings = getSettings();
@@ -2442,7 +2666,7 @@ async function checkMomentumExit() {
 }
 
 // ═══════════════════════════════════════════════════════
-// SCANNER
+// SCANNER - MASSIVELY EXPANDED
 // ═══════════════════════════════════════════════════════
 async function scan() {
   if (!isRunning) return;
@@ -2453,139 +2677,353 @@ async function scan() {
     return;
   }
   
-  const allPairs = new Map();
+  addLog('🔍', `<span class="cyan">Starting mega scan</span> on ${chainList.join(', ')}...`);
   
-  // Source 1: Latest profiles
+  const allPairs = new Map();
+  let sourceCount = { new: 0, boosted: 0, gainers: 0, search: 0 };
+  
+  // ═══════════════════════════════════════════════════════
+  // SOURCE 1: Latest profiles (newest tokens) - 200 tokens
+  // ═══════════════════════════════════════════════════════
   try {
-    $('scannerText').textContent = 'Scanning new tokens...';
-    const res = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(8000) });
+    $('scannerText').textContent = '📡 Fetching new tokens...';
+    const res = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(10000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      for (const t of data.slice(0, 120)) {
+      for (const t of data.slice(0, 200)) {
         if (t.tokenAddress && chainList.includes(t.chainId)) {
-          allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'new', boost: 12 });
+          allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'new', boost: 15 });
+          sourceCount.new++;
         }
       }
     }
-  } catch(e) {}
+    addLog('📡', `New tokens: <span class="cyan">${sourceCount.new}</span>`);
+  } catch(e) { console.error('New tokens fetch failed:', e); }
 
-  // Source 2: Top boosted
+  // ═══════════════════════════════════════════════════════
+  // SOURCE 2: Top boosted (paid promotion) - 200 tokens
+  // ═══════════════════════════════════════════════════════
   try {
-    const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(8000) });
+    $('scannerText').textContent = `📡 Fetching boosted... (${allPairs.size} tokens)`;
+    const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(10000) });
     const data = await res.json();
     if (Array.isArray(data)) {
-      for (const t of data.slice(0, 120)) {
+      for (const t of data.slice(0, 200)) {
+        if (t.tokenAddress && chainList.includes(t.chainId) && !allPairs.has(t.tokenAddress)) {
+          allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'boosted', boost: 20 });
+          sourceCount.boosted++;
+        }
+      }
+    }
+    addLog('🚀', `Boosted tokens: <span class="green">${sourceCount.boosted}</span>`);
+  } catch(e) { console.error('Boosted fetch failed:', e); }
+
+  // ═══════════════════════════════════════════════════════
+  // SOURCE 3: Latest boosts - 150 tokens
+  // ═══════════════════════════════════════════════════════
+  try {
+    $('scannerText').textContent = `📡 Fetching latest boosts... (${allPairs.size} tokens)`;
+    const res = await fetch('https://api.dexscreener.com/token-boosts/latest/v1', { signal: AbortSignal.timeout(10000) });
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      for (const t of data.slice(0, 150)) {
         if (t.tokenAddress && chainList.includes(t.chainId) && !allPairs.has(t.tokenAddress)) {
           allPairs.set(t.tokenAddress, { address: t.tokenAddress, chain: t.chainId, source: 'boosted', boost: 18 });
+          sourceCount.boosted++;
         }
       }
     }
   } catch(e) {}
 
-  // Source 3: Keyword search
-  const keywords = ['moon', 'pump', 'pepe', 'trump', 'elon', 'cat', 'dog', 'ai', 'meme', 'sol', 'base', 'eth', 'degen', 'gem'];
-  const shuffled = keywords.sort(() => Math.random() - 0.5).slice(0, 8);
-  
-  for (const q of shuffled) {
+  // ═══════════════════════════════════════════════════════
+  // SOURCE 4: Top gainers per chain - 100 per chain
+  // ═══════════════════════════════════════════════════════
+  for (const chain of chainList) {
     try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${q}`, { signal: AbortSignal.timeout(4000) });
+      $('scannerText').textContent = `📈 Scanning ${chain} gainers... (${allPairs.size} tokens)`;
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${chain}`, { signal: AbortSignal.timeout(8000) });
       const data = await res.json();
       if (data.pairs) {
-        for (const p of data.pairs.slice(0, 50)) {
+        const gainers = data.pairs
+          .filter(p => p.chainId === chain && parseFloat(p.priceChange?.h1) > 0)
+          .sort((a, b) => (parseFloat(b.priceChange?.h1) || 0) - (parseFloat(a.priceChange?.h1) || 0))
+          .slice(0, 100);
+        
+        for (const p of gainers) {
           const addr = p.baseToken?.address;
-          if (addr && chainList.includes(p.chainId) && !allPairs.has(addr)) {
-            allPairs.set(addr, { address: addr, chain: p.chainId, source: 'search', boost: 0, pair: p });
+          if (addr && !allPairs.has(addr)) {
+            allPairs.set(addr, { address: addr, chain: p.chainId, source: 'gainer', boost: 16, pair: p });
+            sourceCount.gainers++;
           }
         }
       }
     } catch(e) {}
-    await new Promise(r => setTimeout(r, 50));
+    await new Promise(r => setTimeout(r, 100));
   }
+  addLog('📈', `Gainers: <span class="yellow">${sourceCount.gainers}</span>`);
+
+  // ═══════════════════════════════════════════════════════
+  // SOURCE 5: MASSIVE keyword search - 150 keywords!
+  // ═══════════════════════════════════════════════════════
+  const allKeywords = [
+    // Meme essentials
+    'moon', 'pump', 'gem', 'degen', 'pepe', 'wojak', 'based', 'chad', 'giga', 'sigma',
+    'trump', 'elon', 'musk', 'biden', 'kanye', 'drake', 'barron', 'melania', 'ivanka',
+    // Animals - very popular for memecoins
+    'cat', 'dog', 'frog', 'inu', 'shib', 'doge', 'bonk', 'wif', 'popcat', 'neiro',
+    'panda', 'monkey', 'ape', 'lion', 'wolf', 'fox', 'bear', 'bull', 'whale', 'shark',
+    'dragon', 'phoenix', 'bird', 'fish', 'rat', 'pig', 'cow', 'duck', 'penguin', 'koala',
+    'tiger', 'eagle', 'snake', 'turtle', 'rabbit', 'hamster', 'squirrel', 'owl', 'bat',
+    // Crypto culture
+    'ai', 'gpt', 'agent', 'bot', 'meme', 'nft', 'web3', 'defi', 'dao', 'meta',
+    'sol', 'eth', 'btc', 'base', 'matic', 'avax', 'arb', 'bnb', 'sui', 'apt',
+    'virtual', 'fartcoin', 'goat', 'zerebro', 'griffain', 'arc', 'eliza',
+    // Vibes & wealth
+    'rich', 'gold', 'diamond', 'rocket', 'lambo', 'million', 'billion', 'trillion',
+    'king', 'queen', 'god', 'jesus', 'buddha', 'devil', 'angel', 'lord', 'master',
+    'alpha', 'beta', 'omega', 'ultra', 'mega', 'super', 'hyper', 'turbo', 'giga',
+    'safe', 'fair', 'new', 'hot', 'fire', 'burn', 'mars', 'venus', 'jupiter',
+    'cope', 'kek', 'wagmi', 'ngmi', 'gm', 'ser', 'fren', 'anon', 'wen', 'soon',
+    // Numbers
+    '69', '420', '100', '777', '999', '1000', '10000', '100x', '1000x',
+    // Trending
+    'baby', 'mini', 'micro', 'nano', 'pixel', 'punk', 'rare', 'epic', 'legend',
+    'coin', 'token', 'cash', 'money', 'buck', 'dollar', 'peso', 'yen', 'euro',
+    'game', 'play', 'win', 'bet', 'casino', 'poker', 'dice', 'slot', 'jackpot',
+    'usa', 'america', 'china', 'japan', 'korea', 'india', 'europe', 'russia',
+    'fast', 'speed', 'power', 'max', 'pro', 'elite', 'prime', 'apex', 'top',
+    // Food & fun
+    'pizza', 'burger', 'taco', 'sushi', 'ramen', 'coffee', 'beer', 'wine',
+    'moo', 'woof', 'meow', 'quack', 'buzz', 'chirp', 'roar', 'howl',
+    // Tech
+    'cyber', 'quantum', 'neural', 'crypto', 'chain', 'block', 'hash', 'node',
+    // Random trending
+    'retard', 'tard', 'mogger', 'mog', 'skibidi', 'rizz', 'gyat', 'ohio', 'brainrot'
+  ];
   
-  $('scannerText').textContent = `Analyzing ${allPairs.size} tokens...`;
+  // Shuffle and take 60 keywords for this scan
+  const shuffled = [...allKeywords].sort(() => Math.random() - 0.5).slice(0, 60);
   
-  // Enrich & filter
-  const enriched = [];
-  const candidates = Array.from(allPairs.values());
-  
-  for (const cand of candidates) {
+  let searchBatch = 0;
+  for (let i = 0; i < shuffled.length; i++) {
+    const q = shuffled[i];
+    
+    if (i % 10 === 0) {
+      $('scannerText').textContent = `🔍 Searching "${q}"... (${allPairs.size} tokens)`;
+      searchBatch++;
+    }
+    
     try {
-      let pair = cand.pair;
-      if (!pair) {
-        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cand.address}`, { signal: AbortSignal.timeout(3000) });
-        const data = await res.json();
-        if (data.pairs?.[0]) pair = data.pairs[0];
-      }
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${q}`, { signal: AbortSignal.timeout(4000) });
+      const data = await res.json();
       
-      if (pair) {
-        const mc = parseFloat(pair.marketCap) || 0;
-        const liq = parseFloat(pair.liquidity?.usd) || 0;
-        const liqRatio = mc > 0 ? (liq / mc) * 100 : 0;
-        
-        if (mc >= settings.minMC && mc <= settings.maxMC && liq >= settings.minLiquidity && liqRatio >= settings.minLiqRatio) {
-          pair._source = cand.source;
-          pair._boost = cand.boost;
-          enriched.push(pair);
+      if (data.pairs) {
+        for (const p of data.pairs.slice(0, 80)) {
+          const addr = p.baseToken?.address;
+          if (addr && chainList.includes(p.chainId) && !allPairs.has(addr)) {
+            allPairs.set(addr, { address: addr, chain: p.chainId, source: 'search', boost: 5, pair: p });
+            sourceCount.search++;
+          }
+        }
+      }
+    } catch(e) {}
+    
+    // Small delay every 5 requests to avoid rate limiting
+    if (i % 5 === 4) await new Promise(r => setTimeout(r, 50));
+  }
+  addLog('🔎', `Search results: <span class="purple">${sourceCount.search}</span>`);
+
+  // ═══════════════════════════════════════════════════════
+  // SOURCE 6: Trending pairs (additional scan)
+  // ═══════════════════════════════════════════════════════
+  for (const chain of chainList) {
+    try {
+      const trendingQueries = ['trending', 'hot', 'new', chain];
+      for (const tq of trendingQueries) {
+        const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${tq} ${chain}`, { signal: AbortSignal.timeout(4000) });
+        const data = await res.json();
+        if (data.pairs) {
+          for (const p of data.pairs.slice(0, 50)) {
+            const addr = p.baseToken?.address;
+            if (addr && p.chainId === chain && !allPairs.has(addr)) {
+              allPairs.set(addr, { address: addr, chain: p.chainId, source: 'trending', boost: 12, pair: p });
+            }
+          }
         }
       }
     } catch(e) {}
   }
   
-  scannedTotal = enriched.length;
+  $('scannerText').textContent = `⚙️ Enriching ${allPairs.size} tokens...`;
+  addLog('📊', `Total unique tokens: <span class="green">${allPairs.size}</span>`);
+  
+  // ═══════════════════════════════════════════════════════
+  // ENRICH & FILTER - Process in batches
+  // ═══════════════════════════════════════════════════════
+  const enriched = [];
+  const candidates = Array.from(allPairs.values());
+  let enrichedCount = 0;
+  let filteredOut = 0;
+  
+  // Process in parallel batches of 20
+  for (let i = 0; i < candidates.length; i += 20) {
+    const batch = candidates.slice(i, i + 20);
+    
+    if (i % 100 === 0) {
+      $('scannerText').textContent = `⚙️ Enriching ${i}/${candidates.length}...`;
+    }
+    
+    const results = await Promise.allSettled(
+      batch.map(async cand => {
+        try {
+          let pair = cand.pair;
+          
+          if (!pair) {
+            const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cand.address}`, { signal: AbortSignal.timeout(3000) });
+            const data = await res.json();
+            if (data.pairs && data.pairs[0]) pair = data.pairs[0];
+          }
+          
+          if (pair) {
+            const mc = parseFloat(pair.marketCap) || 0;
+            const liq = parseFloat(pair.liquidity?.usd) || 0;
+            const liqRatio = mc > 0 ? (liq / mc) * 100 : 0;
+            
+            // Apply filters
+            if (mc >= settings.minMC && mc <= settings.maxMC && 
+                liq >= settings.minLiquidity && liqRatio >= settings.minLiqRatio) {
+              pair._source = cand.source;
+              pair._boost = cand.boost;
+              return pair;
+            }
+          }
+          return null;
+        } catch(e) { return null; }
+      })
+    );
+    
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value) {
+        enriched.push(result.value);
+        enrichedCount++;
+      } else {
+        filteredOut++;
+      }
+    }
+    
+    // Small delay between batches
+    await new Promise(r => setTimeout(r, 30));
+  }
+  
+  scannedTotal = allPairs.size;
   $('scannedCount').textContent = scannedTotal;
   $('lastScan').textContent = getShortTime();
   
-  // Score & filter
+  addLog('✅', `Passed filters: <span class="green">${enrichedCount}</span> / ${allPairs.size}`);
+  
+  // ═══════════════════════════════════════════════════════
+  // SCORE & FILTER
+  // ═══════════════════════════════════════════════════════
   const opportunities = [];
+  
   for (const pair of enriched) {
     const score = calculateScore(pair, settings);
-    if (score >= settings.minScore) opportunities.push({ pair, score });
+    
+    // Lower threshold for opportunities display (show more)
+    if (score >= Math.max(50, settings.minScore - 15)) {
+      opportunities.push({ pair, score });
+    }
   }
   
   opportunities.sort((a, b) => b.score - a.score);
-  oppsTotal = opportunities.length;
+  
+  // Store for manual buy
+  currentOpportunities = opportunities;
+  
+  // Filter for actual trading (higher threshold)
+  const tradingOpportunities = opportunities.filter(o => o.score >= settings.minScore);
+  
+  oppsTotal = tradingOpportunities.length;
   $('oppsCount').textContent = oppsTotal;
-  $('scannerBadge').textContent = `${oppsTotal} FOUND`;
-  $('scannerText').textContent = `${oppsTotal} opportunities`;
+  $('scannerBadge').textContent = `${opportunities.length} FOUND`;
+  $('scannerText').textContent = `✅ ${oppsTotal} tradeable / ${opportunities.length} total`;
   
-  // Render scanner items
-  renderScanner(opportunities.slice(0, 10));
+  // Render ALL opportunities (not just tradeable)
+  renderScanner(opportunities.slice(0, 20));
   
-  addLog('🔍', `Found <span class="green">${oppsTotal}</span> from <span class="yellow">${scannedTotal}</span>`);
+  addLog('🎯', `Opportunities: <span class="green">${oppsTotal}</span> tradeable / <span class="yellow">${opportunities.length}</span> total`);
   
-  // Trade selection
-  const topOpps = opportunities.slice(0, 20);
+  // ═══════════════════════════════════════════════════════
+  // TRADE SELECTION - More aggressive trading
+  // ═══════════════════════════════════════════════════════
+  const topOpps = tradingOpportunities.slice(0, 30);
   let tradesOpened = 0;
+  let skipped = { cache: 0, duplicate: 0, overextended: 0, momentum: 0, ai: 0 };
+  
   const tradingNow = new Set();
   const existingAddresses = new Set(positions.map(p => p.address));
   const existingSymbols = new Set(positions.map(p => p.symbol));
-  const historyAddresses = new Set(history.slice(0, 50).map(h => h.address));
+  // Only check recent history (last 20 instead of 50)
+  const historyAddresses = new Set(history.slice(0, 20).map(h => h.address));
   
   for (const opp of topOpps) {
-    if (balance < settings.positionSize) break;
+    if (balance < settings.positionSize) {
+      addLog('💰', '<span class="yellow">Insufficient balance</span>');
+      break;
+    }
     
     const addr = opp.pair.baseToken?.address;
     const symbol = opp.pair.baseToken?.symbol || 'UNKNOWN';
     
     if (!addr) continue;
-    if (existingAddresses.has(addr) || existingSymbols.has(symbol)) continue;
-    if (tradingNow.has(addr) || historyAddresses.has(addr)) continue;
     
+    // Duplicate checks
+    if (existingAddresses.has(addr) || existingSymbols.has(symbol)) {
+      skipped.duplicate++;
+      continue;
+    }
+    if (tradingNow.has(addr) || historyAddresses.has(addr)) {
+      skipped.duplicate++;
+      continue;
+    }
+    
+    // Check cache - but allow retrade after some time
     const cached = getCachedAnalysis(addr);
-    if (cached?.includes('SKIP')) continue;
+    if (cached?.includes('SKIP')) {
+      skipped.cache++;
+      continue;
+    }
     
+    // Pre-checks
     const overCheck = isOverextended(opp.pair);
     if (overCheck.skip) {
       setCachedAnalysis(addr, 'SKIP');
+      skipped.overextended++;
       continue;
     }
     
     const momentumCheck = getMomentumScore(opp.pair);
     if (!momentumCheck.good) {
       setCachedAnalysis(addr, 'SKIP');
+      skipped.momentum++;
       continue;
     }
     
+    // For high scores (85+), skip AI and trade directly
+    if (opp.score >= 85) {
+      const mc = parseFloat(opp.pair.marketCap) || 0;
+      const tradeType = mc < 150000 ? 'LONG' : 'QUICK';
+      
+      addLog('🎯', `<span class="green">HIGH SCORE</span> $${esc(symbol)} (${opp.score})`);
+      tradingNow.add(addr);
+      existingSymbols.add(symbol);
+      existingAddresses.add(addr);
+      await executeTrade(opp.pair, opp.score, tradeType);
+      tradesOpened++;
+      continue;
+    }
+    
+    // AI Analysis for medium scores
     try {
       addLog('🤖', `Analyzing $${esc(symbol)}...`);
       const analysis = await analyzeForEntry(opp.pair);
@@ -2602,11 +3040,15 @@ async function scan() {
         existingAddresses.add(addr);
         await executeTrade(opp.pair, opp.score, 'LONG');
         tradesOpened++;
+      } else {
+        skipped.ai++;
+        // Don't cache as SKIP for medium scores - allow retry
       }
     } catch (e) {
-      if (opp.score >= 55) {
+      // On AI error, trade if score is good enough
+      if (opp.score >= 70) {
         const mc = parseFloat(opp.pair.marketCap) || 0;
-        const tradeType = mc < 100000 ? 'LONG' : 'QUICK';
+        const tradeType = mc < 150000 ? 'LONG' : 'QUICK';
         tradingNow.add(addr);
         existingSymbols.add(symbol);
         existingAddresses.add(addr);
@@ -2615,8 +3057,11 @@ async function scan() {
       }
     }
     
-    await new Promise(r => setTimeout(r, 150));
+    await new Promise(r => setTimeout(r, 100));
   }
+  
+  // Log summary
+  addLog('📊', `Trades: <span class="green">${tradesOpened}</span> | Skipped: cache ${skipped.cache}, dupe ${skipped.duplicate}, ext ${skipped.overextended}, mom ${skipped.momentum}, AI ${skipped.ai}`);
 }
 
 function calculateScore(pair, settings) {
@@ -2718,20 +3163,64 @@ function renderScanner(opportunities) {
     const mc = parseFloat(p.marketCap) || 0;
     const liq = parseFloat(p.liquidity?.usd) || 0;
     const chg5m = parseFloat(p.priceChange?.m5) || 0;
+    const chg1h = parseFloat(p.priceChange?.h1) || 0;
     const scoreClass = opp.score >= 85 ? 'high-score' : opp.score >= 70 ? 'medium-score' : '';
+    const dexUrl = p.url || `https://dexscreener.com/${p.chainId}/${p.pairAddress}`;
+    const buys5m = p.txns?.m5?.buys || 0;
+    const sells5m = p.txns?.m5?.sells || 0;
+    const total5m = buys5m + sells5m;
+    const buyRatio = total5m > 0 ? ((buys5m / total5m) * 100).toFixed(0) : '50';
     
     return `<div class="scanner-item ${scoreClass}">
       <div class="scanner-row">
-        <span class="scanner-token">$${esc(symbol)}</span>
-        <span class="scanner-edge">+${opp.score}</span>
+        <span class="scanner-token">
+          <a href="${dexUrl}" target="_blank" class="scanner-token-link" title="Open on DexScreener">↗</a>
+          $${esc(symbol)}
+        </span>
+        <span class="scanner-edge">SCORE ${opp.score}</span>
       </div>
       <div class="scanner-meta">
-        <span>MC: $${fN(mc)}</span>
-        <span>LIQ: $${fN(liq)}</span>
-        <span style="color:${chg5m >= 0 ? 'var(--green)' : 'var(--red)'}">${chg5m >= 0 ? '+' : ''}${chg5m.toFixed(0)}%</span>
+        <span>MC $${fN(mc)}</span>
+        <span>LIQ $${fN(liq)}</span>
+        <span style="color:${chg5m >= 0 ? 'var(--green)' : 'var(--red)'}">5m ${chg5m >= 0 ? '+' : ''}${chg5m.toFixed(0)}%</span>
+        <span style="color:${chg1h >= 0 ? 'var(--green)' : 'var(--red)'}">1h ${chg1h >= 0 ? '+' : ''}${chg1h.toFixed(0)}%</span>
+        <span>Buy ${buyRatio}%</span>
+      </div>
+      <div class="scanner-actions">
+        <a href="${dexUrl}" target="_blank" class="scanner-btn dex">📊 DEX</a>
+        <button onclick="manualBuy('${p.baseToken?.address}', '${p.chainId}', '${p.pairAddress}')" class="scanner-btn buy">⚡ BUY</button>
       </div>
     </div>`;
   }).join('');
+}
+
+// Store opportunities for manual buy
+let currentOpportunities = [];
+
+async function manualBuy(address, chain, pairAddress) {
+  const opp = currentOpportunities.find(o => o.pair.baseToken?.address === address);
+  if (!opp) {
+    addLog('⚠️', '<span class="red">Opportunity not found</span>');
+    return;
+  }
+  
+  const settings = getSettings();
+  if (balance < settings.positionSize) {
+    addLog('⚠️', '<span class="red">Insufficient balance</span>');
+    return;
+  }
+  
+  // Check if already in position
+  if (positions.find(p => p.address === address)) {
+    addLog('⚠️', '<span class="yellow">Already in position</span>');
+    return;
+  }
+  
+  const mc = parseFloat(opp.pair.marketCap) || 0;
+  const tradeType = mc < 100000 ? 'LONG' : 'QUICK';
+  
+  addLog('🎯', `<span class="cyan">Manual buy</span> initiating...`);
+  await executeTrade(opp.pair, opp.score, tradeType);
 }
 
 function renderPositions() {
@@ -2962,6 +3451,12 @@ function importData(event) {
 // Auto-save
 setInterval(saveToStorage, 30000);
 
+// Toggle mobile menu
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobileMenu');
+  menu.classList.toggle('open');
+}
+
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
@@ -2970,7 +3465,8 @@ updateUI();
 renderPositions();
 renderHistory();
 renderPnlChart();
-addLog('💻', '<span class="cyan">SNIPER//TERMINAL</span> v6.7 initialized');
+addLog('💻', '<span class="cyan">SNIPER//TERMINAL</span> v6.8 - Mega Scanner');
+addLog('🔧', 'Click <span class="green">START</span> to begin scanning');
 </script>
 </body>
 </html>
