@@ -3794,28 +3794,35 @@ async function manualBuy(address, chain, pairAddress) {
 }
 
 function renderPositions() {
-  const winContainer = $('winningGrid');
-  const loseContainer = $('losingGrid');
-  $('positionsBadge').textContent = positions.length + ' OPEN';
+  try {
+    const winContainer = $('winningGrid');
+    const loseContainer = $('losingGrid');
+    if (!winContainer || !loseContainer) { console.error('Missing grid containers'); return; }
 
-  // Sort: winners by highest P&L%, losers by worst P&L%
-  const winners = positions.filter(p => (p.pnl||0) >= 0).sort((a,b) => (b.pnlPct||0) - (a.pnlPct||0));
-  const losers = positions.filter(p => (p.pnl||0) < 0).sort((a,b) => (a.pnlPct||0) - (b.pnlPct||0));
+    $('positionsBadge').textContent = positions.length + ' OPEN';
 
-  $('winCount').textContent = winners.length;
-  $('loseCount').textContent = losers.length;
+    const winners = positions.filter(p => (p.pnl||0) >= 0).sort((a,b) => (b.pnlPct||0) - (a.pnlPct||0));
+    const losers = positions.filter(p => (p.pnl||0) < 0).sort((a,b) => (a.pnlPct||0) - (b.pnlPct||0));
 
-  if (winners.length === 0) {
-    winContainer.innerHTML = '<div class="empty"><div class="empty-icon">📈</div><div class="empty-text">No winners</div></div>';
-  } else {
-    winContainer.innerHTML = winners.map(renderCard).join('');
-  }
+    $('winCount').textContent = winners.length;
+    $('loseCount').textContent = losers.length;
 
-  if (losers.length === 0) {
-    loseContainer.innerHTML = '<div class="empty"><div class="empty-icon">📉</div><div class="empty-text">No losers</div></div>';
-  } else {
-    loseContainer.innerHTML = losers.map(renderCard).join('');
-  }
+    if (winners.length === 0) {
+      winContainer.innerHTML = '<div class="empty"><div class="empty-icon">📈</div><div class="empty-text">No winners</div></div>';
+    } else {
+      let html = '';
+      for (const p of winners) { try { html += renderCard(p); } catch(e) { console.error('renderCard error:', e, p); } }
+      winContainer.innerHTML = html;
+    }
+
+    if (losers.length === 0) {
+      loseContainer.innerHTML = '<div class="empty"><div class="empty-icon">📉</div><div class="empty-text">No losers</div></div>';
+    } else {
+      let html = '';
+      for (const p of losers) { try { html += renderCard(p); } catch(e) { console.error('renderCard error:', e, p); } }
+      loseContainer.innerHTML = html;
+    }
+  } catch(e) { console.error('renderPositions error:', e); }
 }
 
 function renderCard(pos) {
@@ -3863,7 +3870,7 @@ function renderCard(pos) {
           <div class="pos-logo">${typeof renderLogo === 'function' ? renderLogo(pos.logo, symbol) : symbol[0]}</div>
           <div class="pos-details">
             <div class="pos-symbol">$${esc(symbol)} <span class="pos-type ${typeClass}">${esc(label)}</span></div>
-            <div class="pos-chain">MC: $${formatNumber(entryMC)} • Score: ${score}</div>
+            <div class="pos-chain">MC: $${fN(entryMC)} • Score: ${score}</div>
           </div>
         </div>
         <div class="pos-pnl">
