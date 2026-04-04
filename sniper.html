@@ -259,8 +259,8 @@ letter-spacing: 2px;
       <div class="pnl-value helius" id="totalScanned">0</div>
     </div>
     <div class="pnl-box">
-      <div class="pnl-label">👥 VIEWERS</div>
-      <div class="pnl-value pump" id="viewersCount">0</div>
+      <div class="pnl-label">🎯 OPPS</div>
+      <div class="pnl-value pump" id="oppsCount">0</div>
     </div>
     <div class="pnl-box">
       <div class="pnl-label">⏱️ UPTIME</div>
@@ -270,10 +270,9 @@ letter-spacing: 2px;
 </div>
 
 <div class="controls">
-  <button class="ctrl-btn" id="startBtn" onclick="sendAction('START')">▶ START SNIPER</button>
-  <button class="ctrl-btn secondary" onclick="sendAction('FORCE_SCAN')">🔍 FORCE SCAN</button>
-  <button class="ctrl-btn warning" onclick="sendAction('CLOSE_ALL')">⚠️ CLOSE ALL</button>
-  <button class="ctrl-btn danger" onclick="sendAction('RESET')">🔄 RESET</button>
+  <button class="ctrl-btn" id="startBtn" onclick="toggleSniper()">▶ START SNIPER</button>
+  <button class="ctrl-btn secondary" onclick="fetchStatus()">🔄 REFRESH</button>
+  <button class="ctrl-btn secondary" onclick="exportData()">📤 EXPORT</button>
 </div>
 
 <div class="scanner-status">
@@ -283,11 +282,10 @@ letter-spacing: 2px;
       <div class="scanner-text" id="scannerText">🌐 Connecting to server...</div>
     </div>
     <div class="scanner-stats">
-      <div class="scanner-stat helius">Helius: <span id="heliusScanned">0</span></div>
-      <div class="scanner-stat pump">Pump: <span id="pumpScanned">0</span></div>
-      <div class="scanner-stat dex">DEX: <span id="dexScanned">0</span></div>
-      <div class="scanner-stat">Safe: <span id="safeScanned">0</span></div>
-      <div class="scanner-stat">Phase: <span id="scanPhase">-</span></div>
+      <div class="scanner-stat helius">Scanned: <span id="scannedStat">0</span></div>
+      <div class="scanner-stat pump">Opps: <span id="oppsStat">0</span></div>
+      <div class="scanner-stat dex">Positions: <span id="posStat">0</span></div>
+      <div class="scanner-stat">Last: <span id="lastScanStat">-</span></div>
     </div>
   </div>
 </div>
@@ -335,162 +333,145 @@ letter-spacing: 2px;
 
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
-// SOLANA SNIPER v8.2 - LIVE TERMINAL CLIENT
-// Connects to server via WebSocket - All users see the same data
+// SOLANA SNIPER v8.2 - LIVE SERVER MODE (HTTP POLLING)
+// All data from backend sniper engine — all users see the same trades
 // ══════════════════════════════════════════════════════════════════════════════
 
 const $ = id => document.getElementById(id);
+const API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/sniper';
 
-// Auto-detect server URL (works on Railway, localhost, or any domain)
-const isSecure = window.location.protocol === 'https:';
-const wsProtocol = isSecure ? 'wss:' : 'ws:';
-const SERVER_URL = `${wsProtocol}//${window.location.host}`;
-
-let ws = null;
-let reconnectTimer = null;
 let state = {};
 let logs = [];
+let connected = false;
+let sessionStart = null;
 
-// Helpers
 const esc = s => (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const fN = n => n >= 1e9 ? (n/1e9).toFixed(2)+'B' : n >= 1e6 ? (n/1e6).toFixed(2)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : n.toFixed(0);
-const fP = p => p < 0.0001 ? p.toFixed(8) : p < 0.01 ? p.toFixed(6) : p < 1 ? p.toFixed(4) : p.toFixed(2);
 
 // ══════════════════════════════════════════════════════════════════════════════
-// WEBSOCKET CONNECTION
+// SERVER POLLING (replaces WebSocket)
 // ══════════════════════════════════════════════════════════════════════════════
-function connect() {
-  if (ws && ws.readyState === WebSocket.OPEN) return;
-  
+async function fetchStatus() {
   try {
-    ws = new WebSocket(SERVER_URL);
-    
-    ws.onopen = () => {
-      console.log('✅ Connected to server');
+    const res = await fetch(API + '/status', { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+
+    if (!connected) {
+      connected = true;
       $('wsBadge').textContent = '🟢 CONNECTED';
       $('wsBadge').className = 'ws-badge connected';
-      $('scannerText').textContent = '🌐 Connected to server';
-      
-      if (reconnectTimer) {
-        clearInterval(reconnectTimer);
-        reconnectTimer = null;
-      }
-      
-      // Request current state
-      ws.send(JSON.stringify({ action: 'GET_STATE' }));
-    };
-    
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        handleMessage(msg);
-      } catch (e) {
-        console.error('Message parse error:', e);
-      }
-    };
-    
-    ws.onclose = () => {
-      console.log('❌ Disconnected from server');
-      $('wsBadge').textContent = '🔴 DISCONNECTED';
-      $('wsBadge').className = 'ws-badge disconnected';
-      $('scannerText').textContent = '⚠️ Disconnected - Reconnecting...';
-      
-      // Reconnect after 3 seconds
-      if (!reconnectTimer) {
-        reconnectTimer = setInterval(() => connect(), 3000);
-      }
-    };
-    
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-    
+      addLog('🌐', '<span class="green">Connected to server!</span>');
+    }
+
+    state = data;
+    if (data.logs && data.logs.length > 0) logs = data.logs;
+    if (data.isRunning && !sessionStart) sessionStart = Date.now();
+    if (!data.isRunning) sessionStart = null;
+
+    updateUI();
+    renderPositions();
+    renderHistory();
+    renderLogs();
+
   } catch (e) {
-    console.error('Connection error:', e);
-  }
-}
-
-function sendAction(action, data = {}) {
-  if (!ws || ws.readyState !== WebSocket.OPEN) {
-    alert('Not connected to server!');
-    return;
-  }
-  ws.send(JSON.stringify({ action, ...data }));
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// MESSAGE HANDLER
-// ══════════════════════════════════════════════════════════════════════════════
-function handleMessage(msg) {
-  switch (msg.type) {
-    case 'STATE':
-      state = msg.data;
-      updateUI();
-      renderPositions();
-      renderHistory();
-      break;
-      
-    case 'LOG':
-      logs.unshift(msg.data);
-      if (logs.length > 200) logs.pop();
+    if (connected) {
+      connected = false;
+      $('wsBadge').textContent = '🔴 OFFLINE';
+      $('wsBadge').className = 'ws-badge disconnected';
+      $('scannerText').textContent = '⚠️ Server offline — retrying...';
+      addLog('❌', '<span class="red">Server unreachable:</span> ' + e.message);
       renderLogs();
-      break;
-      
-    case 'TRADE':
-      // State will be updated via STATE message
-      break;
-      
-    case 'SCAN':
-      // State will be updated via STATE message
-      break;
+    }
   }
 }
 
+async function toggleSniper() {
+  const running = state.isRunning || false;
+  try {
+    addLog('⏳', 'Sending ' + (running ? 'STOP' : 'START') + ' to server...');
+    renderLogs();
+    const res = await fetch(API + (running ? '/stop' : '/start'), { method: 'POST', signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (data.success) {
+      addLog('✅', '<span class="green">Sniper ' + (running ? 'stopped' : 'started') + '!</span>');
+    } else {
+      addLog('⚠️', data.message || 'Command failed');
+    }
+    renderLogs();
+    setTimeout(fetchStatus, 500);
+  } catch (e) {
+    addLog('❌', '<span class="red">Command failed:</span> ' + e.message);
+    renderLogs();
+  }
+}
+
+function addLog(icon, text) {
+  logs.unshift({ time: new Date().toLocaleTimeString('en-US', { hour12: false }), icon, text });
+  if (logs.length > 200) logs.pop();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sniper_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
-// UI UPDATE
+// UI
 // ══════════════════════════════════════════════════════════════════════════════
 function updateUI() {
   if (!state) return;
-  
-  // PNL
-  const pnlEl = $('totalPnl');
+  const positions = state.positions || [];
   const totalPnL = state.totalPnL || 0;
+
+  const pnlEl = $('totalPnl');
   pnlEl.textContent = (totalPnL >= 0 ? '+' : '') + '$' + totalPnL.toFixed(2);
   pnlEl.className = 'pnl-value ' + (totalPnL >= 0 ? 'green' : 'red');
-  
-  // Stats
+
   $('balance').textContent = '$' + (state.balance || 10000).toFixed(0);
   $('securedPnl').textContent = '+$' + (state.securedPnL || 0).toFixed(0);
   $('winRate').textContent = (state.totalTrades > 0 ? ((state.wins / state.totalTrades) * 100).toFixed(0) : '--') + '%';
   $('bestTrade').textContent = '+$' + (state.bestTrade || 0).toFixed(0);
   $('totalTrades').textContent = state.totalTrades || 0;
-  $('positionsCount').textContent = (state.positions || []).length;
   $('totalScanned').textContent = state.scannedTotal || 0;
-  $('viewersCount').textContent = state.wsClients || 1;
-  $('uptimeDisplay').textContent = state.uptime || '--:--';
-  
-  // Scanner stats
-  $('heliusScanned').textContent = state.heliusScanned || 0;
-  $('pumpScanned').textContent = state.pumpScanned || 0;
-  $('dexScanned').textContent = state.dexScanned || 0;
-  $('safeScanned').textContent = state.safeFound || 0;
-  $('scanPhase').textContent = state.currentPhase || '-';
-  $('scannerText').textContent = state.scanStatus || 'Ready';
-  
-  // Mode badge
-  const modeBadge = $('modeBadge');
-  if (state.isRunning) {
-    modeBadge.textContent = '⚡ LIVE';
-    modeBadge.className = 'mode-badge running';
-    $('scannerDot').classList.add('active');
-    $('startBtn').textContent = '⏹ STOP';
-    $('startBtn').onclick = () => sendAction('STOP');
+  $('oppsCount').textContent = state.oppsTotal || 0;
+
+  // Position type counts
+  $('realtimeCount').textContent = positions.filter(p => p.tradeType === 'QUICK').length;
+  $('pumpCount').textContent = positions.filter(p => p.tradeType === 'LONG').length;
+  $('dexCount').textContent = positions.length;
+  $('safeCount').textContent = positions.filter(p => p.isMoonBag).length;
+
+  // Scanner bar stats
+  $('scannedStat').textContent = state.scannedTotal || 0;
+  $('oppsStat').textContent = state.oppsTotal || 0;
+  $('posStat').textContent = positions.length;
+  $('lastScanStat').textContent = state.lastScanTime || '-';
+
+  // Uptime
+  if (sessionStart) {
+    const el = Date.now() - sessionStart;
+    const m = Math.floor(el / 60000), s = Math.floor((el % 60000) / 1000);
+    $('uptimeDisplay').textContent = m > 0 ? m + 'm ' + s + 's' : s + 's';
   } else {
-    modeBadge.textContent = '🔴 STOPPED';
-    modeBadge.className = 'mode-badge stopped';
+    $('uptimeDisplay').textContent = '--:--';
+  }
+
+  // Mode badge + start/stop button
+  if (state.isRunning) {
+    $('modeBadge').textContent = '⚡ LIVE';
+    $('modeBadge').className = 'mode-badge active';
+    $('scannerDot').classList.add('active');
+    $('startBtn').textContent = '⏹ STOP SNIPER';
+    $('scannerText').textContent = '🔍 Scanning... ' + (state.scannedTotal || 0) + ' tokens | ' + (state.oppsTotal || 0) + ' opps | ' + positions.length + ' positions';
+  } else {
+    $('modeBadge').textContent = '🔴 STOPPED';
+    $('modeBadge').className = 'mode-badge';
     $('scannerDot').classList.remove('active');
     $('startBtn').textContent = '▶ START SNIPER';
-    $('startBtn').onclick = () => sendAction('START');
+    $('scannerText').textContent = '⏹ Sniper stopped — Click START';
   }
 }
 
@@ -498,112 +479,118 @@ function renderPositions() {
   const positions = state.positions || [];
   const winning = positions.filter(p => (p.pnl || 0) >= 0).sort((a, b) => (b.pnlPct || 0) - (a.pnlPct || 0));
   const losing = positions.filter(p => (p.pnl || 0) < 0).sort((a, b) => (a.pnlPct || 0) - (b.pnlPct || 0));
-  
+
   $('winningBadge').textContent = winning.length;
   $('losingBadge').textContent = losing.length;
-  
-  $('winningContainer').innerHTML = winning.length === 0 
-    ? `<div class="empty"><div class="empty-icon">📈</div><div class="empty-text">No winning positions</div></div>`
+
+  $('winningContainer').innerHTML = winning.length === 0
+    ? '<div class="empty"><div class="empty-icon">📈</div><div class="empty-text">No winning positions</div></div>'
     : winning.map(renderCard).join('');
-    
+
   $('losingContainer').innerHTML = losing.length === 0
-    ? `<div class="empty"><div class="empty-icon">📉</div><div class="empty-text">No losing positions</div></div>`
+    ? '<div class="empty"><div class="empty-icon">📉</div><div class="empty-text">No losing positions</div></div>'
     : losing.map(renderCard).join('');
 }
 
 function renderCard(pos) {
-  const isProfit = (pos.pnl || 0) >= 0;
-  const holdMin = Math.floor((Date.now() - pos.entryTime) / 60000);
-  
+  const pnl = pos.pnl || 0;
+  const pnlPct = pos.pnlPct || 0;
+  const isProfit = pnl >= 0;
+  const holdMin = Math.floor((Date.now() - (pos.entryTime || Date.now())) / 60000);
+  const chain = pos.chain || 'solana';
+  const dexUrl = 'https://dexscreener.com/' + chain + '/' + (pos.pairAddress || pos.address);
+
   let cardClass = isProfit ? 'profit' : 'loss';
   if (pos.isMoonBag) cardClass = 'moon-bag';
   else if (pos.trailingActivated) cardClass += ' trailing';
-  
-  let typeClass = pos.tradeType === 'MOON' ? 'moon' : pos.tradeType === 'LONG' ? 'long' : 'quick';
-  
+
+  const typeClass = pos.tradeType === 'MOON' ? 'moon' : pos.tradeType === 'LONG' ? 'long' : 'quick';
+  const label = pos.label || pos.tradeType || 'QUICK';
+
   let tags = '';
-  if (pos.isPump) tags += `<span class="pos-tag pump">🎰 PUMP</span>`;
-  if (pos.analysis?.safe) tags += `<span class="pos-tag safe">✓ SAFE</span>`;
-  if (pos.analysis?.hasSocials) tags += `<span class="pos-tag social">🐦 SOCIAL</span>`;
-  if (pos.analysis?.bondingCurve?.progress > 0) tags += `<span class="pos-tag curve">📈 ${pos.analysis.bondingCurve.progress.toFixed(0)}%</span>`;
-  if (pos.analysis?.earlyBuyers?.hasSmartMoney) tags += `<span class="pos-tag whale">🐋 WHALES</span>`;
-  if (pos.analysis?.security?.found) tags += `<span class="pos-tag cg">🦎 CG</span>`;
-  if (pos.isMoonBag) tags += `<span class="pos-tag moon">🌕 FREE</span>`;
-  if (pos.trailingActivated) tags += `<span class="pos-tag trailing">📈 +${(pos.trailingHigh || 0).toFixed(0)}%</span>`;
-  if ((pos.dcaSecured || 0) > 0) tags += `<span class="pos-tag secured">🔒 +$${pos.dcaSecured.toFixed(0)}</span>`;
-  
-  const holderInfo = pos.analysis?.holders?.top10Pct ? `T10: ${pos.analysis.holders.top10Pct.toFixed(0)}%` : '';
-  
-  return `<div class="pos-card ${cardClass}">
-    <div class="pos-header">
-      <div class="pos-token">
-        <div class="pos-logo">${pos.logo ? `<img src="${pos.logo}" onerror="this.parentElement.textContent='${pos.symbol[0]}'">` : pos.symbol[0]}</div>
-        <div>
-          <div class="pos-symbol">$${esc(pos.symbol)} <span class="trade-type ${typeClass}">${pos.label}</span></div>
-          <div class="pos-chain">Score: ${pos.score} ${holderInfo ? '• ' + holderInfo : ''}</div>
-        </div>
-      </div>
-      <div class="pos-pnl">
-        <div class="pos-pnl-value" style="color:var(--${isProfit ? 'green' : 'red'})">${isProfit ? '+' : ''}$${(pos.pnl || 0).toFixed(2)}</div>
-        <div class="pos-pnl-pct" style="color:var(--${isProfit ? 'green' : 'red'})">${isProfit ? '+' : ''}${(pos.pnlPct || 0).toFixed(1)}%</div>
-      </div>
-    </div>
-    <div class="pos-stats">
-      <div class="pos-stat"><div class="pos-stat-label">SIZE</div><div class="pos-stat-value">$${(pos.currentSize || 0).toFixed(0)}</div></div>
-      <div class="pos-stat"><div class="pos-stat-label">TIME</div><div class="pos-stat-value">${holdMin}m</div></div>
-      <div class="pos-stat"><div class="pos-stat-label">PEAK</div><div class="pos-stat-value green">+${(pos.highestPnlPct || 0).toFixed(0)}%</div></div>
-      <div class="pos-stat"><div class="pos-stat-label">TRAIL</div><div class="pos-stat-value ${pos.trailingActivated ? 'orange' : ''}">${pos.trailingActivated ? `-${(pos.currentTrailDistance || 20).toFixed(0)}%` : 'OFF'}</div></div>
-      <div class="pos-stat"><div class="pos-stat-label">MAX</div><div class="pos-stat-value">${pos.maxHold || 30}m</div></div>
-    </div>
-    ${tags ? `<div class="pos-tags">${tags}</div>` : ''}
-    <div class="pos-actions">
-      <button onclick="sendAction('CLOSE_POSITION', {positionId: ${pos.id}})" class="pos-action-btn close">❌ Close</button>
-      <a href="${pos.dexUrl}" target="_blank" class="pos-action-btn">📊 DEX</a>
-      <a href="${pos.pumpUrl}" target="_blank" class="pos-action-btn">🎰 Pump</a>
-    </div>
-  </div>`;
+  if (pos.isMoonBag) tags += '<span class="pos-tag moon">🌕 FREE</span>';
+  if (pos.trailingActivated) tags += '<span class="pos-tag trailing">📈 Peak +' + (pos.trailingHigh || 0).toFixed(0) + '%</span>';
+  if ((pos.dcaSecured || 0) > 0) tags += '<span class="pos-tag secured">🔒 +$' + pos.dcaSecured.toFixed(0) + '</span>';
+  if (pos.dcaLevel > 0) tags += '<span class="pos-tag pump">DCA ' + pos.dcaLevel + '/3</span>';
+
+  return '<div class="pos-card ' + cardClass + '">' +
+    '<div class="pos-header">' +
+      '<div class="pos-token">' +
+        '<div class="pos-logo">' + (pos.symbol || '?')[0] + '</div>' +
+        '<div>' +
+          '<div class="pos-symbol">$' + esc(pos.symbol || '???') + ' <span class="trade-type ' + typeClass + '">' + esc(label) + '</span></div>' +
+          '<div class="pos-chain">Score: ' + (pos.score || 0) + ' • MC: $' + fN(pos.entryMarketCap || 0) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="pos-pnl">' +
+        '<div class="pos-pnl-value" style="color:var(--' + (isProfit ? 'green' : 'red') + ')">' + (isProfit ? '+' : '') + '$' + pnl.toFixed(2) + '</div>' +
+        '<div class="pos-pnl-pct" style="color:var(--' + (isProfit ? 'green' : 'red') + ')">' + (isProfit ? '+' : '') + pnlPct.toFixed(1) + '%</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="pos-stats">' +
+      '<div class="pos-stat"><div class="pos-stat-label">SIZE</div><div class="pos-stat-value">$' + (pos.currentSize || 0).toFixed(0) + '</div></div>' +
+      '<div class="pos-stat"><div class="pos-stat-label">TIME</div><div class="pos-stat-value">' + holdMin + 'm</div></div>' +
+      '<div class="pos-stat"><div class="pos-stat-label">PEAK</div><div class="pos-stat-value green">+' + (pos.highestPnlPct || 0).toFixed(0) + '%</div></div>' +
+      '<div class="pos-stat"><div class="pos-stat-label">TRAIL</div><div class="pos-stat-value ' + (pos.trailingActivated ? 'orange' : '') + '">' + (pos.trailingActivated ? '-' + (pos.currentTrailDistance || 20).toFixed(0) + '%' : 'OFF') + '</div></div>' +
+      '<div class="pos-stat"><div class="pos-stat-label">MAX</div><div class="pos-stat-value">' + (pos.maxHold || 20) + 'm</div></div>' +
+    '</div>' +
+    (tags ? '<div class="pos-tags">' + tags + '</div>' : '') +
+    '<div class="pos-actions">' +
+      '<a href="' + dexUrl + '" target="_blank" class="pos-action-btn">📊 DexScreener</a>' +
+    '</div>' +
+  '</div>';
 }
 
 function renderHistory() {
   const history = state.history || [];
   $('historyBadge').textContent = history.length;
-  
+
   if (history.length === 0) {
-    $('historyContainer').innerHTML = `<div class="empty"><div class="empty-icon">📜</div><div class="empty-text">No trades yet</div></div>`;
+    $('historyContainer').innerHTML = '<div class="empty"><div class="empty-icon">📜</div><div class="empty-text">No trades yet</div></div>';
     return;
   }
-  
-  $('historyContainer').innerHTML = history.slice(0, 100).map(t => {
+
+  $('historyContainer').innerHTML = history.slice(0, 50).map(function(t) {
     const isWin = (t.pnl || 0) >= 0;
-    const time = new Date(t.closeTime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-    let reasonClass = t.reason === 'TRAIL' ? 'trail' : t.reason === 'TIMEOUT' ? 'timeout' : (t.reason || '').includes('RUG') || (t.reason || '').includes('LIQ') ? 'rug' : 'tp';
-    
-    return `<div class="history-item" onclick="window.open('${t.dexUrl}', '_blank')">
-      <span class="history-time">${time}</span>
-      <span class="history-token">$${esc(t.symbol)}</span>
-      <span class="history-reason ${reasonClass}">${t.reason}</span>
-      <span class="history-pnl ${isWin ? 'green' : 'red'}">${isWin ? '+' : ''}$${(t.pnl || 0).toFixed(2)}</span>
-    </div>`;
+    const time = t.closeTime ? new Date(t.closeTime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : '--:--';
+    const reason = t.reason || 'CLOSED';
+    let reasonClass = reason === 'TRAIL' ? 'trail' : (reason === 'TIMEOUT' || reason === 'MAX TIME') ? 'timeout' : reason.includes('RUG') || reason.includes('LIQ') ? 'rug' : isWin ? 'tp' : 'sl';
+    const dcaInfo = (t.dcaSecured || 0) > 0 ? ' (DCA +$' + t.dcaSecured.toFixed(0) + ')' : '';
+    const chain = t.chain || 'solana';
+    const dexUrl = 'https://dexscreener.com/' + chain + '/' + (t.address || '');
+
+    return '<div class="history-item" onclick="window.open(\'' + dexUrl + '\', \'_blank\')">' +
+      '<span class="history-time">' + time + '</span>' +
+      '<span class="history-token">$' + esc(t.symbol || '???') + dcaInfo + '</span>' +
+      '<span class="history-reason ' + reasonClass + '">' + esc(reason) + '</span>' +
+      '<span class="history-pnl ' + (isWin ? 'green' : 'red') + '">' + (isWin ? '+' : '') + '$' + (t.pnl || 0).toFixed(2) + '</span>' +
+    '</div>';
   }).join('');
 }
 
 function renderLogs() {
-  $('logContainer').innerHTML = logs.slice(0, 100).map(l => 
-    `<div class="log-item"><span class="log-time">${l.time}</span><span class="log-icon">${l.icon}</span><span class="log-text">${l.text}</span></div>`
-  ).join('');
+  $('logContainer').innerHTML = logs.slice(0, 100).map(function(l) {
+    return '<div class="log-item"><span class="log-time">' + (l.time || '') + '</span><span class="log-icon">' + (l.icon || '') + '</span><span class="log-text">' + (l.text || '') + '</span></div>';
+  }).join('');
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// INIT
+// INIT — Poll server every 5 seconds
 // ══════════════════════════════════════════════════════════════════════════════
-connect();
+addLog('🌐', '<span class="helius">SOLANA SNIPER — SERVER MODE</span>');
+addLog('ℹ️', 'All users see the same live data from the server');
+addLog('🔌', 'Connecting to DexScreener AI backend...');
+renderLogs();
 
-// Keep connection alive
-setInterval(() => {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ action: 'PING' }));
+fetchStatus();
+setInterval(fetchStatus, 5000);
+setInterval(function() {
+  if (sessionStart) {
+    const el = Date.now() - sessionStart;
+    const m = Math.floor(el / 60000), s = Math.floor((el % 60000) / 1000);
+    $('uptimeDisplay').textContent = m > 0 ? m + 'm ' + s + 's' : s + 's';
   }
-}, 30000);
+}, 1000);
 </script>
 </body>
 </html>
