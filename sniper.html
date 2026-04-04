@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚡ SOLANA SNIPER v8.0 - HELIUS ACTIF</title>
+<title>⚡ SOLANA SNIPER v8.2 - ULTIMATE</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -348,7 +348,6 @@ font-weight: 700;
 .trade-type.quick { background: rgba(0,212,255,0.2); color: var(--cyan); }
 .trade-type.long { background: rgba(168,85,247,0.2); color: var(--purple); }
 .trade-type.moon { background: rgba(255,107,157,0.2); color: var(--pink); }
-.trade-type.realtime { background: rgba(255,123,0,0.2); color: var(--helius); }
 
 .pos-pnl { text-align: right; }
 .pos-pnl-value { font-size: 18px; font-weight: 700; }
@@ -389,12 +388,11 @@ font-weight: 600;
 .pos-tag.secured { background: rgba(0,255,136,0.2); color: var(--green); }
 .pos-tag.moon { background: rgba(255,107,157,0.3); color: var(--pink); }
 .pos-tag.pump { background: rgba(0,229,255,0.2); color: var(--pump); }
-.pos-tag.trending { background: rgba(255,215,0,0.2); color: var(--yellow); }
-.pos-tag.realtime { background: rgba(255,123,0,0.2); color: var(--helius); }
 .pos-tag.social { background: rgba(29,161,242,0.2); color: #1da1f2; }
 .pos-tag.safe { background: rgba(0,255,136,0.2); color: var(--green); }
-.pos-tag.risky { background: rgba(255,71,87,0.2); color: var(--red); }
 .pos-tag.curve { background: rgba(168,85,247,0.2); color: var(--purple); }
+.pos-tag.whale { background: rgba(0,212,255,0.2); color: var(--cyan); }
+.pos-tag.cg { background: rgba(255,215,0,0.2); color: var(--yellow); }
 
 .pos-actions {
 display: flex;
@@ -491,11 +489,11 @@ color: var(--text2);
 <body>
 
 <header class="header">
-  <h1>⚡ SOLANA SNIPER v8.0 - HELIUS ACTIF</h1>
-  <p>🔥 Helius RPC • Pump.fun • DexScreener • Holder Analysis • Bonding Curve • Smart Money</p>
-  <span class="version-badge">HELIUS SCAN ACTIF — TOKENS VÉRIFIÉS</span>
+  <h1>⚡ SOLANA SNIPER v8.2 - ULTIMATE</h1>
+  <p>🔥 Helius • Moralis • CoinGecko • Pump.fun • DexScreener FULL • Smart Money • DCA</p>
+  <span class="version-badge">HELIUS + MORALIS + COINGECKO — FULL MEGA SCAN</span>
   <span class="mode-badge" id="modeBadge">🔴 STOPPED</span>
-  <span class="ws-badge disconnected" id="wsBadge">LOCAL MODE</span>
+  <span class="ws-badge disconnected" id="wsBadge">READY</span>
 </header>
 
 <div class="pnl-banner">
@@ -521,8 +519,8 @@ color: var(--text2);
       <div class="pnl-value green" id="bestTrade">$0</div>
     </div>
     <div class="pnl-box">
-      <div class="pnl-label">⚡ REALTIME</div>
-      <div class="pnl-value helius" id="realtimeCount">0</div>
+      <div class="pnl-label">⚡ HELIUS</div>
+      <div class="pnl-value helius" id="heliusCount">0</div>
     </div>
     <div class="pnl-box">
       <div class="pnl-label">🎰 PUMP</div>
@@ -553,8 +551,11 @@ color: var(--text2);
 
 <div class="controls">
   <button class="ctrl-btn" id="startBtn" onclick="toggleSniper()">▶ START SNIPER</button>
+  <button class="ctrl-btn secondary" onclick="testAPIs()">🔌 TEST APIs</button>
   <button class="ctrl-btn secondary" onclick="forceScan()">🔍 FORCE SCAN</button>
   <button class="ctrl-btn secondary" onclick="exportData()">📤 EXPORT</button>
+  <button class="ctrl-btn warning" onclick="closeAllPositions()">⚠️ CLOSE ALL</button>
+  <button class="ctrl-btn danger" onclick="resetBot()">🔄 RESET</button>
 </div>
 
 <div class="scanner-status">
@@ -616,14 +617,22 @@ color: var(--text2);
 
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
-// SOLANA SNIPER v8.0 - HELIUS ACTIF
-// Scan complet: Helius RPC + Pump.fun API + DexScreener API
+// SOLANA SNIPER v8.2 - ULTIMATE EDITION
+// Helius + Moralis + CoinGecko + Pump.fun + DexScreener FULL MEGA SCAN + DCA
 // ══════════════════════════════════════════════════════════════════════════════
 
 const $ = id => document.getElementById(id);
 
 // API Keys
 const HELIUS_KEY = 'e2f9fdd3-dffc-40b8-abb7-3fb07aadeb55';
+const MORALIS_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImY4YzVkZjU3LWUyM2ItNDBkNS04NTMwLTJkMmVhNzQ3OGI4MCIsIm9yZ0lkIjoiNTA4MjA5IiwidXNlcklkIjoiNTIyOTExIiwidHlwZUlkIjoiYzJkNWQ2OTQtY2UwNC00OWM0LWJiZDEtMDQwNDQ1ODVlODRhIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NzUyNDE2NTEsImV4cCI6NDkzMTAwMTY1MX0.oMBstGfuVMK64RdNXcHlAgDk0X2crdk-uxjJxhDNCcM';
+
+const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
+const HELIUS_API = `https://api.helius.xyz/v0`;
+const MORALIS_API = 'https://solana-gateway.moralis.io';
+const PUMP_API = 'https://frontend-api-v3.pump.fun';
+const DEX_API = 'https://api.dexscreener.com';
+const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 const PUMP_PROGRAM = '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P';
 
 // STATE
@@ -639,7 +648,7 @@ let logs = [];
 let isRunning = false;
 let sessionStartTime = null;
 
-// SCAN COUNTERS (corrigés)
+// SCAN COUNTERS
 let heliusScannedTotal = 0;
 let pumpScannedTotal = 0;
 let dexScannedTotal = 0;
@@ -651,7 +660,9 @@ let localScanning = false;
 
 // Cache
 const analyzedCache = new Map();
-const CACHE_DURATION = 5 * 60 * 1000;
+const holderCache = new Map();
+const securityCache = new Map();
+const CACHE_DURATION = 4 * 60 * 1000;
 
 // Settings
 const SETTINGS = {
@@ -659,21 +670,61 @@ const SETTINGS = {
   minScore: 55,
   trailActivation: 10,
   trailDistance: 20,
+  dca1Pct: 15,
+  dca1Sell: 35,
+  dca2Pct: 40,
+  dca2Sell: 35,
   minMC: 10000,
   maxMC: 15000000,
   minLiquidity: 4000,
   maxHold: 30
 };
 
-// Keywords pour DexScreener
+// ══════════════════════════════════════════════════════════════════════════════
+// MEGA KEYWORDS - 150+ pour DexScreener FULL
+// ══════════════════════════════════════════════════════════════════════════════
 const MEGA_KEYWORDS = [
-  'pepe', 'wojak', 'doge', 'shib', 'bonk', 'wif', 'popcat', 'mew', 'cat', 'dog', 'frog',
+  // MEME ESSENTIALS
+  'pepe', 'wojak', 'apu', 'doge', 'shib', 'bonk', 'wif', 'popcat', 'mew', 'cat', 'dog', 'frog',
   'moon', 'pump', 'gem', 'degen', 'based', 'chad', 'giga', 'mega', 'ultra', 'hyper',
-  'cope', 'wagmi', 'hodl', 'diamond', 'ape', 'trump', 'elon', 'musk', 'ai', 'gpt',
-  'agent', 'bot', 'nft', 'web3', 'defi', 'sol', 'solana', 'rich', 'money', 'gold',
-  'lambo', 'rocket', 'profit', 'gains', 'sigma', 'fire', 'lit', 'king', 'queen',
-  'alpha', 'baby', 'mini', 'super', 'turbo', 'nitro', 'red', 'blue', 'green',
-  'game', 'usa', 'japan', 'korea', 'mars', 'moon', 'dragon', 'wolf', 'bear'
+  'cope', 'wagmi', 'ngmi', 'hodl', 'diamond', 'ape', 'monkey', 'gorilla',
+  // CELEBRITIES
+  'trump', 'elon', 'musk', 'biden', 'kanye', 'drake', 'tate', 'rogan', 'snoop',
+  'taylor', 'swift', 'mrbeast', 'pewdiepie', 'logan', 'paul', 'ksi',
+  // AI & TECH
+  'ai', 'gpt', 'claude', 'agent', 'bot', 'neural', 'quantum', 'cyber', 'meta',
+  'nft', 'web3', 'defi', 'dao', 'pixel', 'retro', 'virtual',
+  // ANIMALS
+  'bear', 'bull', 'wolf', 'lion', 'tiger', 'whale', 'shark', 'panda', 'koala',
+  'bird', 'eagle', 'owl', 'bunny', 'hamster', 'penguin', 'dragon', 'phoenix',
+  // SOLANA SPECIFIC
+  'sol', 'solana', 'raydium', 'jupiter', 'orca', 'meteora', 'jito',
+  'pumpfun', 'bonding', 'graduated',
+  // WEALTH
+  'rich', 'money', 'gold', 'diamond', 'lambo', 'yacht', 'million', 'billion',
+  'rocket', 'profit', 'gains', 'jackpot', 'winner',
+  // FOOD
+  'pizza', 'burger', 'sushi', 'coffee', 'beer', 'banana', 'peach', 'mango',
+  // TRENDING
+  'sigma', 'skibidi', 'rizz', 'ohio', 'gyatt', 'mewing', 'goat', 'bussin',
+  'fire', 'lit', 'vibe', 'slay', 'cap', 'nocap',
+  // MYTHOLOGY
+  'god', 'devil', 'angel', 'demon', 'zeus', 'thor', 'wizard', 'ninja', 'samurai',
+  'king', 'queen', 'emperor', 'alpha', 'omega',
+  // MODIFIERS
+  'baby', 'mini', 'micro', 'super', 'turbo', 'nitro', 'power', 'force',
+  'new', 'hot', 'fast', 'quick', 'safe', 'fair', 'real', 'true',
+  // COLORS & ELEMENTS
+  'red', 'blue', 'green', 'black', 'white', 'gold', 'silver', 'neon',
+  'ice', 'water', 'earth', 'storm', 'thunder', 'dark', 'light',
+  // GAMING
+  'game', 'gamer', 'esport', 'twitch', 'stream', 'mario', 'sonic', 'pokemon',
+  'minecraft', 'fortnite', 'roblox', 'casino', 'poker', 'dice',
+  // COUNTRIES
+  'usa', 'america', 'china', 'japan', 'korea', 'india', 'russia', 'brazil',
+  'uk', 'france', 'germany', 'australia', 'africa', 'europe', 'asia',
+  // PLACES
+  'tokyo', 'london', 'paris', 'dubai', 'vegas', 'miami', 'mars'
 ];
 
 // Helpers
@@ -683,8 +734,7 @@ const fP = p => p < 0.0001 ? p.toFixed(8) : p < 0.01 ? p.toFixed(6) : p < 1 ? p.
 const getTime = () => new Date().toLocaleTimeString('en-US', { hour12: false });
 
 function addLog(icon, text) {
-  const entry = { time: getTime(), icon, text };
-  logs.unshift(entry);
+  logs.unshift({ time: getTime(), icon, text });
   if (logs.length > 400) logs.pop();
   renderLogs();
 }
@@ -696,51 +746,59 @@ function renderLogs() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// SCAN HELIUS RPC - Nouveaux tokens via getProgramAccounts
+// TEST APIs
 // ══════════════════════════════════════════════════════════════════════════════
-
-async function scanHeliusNewTokens() {
+async function testAPIs() {
+  addLog('🔌', 'Testing all APIs...');
+  
+  // Helius
   try {
-    addLog('🔭', '<span class="helius">Scan Helius RPC...</span>');
-    
-    const response = await fetch(`https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'getProgramAccounts',
-        params: [
-          PUMP_PROGRAM,
-          {
-            encoding: 'jsonParsed',
-            filters: [{ dataSize: 82 }] // Taille typique des comptes de tokens Pump.fun
-          }
-        ]
-      })
+    const res = await fetch(`${HELIUS_API}/addresses/So11111111111111111111111111111111111111112/balances?api-key=${HELIUS_KEY}`, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) addLog('✅', '<span class="helius">Helius API:</span> Connected!');
+    else addLog('❌', '<span class="red">Helius:</span> Error ' + res.status);
+  } catch(e) { addLog('❌', '<span class="red">Helius:</span> ' + e.message); }
+  
+  // Moralis
+  try {
+    const res = await fetch(`${MORALIS_API}/account/mainnet/So11111111111111111111111111111111111111112/balance`, {
+      headers: { 'X-API-Key': MORALIS_KEY },
+      signal: AbortSignal.timeout(5000)
     });
-    
-    const data = await response.json();
-    if (data.result && Array.isArray(data.result)) {
-      const tokens = data.result.slice(0, 100);
-      heliusScannedTotal = tokens.length;
-      $('heliusScanned').textContent = heliusScannedTotal;
-      addLog('🔭', `<span class="helius">Helius: ${tokens.length} tokens trouvés</span>`);
-      return tokens;
-    }
-  } catch(e) {
-    addLog('⚠️', `<span class="red">Helius RPC error:</span> ${e.message}`);
-  }
-  return [];
+    if (res.ok) addLog('✅', '<span class="purple">Moralis API:</span> Connected!');
+    else addLog('❌', '<span class="red">Moralis:</span> Error ' + res.status);
+  } catch(e) { addLog('❌', '<span class="red">Moralis:</span> ' + e.message); }
+  
+  // CoinGecko
+  try {
+    const res = await fetch(`${COINGECKO_API}/ping`, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) addLog('✅', '<span class="yellow">CoinGecko API:</span> Connected!');
+    else addLog('❌', '<span class="red">CoinGecko:</span> Error ' + res.status);
+  } catch(e) { addLog('❌', '<span class="red">CoinGecko:</span> ' + e.message); }
+  
+  // DexScreener
+  try {
+    const res = await fetch(`${DEX_API}/latest/dex/tokens/So11111111111111111111111111111111111111112`, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) addLog('✅', '<span class="solana">DexScreener:</span> Connected!');
+    else addLog('❌', '<span class="red">DexScreener:</span> Error ' + res.status);
+  } catch(e) { addLog('❌', '<span class="red">DexScreener:</span> ' + e.message); }
+  
+  // Pump.fun
+  try {
+    const res = await fetch(`${PUMP_API}/coins/latest?limit=1`, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) addLog('✅', '<span class="pump">Pump.fun API:</span> Connected!');
+    else addLog('❌', '<span class="red">Pump.fun:</span> Error ' + res.status);
+  } catch(e) { addLog('❌', '<span class="red">Pump.fun:</span> ' + e.message); }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// HOLDER DISTRIBUTION via Helius
+// HELIUS - Holder Distribution
 // ══════════════════════════════════════════════════════════════════════════════
-
 async function getHolderDistribution(tokenAddress) {
+  const cached = holderCache.get(tokenAddress);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) return cached.data;
+  
   try {
-    const res = await fetch(`https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`, {
+    const res = await fetch(HELIUS_RPC, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -758,19 +816,53 @@ async function getHolderDistribution(tokenAddress) {
       const top10 = holders.slice(0, 10);
       const top10Amount = top10.reduce((sum, h) => sum + parseFloat(h.uiAmount || 0), 0);
       const top10Pct = totalSupply > 0 ? (top10Amount / totalSupply) * 100 : 100;
-      return { totalHolders: holders.length, top10Pct, isDistributed: top10Pct < 50 };
+      const topHolderPct = totalSupply > 0 && holders[0] ? (parseFloat(holders[0].uiAmount || 0) / totalSupply) * 100 : 100;
+      
+      const result = { totalHolders: holders.length, top10Pct, topHolderPct, isDistributed: top10Pct < 50 && topHolderPct < 25 };
+      holderCache.set(tokenAddress, { data: result, timestamp: Date.now() });
+      return result;
     }
   } catch(e) {}
-  return { totalHolders: 0, top10Pct: 100, isDistributed: false };
+  return { totalHolders: 0, top10Pct: 100, topHolderPct: 100, isDistributed: false };
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// BONDING CURVE via Pump.fun API
+// HELIUS - Early Buyers / Smart Money
 // ══════════════════════════════════════════════════════════════════════════════
+async function getEarlyBuyers(tokenAddress) {
+  try {
+    const res = await fetch(`${HELIUS_API}/addresses/${tokenAddress}/transactions?api-key=${HELIUS_KEY}&type=SWAP&limit=50`, {
+      signal: AbortSignal.timeout(8000)
+    });
+    if (res.ok) {
+      const txs = await res.json();
+      const earlyBuyers = new Set();
+      const buyAmounts = {};
+      
+      for (const tx of txs.slice(0, 30)) {
+        const buyer = tx.feePayer;
+        if (buyer) {
+          earlyBuyers.add(buyer);
+          buyAmounts[buyer] = (buyAmounts[buyer] || 0) + 1;
+        }
+      }
+      
+      const whales = Object.entries(buyAmounts)
+        .filter(([_, count]) => count >= 2)
+        .map(([addr, count]) => ({ address: addr, txCount: count }));
+      
+      return { earlyBuyerCount: earlyBuyers.size, whales, hasSmartMoney: whales.length > 0 };
+    }
+  } catch(e) {}
+  return { earlyBuyerCount: 0, whales: [], hasSmartMoney: false };
+}
 
+// ══════════════════════════════════════════════════════════════════════════════
+// PUMP.FUN - Bonding Curve + Socials
+// ══════════════════════════════════════════════════════════════════════════════
 async function getBondingCurveProgress(tokenAddress) {
   try {
-    const res = await fetch(`https://frontend-api-v3.pump.fun/coins/${tokenAddress}`, { 
+    const res = await fetch(`${PUMP_API}/coins/${tokenAddress}`, { 
       signal: AbortSignal.timeout(4000),
       headers: { 'Accept': 'application/json' }
     });
@@ -780,18 +872,63 @@ async function getBondingCurveProgress(tokenAddress) {
       const realSolReserves = parseFloat(data.real_sol_reserves) || 0;
       const totalSol = virtualSolReserves + realSolReserves;
       const curveProgress = Math.min(100, (totalSol / 85) * 100);
-      return { progress: curveProgress, completed: curveProgress >= 100, hasSocials: !!(data.twitter || data.telegram) };
+      
+      return { 
+        progress: curveProgress, 
+        completed: curveProgress >= 100 || data.complete,
+        hasSocials: !!(data.twitter || data.telegram || data.website),
+        twitter: data.twitter,
+        telegram: data.telegram,
+        website: data.website,
+        name: data.name,
+        symbol: data.symbol,
+        imageUri: data.image_uri
+      };
     }
   } catch(e) {}
   return { progress: 0, completed: false, hasSocials: false };
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// CALCUL SCORE
+// COINGECKO - Security Info
 // ══════════════════════════════════════════════════════════════════════════════
+async function getCoinGeckoSecurity(tokenAddress) {
+  const cached = securityCache.get(tokenAddress);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) return cached.data;
+  
+  try {
+    const res = await fetch(`${COINGECKO_API}/coins/solana/contract/${tokenAddress}`, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) {
+      const data = await res.json();
+      const result = {
+        found: true,
+        name: data.name,
+        trustScore: data.tickers?.[0]?.trust_score || 'unknown',
+        communityScore: data.community_score || 0,
+        twitterFollowers: data.community_data?.twitter_followers || 0
+      };
+      securityCache.set(tokenAddress, { data: result, timestamp: Date.now() });
+      return result;
+    }
+  } catch(e) {}
+  return { found: false, trustScore: 'unknown', communityScore: 0 };
+}
 
-function calculateScore(pair, holders, bondingCurve) {
-  let score = 30;
+// ══════════════════════════════════════════════════════════════════════════════
+// FULL TOKEN ANALYSIS
+// ══════════════════════════════════════════════════════════════════════════════
+async function analyzeTokenComplete(tokenAddress, pair) {
+  const analysis = {
+    score: 30,
+    safe: true,
+    reasons: [],
+    holders: null,
+    bondingCurve: null,
+    earlyBuyers: null,
+    security: null,
+    hasSocials: false,
+    imageUri: null
+  };
   
   const mc = parseFloat(pair.marketCap) || 0;
   const liq = parseFloat(pair.liquidity?.usd) || 0;
@@ -799,43 +936,119 @@ function calculateScore(pair, holders, bondingCurve) {
   const chg1h = parseFloat(pair.priceChange?.h1) || 0;
   const buys5m = pair.txns?.m5?.buys || 0;
   const sells5m = pair.txns?.m5?.sells || 0;
+  const buys1h = pair.txns?.h1?.buys || 0;
+  const sells1h = pair.txns?.h1?.sells || 0;
   
-  if (sells5m === 0 && buys5m > 8) return 0;
+  // HONEYPOT CHECK
+  if (sells5m === 0 && buys5m > 8) {
+    analysis.safe = false;
+    analysis.reasons.push('🚨 Honeypot: 0 sells');
+    return analysis;
+  }
+  if (sells1h === 0 && buys1h > 15) {
+    analysis.safe = false;
+    analysis.reasons.push('🚨 Honeypot: 0 sells 1h');
+    return analysis;
+  }
   
-  if (mc >= 30000 && mc <= 300000) score += 20;
-  else if (mc >= 15000 && mc < 30000) score += 12;
-  else if (mc >= 300000 && mc <= 1000000) score += 10;
+  // PUMP CHECK
+  if (chg5m > 200 || chg1h > 400) {
+    analysis.safe = false;
+    analysis.reasons.push('🚨 Pump & Dump risk');
+    return analysis;
+  }
   
-  if (liq >= 15000) score += 12;
-  else if (liq >= 8000) score += 8;
+  // MC Scoring
+  if (mc >= 30000 && mc <= 300000) analysis.score += 22;
+  else if (mc >= 15000 && mc < 30000) analysis.score += 15;
+  else if (mc >= 300000 && mc <= 1000000) analysis.score += 12;
   
+  // Liquidity
+  if (liq >= 20000) analysis.score += 15;
+  else if (liq >= 10000) analysis.score += 10;
+  else if (liq >= 5000) analysis.score += 5;
+  
+  const liqRatio = mc > 0 ? (liq / mc) * 100 : 0;
+  if (liqRatio >= 5 && liqRatio <= 20) analysis.score += 8;
+  
+  // Buy ratio
   const total5m = buys5m + sells5m;
   const buyRatio = total5m > 0 ? (buys5m / total5m) * 100 : 50;
-  if (buyRatio >= 40 && buyRatio < 75) score += 10;
+  if (buyRatio >= 40 && buyRatio < 75) analysis.score += 10;
   
-  if (chg5m > 3 && chg5m < 50) score += 8;
-  if (chg1h > 5 && chg1h < 100) score += 6;
+  // Momentum
+  if (chg5m > 3 && chg5m < 50) analysis.score += 8;
+  if (chg1h > 5 && chg1h < 100) analysis.score += 6;
   
-  if (holders.isDistributed) score += 15;
-  else if (holders.top10Pct > 60) score -= 10;
+  // ═══ HELIUS HOLDER ANALYSIS ═══
+  analysis.holders = await getHolderDistribution(tokenAddress);
   
-  if (bondingCurve.progress >= 20 && bondingCurve.progress < 90) score += 12;
-  if (bondingCurve.hasSocials) score += 10;
+  if (analysis.holders.totalHolders > 0) {
+    if (analysis.holders.isDistributed) {
+      analysis.score += 15;
+      analysis.reasons.push('✅ Well distributed');
+    } else if (analysis.holders.top10Pct > 60) {
+      analysis.score -= 10;
+      analysis.reasons.push(`⚠️ Top10: ${analysis.holders.top10Pct.toFixed(0)}%`);
+    }
+    
+    if (analysis.holders.topHolderPct > 30) {
+      analysis.score -= 8;
+    }
+  }
   
-  return Math.min(100, Math.max(0, Math.round(score)));
+  // ═══ PUMP.FUN BONDING CURVE ═══
+  analysis.bondingCurve = await getBondingCurveProgress(tokenAddress);
+  analysis.imageUri = analysis.bondingCurve.imageUri;
+  
+  if (analysis.bondingCurve.progress > 0) {
+    if (analysis.bondingCurve.progress >= 50 && analysis.bondingCurve.progress < 90) {
+      analysis.score += 15;
+      analysis.reasons.push(`📈 Curve: ${analysis.bondingCurve.progress.toFixed(0)}%`);
+    } else if (analysis.bondingCurve.progress >= 20) {
+      analysis.score += 8;
+    }
+    
+    if (analysis.bondingCurve.hasSocials) {
+      analysis.score += 12;
+      analysis.hasSocials = true;
+      analysis.reasons.push('🐦 Has socials');
+    }
+  }
+  
+  // ═══ EARLY BUYERS ═══
+  analysis.earlyBuyers = await getEarlyBuyers(tokenAddress);
+  
+  if (analysis.earlyBuyers.hasSmartMoney) {
+    analysis.score += 10;
+    analysis.reasons.push(`🐋 ${analysis.earlyBuyers.whales.length} whales`);
+  }
+  
+  // ═══ COINGECKO SECURITY ═══
+  analysis.security = await getCoinGeckoSecurity(tokenAddress);
+  
+  if (analysis.security.found) {
+    analysis.score += 10;
+    analysis.reasons.push('✅ CoinGecko listed');
+    if (analysis.security.trustScore === 'green') analysis.score += 5;
+  }
+  
+  analysis.score = Math.min(100, Math.max(0, Math.round(analysis.score)));
+  
+  return analysis;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
 // EXECUTE TRADE
 // ══════════════════════════════════════════════════════════════════════════════
-
-async function executeTrade(pair, score, tradeType, isPump) {
+async function executeTrade(pair, score, tradeType, isPump, analysis) {
   if (balance < SETTINGS.positionSize) return false;
   
   const symbol = pair.baseToken?.symbol || 'UNKNOWN';
   const address = pair.baseToken?.address;
   const pairAddress = pair.pairAddress;
   const entryPrice = parseFloat(pair.priceUsd) || 0;
+  const logo = analysis?.imageUri || pair.info?.imageUrl || '';
   
   if (!address || entryPrice === 0) return false;
   if (positions.find(p => p.address === address)) return false;
@@ -845,6 +1058,7 @@ async function executeTrade(pair, score, tradeType, isPump) {
     symbol,
     address,
     pairAddress,
+    logo,
     entryPrice,
     currentPrice: entryPrice,
     dexUrl: pair.url || `https://dexscreener.com/solana/${pairAddress}`,
@@ -855,6 +1069,7 @@ async function executeTrade(pair, score, tradeType, isPump) {
     score,
     tradeType,
     isPump,
+    analysis,
     pnl: 0,
     pnlPct: 0,
     highestPnlPct: 0,
@@ -873,17 +1088,44 @@ async function executeTrade(pair, score, tradeType, isPump) {
   balance -= SETTINGS.positionSize;
   
   const sourceTag = isPump ? '<span class="pump">🎰 PUMP</span>' : '<span class="solana">📈 DEX</span>';
-  addLog('🎯', `${sourceTag} $${esc(symbol)} Score:${score} @ $${fP(entryPrice)}`);
+  const safeTag = analysis?.safe ? ' <span class="green">✓</span>' : '';
+  addLog('🎯', `${sourceTag}${safeTag} $${esc(symbol)} Score:${score} @ $${fP(entryPrice)}`);
   
   updateUI();
   renderPositions();
+  saveToStorage();
   return true;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DCA - PARTIAL SELL
+// ══════════════════════════════════════════════════════════════════════════════
+function partialSell(pos, sellPercent, dcaLevel) {
+  const sellAmount = pos.currentSize * (sellPercent / 100);
+  const pnlForSold = sellAmount * (pos.pnlPct / 100);
+  
+  pos.currentSize -= sellAmount;
+  pos.dcaSecured += pnlForSold;
+  pos.dcaLevel = dcaLevel;
+  
+  securedPnL += pnlForSold;
+  balance += sellAmount + pnlForSold;
+  
+  addLog('💰', `<span class="green">DCA${dcaLevel}</span> $${esc(pos.symbol)} +$${pnlForSold.toFixed(2)}`);
+  
+  if (dcaLevel >= 2 && pos.currentSize > 0) {
+    pos.isMoonBag = true;
+    pos.tradeType = 'MOON';
+    pos.label = '🌕 MOON';
+  }
+  
+  updateUI();
+  renderPositions();
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
 // CLOSE TRADE
 // ══════════════════════════════════════════════════════════════════════════════
-
 function closeTrade(pos, reason) {
   if (!positions.find(p => p.id === pos.id)) return;
   
@@ -916,6 +1158,7 @@ function closeTrade(pos, reason) {
   const icon = finalPnl >= 0 ? '✅' : '❌';
   addLog(icon, `${reason} $${esc(pos.symbol)} ${finalPnl >= 0 ? '+' : ''}$${finalPnl.toFixed(2)}`);
   
+  saveToStorage();
   updateUI();
   renderPositions();
   renderHistory();
@@ -924,27 +1167,30 @@ function closeTrade(pos, reason) {
 // ══════════════════════════════════════════════════════════════════════════════
 // UPDATE POSITIONS
 // ══════════════════════════════════════════════════════════════════════════════
-
 async function updatePositions() {
   if (positions.length === 0) return;
   
   for (let i = positions.length - 1; i >= 0; i--) {
     const pos = positions[i];
     try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/solana/${pos.pairAddress}`, { signal: AbortSignal.timeout(5000) });
+      const res = await fetch(`${DEX_API}/latest/dex/pairs/solana/${pos.pairAddress}`, { signal: AbortSignal.timeout(5000) });
       const data = await res.json();
       if (!data.pair) continue;
       
       const newPrice = parseFloat(data.pair.priceUsd) || pos.currentPrice;
       const priceChange = (newPrice - pos.entryPrice) / pos.entryPrice * 100;
       
+      // RUG
       if (priceChange <= -85) {
+        pos.pnlPct = -100;
         closeTrade(pos, 'RUG');
         continue;
       }
       
+      // LIQ PULL
       const currentLiq = parseFloat(data.pair.liquidity?.usd) || 0;
       if (pos.entryLiquidity && currentLiq < pos.entryLiquidity * 0.25) {
+        pos.pnlPct = Math.min(priceChange, -60);
         closeTrade(pos, 'LIQ PULL');
         continue;
       }
@@ -957,24 +1203,36 @@ async function updatePositions() {
       
       const holdTime = (Date.now() - pos.entryTime) / 60000;
       
+      // DCA
+      if (pos.dcaLevel < 2 && !pos.isMoonBag) {
+        if (pos.dcaLevel === 0 && pos.pnlPct >= SETTINGS.dca1Pct) partialSell(pos, SETTINGS.dca1Sell, 1);
+        else if (pos.dcaLevel === 1 && pos.pnlPct >= SETTINGS.dca2Pct) partialSell(pos, SETTINGS.dca2Sell, 2);
+      }
+      
+      // TRAILING
       if (pos.pnlPct >= SETTINGS.trailActivation && !pos.trailingActivated) {
         pos.trailingActivated = true;
         pos.trailingHigh = pos.pnlPct;
-        addLog('📈', `TRAIL $${pos.symbol} +${pos.pnlPct.toFixed(0)}%`);
+        addLog('📈', `<span class="orange">TRAIL</span> $${esc(pos.symbol)} +${pos.pnlPct.toFixed(0)}%`);
       }
       
       if (pos.trailingActivated) {
         if (pos.pnlPct > pos.trailingHigh) pos.trailingHigh = pos.pnlPct;
+        
         let trailDist = SETTINGS.trailDistance;
         if (pos.trailingHigh >= 100) trailDist = 10;
         else if (pos.trailingHigh >= 50) trailDist = 14;
+        pos.currentTrailDistance = trailDist;
         
-        if (pos.trailingHigh - pos.pnlPct >= trailDist) {
+        if (pos.isMoonBag) pos.currentTrailDistance = Math.max(6, trailDist * 0.6);
+        
+        if (pos.trailingHigh - pos.pnlPct >= pos.currentTrailDistance) {
           closeTrade(pos, 'TRAIL');
           continue;
         }
       }
       
+      // TIMEOUT
       if (!pos.isMoonBag && holdTime >= pos.maxHold) {
         closeTrade(pos, 'TIMEOUT');
         continue;
@@ -988,88 +1246,130 @@ async function updatePositions() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// MEGA SCAN COMPLET (Helius + Pump + DexScreener)
+// MEGA SCAN COMPLET (Helius + Pump + DexScreener FULL)
 // ══════════════════════════════════════════════════════════════════════════════
-
 async function megaScan() {
   if (!isRunning || localScanning) return;
   
   localScanning = true;
   const allTokens = new Map();
   
-  addLog('🔍', '<span class="helius">Starting COMPLETE MEGA SCAN...</span>');
-  $('scannerText').textContent = '🔍 MEGA SCAN - Phase 1/6';
+  addLog('🔍', '<span class="helius">Starting ULTIMATE MEGA SCAN...</span>');
+  $('scannerText').textContent = '🔍 MEGA SCAN Starting...';
   
-  // PHASE 1: Helius RPC Scan (NOUVEAU - CORRIGÉ)
-  $('scanPhase').textContent = '1: Helius RPC';
-  const heliusTokens = await scanHeliusNewTokens();
-  for (const token of heliusTokens) {
-    const address = token.pubkey;
-    if (address && !allTokens.has(address)) {
-      allTokens.set(address, { address, source: 'helius', boost: 35 });
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 1: HELIUS - Recent transactions
+  // ═══════════════════════════════════════════════════════════════
+  $('scanPhase').textContent = '1: Helius';
+  try {
+    const res = await fetch(`${HELIUS_API}/addresses/${PUMP_PROGRAM}/transactions?api-key=${HELIUS_KEY}&type=SWAP&limit=100`, {
+      signal: AbortSignal.timeout(10000)
+    });
+    if (res.ok) {
+      const txs = await res.json();
+      const addresses = new Set();
+      for (const tx of txs) {
+        if (tx.tokenTransfers) {
+          for (const transfer of tx.tokenTransfers) {
+            if (transfer.mint && transfer.mint !== 'So11111111111111111111111111111111111111112') {
+              addresses.add(transfer.mint);
+            }
+          }
+        }
+      }
+      addresses.forEach(addr => {
+        if (!allTokens.has(addr)) {
+          allTokens.set(addr, { address: addr, source: 'helius', boost: 35 });
+        }
+      });
+      heliusScannedTotal = addresses.size;
+      $('heliusScanned').textContent = heliusScannedTotal;
+      addLog('🔭', `<span class="helius">Helius: ${addresses.size} tokens</span>`);
     }
+  } catch(e) {}
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 2: PUMP.FUN - Multiple endpoints
+  // ═══════════════════════════════════════════════════════════════
+  $('scanPhase').textContent = '2: Pump.fun';
+  
+  const pumpEndpoints = [
+    { url: `${PUMP_API}/coins/latest?limit=200`, boost: 30 },
+    { url: `${PUMP_API}/coins/king-of-the-hill?includeNsfw=false`, boost: 35 },
+    { url: `${PUMP_API}/coins?offset=0&limit=100&sort=last_trade_timestamp&order=DESC`, boost: 25 },
+    { url: `${PUMP_API}/coins?offset=0&limit=100&sort=created_timestamp&order=DESC`, boost: 28 },
+    { url: `${PUMP_API}/coins?offset=100&limit=100&sort=created_timestamp&order=DESC`, boost: 22 },
+    { url: `${PUMP_API}/coins?offset=200&limit=100&sort=created_timestamp&order=DESC`, boost: 20 }
+  ];
+  
+  for (const ep of pumpEndpoints) {
+    try {
+      const res = await fetch(ep.url, { signal: AbortSignal.timeout(8000), headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          data.forEach(c => {
+            if (c.mint && !allTokens.has(c.mint)) {
+              allTokens.set(c.mint, { address: c.mint, source: 'pump', boost: ep.boost, pumpData: c });
+            }
+          });
+        }
+      }
+    } catch(e) {}
   }
   
-  // PHASE 2: Pump.fun latest coins
-  $('scanPhase').textContent = '2: Pump.fun';
-  try {
-    const res = await fetch('https://frontend-api-v3.pump.fun/coins/latest?limit=200', { signal: AbortSignal.timeout(8000) });
-    const data = await res.json();
-    if (Array.isArray(data)) {
-      data.forEach(c => {
-        if (c.mint && !allTokens.has(c.mint)) {
-          allTokens.set(c.mint, { address: c.mint, source: 'pump', boost: 30, pumpData: c });
-        }
-      });
-      pumpScannedTotal = data.length;
-      $('pumpScanned').textContent = pumpScannedTotal;
-      addLog('🎰', `Pump.fun: ${data.length} tokens`);
-    }
-  } catch(e) {}
+  pumpScannedTotal = Array.from(allTokens.values()).filter(t => t.source === 'pump').length;
+  $('pumpScanned').textContent = pumpScannedTotal;
+  addLog('🎰', `<span class="pump">Pump.fun: ${pumpScannedTotal} tokens</span>`);
   
-  // PHASE 3: Pump.fun KOTH
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 3: DEXSCREENER - New Profiles
+  // ═══════════════════════════════════════════════════════════════
+  $('scanPhase').textContent = '3: DEX New';
   try {
-    const res = await fetch('https://frontend-api-v3.pump.fun/coins/king-of-the-hill?includeNsfw=false', { signal: AbortSignal.timeout(8000) });
-    const data = await res.json();
-    if (Array.isArray(data)) {
-      data.forEach(c => {
-        if (c.mint && !allTokens.has(c.mint)) {
-          allTokens.set(c.mint, { address: c.mint, source: 'pump-koth', boost: 35, pumpData: c });
-        }
-      });
-    }
-  } catch(e) {}
-  
-  // PHASE 4: DexScreener New Profiles
-  $('scanPhase').textContent = '3: DexScreener New';
-  try {
-    const res = await fetch('https://api.dexscreener.com/token-profiles/latest/v1', { signal: AbortSignal.timeout(8000) });
+    const res = await fetch(`${DEX_API}/token-profiles/latest/v1`, { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
       data.filter(t => t.chainId === 'solana').slice(0, 300).forEach(t => {
         if (t.tokenAddress && !allTokens.has(t.tokenAddress)) {
-          allTokens.set(t.tokenAddress, { address: t.tokenAddress, source: 'dex-new', boost: 25 });
+          allTokens.set(t.tokenAddress, { address: t.tokenAddress, source: 'dex-new', boost: 22 });
         }
       });
     }
   } catch(e) {}
   
-  // PHASE 5: DexScreener Boosted
-  $('scanPhase').textContent = '4: DexScreener Boosted';
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 4: DEXSCREENER - Boosted
+  // ═══════════════════════════════════════════════════════════════
+  $('scanPhase').textContent = '4: DEX Boosted';
   try {
-    const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1', { signal: AbortSignal.timeout(8000) });
+    const res = await fetch(`${DEX_API}/token-boosts/top/v1`, { signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (Array.isArray(data)) {
       data.filter(t => t.chainId === 'solana').slice(0, 250).forEach(t => {
         if (t.tokenAddress && !allTokens.has(t.tokenAddress)) {
-          allTokens.set(t.tokenAddress, { address: t.tokenAddress, source: 'dex-boost', boost: 28 });
+          allTokens.set(t.tokenAddress, { address: t.tokenAddress, source: 'dex-boost', boost: 26 });
         }
       });
     }
   } catch(e) {}
   
-  // PHASE 6: Keyword search
-  $('scanPhase').textContent = '5: Keyword Search';
+  try {
+    const res = await fetch(`${DEX_API}/token-boosts/latest/v1`, { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      data.filter(t => t.chainId === 'solana').slice(0, 200).forEach(t => {
+        if (t.tokenAddress && !allTokens.has(t.tokenAddress)) {
+          allTokens.set(t.tokenAddress, { address: t.tokenAddress, source: 'dex-boost-new', boost: 24 });
+        }
+      });
+    }
+  } catch(e) {}
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 5: DEXSCREENER - Mega Keyword Search (100 keywords)
+  // ═══════════════════════════════════════════════════════════════
+  $('scanPhase').textContent = '5: Keywords';
   const shuffledKeywords = [...MEGA_KEYWORDS].sort(() => Math.random() - 0.5).slice(0, 100);
   let kwDone = 0;
   
@@ -1079,7 +1379,7 @@ async function megaScan() {
       $('scannerText').textContent = `🔍 Keywords ${kwDone}/${shuffledKeywords.length} (${allTokens.size} tokens)`;
     }
     try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(kw)}`, { signal: AbortSignal.timeout(4000) });
+      const res = await fetch(`${DEX_API}/latest/dex/search?q=${encodeURIComponent(kw)}`, { signal: AbortSignal.timeout(4000) });
       const data = await res.json();
       if (data.pairs) {
         data.pairs.filter(p => p.chainId === 'solana').slice(0, 80).forEach(p => {
@@ -1093,25 +1393,96 @@ async function megaScan() {
     if (kwDone % 30 === 0) await new Promise(r => setTimeout(r, 30));
   }
   
-  // Mise à jour des compteurs
-  dexScannedTotal = allTokens.size - pumpScannedTotal;
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 6: DEXSCREENER - Solana Specific
+  // ═══════════════════════════════════════════════════════════════
+  $('scanPhase').textContent = '6: Solana';
+  const solanaQueries = [
+    'solana meme', 'solana pump', 'solana new', 'sol meme', 'sol pump',
+    'raydium new', 'jupiter new', 'orca new', 'pumpfun', 'memecoin solana'
+  ];
+  
+  for (const q of solanaQueries) {
+    try {
+      const res = await fetch(`${DEX_API}/latest/dex/search?q=${encodeURIComponent(q)}`, { signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      if (data.pairs) {
+        data.pairs.filter(p => p.chainId === 'solana').slice(0, 100).forEach(p => {
+          const addr = p.baseToken?.address;
+          if (addr && !allTokens.has(addr)) {
+            allTokens.set(addr, { address: addr, source: 'dex-sol', boost: 18, pair: p });
+          }
+        });
+      }
+    } catch(e) {}
+  }
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 7: DEXSCREENER - DEX Specific
+  // ═══════════════════════════════════════════════════════════════
+  $('scanPhase').textContent = '7: DEXs';
+  const dexQueries = ['raydium', 'jupiter', 'orca', 'meteora', 'lifinity', 'phoenix'];
+  
+  for (const dex of dexQueries) {
+    try {
+      const res = await fetch(`${DEX_API}/latest/dex/search?q=${dex}`, { signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      if (data.pairs) {
+        data.pairs.filter(p => p.chainId === 'solana').slice(0, 80).forEach(p => {
+          const addr = p.baseToken?.address;
+          if (addr && !allTokens.has(addr)) {
+            allTokens.set(addr, { address: addr, source: 'dex-dex', boost: 16, pair: p });
+          }
+        });
+      }
+    } catch(e) {}
+  }
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 8: DEXSCREENER - Pattern Search (a-z)
+  // ═══════════════════════════════════════════════════════════════
+  $('scanPhase').textContent = '8: Patterns';
+  const patterns = 'abcdefghijklmnop'.split('');
+  
+  for (const char of patterns) {
+    try {
+      const res = await fetch(`${DEX_API}/latest/dex/search?q=${char}`, { signal: AbortSignal.timeout(4000) });
+      const data = await res.json();
+      if (data.pairs) {
+        data.pairs.filter(p => p.chainId === 'solana').slice(0, 60).forEach(p => {
+          const addr = p.baseToken?.address;
+          if (addr && !allTokens.has(addr)) {
+            allTokens.set(addr, { address: addr, source: 'dex-pattern', boost: 10, pair: p });
+          }
+        });
+      }
+    } catch(e) {}
+  }
+  
+  dexScannedTotal = allTokens.size - heliusScannedTotal - pumpScannedTotal;
   $('dexScanned').textContent = dexScannedTotal;
-  // heliusScannedTotal déjà mis à jour dans scanHeliusNewTokens()
+  $('totalScanned').textContent = allTokens.size;
   
-  addLog('📊', `<span class="solana">Total tokens:</span> ${allTokens.size} (Helius:${heliusScannedTotal} Pump:${pumpScannedTotal} DEX:${dexScannedTotal})`);
+  addLog('📊', `Total: <span class="helius">${heliusScannedTotal}</span> Helius + <span class="pump">${pumpScannedTotal}</span> Pump + <span class="solana">${dexScannedTotal}</span> DEX = <span class="yellow">${allTokens.size}</span>`);
   
-  // PHASE 7: Analyse
-  $('scanPhase').textContent = '6: Analyzing';
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 9: ANALYSIS with all features
+  // ═══════════════════════════════════════════════════════════════
+  $('scanPhase').textContent = '9: Analyzing';
   $('scannerText').textContent = `⚙️ Analyzing ${allTokens.size} tokens...`;
   
   const opportunities = [];
   const candidates = Array.from(allTokens.values());
+  
+  // Sort by boost
+  candidates.sort((a, b) => (b.boost || 0) - (a.boost || 0));
+  
   let analyzed = 0;
   
-  for (const cand of candidates.slice(0, 500)) {
+  for (const cand of candidates.slice(0, 400)) {
     analyzed++;
-    if (analyzed % 50 === 0) {
-      $('scannerText').textContent = `⚙️ Analyzing ${analyzed}/${Math.min(500, candidates.length)}...`;
+    if (analyzed % 40 === 0) {
+      $('scannerText').textContent = `⚙️ Analyzing ${analyzed}/${Math.min(400, candidates.length)}...`;
     }
     
     if (analyzedCache.has(cand.address)) {
@@ -1123,7 +1494,7 @@ async function megaScan() {
     try {
       let pair = cand.pair;
       if (!pair) {
-        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${cand.address}`, { signal: AbortSignal.timeout(4000) });
+        const res = await fetch(`${DEX_API}/latest/dex/tokens/${cand.address}`, { signal: AbortSignal.timeout(4000) });
         const data = await res.json();
         if (data.pairs) {
           pair = data.pairs.find(p => p.chainId === 'solana');
@@ -1140,36 +1511,37 @@ async function megaScan() {
         continue;
       }
       
-      // Analyse Helius des holders
-      const holders = await getHolderDistribution(cand.address);
-      const bondingCurve = await getBondingCurveProgress(cand.address);
-      const score = calculateScore(pair, holders, bondingCurve);
+      // FULL ANALYSIS
+      const analysis = await analyzeTokenComplete(cand.address, pair);
       
-      if (score >= SETTINGS.minScore) {
+      if (analysis.safe && analysis.score >= SETTINGS.minScore) {
         safeTokensFound++;
         $('safeScanned').textContent = safeTokensFound;
         
         pair._source = cand.source;
         pair._boost = cand.boost;
-        opportunities.push({ pair, score });
-        addLog('✨', `<span class="green">OPP:</span> $${pair.baseToken?.symbol} Score:${score} MC:$${fN(mc)}`);
+        opportunities.push({ pair, score: analysis.score, analysis });
+        
+        addLog('✨', `<span class="green">OPP:</span> $${pair.baseToken?.symbol} Score:${analysis.score} MC:$${fN(mc)}`);
       }
       
-      analyzedCache.set(cand.address, { result: score >= SETTINGS.minScore ? 'GOOD' : 'SKIP', timestamp: Date.now() });
+      analyzedCache.set(cand.address, { result: analysis.safe && analysis.score >= SETTINGS.minScore ? 'GOOD' : 'SKIP', timestamp: Date.now() });
       
     } catch(e) {}
     
-    if (analyzed % 20 === 0) await new Promise(r => setTimeout(r, 20));
+    if (analyzed % 15 === 0) await new Promise(r => setTimeout(r, 20));
   }
   
   opportunities.sort((a, b) => b.score - a.score);
-  addLog('🔍', `Found <span class="green">${opportunities.length}</span> opportunities`);
+  addLog('🔍', `Found <span class="green">${opportunities.length}</span> safe opportunities`);
   
-  // PHASE 8: Execution trades
-  $('scanPhase').textContent = '7: Trading';
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 10: EXECUTION
+  // ═══════════════════════════════════════════════════════════════
+  $('scanPhase').textContent = '10: Trading';
   let tradesOpened = 0;
   
-  for (const opp of opportunities.slice(0, 30)) {
+  for (const opp of opportunities.slice(0, 50)) {
     if (balance < SETTINGS.positionSize) break;
     
     const addr = opp.pair.baseToken?.address;
@@ -1179,34 +1551,42 @@ async function megaScan() {
     const isPump = opp.pair._source?.startsWith('pump');
     const tradeType = mc < 150000 ? 'LONG' : 'QUICK';
     
-    const success = await executeTrade(opp.pair, opp.score, tradeType, isPump);
+    const success = await executeTrade(opp.pair, opp.score, tradeType, isPump, opp.analysis);
     if (success) tradesOpened++;
     
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise(r => setTimeout(r, 80));
   }
   
   $('scanPhase').textContent = 'Complete';
-  $('scannerText').textContent = `✅ Scan complete: ${tradesOpened} trades opened, ${opportunities.length} opportunities`;
-  addLog('✅', `Scan complete — ${tradesOpened} trades opened`);
+  $('scannerText').textContent = `✅ ${tradesOpened} trades from ${opportunities.length} opps (${allTokens.size} scanned)`;
+  addLog('✅', `<span class="green">Scan complete — ${tradesOpened} trades opened</span>`);
   
   localScanning = false;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// START / STOP
+// START / STOP / CONTROLS
 // ══════════════════════════════════════════════════════════════════════════════
-
-function startLocalScanning() {
+function startScanning() {
   if (scanInterval) clearInterval(scanInterval);
   if (updateInterval) clearInterval(updateInterval);
   
   isRunning = true;
   sessionStartTime = Date.now();
-  addLog('🚀', '<span class="helius">SNIPER STARTED — SCAN ACTIF</span>');
   
-  setTimeout(() => megaScan(), 3000);
-  scanInterval = setInterval(() => megaScan(), 45000);
+  $('wsBadge').textContent = 'SCANNING';
+  $('wsBadge').className = 'ws-badge connected';
+  $('modeBadge').textContent = '⚡ LIVE';
+  $('modeBadge').className = 'mode-badge active';
+  $('scannerDot').classList.add('active');
+  $('startBtn').textContent = '⏹ STOP';
+  
+  addLog('🚀', '<span class="helius">ULTIMATE SNIPER STARTED</span>');
+  
+  setTimeout(() => megaScan(), 2000);
+  scanInterval = setInterval(() => megaScan(), 40000);
   updateInterval = setInterval(() => updatePositions(), 5000);
+  
   setInterval(() => {
     if (sessionStartTime) {
       const elapsed = Date.now() - sessionStartTime;
@@ -1215,33 +1595,29 @@ function startLocalScanning() {
       $('uptimeDisplay').textContent = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
     }
   }, 1000);
-  
-  $('modeBadge').textContent = '⚡ LIVE';
-  $('modeBadge').className = 'mode-badge active';
-  $('scannerDot').classList.add('active');
-  $('scannerText').textContent = '🔍 Scanning...';
 }
 
-function stopLocalScanning() {
+function stopScanning() {
   isRunning = false;
   if (scanInterval) clearInterval(scanInterval);
   if (updateInterval) clearInterval(updateInterval);
   scanInterval = null;
   updateInterval = null;
-  addLog('⏹️', 'Sniper stopped');
   
+  $('wsBadge').textContent = 'STOPPED';
+  $('wsBadge').className = 'ws-badge disconnected';
   $('modeBadge').textContent = '🔴 STOPPED';
   $('modeBadge').className = 'mode-badge';
   $('scannerDot').classList.remove('active');
   $('scannerText').textContent = 'Click START to begin scanning';
+  $('startBtn').textContent = '▶ START SNIPER';
+  
+  addLog('⏹️', 'Sniper stopped');
 }
 
 function toggleSniper() {
-  if (isRunning) {
-    stopLocalScanning();
-  } else {
-    startLocalScanning();
-  }
+  if (isRunning) stopScanning();
+  else startScanning();
 }
 
 function forceScan() {
@@ -1252,10 +1628,42 @@ function forceScan() {
   megaScan();
 }
 
+function closeAllPositions() {
+  if (positions.length === 0) return;
+  if (!confirm(`Close all ${positions.length} positions?`)) return;
+  [...positions].forEach(pos => closeTrade(pos, 'MANUAL'));
+}
+
+function resetBot() {
+  if (!confirm('Reset all data?')) return;
+  stopScanning();
+  balance = 10000;
+  totalPnL = 0;
+  securedPnL = 0;
+  totalTrades = 0;
+  wins = 0;
+  bestTrade = 0;
+  positions = [];
+  history = [];
+  logs = [];
+  analyzedCache.clear();
+  holderCache.clear();
+  securityCache.clear();
+  heliusScannedTotal = 0;
+  pumpScannedTotal = 0;
+  dexScannedTotal = 0;
+  safeTokensFound = 0;
+  localStorage.removeItem(STORAGE_KEY);
+  updateUI();
+  renderPositions();
+  renderHistory();
+  renderLogs();
+  addLog('🔄', 'Bot reset');
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // UI RENDERING
 // ══════════════════════════════════════════════════════════════════════════════
-
 function updateUI() {
   const pnlEl = $('totalPnl');
   pnlEl.textContent = (totalPnL >= 0 ? '+' : '') + '$' + totalPnL.toFixed(2);
@@ -1268,7 +1676,7 @@ function updateUI() {
   $('totalTrades').textContent = totalTrades;
   $('totalScanned').textContent = heliusScannedTotal + pumpScannedTotal + dexScannedTotal;
   
-  $('realtimeCount').textContent = positions.length;
+  $('heliusCount').textContent = positions.filter(p => p.analysis?.holders).length;
   $('pumpCount').textContent = positions.filter(p => p.isPump).length;
   $('dexCount').textContent = positions.filter(p => !p.isPump).length;
   $('safeCount').textContent = positions.filter(p => p.score >= 70).length;
@@ -1302,18 +1710,24 @@ function renderCard(pos) {
   
   let tags = '';
   if (pos.isPump) tags += `<span class="pos-tag pump">🎰 PUMP</span>`;
-  if (pos.score >= 70) tags += `<span class="pos-tag safe">✓ HIGH SCORE</span>`;
+  if (pos.analysis?.safe) tags += `<span class="pos-tag safe">✓ SAFE</span>`;
+  if (pos.analysis?.hasSocials) tags += `<span class="pos-tag social">🐦 SOCIAL</span>`;
+  if (pos.analysis?.bondingCurve?.progress > 0) tags += `<span class="pos-tag curve">📈 ${pos.analysis.bondingCurve.progress.toFixed(0)}%</span>`;
+  if (pos.analysis?.earlyBuyers?.hasSmartMoney) tags += `<span class="pos-tag whale">🐋 WHALES</span>`;
+  if (pos.analysis?.security?.found) tags += `<span class="pos-tag cg">🦎 CG</span>`;
   if (pos.isMoonBag) tags += `<span class="pos-tag moon">🌕 FREE</span>`;
   if (pos.trailingActivated) tags += `<span class="pos-tag trailing">📈 +${pos.trailingHigh.toFixed(0)}%</span>`;
   if (pos.dcaSecured > 0) tags += `<span class="pos-tag secured">🔒 +$${pos.dcaSecured.toFixed(0)}</span>`;
   
+  const holderInfo = pos.analysis?.holders?.top10Pct ? `T10: ${pos.analysis.holders.top10Pct.toFixed(0)}%` : '';
+  
   return `<div class="pos-card ${cardClass}">
     <div class="pos-header">
       <div class="pos-token">
-        <div class="pos-logo">${pos.symbol[0]}</div>
+        <div class="pos-logo">${pos.logo ? `<img src="${pos.logo}" onerror="this.parentElement.textContent='${pos.symbol[0]}'">` : pos.symbol[0]}</div>
         <div>
           <div class="pos-symbol">$${esc(pos.symbol)} <span class="trade-type ${typeClass}">${pos.label}</span></div>
-          <div class="pos-chain">Score: ${pos.score}</div>
+          <div class="pos-chain">Score: ${pos.score} ${holderInfo ? '• ' + holderInfo : ''}</div>
         </div>
       </div>
       <div class="pos-pnl">
@@ -1331,8 +1745,8 @@ function renderCard(pos) {
     ${tags ? `<div class="pos-tags">${tags}</div>` : ''}
     <div class="pos-actions">
       <button onclick="closeTradeById('${pos.id}')" class="pos-action-btn close">❌ Close</button>
-      <a href="${pos.dexUrl}" target="_blank" class="pos-action-btn">📊 DexScreener</a>
-      <a href="${pos.pumpUrl}" target="_blank" class="pos-action-btn">🎰 Pump.fun</a>
+      <a href="${pos.dexUrl}" target="_blank" class="pos-action-btn">📊 DEX</a>
+      <a href="${pos.pumpUrl}" target="_blank" class="pos-action-btn">🎰 Pump</a>
     </div>
   </div>`;
 }
@@ -1353,7 +1767,7 @@ function renderHistory() {
   $('historyContainer').innerHTML = history.slice(0, 100).map(t => {
     const isWin = t.pnl >= 0;
     const time = new Date(t.closeTime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-    let reasonClass = t.reason === 'TRAIL' ? 'trail' : t.reason === 'TIMEOUT' ? 'timeout' : t.reason.includes('RUG') ? 'rug' : 'tp';
+    let reasonClass = t.reason === 'TRAIL' ? 'trail' : t.reason === 'TIMEOUT' ? 'timeout' : t.reason.includes('RUG') || t.reason.includes('LIQ') ? 'rug' : 'tp';
     
     return `<div class="history-item" onclick="window.open('${t.dexUrl}', '_blank')">
       <span class="history-time">${time}</span>
@@ -1364,21 +1778,55 @@ function renderHistory() {
   }).join('');
 }
 
+// STORAGE
+const STORAGE_KEY = 'sniper_v82_ultimate';
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      balance, totalPnL, securedPnL, totalTrades, wins, bestTrade,
+      history: history.slice(0, 500)
+    }));
+  } catch(e) {}
+}
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      balance = data.balance || 10000;
+      totalPnL = data.totalPnL || 0;
+      securedPnL = data.securedPnL || 0;
+      totalTrades = data.totalTrades || 0;
+      wins = data.wins || 0;
+      bestTrade = data.bestTrade || 0;
+      history = data.history || [];
+      addLog('💾', `Loaded ${history.length} trades`);
+    }
+  } catch(e) {}
+}
+
 function exportData() {
   const blob = new Blob([JSON.stringify({ balance, totalPnL, securedPnL, totalTrades, wins, bestTrade, history, positions }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `sniper_helius_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `sniper_ultimate_${new Date().toISOString().slice(0,10)}.json`;
   a.click();
 }
+
+setInterval(saveToStorage, 30000);
 
 // ══════════════════════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════════════════════
-
-addLog('⚡', '<span class="helius">SOLANA SNIPER v8.0 - HELIUS ACTIF</span>');
-addLog('ℹ️', 'Scan complet: Helius RPC + Pump.fun + DexScreener');
-addLog('🔭', '<span class="helius">Helius API prête</span>');
+loadFromStorage();
+updateUI();
+renderPositions();
+renderHistory();
+addLog('⚡', '<span class="helius">SOLANA SNIPER v8.2 - ULTIMATE EDITION</span>');
+addLog('ℹ️', 'Helius + Moralis + CoinGecko + Pump.fun + DexScreener FULL');
+addLog('🔌', 'Click "TEST APIs" to verify all connections');
 </script>
 </body>
 </html>
