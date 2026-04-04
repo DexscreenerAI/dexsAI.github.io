@@ -1964,6 +1964,7 @@ body::before {
     <button class="ctrl-btn" onclick="clearCache()">↻ CACHE</button>
     <button class="ctrl-btn" onclick="exportData()">↑ EXPORT</button>
     <button class="ctrl-btn warning" onclick="closeAllPositions()">⚠ CLOSE ALL</button>
+    <span id="scanCounter" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#00d4ff;letter-spacing:1px;padding:8px 14px;border:1px solid rgba(0,212,255,0.2);border-radius:8px;background:rgba(0,212,255,0.06)">SCAN: 0</span>
   </div>
   
   <!-- SCANNER STATUS -->
@@ -2356,6 +2357,9 @@ async function pollServerStatus() {
     scannedTotal = state.scannedTotal || 0;
     oppsTotal = state.oppsTotal || 0;
     isRunning = state.isRunning || false;
+
+    // Update scan counter in controls
+    if ($('scanCounter')) $('scanCounter').textContent = 'SCAN: ' + scannedTotal;
 
     // Update status badges
     if (state.isRunning) {
