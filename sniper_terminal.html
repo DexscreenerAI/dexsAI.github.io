@@ -1959,11 +1959,11 @@ body::before {
   
   <!-- CONTROLS ROW -->
   <div class="controls-row">
-    <button class="ctrl-btn primary" id="startBtn" onclick="serverStartStop()">▶ START</button>
-    <button class="ctrl-btn" onclick="openStats()">📊 STATS</button>
-    <button class="ctrl-btn" onclick="clearCache()">↻ CACHE</button>
-    <button class="ctrl-btn" onclick="exportData()">↑ EXPORT</button>
-    <button class="ctrl-btn warning" onclick="closeAllPositions()">⚠ CLOSE ALL</button>
+    <button class="ctrl-btn primary" id="startBtn">▶ START</button>
+    <button class="ctrl-btn" id="statsBtn">📊 STATS</button>
+    <button class="ctrl-btn" id="cacheBtn">↻ CACHE</button>
+    <button class="ctrl-btn" id="exportBtn">↑ EXPORT</button>
+    <button class="ctrl-btn warning" id="closeAllBtn">⚠ CLOSE ALL</button>
     <span id="scanCounter" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#00d4ff;letter-spacing:1px;padding:8px 14px;border:1px solid rgba(0,212,255,0.2);border-radius:8px;background:rgba(0,212,255,0.06)">SCAN: 0</span>
   </div>
   
@@ -4104,6 +4104,15 @@ updateUI();
 renderPositions();
 renderHistory();
 renderPnlChart();
+
+// Bind buttons (avoid inline onclick which fails if script has errors above)
+try {
+  $('startBtn').onclick = function() { serverStartStop(); };
+  $('statsBtn').onclick = function() { openStats(); };
+  $('cacheBtn').onclick = function() { clearCache(); };
+  $('exportBtn').onclick = function() { exportData(); };
+  $('closeAllBtn').onclick = function() { closeAllPositions(); };
+} catch(e) { console.error('Button bind error:', e); }
 
 // Auto-connect to server
 pollServerStatus();
