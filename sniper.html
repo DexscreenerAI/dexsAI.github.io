@@ -285,7 +285,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); -webkit
     <div class="stat-box"><div class="stat-label">QUICK</div><div class="stat-value cyan" id="realtimeCount">0</div></div>
     <div class="stat-box"><div class="stat-label">LONG</div><div class="stat-value purple" id="pumpCount">0</div></div>
     <div class="stat-box"><div class="stat-label">POSITIONS</div><div class="stat-value" id="dexCount">0</div></div>
-    <div class="stat-box"><div class="stat-label">MOON</div><div class="stat-value orange" id="safeCount">0</div></div>
+    <div class="stat-box"><div class="stat-label">MOON BAGS</div><div class="stat-value purple" id="safeCount">0</div></div>
+    <div class="stat-box"><div class="stat-label">MOON $</div><div class="stat-value purple" id="moonTotal">$0</div></div>
     <div class="stat-box"><div class="stat-label">TRADES</div><div class="stat-value" id="totalTrades">0</div></div>
     <div class="stat-box"><div class="stat-label">SCANNED</div><div class="stat-value cyan" id="totalScanned">0</div></div>
     <div class="stat-box"><div class="stat-label">OPPS</div><div class="stat-value yellow" id="oppsCount">0</div></div>
@@ -395,6 +396,11 @@ async function extendPos(id) {
   try { await fetch(API + '/extend/' + id, { method: 'POST' }); setTimeout(fetchStatus, 500); } catch(e) {}
 }
 
+async function sellMoon(id) {
+  if (!confirm('Sell this Moon Bag?')) return;
+  try { await fetch(API + '/sellmoon/' + id, { method: 'POST' }); setTimeout(fetchStatus, 500); } catch(e) {}
+}
+
 function addLog(icon, text) { logs.unshift({ time: new Date().toLocaleTimeString('en-US',{hour12:false}), icon, text }); if(logs.length>200) logs.pop(); }
 
 function exportData() {
@@ -420,7 +426,10 @@ function updateUI() {
   $('realtimeCount').textContent = positions.filter(p => p.tradeType === 'QUICK').length;
   $('pumpCount').textContent = positions.filter(p => p.tradeType === 'LONG').length;
   $('dexCount').textContent = positions.length;
-  $('safeCount').textContent = positions.filter(p => p.isMoonBag).length;
+  const moonBags = positions.filter(p => p.isMoonBag);
+  $('safeCount').textContent = moonBags.length;
+  const moonValue = moonBags.reduce((s,p) => s + (p.currentSize * (1 + (p.pnlPct||0)/100)), 0);
+  $('moonTotal').textContent = '$' + moonValue.toFixed(0);
   $('scannedStat').textContent = state.scannedTotal || 0;
   $('oppsStat').textContent = state.oppsTotal || 0;
   $('posStat').textContent = positions.length;
@@ -464,11 +473,25 @@ function renderCard(pos) {
   else if (pos.trailingActivated) cardClass += ' trailing';
   const typeClass = pos.tradeType === 'MOON' ? 'moon' : pos.tradeType === 'LONG' ? 'long' : 'quick';
   const label = pos.label || pos.tradeType || 'QUICK';
+
+  // Tags
   let tags = '';
-  if (pos.isMoonBag) tags += '<span class="pos-tag moon">MOON</span>';
+  if (pos.isMoonBag) tags += '<span class="pos-tag moon">MOON BAG ∞</span>';
+  if (pos.tpLevel > 0) tags += '<span class="pos-tag secured">TP' + pos.tpLevel + ' secured</span>';
   if (pos.trailingActivated) tags += '<span class="pos-tag trailing">Peak +' + (pos.trailingHigh||0).toFixed(0) + '%</span>';
   if ((pos.dcaSecured||0) > 0) tags += '<span class="pos-tag secured">+$' + pos.dcaSecured.toFixed(0) + '</span>';
-  if (pos.dcaLevel > 0) tags += '<span class="pos-tag pump">DCA ' + pos.dcaLevel + '/3</span>';
+  if ((pos.totalDcaAdded||0) > 0) tags += '<span class="pos-tag pump">DCA +$' + pos.totalDcaAdded.toFixed(0) + '</span>';
+
+  // Buttons — moon bags get "Sell Moon" instead of Close/Extend
+  let actions;
+  if (pos.isMoonBag) {
+    actions = '<button onclick="sellMoon(' + (pos.id||0) + ')" class="pos-action-btn" style="border-color:var(--purple);color:var(--purple)">Sell Moon Bag</button>';
+  } else {
+    actions = '<button onclick="closePos(' + (pos.id||0) + ')" class="pos-action-btn close">Close</button>' +
+      '<button onclick="extendPos(' + (pos.id||0) + ')" class="pos-action-btn extend">+15min</button>';
+  }
+  actions += '<a href="' + dexUrl + '" target="_blank" class="pos-action-btn">DexScreener</a>' +
+    '<a href="/?ca=' + (pos.address||'') + '" target="_blank" class="pos-action-btn" style="border-color:rgba(0,212,255,0.3);color:var(--cyan)">Analyze</a>';
 
   return '<div class="pos-card ' + cardClass + '">' +
     '<div class="pos-header"><div class="pos-token">' +
@@ -480,18 +503,13 @@ function renderCard(pos) {
       '<div class="pos-pnl-pct" style="color:var(--' + (isProfit?'green':'red') + ')">' + (isProfit?'+':'') + pnlPct.toFixed(1) + '%</div></div></div>' +
     '<div class="pos-stats">' +
       '<div class="pos-stat"><div class="pos-stat-label">SIZE</div><div class="pos-stat-value">$' + (pos.currentSize||0).toFixed(0) + '</div></div>' +
-      '<div class="pos-stat"><div class="pos-stat-label">TIME</div><div class="pos-stat-value">' + holdMin + 'm</div></div>' +
+      '<div class="pos-stat"><div class="pos-stat-label">TIME</div><div class="pos-stat-value">' + (pos.isMoonBag ? '∞' : holdMin + 'm') + '</div></div>' +
       '<div class="pos-stat"><div class="pos-stat-label">PEAK</div><div class="pos-stat-value green">+' + (pos.highestPnlPct||0).toFixed(0) + '%</div></div>' +
-      '<div class="pos-stat"><div class="pos-stat-label">TRAIL</div><div class="pos-stat-value ' + (pos.trailingActivated?'orange':'') + '">' + (pos.trailingActivated ? '-'+(pos.currentTrailDistance||20).toFixed(0)+'%' : 'OFF') + '</div></div>' +
-      '<div class="pos-stat"><div class="pos-stat-label">MAX</div><div class="pos-stat-value">' + (pos.maxHold||20) + 'm</div></div>' +
+      '<div class="pos-stat"><div class="pos-stat-label">TRAIL</div><div class="pos-stat-value ' + (pos.trailingActivated?'orange':'') + '">' + (pos.isMoonBag ? 'NONE' : pos.trailingActivated ? '-'+(pos.currentTrailDistance||20).toFixed(0)+'%' : 'OFF') + '</div></div>' +
+      '<div class="pos-stat"><div class="pos-stat-label">MAX</div><div class="pos-stat-value">' + (pos.isMoonBag ? '∞' : (pos.maxHold||20) + 'm') + '</div></div>' +
     '</div>' +
     (tags ? '<div class="pos-tags">' + tags + '</div>' : '') +
-    '<div class="pos-actions">' +
-      '<button onclick="closePos(' + (pos.id||0) + ')" class="pos-action-btn close">Close</button>' +
-      '<button onclick="extendPos(' + (pos.id||0) + ')" class="pos-action-btn extend">+15min</button>' +
-      '<a href="' + dexUrl + '" target="_blank" class="pos-action-btn">DexScreener</a>' +
-      '<a href="/?ca=' + (pos.address||'') + '" target="_blank" class="pos-action-btn" style="border-color:rgba(0,212,255,0.3);color:var(--cyan)">Analyze</a>' +
-    '</div></div>';
+    '<div class="pos-actions">' + actions + '</div></div>';
 }
 
 function renderHistory() {
