@@ -1824,35 +1824,83 @@ body::before {
    RESPONSIVE
    ═══════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
+  /* TOP BAR */
   .top-bar {
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
+    padding: 8px 10px;
   }
-  
   .top-stats {
-    gap: 12px;
+    gap: 8px;
     flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
   }
-  
-  .main-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .positions-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .settings-grid {
-    grid-template-columns: 1fr;
-  }
-  
+  .top-stat-label { font-size: 9px; }
+  .top-stat-value { font-size: 14px; }
+
+  /* LAYOUT */
+  .main-grid { grid-template-columns: 1fr; gap: 8px; padding: 8px; }
+  .positions-grid { grid-template-columns: 1fr; }
+  .settings-grid { grid-template-columns: 1fr; }
+
+  /* CONTROLS */
   .controls-row {
     justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px;
   }
-  
-  .pos-stats-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .ctrl-btn { padding: 8px 12px; font-size: 11px; }
+
+  /* SCAN COUNTER in controls */
+  #scanCounter { font-size: 12px !important; padding: 6px 10px !important; }
+
+  /* POSITIONS — stack columns on mobile */
+  #positionsContainer { flex-direction: column !important; }
+
+  /* POSITION CARDS */
+  .position-card { padding: 10px; }
+  .pos-symbol { font-size: 13px; }
+  .pos-chain { font-size: 10px; }
+  .pos-pnl-value { font-size: 16px; }
+  .pos-pnl-pct { font-size: 11px; }
+  .pos-stats-row { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+  .pos-stat { padding: 5px; }
+  .pos-stat-label { font-size: 9px; }
+  .pos-stat-value { font-size: 12px; }
+  .pos-actions { flex-wrap: wrap; }
+  .pos-action-btn { padding: 6px 10px; font-size: 10px; }
+  .pos-tag { font-size: 9px; }
+
+  /* STATUS BADGES */
+  .status-badges { flex-wrap: wrap; }
+  .status-badge { font-size: 10px; padding: 4px 10px; }
+
+  /* PANELS */
+  .panel-header { padding: 6px 10px; }
+  .panel-title { font-size: 10px; }
+  .panel-badge { font-size: 10px; }
+  .panel-content { padding: 6px; }
+
+  /* HISTORY */
+  .history-item { font-size: 10px; padding: 6px; grid-template-columns: 40px 1fr auto; }
+  .history-pnl { font-size: 11px; }
+
+  /* LOGS */
+  .log-item { font-size: 10px; }
+  .log-time { font-size: 9px; min-width: 42px; }
+
+  /* NAVBAR */
+  .nav-links { display: none; }
+  .nav-socials { display: none; }
+
+  /* MODALS */
+  .modal-content { max-width: 95vw !important; padding: 12px; }
+
+  /* SCANNER STATUS */
+  .scanner-bar { flex-direction: column; gap: 4px; padding: 6px 10px; }
+  .scanner-stats { flex-wrap: wrap; gap: 6px; font-size: 10px; }
 }
 </style>
 </head>
