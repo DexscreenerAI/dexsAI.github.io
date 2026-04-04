@@ -1995,17 +1995,23 @@ body::before {
     </div>
   </div>
   
-  <!-- CENTER: POSITIONS -->
+  <!-- CENTER: POSITIONS — 2 columns -->
   <div class="panel" style="grid-row: span 2;">
     <div class="panel-header">
       <span class="panel-title">ACTIVE POSITIONS</span>
       <span class="panel-badge green" id="positionsBadge">0 OPEN</span>
     </div>
-    <div class="panel-content" id="positionsContainer">
-      <div class="positions-grid" id="positionsGrid">
-        <div class="empty" style="grid-column: 1/-1;">
-          <div class="empty-icon">📈</div>
-          <div class="empty-text">NO ACTIVE POSITIONS</div>
+    <div class="panel-content" id="positionsContainer" style="display:flex;gap:12px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#00ff88;letter-spacing:1px;padding:6px 0;border-bottom:1px solid rgba(0,255,136,0.2);margin-bottom:8px;">▲ WINNING <span id="winCount" style="opacity:0.6">0</span></div>
+        <div id="winningGrid">
+          <div class="empty"><div class="empty-icon">📈</div><div class="empty-text">No winners</div></div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#ff3b4f;letter-spacing:1px;padding:6px 0;border-bottom:1px solid rgba(255,59,79,0.2);margin-bottom:8px;">▼ LOSING <span id="loseCount" style="opacity:0.6">0</span></div>
+        <div id="losingGrid">
+          <div class="empty"><div class="empty-icon">📉</div><div class="empty-text">No losers</div></div>
         </div>
       </div>
     </div>
@@ -3775,15 +3781,31 @@ async function manualBuy(address, chain, pairAddress) {
 }
 
 function renderPositions() {
-  const container = $('positionsGrid');
+  const winContainer = $('winningGrid');
+  const loseContainer = $('losingGrid');
   $('positionsBadge').textContent = positions.length + ' OPEN';
-  
-  if (positions.length === 0) {
-    container.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📈</div><div class="empty-text">NO ACTIVE POSITIONS</div></div>';
-    return;
+
+  // Sort: winners by highest P&L%, losers by worst P&L%
+  const winners = positions.filter(p => (p.pnl||0) >= 0).sort((a,b) => (b.pnlPct||0) - (a.pnlPct||0));
+  const losers = positions.filter(p => (p.pnl||0) < 0).sort((a,b) => (a.pnlPct||0) - (b.pnlPct||0));
+
+  $('winCount').textContent = winners.length;
+  $('loseCount').textContent = losers.length;
+
+  if (winners.length === 0) {
+    winContainer.innerHTML = '<div class="empty"><div class="empty-icon">📈</div><div class="empty-text">No winners</div></div>';
+  } else {
+    winContainer.innerHTML = winners.map(renderCard).join('');
   }
-  
-  container.innerHTML = positions.map(pos => {
+
+  if (losers.length === 0) {
+    loseContainer.innerHTML = '<div class="empty"><div class="empty-icon">📉</div><div class="empty-text">No losers</div></div>';
+  } else {
+    loseContainer.innerHTML = losers.map(renderCard).join('');
+  }
+}
+
+function renderCard(pos) {
     const isProfit = pos.pnl >= 0;
     const holdMin = Math.floor((Date.now() - pos.entryTime) / 60000);
     const holdPct = Math.min(100, (holdMin / pos.maxHold) * 100);
@@ -3859,7 +3881,7 @@ function renderPositions() {
         ${pos.twitter ? `<a href="${pos.twitter}" target="_blank" class="pos-action-btn">𝕏</a>` : ''}
       </div>
     </div>`;
-  }).join('');
+}
 }
 
 function renderHistory() {
