@@ -219,24 +219,16 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); -webkit
 .log-text .green { color:var(--green); }
 .log-text .red { color:var(--red); }
 
-/* LIVE COUNTER */
+/* LIVE COUNTER — top center banner */
 .live-counter {
-  position:fixed; left:0; top:50%; transform:translateY(-50%); z-index:100;
-  background:var(--card); border:1px solid var(--card-border); border-left:none;
-  border-radius:0 12px 12px 0; padding:16px 14px; min-width:80px;
-  display:flex; flex-direction:column; gap:14px; align-items:center;
+  background:var(--bg2); border-bottom:1px solid var(--card-border);
+  padding:10px 24px; display:flex; justify-content:center; align-items:center; gap:12px;
 }
-.counter-item { text-align:center; }
 .counter-value {
-  font-family:var(--mono); font-size:22px; font-weight:800; color:var(--cyan);
-  line-height:1; text-shadow:0 0 20px rgba(0,212,255,0.3);
+  font-family:var(--mono); font-size:28px; font-weight:800; color:var(--cyan);
+  text-shadow:0 0 20px rgba(0,212,255,0.3);
 }
-.counter-value.green { color:var(--green); text-shadow:0 0 20px rgba(0,255,136,0.3); }
-.counter-value.red { color:var(--red); text-shadow:0 0 20px rgba(255,59,79,0.3); }
-.counter-value.yellow { color:var(--yellow); }
-.counter-label { font-family:var(--mono); font-size:7px; color:var(--text3); letter-spacing:1px; margin-top:3px; }
-.counter-divider { width:100%; height:1px; background:var(--card-border); }
-@media(max-width:768px) { .live-counter { display:none; } }
+.counter-label { font-family:var(--mono); font-size:11px; color:var(--text2); letter-spacing:1px; }
 
 /* EMPTY */
 .empty { text-align:center; padding:30px; color:var(--text3); }
@@ -253,13 +245,6 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); -webkit
 </head>
 <body>
 
-<div class="live-counter">
-  <div class="counter-item">
-    <div class="counter-value" id="liveScanned">0</div>
-    <div class="counter-label">SCAN</div>
-  </div>
-</div>
-
 <header class="header">
   <div class="header-left">
     <a href="/" style="text-decoration:none;display:flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid var(--card-border);border-radius:8px;color:var(--text2);font-family:var(--mono);font-size:11px;transition:all .15s;margin-right:8px" onmouseover="this.style.borderColor='rgba(0,212,255,0.4)';this.style.color='var(--cyan)'" onmouseout="this.style.borderColor='var(--card-border)';this.style.color='var(--text2)'">&larr; App</a>
@@ -274,6 +259,11 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); -webkit
     <span class="badge conn" id="wsBadge">OFFLINE</span>
   </div>
 </header>
+
+<div class="live-counter">
+  <div class="counter-label">TOKENS SCANNED</div>
+  <div class="counter-value" id="liveScanned">0</div>
+</div>
 
 <div class="stats-bar">
   <div class="stats-grid">
