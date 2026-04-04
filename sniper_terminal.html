@@ -3817,7 +3817,7 @@ function renderPositions() {
           <div class="pos-logo">${renderLogo(pos.logo, pos.symbol)}</div>
           <div class="pos-details">
             <div class="pos-symbol">$${esc(pos.symbol)} <span class="pos-type ${typeClass}">${pos.label}</span></div>
-            <div class="pos-chain">${pos.chain.toUpperCase()} • Score: ${pos.score}</div>
+            <div class="pos-chain">MC: $${formatNumber(pos.entryMarketCap || 0)} • Score: ${pos.score}</div>
           </div>
         </div>
         <div class="pos-pnl">
@@ -3833,7 +3833,7 @@ function renderPositions() {
         </div>
         <div class="pos-stat">
           <div class="pos-stat-label">${pos.trailingActivated ? 'TRAIL' : 'SL'}</div>
-          <div class="pos-stat-value ${pos.trailingActivated ? 'orange' : 'red'}">${pos.trailingActivated ? `-${pos.currentTrailDistance.toFixed(0)}%` : `-${pos.stopLoss}%`}</div>
+          <div class="pos-stat-value ${pos.trailingActivated ? 'orange' : 'red'}">${pos.trailingActivated ? `-${(pos.currentTrailDistance||20).toFixed(0)}%` : '-60%'}</div>
         </div>
         <div class="pos-stat">
           <div class="pos-stat-label">PEAK</div>
