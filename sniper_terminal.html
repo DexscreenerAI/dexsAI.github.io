@@ -155,28 +155,28 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --bg-dark: #0a0c0f;
-  --bg-panel: #0d1117;
-  --bg-card: #131920;
-  --bg-hover: #1a222d;
-  --border: #1e2a3a;
-  --border-bright: #2d4a5e;
-  --green: #00ff88;
-  --green-dim: rgba(0, 255, 136, 0.15);
-  --green-glow: rgba(0, 255, 136, 0.4);
-  --red: #ff4757;
-  --red-dim: rgba(255, 71, 87, 0.15);
-  --cyan: #00d4ff;
-  --cyan-dim: rgba(0, 212, 255, 0.15);
-  --yellow: #ffd93d;
-  --yellow-dim: rgba(255, 217, 61, 0.15);
-  --purple: #a855f7;
-  --purple-dim: rgba(168, 85, 247, 0.15);
-  --orange: #ff9f43;
-  --pink: #ff6b9d;
-  --text: #e2e8f0;
-  --text-dim: #64748b;
-  --text-muted: #475569;
+  --bg-dark: #050608;
+  --bg-panel: #080a0d;
+  --bg-card: #0c1015;
+  --bg-hover: #121820;
+  --border: #0f1f12;
+  --border-bright: #1a3d20;
+  --green: #00ff41;
+  --green-dim: rgba(0, 255, 65, 0.12);
+  --green-glow: rgba(0, 255, 65, 0.6);
+  --red: #ff0040;
+  --red-dim: rgba(255, 0, 64, 0.12);
+  --cyan: #00f0ff;
+  --cyan-dim: rgba(0, 240, 255, 0.12);
+  --yellow: #f0ff00;
+  --yellow-dim: rgba(240, 255, 0, 0.12);
+  --purple: #bf00ff;
+  --purple-dim: rgba(191, 0, 255, 0.12);
+  --orange: #ff6600;
+  --pink: #ff00aa;
+  --text: #c0ffce;
+  --text-dim: #4a7050;
+  --text-muted: #2a4030;
   --mono: 'JetBrains Mono', 'Courier New', monospace;
 }
 
@@ -188,6 +188,95 @@ html, body {
   line-height: 1.4;
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════
+   HACKER EFFECTS - Matrix Rain + Scanlines + CRT
+   ═══════════════════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 65, 0.015) 2px,
+      rgba(0, 255, 65, 0.015) 4px
+    );
+  pointer-events: none;
+  z-index: 10000;
+  animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100vh; }
+}
+
+/* Matrix rain effect */
+#matrix-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.06;
+}
+
+/* Glitch effect for headers */
+@keyframes glitch {
+  0% { text-shadow: 0.05em 0 0 var(--red), -0.025em -0.05em 0 var(--cyan), 0.025em 0.05em 0 var(--green); }
+  14% { text-shadow: 0.05em 0 0 var(--red), -0.025em -0.05em 0 var(--cyan), 0.025em 0.05em 0 var(--green); }
+  15% { text-shadow: -0.05em -0.025em 0 var(--red), 0.025em 0.025em 0 var(--cyan), -0.05em -0.05em 0 var(--green); }
+  49% { text-shadow: -0.05em -0.025em 0 var(--red), 0.025em 0.025em 0 var(--cyan), -0.05em -0.05em 0 var(--green); }
+  50% { text-shadow: 0.025em 0.05em 0 var(--red), 0.05em 0 0 var(--cyan), 0 -0.05em 0 var(--green); }
+  99% { text-shadow: 0.025em 0.05em 0 var(--red), 0.05em 0 0 var(--cyan), 0 -0.05em 0 var(--green); }
+  100% { text-shadow: -0.025em 0 0 var(--red), -0.025em -0.025em 0 var(--cyan), -0.025em -0.05em 0 var(--green); }
+}
+
+.glitch {
+  animation: glitch 3s infinite;
+}
+
+/* Pulse glow animation */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px var(--green), inset 0 0 5px rgba(0,255,65,0.1); }
+  50% { box-shadow: 0 0 20px var(--green), 0 0 40px var(--green-glow), inset 0 0 10px rgba(0,255,65,0.2); }
+}
+
+@keyframes pulse-text {
+  0%, 100% { text-shadow: 0 0 5px var(--green-glow); }
+  50% { text-shadow: 0 0 15px var(--green), 0 0 30px var(--green-glow); }
+}
+
+/* Terminal cursor blink */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.cursor::after {
+  content: '█';
+  animation: blink 1s step-end infinite;
+  color: var(--green);
+}
+
+/* Hexagon decorations */
+.hex-grid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300ff41' fill-opacity='0.02'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -215,13 +304,19 @@ html, body {
 .logo-text {
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   color: var(--green);
-  text-shadow: 0 0 10px var(--green-glow);
+  text-shadow: 0 0 10px var(--green-glow), 0 0 20px var(--green-glow), 0 0 40px rgba(0,255,65,0.3);
+  animation: pulse-text 2s ease-in-out infinite;
+}
+
+.logo-text.glitch {
+  animation: glitch 2.5s infinite, pulse-text 2s ease-in-out infinite;
 }
 
 .logo-slash {
-  color: var(--text-dim);
+  color: var(--red);
+  text-shadow: 0 0 8px rgba(255,0,64,0.6);
 }
 
 .top-stats {
@@ -260,25 +355,59 @@ html, body {
 }
 
 .status-badge {
-  padding: 4px 10px;
-  border-radius: 3px;
+  padding: 4px 12px;
+  border-radius: 2px;
   font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 1px;
+  font-weight: 700;
+  letter-spacing: 2px;
   text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+
+.status-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% { left: -100%; }
+  50%, 100% { left: 100%; }
 }
 
 .status-badge.live {
-  background: var(--green-dim);
+  background: var(--bg-dark);
   color: var(--green);
   border: 1px solid var(--green);
-  animation: pulse-glow 2s infinite;
+  box-shadow: 0 0 10px var(--green-glow), inset 0 0 20px rgba(0,255,65,0.1);
+  animation: pulse-glow 1.5s infinite;
+}
+
+.status-badge.live::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 0 10px var(--green);
+  animation: blink 1s infinite;
 }
 
 .status-badge.stopped {
-  background: var(--red-dim);
+  background: var(--bg-dark);
   color: var(--red);
   border: 1px solid var(--red);
+  box-shadow: 0 0 10px rgba(255,0,64,0.3);
 }
 
 .status-badge.demo {
@@ -386,10 +515,10 @@ html, body {
 }
 
 .ctrl-btn {
-  padding: 8px 14px;
+  padding: 8px 16px;
   font-family: var(--mono);
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
   border: 1px solid var(--border-bright);
@@ -398,24 +527,49 @@ html, body {
   color: var(--text-dim);
   cursor: pointer;
   transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctrl-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.4s;
+}
+
+.ctrl-btn:hover::before {
+  left: 100%;
 }
 
 .ctrl-btn:hover {
   background: var(--bg-hover);
   border-color: var(--cyan);
   color: var(--cyan);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 10px rgba(0,240,255,0.2);
+}
+
+.ctrl-btn:active {
+  transform: translateY(0);
 }
 
 .ctrl-btn.primary {
-  background: var(--green-dim);
+  background: linear-gradient(135deg, rgba(0,255,65,0.1) 0%, var(--bg-card) 100%);
   border-color: var(--green);
   color: var(--green);
+  box-shadow: 0 0 10px rgba(0,255,65,0.2);
 }
 
 .ctrl-btn.primary:hover {
   background: var(--green);
   color: var(--bg-dark);
-  box-shadow: 0 0 15px var(--green-glow);
+  box-shadow: 0 0 25px var(--green-glow), 0 0 50px rgba(0,255,65,0.3);
+  text-shadow: none;
 }
 
 .ctrl-btn.danger {
@@ -426,6 +580,7 @@ html, body {
 .ctrl-btn.danger:hover {
   background: var(--red);
   color: white;
+  box-shadow: 0 0 20px rgba(255,0,64,0.4);
 }
 
 .ctrl-btn.warning {
@@ -434,28 +589,58 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════
-   SCANNER PANEL (Left Column)
+   SCANNER PANEL (Left Column) - HACKER STYLE
    ═══════════════════════════════════════════════════════ */
 .scanner-item {
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 10px;
-  background: var(--bg-card);
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(0,255,65,0.02) 100%);
   border: 1px solid var(--border);
   border-left: 3px solid var(--cyan);
   margin-bottom: 6px;
   border-radius: 2px;
   transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.scanner-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0,255,65,0.05), transparent);
+  animation: scan-sweep 3s infinite;
+}
+
+@keyframes scan-sweep {
+  0% { left: -50%; }
+  100% { left: 150%; }
 }
 
 .scanner-item:hover {
-  background: var(--bg-hover);
-  border-color: var(--cyan);
+  background: linear-gradient(135deg, var(--bg-hover) 0%, rgba(0,255,65,0.05) 100%);
+  border-color: var(--green);
+  box-shadow: 0 0 15px rgba(0,255,65,0.1), inset 0 0 30px rgba(0,255,65,0.02);
 }
 
 .scanner-item.high-score {
   border-left-color: var(--green);
+  box-shadow: 0 0 10px rgba(0,255,65,0.15);
+}
+
+.scanner-item.high-score::after {
+  content: '◆';
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  color: var(--green);
+  font-size: 8px;
+  animation: blink 1.5s infinite;
 }
 
 .scanner-item.medium-score {
@@ -469,12 +654,35 @@ html, body {
 }
 
 .scanner-token {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text);
-  font-size: 11px;
+  font-size: 12px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  text-shadow: 0 0 10px rgba(0,255,65,0.3);
+}
+
+.scanner-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: var(--bg-dark);
+  border: 1px solid var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--green);
+  overflow: hidden;
+  box-shadow: 0 0 8px rgba(0,255,65,0.2);
+}
+
+.scanner-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .scanner-token-link {
@@ -484,26 +692,31 @@ html, body {
   width: 20px;
   height: 20px;
   border-radius: 3px;
-  background: var(--green-dim);
+  background: var(--bg-dark);
   border: 1px solid var(--green);
   color: var(--green);
   text-decoration: none;
   font-size: 10px;
   transition: all 0.1s;
+  box-shadow: 0 0 5px rgba(0,255,65,0.2);
 }
 
 .scanner-token-link:hover {
   background: var(--green);
   color: var(--bg-dark);
+  box-shadow: 0 0 15px var(--green-glow);
 }
 
 .scanner-edge {
   font-size: 10px;
-  font-weight: 600;
-  padding: 2px 6px;
+  font-weight: 700;
+  padding: 3px 8px;
   border-radius: 2px;
-  background: var(--green-dim);
+  background: var(--bg-dark);
   color: var(--green);
+  border: 1px solid var(--green);
+  text-shadow: 0 0 8px var(--green-glow);
+  letter-spacing: 1px;
 }
 
 .scanner-meta {
@@ -529,24 +742,45 @@ html, body {
   padding: 5px 10px;
   font-family: var(--mono);
   font-size: 9px;
-  font-weight: 600;
+  font-weight: 700;
   border: 1px solid var(--border);
   border-radius: 2px;
   background: var(--bg-dark);
   color: var(--text-dim);
   cursor: pointer;
-  transition: all 0.1s;
+  transition: all 0.15s;
   text-decoration: none;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.scanner-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.3s;
+}
+
+.scanner-btn:hover::before {
+  left: 100%;
 }
 
 .scanner-btn.buy {
   border-color: var(--green);
   color: var(--green);
+  box-shadow: 0 0 5px rgba(0,255,65,0.2);
 }
 
 .scanner-btn.buy:hover {
   background: var(--green);
   color: var(--bg-dark);
+  box-shadow: 0 0 15px var(--green-glow), 0 0 30px rgba(0,255,65,0.3);
+  text-shadow: none;
 }
 
 .scanner-btn.dex {
@@ -557,10 +791,23 @@ html, body {
 .scanner-btn.dex:hover {
   background: var(--cyan);
   color: var(--bg-dark);
+  box-shadow: 0 0 15px rgba(0,240,255,0.4);
+}
+
+.scanner-btn.pump {
+  border-color: var(--pink);
+  color: var(--pink);
+}
+
+.scanner-btn.pump:hover {
+  background: var(--pink);
+  color: var(--bg-dark);
+  box-shadow: 0 0 15px rgba(255,0,170,0.4);
 }
 
 .scanner-btn:hover {
   background: var(--bg-hover);
+  transform: translateY(-1px);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -584,29 +831,81 @@ html, body {
   padding: 12px;
   border-left: 3px solid var(--cyan);
   transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.position-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, rgba(0,255,65,0.05) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .position-card:hover {
   background: var(--bg-hover);
+  box-shadow: inset 0 0 30px rgba(0,255,65,0.03);
 }
 
 .position-card.profit {
   border-left-color: var(--green);
-  background: linear-gradient(90deg, rgba(0,255,136,0.03) 0%, var(--bg-card) 100%);
+  background: linear-gradient(90deg, rgba(0,255,65,0.05) 0%, var(--bg-card) 100%);
+  box-shadow: 0 0 15px rgba(0,255,65,0.1);
+}
+
+.position-card.profit::after {
+  content: '▲';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  color: var(--green);
+  font-size: 10px;
+  opacity: 0.5;
+  animation: pulse-text 1.5s infinite;
 }
 
 .position-card.loss {
   border-left-color: var(--red);
-  background: linear-gradient(90deg, rgba(255,71,87,0.03) 0%, var(--bg-card) 100%);
+  background: linear-gradient(90deg, rgba(255,0,64,0.05) 0%, var(--bg-card) 100%);
+}
+
+.position-card.loss::after {
+  content: '▼';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  color: var(--red);
+  font-size: 10px;
+  opacity: 0.5;
 }
 
 .position-card.moon {
   border-left-color: var(--pink);
-  background: linear-gradient(90deg, rgba(255,107,157,0.05) 0%, var(--bg-card) 100%);
+  background: linear-gradient(90deg, rgba(255,0,170,0.05) 0%, rgba(191,0,255,0.03) 50%, var(--bg-card) 100%);
+  box-shadow: 0 0 20px rgba(255,0,170,0.1);
+}
+
+.position-card.moon::after {
+  content: '🌕';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 12px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
 .position-card.trailing {
   border-left-color: var(--orange);
+  box-shadow: 0 0 15px rgba(255,102,0,0.15);
 }
 
 .pos-header {
@@ -623,24 +922,46 @@ html, body {
 }
 
 .pos-logo {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 4px;
-  background: var(--bg-dark);
+  background: linear-gradient(135deg, var(--bg-dark) 0%, #0a120c 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--text-dim);
+  color: var(--green);
+  text-shadow: 0 0 10px var(--green-glow);
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid var(--green);
+  box-shadow: 0 0 10px rgba(0,255,65,0.2), inset 0 0 15px rgba(0,255,65,0.1);
+  position: relative;
+}
+
+.pos-logo::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 40%, rgba(0,255,65,0.1) 50%, transparent 60%);
+  animation: logo-shine 3s infinite;
+}
+
+@keyframes logo-shine {
+  0% { transform: translateX(-100%) translateY(-100%); }
+  100% { transform: translateX(100%) translateY(100%); }
 }
 
 .pos-logo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 3px;
+  position: relative;
+  z-index: 1;
 }
 
 .pos-details {
@@ -938,21 +1259,36 @@ html, body {
 .history-pnl.red { color: var(--red); }
 
 /* ═══════════════════════════════════════════════════════
-   ACTIVITY LOG
+   ACTIVITY LOG - TERMINAL STYLE
    ═══════════════════════════════════════════════════════ */
 .log-item {
   display: flex;
   gap: 8px;
   padding: 6px 10px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(0,255,65,0.05);
   font-size: 10px;
   line-height: 1.4;
+  position: relative;
+  transition: background 0.1s;
+}
+
+.log-item:hover {
+  background: rgba(0,255,65,0.03);
+}
+
+.log-item::before {
+  content: '>';
+  color: var(--green);
+  opacity: 0.3;
+  margin-right: 4px;
 }
 
 .log-time {
-  color: var(--text-muted);
-  min-width: 50px;
+  color: var(--green);
+  min-width: 55px;
   font-size: 9px;
+  opacity: 0.6;
+  font-weight: 500;
 }
 
 .log-icon {
@@ -960,17 +1296,19 @@ html, body {
 }
 
 .log-text {
-  color: var(--text-dim);
+  color: var(--text);
   flex: 1;
+  font-weight: 400;
 }
 
-.log-text .green { color: var(--green); }
-.log-text .red { color: var(--red); }
-.log-text .cyan { color: var(--cyan); }
+.log-text .green { color: var(--green); text-shadow: 0 0 8px var(--green-glow); }
+.log-text .red { color: var(--red); text-shadow: 0 0 8px rgba(255,0,64,0.4); }
+.log-text .cyan { color: var(--cyan); text-shadow: 0 0 8px rgba(0,240,255,0.4); }
 .log-text .yellow { color: var(--yellow); }
 .log-text .purple { color: var(--purple); }
 .log-text .orange { color: var(--orange); }
 .log-text .pink { color: var(--pink); }
+.log-text .glitch { animation: glitch 2s infinite; }
 
 /* ═══════════════════════════════════════════════════════
    PNL CURVE MINI CHART
@@ -1315,7 +1653,7 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════
-   EMPTY STATE
+   EMPTY STATE - HACKER STYLE
    ═══════════════════════════════════════════════════════ */
 .empty {
   display: flex;
@@ -1323,61 +1661,145 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 30px 20px;
-  color: var(--text-muted);
+  color: var(--green);
   text-align: center;
+  position: relative;
+}
+
+.empty::before {
+  content: '[ AWAITING DATA ]';
+  position: absolute;
+  top: 10px;
+  font-size: 8px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  animation: blink 2s infinite;
 }
 
 .empty-icon {
-  font-size: 28px;
-  margin-bottom: 10px;
-  opacity: 0.5;
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.7;
+  animation: pulse-text 2s infinite;
 }
 
 .empty-text {
-  font-size: 10px;
-  letter-spacing: 1px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--green);
+  text-shadow: 0 0 10px var(--green-glow);
+}
+
+.empty-text .cursor::after {
+  content: '█';
+  animation: blink 0.8s step-end infinite;
+  color: var(--green);
 }
 
 /* ═══════════════════════════════════════════════════════
-   SCANNER STATUS BAR
+   SCANNER STATUS BAR - RADAR STYLE
    ═══════════════════════════════════════════════════════ */
 .scanner-status-bar {
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 12px;
-  background: var(--bg-dark);
-  border-bottom: 1px solid var(--border);
+  padding: 8px 12px;
+  background: linear-gradient(90deg, var(--bg-dark) 0%, rgba(0,255,65,0.02) 50%, var(--bg-dark) 100%);
+  border-bottom: 1px solid var(--green);
+  border-top: 1px solid rgba(0,255,65,0.1);
   font-size: 9px;
+  position: relative;
+  overflow: hidden;
+}
+
+.scanner-status-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0,255,65,0.1), transparent);
+  animation: status-scan 2s linear infinite;
+}
+
+@keyframes status-scan {
+  0% { left: -50%; }
+  100% { left: 150%; }
 }
 
 .scanner-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+}
+
+.scanner-radar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--green);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scanner-radar::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px solid var(--green);
+  animation: radar-pulse 1.5s ease-out infinite;
+  opacity: 0;
+}
+
+.scanner-radar::after {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--green);
+}
+
+@keyframes radar-pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.scanner-radar.scanning::before {
+  animation: radar-pulse 0.8s ease-out infinite;
 }
 
 .scanner-dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--red);
+  box-shadow: 0 0 5px rgba(255,0,64,0.5);
 }
 
 .scanner-dot.active {
   background: var(--green);
-  box-shadow: 0 0 8px var(--green-glow);
-  animation: blink 1s infinite;
+  box-shadow: 0 0 10px var(--green-glow), 0 0 20px rgba(0,255,65,0.3);
+  animation: pulse-dot 1s infinite;
 }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 10px var(--green-glow); }
+  50% { transform: scale(1.2); box-shadow: 0 0 20px var(--green-glow), 0 0 30px rgba(0,255,65,0.4); }
 }
 
 .scanner-text {
-  color: var(--text-dim);
+  color: var(--green);
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .scanner-stats {
@@ -1387,11 +1809,15 @@ html, body {
 
 .scanner-stat {
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .scanner-stat span {
   color: var(--cyan);
-  font-weight: 600;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(0,240,255,0.4);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1431,6 +1857,10 @@ html, body {
 </style>
 </head>
 <body>
+
+<!-- MATRIX RAIN BACKGROUND -->
+<canvas id="matrix-bg"></canvas>
+<div class="hex-grid"></div>
 
 <!-- ═══════════════════════════════════════════════════════
      NAVBAR
@@ -1480,7 +1910,7 @@ html, body {
      ═══════════════════════════════════════════════════════ -->
 <div class="top-bar">
   <div class="logo">
-    <span class="logo-text">SNIPER<span class="logo-slash">//</span>TERMINAL</span>
+    <span class="logo-text glitch">SNIPER<span class="logo-slash">//</span>TERMINAL</span>
   </div>
   
   <div class="top-stats">
@@ -2057,6 +2487,39 @@ function clearCache() {
   lastCacheClear = Date.now();
   $('cacheCount').textContent = '0';
   addLog('🗑️', `Cache cleared (${oldSize} entries)`);
+}
+
+// ═══════════════════════════════════════════════════════
+// IMAGE URL FIXER
+// ═══════════════════════════════════════════════════════
+function fixImageUrl(url) {
+  if (!url) return null;
+  
+  // Fix IPFS URLs
+  if (url.startsWith('ipfs://')) {
+    return url.replace('ipfs://', 'https://ipfs.io/ipfs/');
+  }
+  
+  // Fix pump.fun IPFS hashes
+  if (url && !url.startsWith('http') && url.length > 30) {
+    return `https://pump.mypinata.cloud/ipfs/${url}`;
+  }
+  
+  // Fix CF IPFS URLs that might be blocked
+  if (url.includes('cf-ipfs.com')) {
+    const hash = url.split('/ipfs/')[1];
+    if (hash) return `https://ipfs.io/ipfs/${hash}`;
+  }
+  
+  return url;
+}
+
+function renderLogo(logoUrl, symbol) {
+  const fixedUrl = fixImageUrl(logoUrl);
+  if (fixedUrl) {
+    return `<img src="${fixedUrl}" onerror="this.parentElement.innerHTML='${symbol.charAt(0)}'" loading="lazy">`;
+  }
+  return symbol.charAt(0);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3239,9 +3702,11 @@ function updateUI() {
 function renderScanner(opportunities) {
   const container = $('scannerContainer');
   if (opportunities.length === 0) {
-    container.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">SCANNING...</div></div>';
+    container.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">SCANNING<span class="cursor"></span></div></div>';
     return;
   }
+  
+  currentOpportunities = opportunities;
   
   container.innerHTML = opportunities.map(opp => {
     const p = opp.pair;
@@ -3256,25 +3721,30 @@ function renderScanner(opportunities) {
     const sells5m = p.txns?.m5?.sells || 0;
     const total5m = buys5m + sells5m;
     const buyRatio = total5m > 0 ? ((buys5m / total5m) * 100).toFixed(0) : '50';
+    const logoUrl = opp.analysis?.imageUri || p.info?.imageUrl || '';
+    const chain = (p.chainId || 'solana').toUpperCase();
     
     return `<div class="scanner-item ${scoreClass}">
       <div class="scanner-row">
         <span class="scanner-token">
+          <div class="scanner-logo">${renderLogo(logoUrl, symbol)}</div>
           <a href="${dexUrl}" target="_blank" class="scanner-token-link" title="Open on DexScreener">↗</a>
           $${esc(symbol)}
+          <span style="font-size:8px;color:var(--text-muted);font-weight:400">${chain}</span>
         </span>
-        <span class="scanner-edge">SCORE ${opp.score}</span>
+        <span class="scanner-edge">⚡ ${opp.score}</span>
       </div>
       <div class="scanner-meta">
         <span>MC $${fN(mc)}</span>
         <span>LIQ $${fN(liq)}</span>
         <span style="color:${chg5m >= 0 ? 'var(--green)' : 'var(--red)'}">5m ${chg5m >= 0 ? '+' : ''}${chg5m.toFixed(0)}%</span>
         <span style="color:${chg1h >= 0 ? 'var(--green)' : 'var(--red)'}">1h ${chg1h >= 0 ? '+' : ''}${chg1h.toFixed(0)}%</span>
-        <span>Buy ${buyRatio}%</span>
+        <span title="Buy pressure">🟢 ${buyRatio}%</span>
       </div>
       <div class="scanner-actions">
         <a href="${dexUrl}" target="_blank" class="scanner-btn dex">📊 DEX</a>
-        <button onclick="manualBuy('${p.baseToken?.address}', '${p.chainId}', '${p.pairAddress}')" class="scanner-btn buy">⚡ BUY</button>
+        <a href="https://pump.fun/coin/${p.baseToken?.address}" target="_blank" class="scanner-btn pump">🎰 PUMP</a>
+        <button onclick="manualBuy('${p.baseToken?.address}', '${p.chainId}', '${p.pairAddress}')" class="scanner-btn buy">⚡ SNIPE</button>
       </div>
     </div>`;
   }).join('');
@@ -3347,10 +3817,10 @@ function renderPositions() {
     return `<div class="position-card ${cardClass}">
       <div class="pos-header">
         <div class="pos-token-info">
-          <div class="pos-logo">${pos.logo ? `<img src="${pos.logo}" onerror="this.style.display='none'">` : pos.symbol.charAt(0)}</div>
+          <div class="pos-logo">${renderLogo(pos.logo, pos.symbol)}</div>
           <div class="pos-details">
             <div class="pos-symbol">$${esc(pos.symbol)} <span class="pos-type ${typeClass}">${pos.label}</span></div>
-            <div class="pos-chain">${pos.chain} • Score: ${pos.score}</div>
+            <div class="pos-chain">${pos.chain.toUpperCase()} • Score: ${pos.score}</div>
           </div>
         </div>
         <div class="pos-pnl">
@@ -3544,15 +4014,73 @@ function toggleMobileMenu() {
 }
 
 // ═══════════════════════════════════════════════════════
-// INIT
+// INIT WITH BOOT SEQUENCE
 // ═══════════════════════════════════════════════════════
 loadFromStorage();
 updateUI();
 renderPositions();
 renderHistory();
 renderPnlChart();
-addLog('💻', '<span class="cyan">SNIPER//TERMINAL</span> v6.8 - Mega Scanner');
-addLog('🔧', 'Click <span class="green">START</span> to begin scanning');
+
+// Hacker boot sequence
+const bootSequence = [
+  { delay: 0, icon: '⚡', text: '<span class="cyan">INITIALIZING SYSTEM...</span>' },
+  { delay: 200, icon: '🔐', text: '<span class="yellow">Decrypting protocols...</span>' },
+  { delay: 400, icon: '📡', text: '<span class="text-dim">Connecting to Helius RPC...</span> <span class="green">OK</span>' },
+  { delay: 600, icon: '🎰', text: '<span class="text-dim">Connecting to Pump.fun API...</span> <span class="green">OK</span>' },
+  { delay: 800, icon: '📊', text: '<span class="text-dim">Connecting to DexScreener...</span> <span class="green">OK</span>' },
+  { delay: 1000, icon: '🧠', text: '<span class="purple">AI scoring module loaded</span>' },
+  { delay: 1200, icon: '🛡️', text: '<span class="text-dim">Anti-rug protection...</span> <span class="green">ACTIVE</span>' },
+  { delay: 1400, icon: '💻', text: '<span class="green glitch">SNIPER//TERMINAL</span> v7.0 — HACKER EDITION' },
+  { delay: 1600, icon: '🚀', text: '<span class="cyan">Ready to hunt.</span> Click <span class="green">START</span> to begin' },
+];
+
+bootSequence.forEach(({ delay, icon, text }) => {
+  setTimeout(() => addLog(icon, text), delay);
+});
+
+// ═══════════════════════════════════════════════════════
+// MATRIX RAIN EFFECT
+// ═══════════════════════════════════════════════════════
+(function initMatrix() {
+  const canvas = document.getElementById('matrix-bg');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  
+  const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF$#@%&*<>[]{}';
+  const charArray = chars.split('');
+  const fontSize = 12;
+  const columns = Math.floor(canvas.width / fontSize);
+  const drops = Array(columns).fill(1);
+  
+  function draw() {
+    ctx.fillStyle = 'rgba(5, 6, 8, 0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = '#00ff41';
+    ctx.font = fontSize + 'px JetBrains Mono';
+    
+    for (let i = 0; i < drops.length; i++) {
+      const text = charArray[Math.floor(Math.random() * charArray.length)];
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+      
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i]++;
+    }
+  }
+  
+  setInterval(draw, 50);
+})();
 </script>
 </body>
 </html>
