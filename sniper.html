@@ -3,290 +3,285 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚡ SOLANA SNIPER v8.2 - LIVE TERMINAL</title>
+<title>DexScreener AI — Sniper</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
 
 :root {
---bg: #0a0a0a;
---bg2: #111111;
---bg3: #1a1a1a;
---bg4: #222222;
---green: #00ff88;
---red: #ff4757;
---cyan: #00d4ff;
---yellow: #ffd700;
---purple: #a855f7;
---orange: #ff9500;
---pink: #ff6b9d;
---solana: #14f195;
---pump: #00e5ff;
---helius: #ff7b00;
---text: #e2e8f0;
---text2: #94a3b8;
---border: #2a2a2a;
+  --bg: #060a10;
+  --bg2: #0b1018;
+  --bg3: #101822;
+  --card: #111a26;
+  --card-border: #1a2636;
+  --cyan: #00d4ff;
+  --cyan-dim: rgba(0,212,255,0.12);
+  --green: #00ff88;
+  --green-dim: rgba(0,255,136,0.10);
+  --red: #ff3b4f;
+  --red-dim: rgba(255,59,79,0.10);
+  --yellow: #ffaa00;
+  --yellow-dim: rgba(255,170,0,0.10);
+  --orange: #ff6b2b;
+  --purple: #b388ff;
+  --purple-dim: rgba(179,136,255,0.10);
+  --text: #dfe4ed;
+  --text2: rgba(255,255,255,0.50);
+  --text3: rgba(255,255,255,0.22);
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
 }
 
-body {
-font-family: 'Courier New', monospace;
-background: var(--bg);
-color: var(--green);
-min-height: 100vh;
-}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased; min-height:100vh; }
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--card-border); border-radius:4px; }
 
+/* HEADER */
 .header {
-background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
-border-bottom: 2px solid var(--helius);
-padding: 20px;
-text-align: center;
+  background:var(--bg2);
+  border-bottom:1px solid var(--card-border);
+  padding:20px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px;
 }
-.header h1 {
-font-size: 24px;
-letter-spacing: 3px;
-text-shadow: 0 0 20px var(--helius);
-margin-bottom: 8px;
-background: linear-gradient(90deg, var(--helius), var(--pump), var(--solana));
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-background-clip: text;
+.header-left { display:flex; align-items:center; gap:14px; }
+.header-logo {
+  width:36px; height:36px; border-radius:8px;
+  background:var(--cyan-dim); border:1px solid rgba(0,212,255,0.25);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-size:16px; font-weight:700; color:var(--cyan);
 }
-.header p { font-size: 10px; color: var(--text2); letter-spacing: 1px; }
-.version-badge {
-display: inline-block;
-margin-top: 8px;
-padding: 4px 12px;
-background: rgba(255,123,0,0.2);
-border: 1px solid var(--helius);
-border-radius: 12px;
-font-size: 9px;
-color: var(--helius);
+.header h1 { font-family:var(--mono); font-size:15px; font-weight:700; letter-spacing:1px; color:#fff; }
+.header p { font-size:12px; color:var(--text2); margin-top:2px; }
+.header-right { display:flex; align-items:center; gap:10px; }
+.badge {
+  font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:1px;
+  padding:5px 12px; border-radius:6px;
 }
-.mode-badge {
-display: inline-block;
-margin: 10px 5px 0;
-padding: 6px 16px;
-border-radius: 20px;
-font-size: 10px;
-font-weight: 700;
-letter-spacing: 2px;
+.badge.status { background:var(--red-dim); border:1px solid var(--red); color:var(--red); }
+.badge.status.active { background:var(--green-dim); border-color:var(--green); color:var(--green); }
+.badge.conn { background:var(--red-dim); border:1px solid var(--red); color:var(--red); }
+.badge.conn.connected { background:var(--green-dim); border-color:var(--green); color:var(--green); }
+
+/* STATS BAR */
+.stats-bar {
+  background:var(--bg2);
+  border-bottom:1px solid var(--card-border);
+  padding:12px 24px;
 }
-.mode-badge.stopped { background: rgba(255,71,87,0.1); border: 1px solid var(--red); color: var(--red); }
-.mode-badge.running { background: rgba(255,123,0,0.1); border: 1px solid var(--helius); color: var(--helius); animation: pulse 2s infinite; }
-.ws-badge { display: inline-block; margin: 10px 5px 0; padding: 4px 10px; border-radius: 12px; font-size: 9px; font-weight: 700; }
-.ws-badge.connected { background: rgba(0,255,136,0.2); border: 1px solid var(--green); color: var(--green); }
-.ws-badge.disconnected { background: rgba(255,71,87,0.2); border: 1px solid var(--red); color: var(--red); }
-@keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--helius); } 50% { opacity: 0.7; box-shadow: 0 0 20px var(--helius); } }
+.stats-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(90px, 1fr));
+  gap:8px;
+  max-width:1400px;
+  margin:0 auto;
+}
+.stat-box {
+  text-align:center; padding:10px 6px;
+  background:var(--card); border:1px solid var(--card-border); border-radius:8px;
+}
+.stat-box.main { border-color:var(--cyan); background:var(--cyan-dim); }
+.stat-box.highlight { border-color:var(--green); background:var(--green-dim); }
+.stat-label { font-family:var(--mono); font-size:9px; color:var(--text2); letter-spacing:1px; margin-bottom:4px; }
+.stat-value { font-family:var(--mono); font-size:15px; font-weight:700; }
+.stat-value.cyan { color:var(--cyan); }
+.stat-value.green { color:var(--green); }
+.stat-value.red { color:var(--red); }
+.stat-value.yellow { color:var(--yellow); }
+.stat-value.purple { color:var(--purple); }
+.stat-value.orange { color:var(--orange); }
 
-.pnl-banner { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px; }
-.pnl-grid { max-width: 1800px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 6px; }
-.pnl-box { text-align: center; padding: 8px 4px; background: var(--bg3); border-radius: 8px; }
-.pnl-box.main { border: 2px solid var(--helius); background: rgba(255,123,0,0.05); }
-.pnl-box.highlight { border: 1px solid var(--solana); background: rgba(20,241,149,0.05); }
-.pnl-label { font-size: 7px; color: var(--text2); letter-spacing: 1px; margin-bottom: 3px; }
-.pnl-value { font-size: 14px; font-weight: 700; }
-.pnl-value.green { color: var(--green); }
-.pnl-value.red { color: var(--red); }
-.pnl-value.yellow { color: var(--yellow); }
-.pnl-value.solana { color: var(--solana); }
-.pnl-value.pump { color: var(--pump); }
-.pnl-value.helius { color: var(--helius); }
+/* CONTROLS */
+.controls {
+  display:flex; justify-content:center; gap:8px; padding:14px 24px;
+  background:var(--bg2); border-bottom:1px solid var(--card-border); flex-wrap:wrap;
+}
+.ctrl-btn {
+  padding:9px 18px; font-family:var(--mono); font-size:11px; font-weight:600;
+  letter-spacing:0.5px; border:1px solid rgba(0,212,255,0.25); border-radius:8px;
+  background:var(--cyan-dim); color:var(--cyan); cursor:pointer; transition:all .15s;
+}
+.ctrl-btn:hover { background:rgba(0,212,255,0.18); border-color:rgba(0,212,255,0.4); }
+.ctrl-btn.secondary { background:transparent; border-color:var(--card-border); color:var(--text2); }
+.ctrl-btn.secondary:hover { border-color:var(--cyan); color:var(--cyan); }
 
-.controls { display: flex; justify-content: center; gap: 8px; padding: 12px; background: var(--bg2); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-.ctrl-btn { padding: 10px 20px; font-family: inherit; font-size: 11px; font-weight: 700; letter-spacing: 2px; border: 2px solid var(--helius); border-radius: 8px; background: transparent; color: var(--helius); cursor: pointer; transition: all 0.2s; }
-.ctrl-btn:hover { background: var(--helius); color: var(--bg); box-shadow: 0 0 20px var(--helius); }
-.ctrl-btn.danger { border-color: var(--red); color: var(--red); }
-.ctrl-btn.danger:hover { background: var(--red); color: white; }
-.ctrl-btn.secondary { border-color: var(--solana); color: var(--solana); }
-.ctrl-btn.secondary:hover { background: var(--solana); color: var(--bg); }
-.ctrl-btn.warning { border-color: var(--orange); color: var(--orange); }
-.ctrl-btn.warning:hover { background: var(--orange); color: var(--bg); }
-.ctrl-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+/* SCANNER STATUS */
+.scanner-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 24px; background:var(--bg); border-bottom:1px solid var(--card-border);
+  flex-wrap:wrap; gap:8px;
+}
+.scanner-left { display:flex; align-items:center; gap:10px; }
+.scanner-dot { width:8px; height:8px; border-radius:50%; background:var(--red); }
+.scanner-dot.active { background:var(--green); animation:blink 1s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+.scanner-text { font-family:var(--mono); font-size:11px; color:var(--text2); }
+.scanner-stats { display:flex; gap:14px; font-family:var(--mono); font-size:10px; color:var(--text2); }
+.scanner-stats span { font-weight:600; color:var(--cyan); }
 
-.scanner-status { padding: 10px 20px; background: var(--bg2); border-bottom: 1px solid var(--border); }
-.scanner-bar { display: flex; align-items: center; justify-content: space-between; max-width: 1600px; margin: 0 auto; flex-wrap: wrap; gap: 8px; }
-.scanner-info { display: flex; align-items: center; gap: 10px; }
-.scanner-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); }
-.scanner-dot.active { background: var(--helius); animation: blink 1s infinite; }
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-.scanner-text { font-size: 11px; color: var(--text2); }
-.scanner-stats { display: flex; gap: 10px; font-size: 10px; flex-wrap: wrap; }
-.scanner-stat { color: var(--text2); }
-.scanner-stat span { font-weight: 700; }
-.scanner-stat.helius span { color: var(--helius); }
-.scanner-stat.pump span { color: var(--pump); }
-.scanner-stat.dex span { color: var(--solana); }
+/* MAIN GRID */
+.main { max-width:1400px; margin:0 auto; padding:16px 24px; display:flex; flex-direction:column; gap:16px; }
+.trades-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.bottom-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:900px) { .trades-row,.bottom-row { grid-template-columns:1fr; } }
 
-.main { display: flex; flex-direction: column; gap: 15px; padding: 15px; max-width: 1900px; margin: 0 auto; }
-.trades-row, .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-@media (max-width: 1200px) { .trades-row, .bottom-row { grid-template-columns: 1fr; } }
+/* SECTIONS */
+.section { background:var(--card); border:1px solid var(--card-border); border-radius:10px; overflow:hidden; }
+.section-header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:12px 16px; border-bottom:1px solid var(--card-border); background:var(--bg3);
+}
+.section-title { font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:1px; color:var(--cyan); }
+.section-badge { font-family:var(--mono); font-size:10px; padding:2px 8px; background:var(--bg); border-radius:8px; color:var(--text2); }
+.section-content { padding:12px; max-height:380px; overflow-y:auto; }
 
-.section { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-.section-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); background: var(--bg3); }
-.section-title { font-size: 12px; letter-spacing: 2px; color: var(--helius); }
-.section-badge { font-size: 9px; padding: 3px 8px; background: var(--bg); border-radius: 10px; color: var(--text2); }
-.section-content { padding: 12px; max-height: 350px; overflow-y: auto; }
+/* POSITION CARDS */
+.pos-card {
+  background:var(--bg3); border:1px solid var(--card-border); border-radius:8px;
+  padding:14px; margin-bottom:10px; border-left:3px solid var(--card-border); transition:all .15s;
+}
+.pos-card:hover { border-color:rgba(0,212,255,0.3); }
+.pos-card.profit { border-left-color:var(--green); }
+.pos-card.loss { border-left-color:var(--red); }
+.pos-card.trailing { border-left-color:var(--orange); }
+.pos-card.moon-bag { border-left-color:var(--purple); background:var(--purple-dim); }
+.pos-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+.pos-token { display:flex; align-items:center; gap:10px; }
+.pos-logo {
+  width:36px; height:36px; border-radius:8px; background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-size:13px; font-weight:700; color:var(--cyan);
+  border:1px solid var(--card-border); overflow:hidden;
+}
+.pos-logo img { width:100%; height:100%; object-fit:cover; }
+.pos-symbol { font-family:var(--mono); font-size:13px; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px; }
+.pos-chain { font-family:var(--mono); font-size:10px; color:var(--text2); margin-top:2px; }
+.trade-type { font-family:var(--mono); font-size:8px; padding:2px 6px; border-radius:4px; font-weight:700; }
+.trade-type.quick { background:var(--cyan-dim); color:var(--cyan); }
+.trade-type.long { background:var(--purple-dim); color:var(--purple); }
+.trade-type.moon { background:rgba(255,107,157,0.15); color:#ff6b9d; }
+.pos-pnl { text-align:right; }
+.pos-pnl-value { font-family:var(--mono); font-size:16px; font-weight:700; }
+.pos-pnl-pct { font-family:var(--mono); font-size:10px; margin-top:2px; }
+.pos-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin:10px 0; }
+.pos-stat { text-align:center; padding:6px 3px; background:var(--bg); border-radius:6px; border:1px solid var(--card-border); }
+.pos-stat-label { font-family:var(--mono); font-size:8px; color:var(--text3); margin-bottom:2px; letter-spacing:0.5px; }
+.pos-stat-value { font-family:var(--mono); font-size:10px; color:var(--text); font-weight:600; }
+.pos-stat-value.green { color:var(--green); }
+.pos-stat-value.orange { color:var(--orange); }
+.pos-tags { display:flex; gap:4px; margin-top:8px; flex-wrap:wrap; }
+.pos-tag { font-family:var(--mono); font-size:8px; padding:2px 7px; border-radius:4px; font-weight:600; }
+.pos-tag.trailing { background:rgba(255,107,43,0.12); color:var(--orange); }
+.pos-tag.secured { background:var(--green-dim); color:var(--green); }
+.pos-tag.moon { background:var(--purple-dim); color:var(--purple); }
+.pos-tag.pump { background:var(--cyan-dim); color:var(--cyan); }
+.pos-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+.pos-action-btn {
+  padding:5px 10px; font-family:var(--mono); font-size:9px; font-weight:600;
+  border:1px solid var(--card-border); border-radius:6px; background:transparent;
+  color:var(--text2); cursor:pointer; transition:all .15s; text-decoration:none;
+}
+.pos-action-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+.pos-action-btn.close { border-color:rgba(255,59,79,0.3); color:var(--red); }
+.pos-action-btn.close:hover { background:var(--red-dim); }
+.pos-action-btn.extend { border-color:rgba(0,212,255,0.3); color:var(--cyan); }
+.pos-action-btn.extend:hover { background:var(--cyan-dim); }
 
-.pos-card { background: var(--bg3); border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 4px solid var(--helius); transition: all 0.3s; }
-.pos-card:hover { background: var(--bg4); }
-.pos-card.profit { border-left-color: var(--green); }
-.pos-card.loss { border-left-color: var(--red); }
-.pos-card.trailing { border-left-color: var(--orange); box-shadow: 0 0 12px rgba(255,149,0,0.2); }
-.pos-card.moon-bag { border-left-color: var(--pink); background: rgba(255,107,157,0.08); }
+/* HISTORY */
+.history-item {
+  display:grid; grid-template-columns:45px 1fr auto auto; gap:8px; align-items:center;
+  padding:9px 10px; background:var(--bg3); border:1px solid var(--card-border);
+  border-radius:6px; margin-bottom:6px; font-family:var(--mono); font-size:10px;
+  cursor:pointer; transition:all .12s;
+}
+.history-item:hover { border-color:rgba(0,212,255,0.3); }
+.history-time { color:var(--text3); font-size:9px; }
+.history-token { color:var(--text); font-weight:600; }
+.history-reason { font-size:8px; padding:2px 6px; border-radius:4px; font-weight:600; }
+.history-reason.tp { background:var(--green-dim); color:var(--green); }
+.history-reason.trail { background:rgba(255,107,43,0.12); color:var(--orange); }
+.history-reason.sl { background:var(--red-dim); color:var(--red); }
+.history-reason.rug { background:rgba(255,0,0,0.15); color:#ff0000; }
+.history-reason.timeout { background:var(--yellow-dim); color:var(--yellow); }
+.history-pnl { font-weight:700; font-size:11px; }
+.history-pnl.green { color:var(--green); }
+.history-pnl.red { color:var(--red); }
 
-.pos-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-.pos-token { display: flex; align-items: center; gap: 10px; }
-.pos-logo { width: 40px; height: 40px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; overflow: hidden; border: 2px solid var(--helius); }
-.pos-logo img { width: 100%; height: 100%; object-fit: cover; }
-.pos-symbol { font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.pos-chain { font-size: 9px; color: var(--helius); margin-top: 2px; }
-.trade-type { font-size: 8px; padding: 2px 5px; border-radius: 4px; font-weight: 700; }
-.trade-type.quick { background: rgba(0,212,255,0.2); color: var(--cyan); }
-.trade-type.long { background: rgba(168,85,247,0.2); color: var(--purple); }
-.trade-type.moon { background: rgba(255,107,157,0.2); color: var(--pink); }
+/* LOGS */
+.log-item { display:flex; gap:8px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:10px; }
+.log-time { font-family:var(--mono); color:var(--text3); min-width:50px; font-size:9px; }
+.log-icon { min-width:16px; }
+.log-text { color:var(--text2); line-height:1.4; }
+.log-text .green { color:var(--green); }
+.log-text .red { color:var(--red); }
 
-.pos-pnl { text-align: right; }
-.pos-pnl-value { font-size: 18px; font-weight: 700; }
-.pos-pnl-pct { font-size: 11px; margin-top: 2px; }
+/* EMPTY */
+.empty { text-align:center; padding:30px; color:var(--text3); }
+.empty-icon { font-size:32px; margin-bottom:10px; }
+.empty-text { font-family:var(--mono); font-size:10px; letter-spacing:1px; }
 
-.pos-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 10px 0; }
-.pos-stat { text-align: center; padding: 6px 3px; background: var(--bg); border-radius: 5px; }
-.pos-stat-label { font-size: 7px; color: var(--text2); margin-bottom: 2px; }
-.pos-stat-value { font-size: 10px; color: var(--text); font-weight: 600; }
-.pos-stat-value.green { color: var(--green); }
-.pos-stat-value.orange { color: var(--orange); }
-
-.pos-tags { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
-.pos-tag { font-size: 7px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
-.pos-tag.trailing { background: rgba(255,149,0,0.2); color: var(--orange); }
-.pos-tag.secured { background: rgba(0,255,136,0.2); color: var(--green); }
-.pos-tag.moon { background: rgba(255,107,157,0.3); color: var(--pink); }
-.pos-tag.pump { background: rgba(0,229,255,0.2); color: var(--pump); }
-.pos-tag.social { background: rgba(29,161,242,0.2); color: #1da1f2; }
-.pos-tag.safe { background: rgba(0,255,136,0.2); color: var(--green); }
-.pos-tag.curve { background: rgba(168,85,247,0.2); color: var(--purple); }
-.pos-tag.whale { background: rgba(0,212,255,0.2); color: var(--cyan); }
-.pos-tag.cg { background: rgba(255,215,0,0.2); color: var(--yellow); }
-
-.pos-actions { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
-.pos-action-btn { padding: 5px 8px; font-size: 9px; font-weight: 600; border: 1px solid var(--border); border-radius: 5px; background: var(--bg); color: var(--text2); cursor: pointer; transition: all 0.2s; text-decoration: none; }
-.pos-action-btn:hover { border-color: var(--helius); color: var(--helius); }
-.pos-action-btn.close { border-color: var(--red); color: var(--red); }
-
-.history-item { display: grid; grid-template-columns: 45px 1fr auto auto; gap: 8px; align-items: center; padding: 10px; background: var(--bg3); border-radius: 6px; margin-bottom: 6px; font-size: 10px; cursor: pointer; border: 1px solid transparent; }
-.history-item:hover { background: var(--bg4); border-color: var(--helius); }
-.history-time { color: var(--text2); font-size: 9px; }
-.history-token { color: var(--text); font-weight: 600; }
-.history-reason { font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
-.history-reason.tp { background: rgba(0,255,136,0.2); color: var(--green); }
-.history-reason.trail { background: rgba(255,149,0,0.2); color: var(--orange); }
-.history-reason.rug { background: rgba(255,0,0,0.3); color: #ff0000; }
-.history-reason.timeout { background: rgba(255,215,0,0.2); color: var(--yellow); }
-.history-pnl { font-weight: 700; font-size: 11px; }
-.history-pnl.green { color: var(--green); }
-.history-pnl.red { color: var(--red); }
-
-.log-item { display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 10px; }
-.log-time { color: var(--text2); min-width: 50px; font-size: 9px; }
-.log-icon { min-width: 16px; }
-.log-text { color: var(--text); line-height: 1.4; }
-
-.empty { text-align: center; padding: 30px; color: var(--text2); }
-.empty-icon { font-size: 35px; margin-bottom: 12px; }
-.empty-text { font-size: 11px; letter-spacing: 1px; }
-
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--helius); }
-
-@media (max-width: 768px) { .header h1 { font-size: 16px; } .pnl-grid { grid-template-columns: repeat(3, 1fr); } .pos-stats { grid-template-columns: repeat(3, 1fr); } }
+@media(max-width:768px) {
+  .stats-grid { grid-template-columns:repeat(3,1fr); }
+  .pos-stats { grid-template-columns:repeat(3,1fr); }
+  .header { padding:14px 16px; }
+  .main { padding:12px 14px; }
+}
 </style>
 </head>
 <body>
 
 <header class="header">
-  <h1>⚡ SOLANA SNIPER v8.2 - LIVE TERMINAL</h1>
-  <p>🔥 Real-time shared data • All users see the same trades</p>
-  <span class="version-badge">CONNECTED TO SERVER — LIVE DATA</span>
-  <span class="mode-badge stopped" id="modeBadge">🔴 STOPPED</span>
-  <span class="ws-badge disconnected" id="wsBadge">⚡ CONNECTING...</span>
+  <div class="header-left">
+    <div class="header-logo">S</div>
+    <div>
+      <h1>DEXSCREENER AI SNIPER</h1>
+      <p>Live server — all users see the same data</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="badge status" id="modeBadge">STOPPED</span>
+    <span class="badge conn" id="wsBadge">OFFLINE</span>
+  </div>
 </header>
 
-<div class="pnl-banner">
-  <div class="pnl-grid">
-    <div class="pnl-box main">
-      <div class="pnl-label">💰 TOTAL P&L</div>
-      <div class="pnl-value green" id="totalPnl">$0.00</div>
-    </div>
-    <div class="pnl-box">
-      <div class="pnl-label">💵 BALANCE</div>
-      <div class="pnl-value helius" id="balance">$10,000</div>
-    </div>
-    <div class="pnl-box highlight">
-      <div class="pnl-label">🔒 SECURED</div>
-      <div class="pnl-value green" id="securedPnl">$0</div>
-    </div>
-    <div class="pnl-box">
-      <div class="pnl-label">📊 WIN RATE</div>
-      <div class="pnl-value yellow" id="winRate">--%</div>
-    </div>
-    <div class="pnl-box">
-      <div class="pnl-label">🏆 BEST</div>
-      <div class="pnl-value green" id="bestTrade">$0</div>
-    </div>
-    <div class="pnl-box">
-      <div class="pnl-label">⚡ QUICK</div>
-      <div class="pnl-value helius" id="realtimeCount">0</div>
-    </div>
-    <div class="pnl-box">
-      <div class="pnl-label">🌙 LONG</div>
-      <div class="pnl-value pump" id="pumpCount">0</div>
-    </div>
-    <div class="pnl-box">
-      <div class="pnl-label">📈 TOTAL POS</div>
-      <div class="pnl-value solana" id="dexCount">0</div>
-    </div>
-    <div class="pnl-box">
-      <div class="pnl-label">🌕 MOON</div>
-      <div class="pnl-value green" id="safeCount">0</div>
-    </div>
-    <div class="pnl-box">
-      <div class="pnl-label">📈 TRADES</div>
-      <div class="pnl-value" id="totalTrades">0</div>
-    </div>
-    <div class="pnl-box">
-      <div class="pnl-label">🔍 SCANNED</div>
-      <div class="pnl-value helius" id="totalScanned">0</div>
-    </div>
-    <div class="pnl-box">
-      <div class="pnl-label">🎯 OPPS</div>
-      <div class="pnl-value pump" id="oppsCount">0</div>
-    </div>
-    <div class="pnl-box">
-      <div class="pnl-label">⏱️ UPTIME</div>
-      <div class="pnl-value" id="uptimeDisplay">--:--</div>
-    </div>
+<div class="stats-bar">
+  <div class="stats-grid">
+    <div class="stat-box main"><div class="stat-label">TOTAL P&L</div><div class="stat-value green" id="totalPnl">$0.00</div></div>
+    <div class="stat-box"><div class="stat-label">BALANCE</div><div class="stat-value cyan" id="balance">$10,000</div></div>
+    <div class="stat-box highlight"><div class="stat-label">SECURED</div><div class="stat-value green" id="securedPnl">$0</div></div>
+    <div class="stat-box"><div class="stat-label">WIN RATE</div><div class="stat-value yellow" id="winRate">--%</div></div>
+    <div class="stat-box"><div class="stat-label">BEST</div><div class="stat-value green" id="bestTrade">$0</div></div>
+    <div class="stat-box"><div class="stat-label">QUICK</div><div class="stat-value cyan" id="realtimeCount">0</div></div>
+    <div class="stat-box"><div class="stat-label">LONG</div><div class="stat-value purple" id="pumpCount">0</div></div>
+    <div class="stat-box"><div class="stat-label">POSITIONS</div><div class="stat-value" id="dexCount">0</div></div>
+    <div class="stat-box"><div class="stat-label">MOON</div><div class="stat-value orange" id="safeCount">0</div></div>
+    <div class="stat-box"><div class="stat-label">TRADES</div><div class="stat-value" id="totalTrades">0</div></div>
+    <div class="stat-box"><div class="stat-label">SCANNED</div><div class="stat-value cyan" id="totalScanned">0</div></div>
+    <div class="stat-box"><div class="stat-label">OPPS</div><div class="stat-value yellow" id="oppsCount">0</div></div>
+    <div class="stat-box"><div class="stat-label">UPTIME</div><div class="stat-value" id="uptimeDisplay">--:--</div></div>
   </div>
 </div>
 
 <div class="controls">
-  <button class="ctrl-btn" id="startBtn" onclick="toggleSniper()">▶ START SNIPER</button>
-  <button class="ctrl-btn secondary" onclick="fetchStatus()">🔄 REFRESH</button>
-  <button class="ctrl-btn secondary" onclick="exportData()">📤 EXPORT</button>
+  <button class="ctrl-btn" id="startBtn" onclick="toggleSniper()">START SNIPER</button>
+  <button class="ctrl-btn secondary" onclick="fetchStatus()">REFRESH</button>
+  <button class="ctrl-btn secondary" onclick="exportData()">EXPORT</button>
 </div>
 
-<div class="scanner-status">
-  <div class="scanner-bar">
-    <div class="scanner-info">
-      <div class="scanner-dot" id="scannerDot"></div>
-      <div class="scanner-text" id="scannerText">🌐 Connecting to server...</div>
-    </div>
-    <div class="scanner-stats">
-      <div class="scanner-stat helius">Scanned: <span id="scannedStat">0</span></div>
-      <div class="scanner-stat pump">Opps: <span id="oppsStat">0</span></div>
-      <div class="scanner-stat dex">Positions: <span id="posStat">0</span></div>
-      <div class="scanner-stat">Last: <span id="lastScanStat">-</span></div>
-    </div>
+<div class="scanner-bar">
+  <div class="scanner-left">
+    <div class="scanner-dot" id="scannerDot"></div>
+    <div class="scanner-text" id="scannerText">Connecting to server...</div>
+  </div>
+  <div class="scanner-stats">
+    Scanned: <span id="scannedStat">0</span> |
+    Opps: <span id="oppsStat">0</span> |
+    Pos: <span id="posStat">0</span> |
+    Last: <span id="lastScanStat">-</span>
   </div>
 </div>
 
@@ -294,7 +289,7 @@ letter-spacing: 2px;
   <div class="trades-row">
     <div class="section">
       <div class="section-header">
-        <span class="section-title">✅ WINNING TRADES</span>
+        <span class="section-title">WINNING TRADES</span>
         <span class="section-badge" id="winningBadge">0</span>
       </div>
       <div class="section-content" id="winningContainer">
@@ -303,7 +298,7 @@ letter-spacing: 2px;
     </div>
     <div class="section">
       <div class="section-header">
-        <span class="section-title">❌ LOSING TRADES</span>
+        <span class="section-title">LOSING TRADES</span>
         <span class="section-badge" id="losingBadge">0</span>
       </div>
       <div class="section-content" id="losingContainer">
@@ -314,14 +309,14 @@ letter-spacing: 2px;
   <div class="bottom-row">
     <div class="section">
       <div class="section-header">
-        <span class="section-title">📡 ACTIVITY LOG</span>
+        <span class="section-title">ACTIVITY LOG</span>
         <span class="section-badge">live</span>
       </div>
       <div class="section-content" id="logContainer"></div>
     </div>
     <div class="section">
       <div class="section-header">
-        <span class="section-title">📜 TRADE HISTORY</span>
+        <span class="section-title">TRADE HISTORY</span>
         <span class="section-badge" id="historyBadge">0</span>
       </div>
       <div class="section-content" id="historyContainer">
@@ -332,119 +327,62 @@ letter-spacing: 2px;
 </div>
 
 <script>
-// ══════════════════════════════════════════════════════════════════════════════
-// SOLANA SNIPER v8.2 - LIVE SERVER MODE (HTTP POLLING)
-// All data from backend sniper engine — all users see the same trades
-// ══════════════════════════════════════════════════════════════════════════════
-
 const $ = id => document.getElementById(id);
 const API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/sniper';
-
 let state = {};
 let logs = [];
 let connected = false;
 let sessionStart = null;
-
 const esc = s => (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const fN = n => n >= 1e9 ? (n/1e9).toFixed(2)+'B' : n >= 1e6 ? (n/1e6).toFixed(2)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : n.toFixed(0);
 
-// ══════════════════════════════════════════════════════════════════════════════
-// SERVER POLLING (replaces WebSocket)
-// ══════════════════════════════════════════════════════════════════════════════
 async function fetchStatus() {
   try {
     const res = await fetch(API + '/status', { signal: AbortSignal.timeout(8000) });
-    const data = await res.json();
-
-    if (!connected) {
-      connected = true;
-      $('wsBadge').textContent = '🟢 CONNECTED';
-      $('wsBadge').className = 'ws-badge connected';
-      addLog('🌐', '<span class="green">Connected to server!</span>');
-    }
-
-    state = data;
-    if (data.logs && data.logs.length > 0) logs = data.logs;
-    if (data.isRunning && !sessionStart) sessionStart = Date.now();
-    if (!data.isRunning) sessionStart = null;
-
-    updateUI();
-    renderPositions();
-    renderHistory();
-    renderLogs();
-
+    state = await res.json();
+    if (!connected) { connected = true; $('wsBadge').textContent = 'CONNECTED'; $('wsBadge').className = 'badge conn connected'; }
+    if (state.logs && state.logs.length > 0) logs = state.logs;
+    if (state.isRunning && !sessionStart) sessionStart = Date.now();
+    if (!state.isRunning) sessionStart = null;
+    updateUI(); renderPositions(); renderHistory(); renderLogs();
   } catch (e) {
-    if (connected) {
-      connected = false;
-      $('wsBadge').textContent = '🔴 OFFLINE';
-      $('wsBadge').className = 'ws-badge disconnected';
-      $('scannerText').textContent = '⚠️ Server offline — retrying...';
-      addLog('❌', '<span class="red">Server unreachable:</span> ' + e.message);
-      renderLogs();
-    }
+    if (connected) { connected = false; $('wsBadge').textContent = 'OFFLINE'; $('wsBadge').className = 'badge conn'; $('scannerText').textContent = 'Server offline...'; }
   }
 }
 
 async function toggleSniper() {
   const running = state.isRunning || false;
   try {
-    addLog('⏳', 'Sending ' + (running ? 'STOP' : 'START') + ' to server...');
-    renderLogs();
     const res = await fetch(API + (running ? '/stop' : '/start'), { method: 'POST', signal: AbortSignal.timeout(8000) });
     const data = await res.json();
-    if (data.success) {
-      addLog('✅', '<span class="green">Sniper ' + (running ? 'stopped' : 'started') + '!</span>');
-    } else {
-      addLog('⚠️', data.message || 'Command failed');
-    }
-    renderLogs();
     setTimeout(fetchStatus, 500);
-  } catch (e) {
-    addLog('❌', '<span class="red">Command failed:</span> ' + e.message);
-    renderLogs();
-  }
+  } catch (e) { console.error(e); }
 }
 
 async function closePos(id) {
   if (!confirm('Close this position?')) return;
-  try {
-    await fetch(API + '/close/' + id, { method: 'POST', signal: AbortSignal.timeout(5000) });
-    setTimeout(fetchStatus, 500);
-  } catch (e) { alert('Failed: ' + e.message); }
+  try { await fetch(API + '/close/' + id, { method: 'POST' }); setTimeout(fetchStatus, 500); } catch(e) {}
 }
 
 async function extendPos(id) {
-  try {
-    await fetch(API + '/extend/' + id, { method: 'POST', signal: AbortSignal.timeout(5000) });
-    setTimeout(fetchStatus, 500);
-  } catch (e) { alert('Failed: ' + e.message); }
+  try { await fetch(API + '/extend/' + id, { method: 'POST' }); setTimeout(fetchStatus, 500); } catch(e) {}
 }
 
-function addLog(icon, text) {
-  logs.unshift({ time: new Date().toLocaleTimeString('en-US', { hour12: false }), icon, text });
-  if (logs.length > 200) logs.pop();
-}
+function addLog(icon, text) { logs.unshift({ time: new Date().toLocaleTimeString('en-US',{hour12:false}), icon, text }); if(logs.length>200) logs.pop(); }
 
 function exportData() {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'sniper_' + new Date().toISOString().slice(0,10) + '.json';
-  a.click();
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'sniper_' + new Date().toISOString().slice(0,10) + '.json'; a.click();
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// UI
-// ══════════════════════════════════════════════════════════════════════════════
 function updateUI() {
   if (!state) return;
   const positions = state.positions || [];
   const totalPnL = state.totalPnL || 0;
-
   const pnlEl = $('totalPnl');
   pnlEl.textContent = (totalPnL >= 0 ? '+' : '') + '$' + totalPnL.toFixed(2);
-  pnlEl.className = 'pnl-value ' + (totalPnL >= 0 ? 'green' : 'red');
-
+  pnlEl.className = 'stat-value ' + (totalPnL >= 0 ? 'green' : 'red');
   $('balance').textContent = '$' + (state.balance || 10000).toFixed(0);
   $('securedPnl').textContent = '+$' + (state.securedPnL || 0).toFixed(0);
   $('winRate').textContent = (state.totalTrades > 0 ? ((state.wins / state.totalTrades) * 100).toFixed(0) : '--') + '%';
@@ -452,162 +390,107 @@ function updateUI() {
   $('totalTrades').textContent = state.totalTrades || 0;
   $('totalScanned').textContent = state.scannedTotal || 0;
   $('oppsCount').textContent = state.oppsTotal || 0;
-
-  // Position type counts
   $('realtimeCount').textContent = positions.filter(p => p.tradeType === 'QUICK').length;
   $('pumpCount').textContent = positions.filter(p => p.tradeType === 'LONG').length;
   $('dexCount').textContent = positions.length;
   $('safeCount').textContent = positions.filter(p => p.isMoonBag).length;
-
-  // Scanner bar stats
   $('scannedStat').textContent = state.scannedTotal || 0;
   $('oppsStat').textContent = state.oppsTotal || 0;
   $('posStat').textContent = positions.length;
   $('lastScanStat').textContent = state.lastScanTime || '-';
-
-  // Uptime
   if (sessionStart) {
-    const el = Date.now() - sessionStart;
-    const m = Math.floor(el / 60000), s = Math.floor((el % 60000) / 1000);
-    $('uptimeDisplay').textContent = m > 0 ? m + 'm ' + s + 's' : s + 's';
-  } else {
-    $('uptimeDisplay').textContent = '--:--';
-  }
-
-  // Mode badge + start/stop button
+    const el = Date.now() - sessionStart, m = Math.floor(el/60000), s = Math.floor((el%60000)/1000);
+    $('uptimeDisplay').textContent = m > 0 ? m+'m '+s+'s' : s+'s';
+  } else { $('uptimeDisplay').textContent = '--:--'; }
   if (state.isRunning) {
-    $('modeBadge').textContent = '⚡ LIVE';
-    $('modeBadge').className = 'mode-badge active';
+    $('modeBadge').textContent = 'LIVE'; $('modeBadge').className = 'badge status active';
     $('scannerDot').classList.add('active');
-    $('startBtn').textContent = '⏹ STOP SNIPER';
-    $('scannerText').textContent = '🔍 Scanning... ' + (state.scannedTotal || 0) + ' tokens | ' + (state.oppsTotal || 0) + ' opps | ' + positions.length + ' positions';
+    $('startBtn').textContent = 'STOP SNIPER';
+    $('scannerText').textContent = 'Scanning... ' + (state.scannedTotal||0) + ' tokens | ' + positions.length + ' positions';
   } else {
-    $('modeBadge').textContent = '🔴 STOPPED';
-    $('modeBadge').className = 'mode-badge';
+    $('modeBadge').textContent = 'STOPPED'; $('modeBadge').className = 'badge status';
     $('scannerDot').classList.remove('active');
-    $('startBtn').textContent = '▶ START SNIPER';
-    $('scannerText').textContent = '⏹ Sniper stopped — Click START';
+    $('startBtn').textContent = 'START SNIPER';
+    $('scannerText').textContent = 'Sniper stopped';
   }
 }
 
 function renderPositions() {
   const positions = state.positions || [];
-  const winning = positions.filter(p => (p.pnl || 0) >= 0).sort((a, b) => (b.pnlPct || 0) - (a.pnlPct || 0));
-  const losing = positions.filter(p => (p.pnl || 0) < 0).sort((a, b) => (a.pnlPct || 0) - (b.pnlPct || 0));
-
+  const winning = positions.filter(p => (p.pnl||0) >= 0).sort((a,b) => (b.pnlPct||0) - (a.pnlPct||0));
+  const losing = positions.filter(p => (p.pnl||0) < 0).sort((a,b) => (a.pnlPct||0) - (b.pnlPct||0));
   $('winningBadge').textContent = winning.length;
   $('losingBadge').textContent = losing.length;
-
-  $('winningContainer').innerHTML = winning.length === 0
-    ? '<div class="empty"><div class="empty-icon">📈</div><div class="empty-text">No winning positions</div></div>'
-    : winning.map(renderCard).join('');
-
-  $('losingContainer').innerHTML = losing.length === 0
-    ? '<div class="empty"><div class="empty-icon">📉</div><div class="empty-text">No losing positions</div></div>'
-    : losing.map(renderCard).join('');
+  $('winningContainer').innerHTML = winning.length === 0 ? '<div class="empty"><div class="empty-icon">📈</div><div class="empty-text">No winning positions</div></div>' : winning.map(renderCard).join('');
+  $('losingContainer').innerHTML = losing.length === 0 ? '<div class="empty"><div class="empty-icon">📉</div><div class="empty-text">No losing positions</div></div>' : losing.map(renderCard).join('');
 }
 
 function renderCard(pos) {
-  const pnl = pos.pnl || 0;
-  const pnlPct = pos.pnlPct || 0;
-  const isProfit = pnl >= 0;
+  const pnl = pos.pnl || 0, pnlPct = pos.pnlPct || 0, isProfit = pnl >= 0;
   const holdMin = Math.floor((Date.now() - (pos.entryTime || Date.now())) / 60000);
   const chain = pos.chain || 'solana';
   const dexUrl = 'https://dexscreener.com/' + chain + '/' + (pos.pairAddress || pos.address);
-
   let cardClass = isProfit ? 'profit' : 'loss';
   if (pos.isMoonBag) cardClass = 'moon-bag';
   else if (pos.trailingActivated) cardClass += ' trailing';
-
   const typeClass = pos.tradeType === 'MOON' ? 'moon' : pos.tradeType === 'LONG' ? 'long' : 'quick';
   const label = pos.label || pos.tradeType || 'QUICK';
-
   let tags = '';
-  if (pos.isMoonBag) tags += '<span class="pos-tag moon">🌕 FREE</span>';
-  if (pos.trailingActivated) tags += '<span class="pos-tag trailing">📈 Peak +' + (pos.trailingHigh || 0).toFixed(0) + '%</span>';
-  if ((pos.dcaSecured || 0) > 0) tags += '<span class="pos-tag secured">🔒 +$' + pos.dcaSecured.toFixed(0) + '</span>';
+  if (pos.isMoonBag) tags += '<span class="pos-tag moon">MOON</span>';
+  if (pos.trailingActivated) tags += '<span class="pos-tag trailing">Peak +' + (pos.trailingHigh||0).toFixed(0) + '%</span>';
+  if ((pos.dcaSecured||0) > 0) tags += '<span class="pos-tag secured">+$' + pos.dcaSecured.toFixed(0) + '</span>';
   if (pos.dcaLevel > 0) tags += '<span class="pos-tag pump">DCA ' + pos.dcaLevel + '/3</span>';
 
   return '<div class="pos-card ' + cardClass + '">' +
-    '<div class="pos-header">' +
-      '<div class="pos-token">' +
-        '<div class="pos-logo">' + (pos.symbol || '?')[0] + '</div>' +
-        '<div>' +
-          '<div class="pos-symbol">$' + esc(pos.symbol || '???') + ' <span class="trade-type ' + typeClass + '">' + esc(label) + '</span></div>' +
-          '<div class="pos-chain">Score: ' + (pos.score || 0) + ' • MC: $' + fN(pos.entryMarketCap || 0) + '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="pos-pnl">' +
-        '<div class="pos-pnl-value" style="color:var(--' + (isProfit ? 'green' : 'red') + ')">' + (isProfit ? '+' : '') + '$' + pnl.toFixed(2) + '</div>' +
-        '<div class="pos-pnl-pct" style="color:var(--' + (isProfit ? 'green' : 'red') + ')">' + (isProfit ? '+' : '') + pnlPct.toFixed(1) + '%</div>' +
-      '</div>' +
-    '</div>' +
+    '<div class="pos-header"><div class="pos-token">' +
+      '<div class="pos-logo">' + (pos.symbol||'?')[0] + '</div><div>' +
+      '<div class="pos-symbol">$' + esc(pos.symbol||'???') + ' <span class="trade-type ' + typeClass + '">' + esc(label) + '</span></div>' +
+      '<div class="pos-chain">Score: ' + (pos.score||0) + ' &bull; MC: $' + fN(pos.entryMarketCap||0) + '</div>' +
+    '</div></div>' +
+    '<div class="pos-pnl"><div class="pos-pnl-value" style="color:var(--' + (isProfit?'green':'red') + ')">' + (isProfit?'+':'') + '$' + pnl.toFixed(2) + '</div>' +
+      '<div class="pos-pnl-pct" style="color:var(--' + (isProfit?'green':'red') + ')">' + (isProfit?'+':'') + pnlPct.toFixed(1) + '%</div></div></div>' +
     '<div class="pos-stats">' +
-      '<div class="pos-stat"><div class="pos-stat-label">SIZE</div><div class="pos-stat-value">$' + (pos.currentSize || 0).toFixed(0) + '</div></div>' +
+      '<div class="pos-stat"><div class="pos-stat-label">SIZE</div><div class="pos-stat-value">$' + (pos.currentSize||0).toFixed(0) + '</div></div>' +
       '<div class="pos-stat"><div class="pos-stat-label">TIME</div><div class="pos-stat-value">' + holdMin + 'm</div></div>' +
-      '<div class="pos-stat"><div class="pos-stat-label">PEAK</div><div class="pos-stat-value green">+' + (pos.highestPnlPct || 0).toFixed(0) + '%</div></div>' +
-      '<div class="pos-stat"><div class="pos-stat-label">TRAIL</div><div class="pos-stat-value ' + (pos.trailingActivated ? 'orange' : '') + '">' + (pos.trailingActivated ? '-' + (pos.currentTrailDistance || 20).toFixed(0) + '%' : 'OFF') + '</div></div>' +
-      '<div class="pos-stat"><div class="pos-stat-label">MAX</div><div class="pos-stat-value">' + (pos.maxHold || 20) + 'm</div></div>' +
+      '<div class="pos-stat"><div class="pos-stat-label">PEAK</div><div class="pos-stat-value green">+' + (pos.highestPnlPct||0).toFixed(0) + '%</div></div>' +
+      '<div class="pos-stat"><div class="pos-stat-label">TRAIL</div><div class="pos-stat-value ' + (pos.trailingActivated?'orange':'') + '">' + (pos.trailingActivated ? '-'+(pos.currentTrailDistance||20).toFixed(0)+'%' : 'OFF') + '</div></div>' +
+      '<div class="pos-stat"><div class="pos-stat-label">MAX</div><div class="pos-stat-value">' + (pos.maxHold||20) + 'm</div></div>' +
     '</div>' +
     (tags ? '<div class="pos-tags">' + tags + '</div>' : '') +
     '<div class="pos-actions">' +
-      '<button onclick="closePos(' + (pos.id || 0) + ')" class="pos-action-btn close">❌ Close</button>' +
-      '<button onclick="extendPos(' + (pos.id || 0) + ')" class="pos-action-btn" style="border-color:var(--cyan);color:var(--cyan)">🔄 +15min</button>' +
-      '<a href="' + dexUrl + '" target="_blank" class="pos-action-btn">📊 DexScreener</a>' +
-    '</div>' +
-  '</div>';
+      '<button onclick="closePos(' + (pos.id||0) + ')" class="pos-action-btn close">Close</button>' +
+      '<button onclick="extendPos(' + (pos.id||0) + ')" class="pos-action-btn extend">+15min</button>' +
+      '<a href="' + dexUrl + '" target="_blank" class="pos-action-btn">DexScreener</a>' +
+    '</div></div>';
 }
 
 function renderHistory() {
   const history = state.history || [];
   $('historyBadge').textContent = history.length;
-
-  if (history.length === 0) {
-    $('historyContainer').innerHTML = '<div class="empty"><div class="empty-icon">📜</div><div class="empty-text">No trades yet</div></div>';
-    return;
-  }
-
-  $('historyContainer').innerHTML = history.slice(0, 50).map(function(t) {
-    const isWin = (t.pnl || 0) >= 0;
-    const time = t.closeTime ? new Date(t.closeTime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : '--:--';
+  if (history.length === 0) { $('historyContainer').innerHTML = '<div class="empty"><div class="empty-icon">📜</div><div class="empty-text">No trades yet</div></div>'; return; }
+  $('historyContainer').innerHTML = history.slice(0,50).map(function(t) {
+    const isWin = (t.pnl||0) >= 0;
+    const time = t.closeTime ? new Date(t.closeTime).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'}) : '--:--';
     const reason = t.reason || 'CLOSED';
-    let reasonClass = reason === 'TRAIL' ? 'trail' : (reason === 'TIMEOUT' || reason === 'MAX TIME') ? 'timeout' : reason.includes('RUG') || reason.includes('LIQ') ? 'rug' : isWin ? 'tp' : 'sl';
-    const dcaInfo = (t.dcaSecured || 0) > 0 ? ' (DCA +$' + t.dcaSecured.toFixed(0) + ')' : '';
-    const chain = t.chain || 'solana';
-    const dexUrl = 'https://dexscreener.com/' + chain + '/' + (t.address || '');
-
-    return '<div class="history-item" onclick="window.open(\'' + dexUrl + '\', \'_blank\')">' +
-      '<span class="history-time">' + time + '</span>' +
-      '<span class="history-token">$' + esc(t.symbol || '???') + dcaInfo + '</span>' +
-      '<span class="history-reason ' + reasonClass + '">' + esc(reason) + '</span>' +
-      '<span class="history-pnl ' + (isWin ? 'green' : 'red') + '">' + (isWin ? '+' : '') + '$' + (t.pnl || 0).toFixed(2) + '</span>' +
-    '</div>';
+    let rc = reason==='TRAIL'?'trail':(reason==='TIMEOUT'||reason==='MAX TIME')?'timeout':reason.includes('RUG')||reason.includes('LIQ')?'rug':isWin?'tp':'sl';
+    const dca = (t.dcaSecured||0)>0 ? ' (DCA +$'+t.dcaSecured.toFixed(0)+')' : '';
+    const dexUrl = 'https://dexscreener.com/'+(t.chain||'solana')+'/'+(t.address||'');
+    return '<div class="history-item" onclick="window.open(\''+dexUrl+'\',\'_blank\')">'+
+      '<span class="history-time">'+time+'</span><span class="history-token">$'+esc(t.symbol||'???')+dca+'</span>'+
+      '<span class="history-reason '+rc+'">'+esc(reason)+'</span>'+
+      '<span class="history-pnl '+(isWin?'green':'red')+'">'+(isWin?'+':'')+'$'+(t.pnl||0).toFixed(2)+'</span></div>';
   }).join('');
 }
 
 function renderLogs() {
-  $('logContainer').innerHTML = logs.slice(0, 100).map(function(l) {
-    return '<div class="log-item"><span class="log-time">' + (l.time || '') + '</span><span class="log-icon">' + (l.icon || '') + '</span><span class="log-text">' + (l.text || '') + '</span></div>';
+  $('logContainer').innerHTML = logs.slice(0,100).map(function(l) {
+    return '<div class="log-item"><span class="log-time">'+(l.time||'')+'</span><span class="log-icon">'+(l.icon||'')+'</span><span class="log-text">'+(l.text||'')+'</span></div>';
   }).join('');
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// INIT — Poll server every 5 seconds
-// ══════════════════════════════════════════════════════════════════════════════
-addLog('🌐', '<span class="helius">SOLANA SNIPER — SERVER MODE</span>');
-addLog('ℹ️', 'All users see the same live data from the server');
-addLog('🔌', 'Connecting to DexScreener AI backend...');
-renderLogs();
-
 fetchStatus();
 setInterval(fetchStatus, 5000);
-setInterval(function() {
-  if (sessionStart) {
-    const el = Date.now() - sessionStart;
-    const m = Math.floor(el / 60000), s = Math.floor((el % 60000) / 1000);
-    $('uptimeDisplay').textContent = m > 0 ? m + 'm ' + s + 's' : s + 's';
-  }
-}, 1000);
+setInterval(function() { if(sessionStart) { const el=Date.now()-sessionStart,m=Math.floor(el/60000),s=Math.floor((el%60000)/1000); $('uptimeDisplay').textContent=m>0?m+'m '+s+'s':s+'s'; } }, 1000);
 </script>
 </body>
 </html>
