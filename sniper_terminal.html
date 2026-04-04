@@ -3819,79 +3819,88 @@ function renderPositions() {
 }
 
 function renderCard(pos) {
-    const isProfit = pos.pnl >= 0;
-    const holdMin = Math.floor((Date.now() - pos.entryTime) / 60000);
-    const holdPct = Math.min(100, (holdMin / pos.maxHold) * 100);
-    
+    const pnl = pos.pnl || 0;
+    const pnlPct = pos.pnlPct || 0;
+    const isProfit = pnl >= 0;
+    const holdMin = Math.floor((Date.now() - (pos.entryTime || Date.now())) / 60000);
+    const maxHold = pos.maxHold || 30;
+    const holdPct = Math.min(100, (holdMin / maxHold) * 100);
+    const currentSize = pos.currentSize || 0;
+    const highestPnlPct = pos.highestPnlPct || 0;
+    const trailingHigh = pos.trailingHigh || 0;
+    const dcaSecured = pos.dcaSecured || 0;
+    const score = pos.score || 0;
+    const symbol = pos.symbol || '???';
+    const label = pos.label || pos.tradeType || 'QUICK';
+    const entryMC = pos.entryMarketCap || 0;
+
     let cardClass = isProfit ? 'profit' : 'loss';
     if (pos.isMoonBag) cardClass = 'moon';
     else if (pos.trailingActivated) cardClass += ' trailing';
-    
+
     let typeClass = 'quick';
     if (pos.isMoonBag) typeClass = 'moon';
     else if (pos.tradeType === 'LONG') typeClass = 'long';
-    
+
     let progressClass = '';
     if (!pos.isMoonBag) {
       if (holdPct > 85) progressClass = 'danger';
       else if (holdPct > 65) progressClass = 'warning';
     }
-    
+
     const pnlColor = isProfit ? 'green' : 'red';
-    
+
     let tags = '';
     if (pos.isMoonBag) tags += '<span class="pos-tag" style="background:rgba(179,136,255,0.2);color:#b388ff">🌕 MOON BAG ∞</span>';
-    if (pos.tpLevel > 0) tags += '<span class="pos-tag" style="background:rgba(0,255,136,0.15);color:#00ff88">TP' + pos.tpLevel + '</span>';
-    if ((pos.totalDcaAdded||0) > 0) tags += '<span class="pos-tag" style="background:rgba(0,212,255,0.15);color:#00d4ff">DCA +$' + pos.totalDcaAdded.toFixed(0) + '</span>';
-    if (pos.trailingActivated) tags += `<span class="pos-tag trailing">📈 ${pos.trailingHigh.toFixed(0)}%</span>`;
-    if (pos.dcaSecured > 0) tags += `<span class="pos-tag secured">🔒 +$${pos.dcaSecured.toFixed(0)}</span>`;
-    
+    if ((pos.tpLevel || 0) > 0) tags += '<span class="pos-tag" style="background:rgba(0,255,136,0.15);color:#00ff88">TP' + pos.tpLevel + '</span>';
+    if ((pos.totalDcaAdded || 0) > 0) tags += '<span class="pos-tag" style="background:rgba(0,212,255,0.15);color:#00d4ff">DCA +$' + pos.totalDcaAdded.toFixed(0) + '</span>';
+    if (pos.trailingActivated) tags += '<span class="pos-tag trailing">📈 ' + trailingHigh.toFixed(0) + '%</span>';
+    if (dcaSecured > 0) tags += '<span class="pos-tag secured">🔒 +$' + dcaSecured.toFixed(0) + '</span>';
+
     return `<div class="position-card ${cardClass}">
       <div class="pos-header">
         <div class="pos-token-info">
-          <div class="pos-logo">${renderLogo(pos.logo, pos.symbol)}</div>
+          <div class="pos-logo">${typeof renderLogo === 'function' ? renderLogo(pos.logo, symbol) : symbol[0]}</div>
           <div class="pos-details">
-            <div class="pos-symbol">$${esc(pos.symbol)} <span class="pos-type ${typeClass}">${pos.label}</span></div>
-            <div class="pos-chain">MC: $${formatNumber(pos.entryMarketCap || 0)} • Score: ${pos.score}</div>
+            <div class="pos-symbol">$${esc(symbol)} <span class="pos-type ${typeClass}">${esc(label)}</span></div>
+            <div class="pos-chain">MC: $${formatNumber(entryMC)} • Score: ${score}</div>
           </div>
         </div>
         <div class="pos-pnl">
-          <div class="pos-pnl-value ${pnlColor}">${isProfit ? '+' : ''}$${pos.pnl.toFixed(2)}</div>
-          <div class="pos-pnl-pct ${pnlColor}">${isProfit ? '+' : ''}${pos.pnlPct.toFixed(1)}%</div>
+          <div class="pos-pnl-value ${pnlColor}">${isProfit ? '+' : ''}$${pnl.toFixed(2)}</div>
+          <div class="pos-pnl-pct ${pnlColor}">${isProfit ? '+' : ''}${pnlPct.toFixed(1)}%</div>
         </div>
       </div>
-      
+
       <div class="pos-stats-row">
         <div class="pos-stat">
           <div class="pos-stat-label">SIZE</div>
-          <div class="pos-stat-value">$${pos.currentSize.toFixed(0)}</div>
+          <div class="pos-stat-value">$${currentSize.toFixed(0)}</div>
         </div>
         <div class="pos-stat">
           <div class="pos-stat-label">${pos.trailingActivated ? 'TRAIL' : 'SL'}</div>
-          <div class="pos-stat-value ${pos.trailingActivated ? 'orange' : 'red'}">${pos.trailingActivated ? `-${(pos.currentTrailDistance||20).toFixed(0)}%` : '-60%'}</div>
+          <div class="pos-stat-value ${pos.trailingActivated ? 'orange' : 'red'}">${pos.trailingActivated ? '-' + (pos.currentTrailDistance||20).toFixed(0) + '%' : '-60%'}</div>
         </div>
         <div class="pos-stat">
           <div class="pos-stat-label">PEAK</div>
-          <div class="pos-stat-value green">+${pos.highestPnlPct.toFixed(0)}%</div>
+          <div class="pos-stat-value green">+${highestPnlPct.toFixed(0)}%</div>
         </div>
         <div class="pos-stat">
           <div class="pos-stat-label">TIME</div>
           <div class="pos-stat-value">${holdMin}m</div>
         </div>
       </div>
-      
-      ${!pos.isMoonBag ? `<div class="pos-progress"><div class="pos-progress-bar ${progressClass}" style="width:${holdPct}%"></div></div>` : ''}
-      
-      ${tags ? `<div class="pos-tags">${tags}</div>` : ''}
-      
+
+      ${!pos.isMoonBag ? '<div class="pos-progress"><div class="pos-progress-bar ' + progressClass + '" style="width:' + holdPct + '%"></div></div>' : ''}
+
+      ${tags ? '<div class="pos-tags">' + tags + '</div>' : ''}
+
       <div class="pos-actions">
         ${pos.isMoonBag
-          ? `<button onclick="sellMoon(${pos.id})" class="pos-action-btn" style="border-color:#b388ff;color:#b388ff">SELL MOON</button>`
-          : `<button onclick="closePos(${pos.id})" class="pos-action-btn close">CLOSE</button>
-             <button onclick="extendPos(${pos.id})" class="pos-action-btn dex">+15min</button>`}
-        <a href="${pos.dexUrl}" target="_blank" class="pos-action-btn dex">DEX</a>
+          ? '<button onclick="sellMoon(' + (pos.id||0) + ')" class="pos-action-btn" style="border-color:#b388ff;color:#b388ff">SELL MOON</button>'
+          : '<button onclick="closePos(' + (pos.id||0) + ')" class="pos-action-btn close">CLOSE</button><button onclick="extendPos(' + (pos.id||0) + ')" class="pos-action-btn dex">+15min</button>'}
+        <a href="${pos.dexUrl || '#'}" target="_blank" class="pos-action-btn dex">DEX</a>
         <a href="/?ca=${pos.address||''}" target="_blank" class="pos-action-btn">ANALYZE</a>
-        ${pos.twitter ? `<a href="${pos.twitter}" target="_blank" class="pos-action-btn">𝕏</a>` : ''}
       </div>
     </div>`;
 }
