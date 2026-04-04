@@ -1961,16 +1961,11 @@ body::before {
   
   <!-- CONTROLS ROW -->
   <div class="controls-row">
-    <button class="ctrl-btn primary" id="startBtn" onclick="serverMode ? serverStartStop() : startBot()">▶ START</button>
-    <button class="ctrl-btn" id="serverModeBtn" onclick="toggleServerMode()">🌐 SERVER</button>
+    <button class="ctrl-btn primary" id="startBtn" onclick="serverStartStop()">▶ START</button>
     <button class="ctrl-btn" onclick="openSettings()">⚙ SETTINGS</button>
     <button class="ctrl-btn" onclick="openStats()">📊 STATS</button>
     <button class="ctrl-btn" onclick="clearCache()">↻ CACHE</button>
-    <button class="ctrl-btn" onclick="exportData()">↑ EXPORT</button>
-    <button class="ctrl-btn" onclick="document.getElementById('importFile').click()">↓ IMPORT</button>
-    <input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display:none">
     <button class="ctrl-btn warning" onclick="closeAllPositions()">⚠ CLOSE ALL</button>
-    <button class="ctrl-btn danger" onclick="resetBot()">✕ RESET</button>
     <a href="./sniper.html" class="ctrl-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px;border-color:var(--cyan);color:var(--cyan);">
       <span>🎨</span> CLEAN MODE
     </a>
@@ -2344,25 +2339,9 @@ const SNIPER_API = 'https://dexscreener-telegram-bot-production.up.railway.app/a
 // ═══════════════════════════════════════════════════════
 // SERVER MODE — Connect to backend sniper engine
 // ═══════════════════════════════════════════════════════
-let serverMode = false;
+// Always server mode — all users see same data
+let serverMode = true;
 let serverPollInterval = null;
-
-async function toggleServerMode() {
-  serverMode = !serverMode;
-  const btn = $('serverModeBtn');
-  if (serverMode) {
-    btn.textContent = '🌐 SERVER: ON';
-    btn.classList.add('active');
-    addLog('🌐', '<span class="green">Server Mode ON</span> — Connected to backend sniper');
-    pollServerStatus();
-    serverPollInterval = setInterval(pollServerStatus, 5000);
-  } else {
-    btn.textContent = '🌐 SERVER';
-    btn.classList.remove('active');
-    if (serverPollInterval) clearInterval(serverPollInterval);
-    addLog('🌐', 'Server Mode OFF — Local mode');
-  }
-}
 
 async function pollServerStatus() {
   try {
@@ -2423,6 +2402,20 @@ async function serverStartStop() {
   } catch (e) {
     addLog('❌', 'Server command failed: ' + e.message);
   }
+}
+
+async function closePos(id) {
+  if (!confirm('Close this position?')) return;
+  try { await fetch(SNIPER_API + '/close/' + id, { method: 'POST' }); pollServerStatus(); } catch(e) {}
+}
+
+async function extendPos(id) {
+  try { await fetch(SNIPER_API + '/extend/' + id, { method: 'POST' }); pollServerStatus(); } catch(e) {}
+}
+
+async function sellMoon(id) {
+  if (!confirm('Sell this Moon Bag?')) return;
+  try { await fetch(SNIPER_API + '/sellmoon/' + id, { method: 'POST' }); pollServerStatus(); } catch(e) {}
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3813,7 +3806,9 @@ function renderPositions() {
     const pnlColor = isProfit ? 'green' : 'red';
     
     let tags = '';
-    if (pos.isMoonBag) tags += '<span class="pos-tag" style="background:rgba(255,107,157,0.2);color:var(--pink)">🌕 FREE</span>';
+    if (pos.isMoonBag) tags += '<span class="pos-tag" style="background:rgba(179,136,255,0.2);color:#b388ff">🌕 MOON BAG ∞</span>';
+    if (pos.tpLevel > 0) tags += '<span class="pos-tag" style="background:rgba(0,255,136,0.15);color:#00ff88">TP' + pos.tpLevel + '</span>';
+    if ((pos.totalDcaAdded||0) > 0) tags += '<span class="pos-tag" style="background:rgba(0,212,255,0.15);color:#00d4ff">DCA +$' + pos.totalDcaAdded.toFixed(0) + '</span>';
     if (pos.trailingActivated) tags += `<span class="pos-tag trailing">📈 ${pos.trailingHigh.toFixed(0)}%</span>`;
     if (pos.dcaSecured > 0) tags += `<span class="pos-tag secured">🔒 +$${pos.dcaSecured.toFixed(0)}</span>`;
     
@@ -3856,8 +3851,12 @@ function renderPositions() {
       ${tags ? `<div class="pos-tags">${tags}</div>` : ''}
       
       <div class="pos-actions">
-        <button onclick="manualCloseTrade('${pos.address}')" class="pos-action-btn close">CLOSE</button>
+        ${pos.isMoonBag
+          ? `<button onclick="sellMoon(${pos.id})" class="pos-action-btn" style="border-color:#b388ff;color:#b388ff">SELL MOON</button>`
+          : `<button onclick="closePos(${pos.id})" class="pos-action-btn close">CLOSE</button>
+             <button onclick="extendPos(${pos.id})" class="pos-action-btn dex">+15min</button>`}
         <a href="${pos.dexUrl}" target="_blank" class="pos-action-btn dex">DEX</a>
+        <a href="/?ca=${pos.address||''}" target="_blank" class="pos-action-btn">ANALYZE</a>
         ${pos.twitter ? `<a href="${pos.twitter}" target="_blank" class="pos-action-btn">𝕏</a>` : ''}
       </div>
     </div>`;
@@ -3952,7 +3951,9 @@ function loadFromStorage() {
   } catch (e) {}
 }
 
-function exportData() {
+// Export/Import/Reset removed — server manages all data
+
+function exportData_disabled() {
   const exportObj = {
     exportDate: new Date().toISOString(),
     version: 'v6.7-terminal',
@@ -4017,25 +4018,25 @@ function toggleMobileMenu() {
 }
 
 // ═══════════════════════════════════════════════════════
-// INIT WITH BOOT SEQUENCE
+// INIT — SERVER MODE (all users see same data)
 // ═══════════════════════════════════════════════════════
-loadFromStorage();
 updateUI();
 renderPositions();
 renderHistory();
 renderPnlChart();
 
-// Hacker boot sequence
+// Auto-connect to server
+pollServerStatus();
+serverPollInterval = setInterval(pollServerStatus, 5000);
+
+// Boot sequence
 const bootSequence = [
-  { delay: 0, icon: '⚡', text: '<span class="cyan">INITIALIZING SYSTEM...</span>' },
-  { delay: 200, icon: '🔐', text: '<span class="yellow">Decrypting protocols...</span>' },
-  { delay: 400, icon: '📡', text: '<span class="text-dim">Connecting to Helius RPC...</span> <span class="green">OK</span>' },
-  { delay: 600, icon: '🎰', text: '<span class="text-dim">Connecting to Pump.fun API...</span> <span class="green">OK</span>' },
-  { delay: 800, icon: '📊', text: '<span class="text-dim">Connecting to DexScreener...</span> <span class="green">OK</span>' },
-  { delay: 1000, icon: '🧠', text: '<span class="purple">AI scoring module loaded</span>' },
-  { delay: 1200, icon: '🛡️', text: '<span class="text-dim">Anti-rug protection...</span> <span class="green">ACTIVE</span>' },
-  { delay: 1400, icon: '💻', text: '<span class="green glitch">SNIPER//TERMINAL</span> v7.0 — HACKER EDITION' },
-  { delay: 1600, icon: '🚀', text: '<span class="cyan">Ready to hunt.</span> Click <span class="green">START</span> to begin' },
+  { delay: 0, icon: '⚡', text: '<span class="cyan">INITIALIZING TERMINAL...</span>' },
+  { delay: 200, icon: '🌐', text: '<span class="text-dim">Connecting to server...</span>' },
+  { delay: 600, icon: '📡', text: '<span class="text-dim">DexScreener AI Backend...</span> <span class="green">OK</span>' },
+  { delay: 1000, icon: '🛡️', text: '<span class="text-dim">Anti-rug + Smart Entry...</span> <span class="green">ACTIVE</span>' },
+  { delay: 1400, icon: '💻', text: '<span class="green glitch">SNIPER//TERMINAL</span> v3.0 — SERVER MODE' },
+  { delay: 1600, icon: '🚀', text: '<span class="cyan">Live data.</span> All users see the same trades.' },
 ];
 
 bootSequence.forEach(({ delay, icon, text }) => {
