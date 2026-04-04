@@ -256,22 +256,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); -webkit
 <div class="live-counter">
   <div class="counter-item">
     <div class="counter-value" id="liveScanned">0</div>
-    <div class="counter-label">SCANNED</div>
-  </div>
-  <div class="counter-divider"></div>
-  <div class="counter-item">
-    <div class="counter-value yellow" id="liveOpps">0</div>
-    <div class="counter-label">OPPS</div>
-  </div>
-  <div class="counter-divider"></div>
-  <div class="counter-item">
-    <div class="counter-value green" id="livePositions">0</div>
-    <div class="counter-label">OPEN</div>
-  </div>
-  <div class="counter-divider"></div>
-  <div class="counter-item">
-    <div class="counter-value" id="livePnl">$0</div>
-    <div class="counter-label">P&L</div>
+    <div class="counter-label">SCAN</div>
   </div>
 </div>
 
@@ -455,13 +440,8 @@ function updateUI() {
     $('startBtn').textContent = 'START SNIPER';
     $('scannerText').textContent = 'Sniper stopped';
   }
-  // Live counter (fixed left panel)
+  // Live counter
   $('liveScanned').textContent = state.scannedTotal || 0;
-  $('liveOpps').textContent = state.oppsTotal || 0;
-  $('livePositions').textContent = positions.length;
-  const pnlVal = state.totalPnL || 0;
-  $('livePnl').textContent = (pnlVal >= 0 ? '+' : '') + '$' + pnlVal.toFixed(0);
-  $('livePnl').className = 'counter-value ' + (pnlVal >= 0 ? 'green' : 'red');
 }
 
 function renderPositions() {
