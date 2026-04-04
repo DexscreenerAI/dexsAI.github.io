@@ -405,6 +405,21 @@ async function toggleSniper() {
   }
 }
 
+async function closePos(id) {
+  if (!confirm('Close this position?')) return;
+  try {
+    await fetch(API + '/close/' + id, { method: 'POST', signal: AbortSignal.timeout(5000) });
+    setTimeout(fetchStatus, 500);
+  } catch (e) { alert('Failed: ' + e.message); }
+}
+
+async function extendPos(id) {
+  try {
+    await fetch(API + '/extend/' + id, { method: 'POST', signal: AbortSignal.timeout(5000) });
+    setTimeout(fetchStatus, 500);
+  } catch (e) { alert('Failed: ' + e.message); }
+}
+
 function addLog(icon, text) {
   logs.unshift({ time: new Date().toLocaleTimeString('en-US', { hour12: false }), icon, text });
   if (logs.length > 200) logs.pop();
@@ -536,6 +551,8 @@ function renderCard(pos) {
     '</div>' +
     (tags ? '<div class="pos-tags">' + tags + '</div>' : '') +
     '<div class="pos-actions">' +
+      '<button onclick="closePos(' + (pos.id || 0) + ')" class="pos-action-btn close">❌ Close</button>' +
+      '<button onclick="extendPos(' + (pos.id || 0) + ')" class="pos-action-btn" style="border-color:var(--cyan);color:var(--cyan)">🔄 +15min</button>' +
       '<a href="' + dexUrl + '" target="_blank" class="pos-action-btn">📊 DexScreener</a>' +
     '</div>' +
   '</div>';
