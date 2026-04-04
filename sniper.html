@@ -219,6 +219,25 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); -webkit
 .log-text .green { color:var(--green); }
 .log-text .red { color:var(--red); }
 
+/* LIVE COUNTER */
+.live-counter {
+  position:fixed; left:0; top:50%; transform:translateY(-50%); z-index:100;
+  background:var(--card); border:1px solid var(--card-border); border-left:none;
+  border-radius:0 12px 12px 0; padding:16px 14px; min-width:80px;
+  display:flex; flex-direction:column; gap:14px; align-items:center;
+}
+.counter-item { text-align:center; }
+.counter-value {
+  font-family:var(--mono); font-size:22px; font-weight:800; color:var(--cyan);
+  line-height:1; text-shadow:0 0 20px rgba(0,212,255,0.3);
+}
+.counter-value.green { color:var(--green); text-shadow:0 0 20px rgba(0,255,136,0.3); }
+.counter-value.red { color:var(--red); text-shadow:0 0 20px rgba(255,59,79,0.3); }
+.counter-value.yellow { color:var(--yellow); }
+.counter-label { font-family:var(--mono); font-size:7px; color:var(--text3); letter-spacing:1px; margin-top:3px; }
+.counter-divider { width:100%; height:1px; background:var(--card-border); }
+@media(max-width:768px) { .live-counter { display:none; } }
+
 /* EMPTY */
 .empty { text-align:center; padding:30px; color:var(--text3); }
 .empty-icon { font-size:32px; margin-bottom:10px; }
@@ -234,8 +253,31 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); -webkit
 </head>
 <body>
 
+<div class="live-counter">
+  <div class="counter-item">
+    <div class="counter-value" id="liveScanned">0</div>
+    <div class="counter-label">SCANNED</div>
+  </div>
+  <div class="counter-divider"></div>
+  <div class="counter-item">
+    <div class="counter-value yellow" id="liveOpps">0</div>
+    <div class="counter-label">OPPS</div>
+  </div>
+  <div class="counter-divider"></div>
+  <div class="counter-item">
+    <div class="counter-value green" id="livePositions">0</div>
+    <div class="counter-label">OPEN</div>
+  </div>
+  <div class="counter-divider"></div>
+  <div class="counter-item">
+    <div class="counter-value" id="livePnl">$0</div>
+    <div class="counter-label">P&L</div>
+  </div>
+</div>
+
 <header class="header">
   <div class="header-left">
+    <a href="/" style="text-decoration:none;display:flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid var(--card-border);border-radius:8px;color:var(--text2);font-family:var(--mono);font-size:11px;transition:all .15s;margin-right:8px" onmouseover="this.style.borderColor='rgba(0,212,255,0.4)';this.style.color='var(--cyan)'" onmouseout="this.style.borderColor='var(--card-border)';this.style.color='var(--text2)'">&larr; App</a>
     <div class="header-logo">S</div>
     <div>
       <h1>DEXSCREENER AI SNIPER</h1>
@@ -413,6 +455,13 @@ function updateUI() {
     $('startBtn').textContent = 'START SNIPER';
     $('scannerText').textContent = 'Sniper stopped';
   }
+  // Live counter (fixed left panel)
+  $('liveScanned').textContent = state.scannedTotal || 0;
+  $('liveOpps').textContent = state.oppsTotal || 0;
+  $('livePositions').textContent = positions.length;
+  const pnlVal = state.totalPnL || 0;
+  $('livePnl').textContent = (pnlVal >= 0 ? '+' : '') + '$' + pnlVal.toFixed(0);
+  $('livePnl').className = 'counter-value ' + (pnlVal >= 0 ? 'green' : 'red');
 }
 
 function renderPositions() {
@@ -461,6 +510,7 @@ function renderCard(pos) {
       '<button onclick="closePos(' + (pos.id||0) + ')" class="pos-action-btn close">Close</button>' +
       '<button onclick="extendPos(' + (pos.id||0) + ')" class="pos-action-btn extend">+15min</button>' +
       '<a href="' + dexUrl + '" target="_blank" class="pos-action-btn">DexScreener</a>' +
+      '<a href="/?ca=' + (pos.address||'') + '" target="_blank" class="pos-action-btn" style="border-color:rgba(0,212,255,0.3);color:var(--cyan)">Analyze</a>' +
     '</div></div>';
 }
 
