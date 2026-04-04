@@ -3951,15 +3951,51 @@ function loadFromStorage() {
 }
 
 function exportData() {
-  // Export server state for analysis
-  const blob = new Blob([JSON.stringify(state || {}, null, 2)], { type: 'application/json' });
+  const s = state || {};
+  const pos = s.positions || [];
+  const hist = s.history || [];
+  const rows = [['Type','Symbol','Address','Chain','Score','TradeType','EntryPrice','CurrentPrice','PnL$','PnL%','Peak%','Size','DCA','MoonBag','HoldMin','Reason','Time'].join(',')];
+
+  // Open positions
+  pos.forEach(p => {
+    const hold = Math.floor((Date.now() - (p.entryTime||0)) / 60000);
+    rows.push([
+      'OPEN', p.symbol||'', p.address||'', p.chain||'solana', p.score||0, p.tradeType||'',
+      p.entryPrice||0, p.currentPrice||0, (p.pnl||0).toFixed(2), (p.pnlPct||0).toFixed(1),
+      (p.highestPnlPct||0).toFixed(1), (p.currentSize||0).toFixed(0), p.dcaLevel||0,
+      p.isMoonBag?'YES':'NO', hold, '', new Date(p.entryTime||0).toISOString()
+    ].join(','));
+  });
+
+  // Closed trades
+  hist.forEach(h => {
+    rows.push([
+      'CLOSED', h.symbol||'', h.address||'', h.chain||'solana', h.score||0, h.tradeType||'',
+      '', '', (h.pnl||0).toFixed(2), (h.pnlPct||0).toFixed(1),
+      '', '', '', '', h.holdMin||0, h.reason||'', new Date(h.closeTime||0).toISOString()
+    ].join(','));
+  });
+
+  // Stats row
+  rows.push('');
+  rows.push('STATS');
+  rows.push('Balance,' + (s.balance||0).toFixed(2));
+  rows.push('TotalPnL,' + (s.totalPnL||0).toFixed(2));
+  rows.push('SecuredPnL,' + (s.securedPnL||0).toFixed(2));
+  rows.push('Trades,' + (s.totalTrades||0));
+  rows.push('Wins,' + (s.wins||0));
+  rows.push('WinRate,' + (s.totalTrades > 0 ? ((s.wins/s.totalTrades)*100).toFixed(1) : '0') + '%');
+  rows.push('Scanned,' + (s.scannedTotal||0));
+
+  const csv = rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `sniper_export_${Date.now()}.json`;
+  a.download = 'sniper_export_' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
   URL.revokeObjectURL(url);
-  addLog('📤', '<span class="green">Exported server data</span>');
+  addLog('📤', '<span class="green">Exported CSV</span> (' + pos.length + ' open + ' + hist.length + ' closed)');
 }
 
 function exportData_old() {
