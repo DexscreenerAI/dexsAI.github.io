@@ -2395,15 +2395,28 @@ async function pollServerStatus() {
 }
 
 async function serverStartStop() {
-  if (!serverMode) return;
   try {
-    const endpoint = isRunning ? '/stop' : '/start';
-    const res = await fetch(SNIPER_API + endpoint, { method: 'POST', signal: AbortSignal.timeout(5000) });
+    // First check current state from server
+    let running = isRunning;
+    try {
+      const statusRes = await fetch(SNIPER_API + '/status', { signal: AbortSignal.timeout(3000) });
+      const statusData = await statusRes.json();
+      running = statusData.isRunning || false;
+    } catch(e) {}
+
+    const endpoint = running ? '/stop' : '/start';
+    addLog('⏳', `Sending ${endpoint.slice(1).toUpperCase()} to server...`);
+
+    const res = await fetch(SNIPER_API + endpoint, { method: 'POST', signal: AbortSignal.timeout(8000) });
     const data = await res.json();
     if (data.success) {
-      addLog('🌐', `Server sniper ${endpoint === '/start' ? 'started' : 'stopped'}`);
-      pollServerStatus();
+      isRunning = !running;
+      addLog('✅', `Server sniper ${endpoint === '/start' ? 'STARTED' : 'STOPPED'}`);
+      $('startBtn').textContent = isRunning ? '⏹ STOP' : '▶ START';
+    } else {
+      addLog('⚠️', data.message || 'Command failed');
     }
+    setTimeout(pollServerStatus, 500);
   } catch (e) {
     addLog('❌', 'Server command failed: ' + e.message);
   }
