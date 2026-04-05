@@ -4052,50 +4052,102 @@ function loadFromStorage() {
 
 function exportData() {
   const s = serverState || {};
-  const pos = s.positions || [];
-  const hist = s.history || [];
-  const rows = [['Type','Symbol','Address','Chain','Score','TradeType','EntryPrice','CurrentPrice','PnL$','PnL%','Peak%','Size','DCA','MoonBag','HoldMin','Reason','Time'].join(',')];
 
-  // Open positions
-  pos.forEach(p => {
-    const hold = Math.floor((Date.now() - (p.entryTime||0)) / 60000);
-    rows.push([
-      'OPEN', p.symbol||'', p.address||'', p.chain||'solana', p.score||0, p.tradeType||'',
-      p.entryPrice||0, p.currentPrice||0, (p.pnl||0).toFixed(2), (p.pnlPct||0).toFixed(1),
-      (p.highestPnlPct||0).toFixed(1), (p.currentSize||0).toFixed(0), p.dcaLevel||0,
-      p.isMoonBag?'YES':'NO', hold, '', new Date(p.entryTime||0).toISOString()
-    ].join(','));
-  });
+  // Full raw JSON export — everything the server knows
+  const exportObj = {
+    exportDate: new Date().toISOString(),
+    // STATS
+    stats: {
+      balance: s.balance || 0,
+      totalPnL: s.totalPnL || 0,
+      closedPnL: s.closedPnL || 0,
+      securedPnL: s.securedPnL || 0,
+      unrealizedPnL: s.unrealizedPnL || 0,
+      totalTrades: s.totalTrades || 0,
+      wins: s.wins || 0,
+      winRate: s.totalTrades > 0 ? ((s.wins/s.totalTrades)*100).toFixed(1) + '%' : '0%',
+      bestTrade: s.bestTrade || 0,
+      worstTrade: s.worstTrade || 0,
+      scannedTotal: s.scannedTotal || 0,
+      oppsTotal: s.oppsTotal || 0,
+      isRunning: s.isRunning || false,
+      uptime: s.uptime || '',
+    },
+    // SETTINGS
+    settings: s.settings || {},
+    // OPEN POSITIONS — full detail
+    openPositions: (s.positions || []).map(p => ({
+      symbol: p.symbol,
+      address: p.address,
+      chain: p.chain,
+      score: p.score,
+      tradeType: p.tradeType,
+      label: p.label,
+      isMoonBag: p.isMoonBag || false,
+      entryPrice: p.entryPrice,
+      currentPrice: p.currentPrice,
+      entryMarketCap: p.entryMarketCap,
+      entryLiquidity: p.entryLiquidity,
+      entryVolume: p.entryVolume,
+      initialSize: p.initialSize,
+      currentSize: p.currentSize,
+      pnl: p.pnl,
+      pnlPct: p.pnlPct,
+      highestPnlPct: p.highestPnlPct,
+      holdMinutes: Math.floor((Date.now() - (p.entryTime||Date.now())) / 60000),
+      maxHold: p.maxHold,
+      trailingActivated: p.trailingActivated || false,
+      trailingHigh: p.trailingHigh || 0,
+      currentTrailDistance: p.currentTrailDistance || 0,
+      tpLevel: p.tpLevel || 0,
+      dcaLevel: p.dcaLevel || 0,
+      dcaSecured: p.dcaSecured || 0,
+      totalDcaAdded: p.totalDcaAdded || 0,
+      entryTime: new Date(p.entryTime||0).toISOString(),
+      dexUrl: p.dexUrl,
+      // Analysis data if available
+      analysisReasons: p.analysis?.reasons || [],
+      hasSocials: p.analysis?.hasSocials || false,
+      holdersTop10: p.analysis?.holders?.top10Pct || null,
+      holdersTopHolder: p.analysis?.holders?.topHolderPct || null,
+      holdersCount: p.analysis?.holders?.totalHolders || null,
+      bondingCurve: p.analysis?.bondingCurve?.progress || null,
+    })),
+    // CLOSED TRADES — full detail
+    closedTrades: (s.history || []).map(h => ({
+      symbol: h.symbol,
+      address: h.address,
+      chain: h.chain,
+      score: h.score,
+      tradeType: h.tradeType,
+      pnl: h.pnl,
+      pnlPct: h.pnlPct,
+      dcaSecured: h.dcaSecured || 0,
+      reason: h.reason,
+      holdMinutes: h.holdMin || 0,
+      closeTime: new Date(h.closeTime||0).toISOString(),
+      dexUrl: h.dexUrl,
+    })),
+    // WATCHLIST
+    watchlist: s.watchlistTokens || [],
+    watchlistCount: s.watchlistCount || 0,
+    // RECENT LOGS
+    recentLogs: (s.logs || []).slice(0, 50).map(l => ({
+      time: l.time,
+      icon: l.icon,
+      text: (l.text||'').replace(/<[^>]*>/g, ''), // Strip HTML tags
+    })),
+  };
 
-  // Closed trades
-  hist.forEach(h => {
-    rows.push([
-      'CLOSED', h.symbol||'', h.address||'', h.chain||'solana', h.score||0, h.tradeType||'',
-      '', '', (h.pnl||0).toFixed(2), (h.pnlPct||0).toFixed(1),
-      '', '', '', '', h.holdMin||0, h.reason||'', new Date(h.closeTime||0).toISOString()
-    ].join(','));
-  });
-
-  // Stats row
-  rows.push('');
-  rows.push('STATS');
-  rows.push('Balance,' + (s.balance||0).toFixed(2));
-  rows.push('TotalPnL,' + (s.totalPnL||0).toFixed(2));
-  rows.push('SecuredPnL,' + (s.securedPnL||0).toFixed(2));
-  rows.push('Trades,' + (s.totalTrades||0));
-  rows.push('Wins,' + (s.wins||0));
-  rows.push('WinRate,' + (s.totalTrades > 0 ? ((s.wins/s.totalTrades)*100).toFixed(1) : '0') + '%');
-  rows.push('Scanned,' + (s.scannedTotal||0));
-
-  const csv = rows.join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
+  const json = JSON.stringify(exportObj, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'sniper_export_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.download = 'sniper_full_export_' + new Date().toISOString().slice(0,16).replace(':','-') + '.json';
   a.click();
   URL.revokeObjectURL(url);
-  addLog('📤', '<span class="green">Exported CSV</span> (' + pos.length + ' open + ' + hist.length + ' closed)');
+  addLog('📤', '<span class="green">Full export</span> (' + (s.positions||[]).length + ' open, ' + (s.history||[]).length + ' closed, ' + (s.watchlistTokens||[]).length + ' watchlist)');
 }
 
 function exportData_old() {
