@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SHAZAM CRYPTO - AI Chart Analysis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a0a0f 0%, #0d1117 50%, #0a0f14 100%);
+      font-family: 'Rajdhani', sans-serif;
+      color: #e0e0e0;
+      overflow-x: hidden;
+    }
+
+    /* Animated Background */
+    .grid-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .scanline {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.5), transparent);
+      animation: scanline 4s linear infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes scanline {
+      0% { top: -10%; }
+      100% { top: 110%; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    @keyframes scan {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(0, 255, 136, 0.6); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 30px;
+      border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+      position: relative;
+      z-index: 10;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-icon {
+      animation: glow 2s ease-in-out infinite;
+      border-radius: 50%;
+    }
+
+    .title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: #fff;
+    }
+
+    .title-accent {
+      background: linear-gradient(90deg, #00ff88, #00aaff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-left: 5px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      letter-spacing: 4px;
+      color: rgba(0, 255, 136, 0.6);
+      text-transform: uppercase;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: #00ff88;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #00ff88;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    /* Main */
+    main {
+      padding: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Upload Zone */
+    .upload-zone {
+      border: 2px dashed rgba(0, 255, 136, 0.3);
+      border-radius: 20px;
+      padding: 80px 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(0, 255, 136, 0.02);
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: #00ff88;
+      background: rgba(0, 255, 136, 0.08);
+      transform: scale(1.02);
+    }
+
+    .upload-icon {
+      margin-bottom: 20px;
+      opacity: 0.8;
+    }
+
+    .upload-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+      color: #fff;
+    }
+
+    .upload-text {
+      margin-bottom: 25px;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 14px;
+    }
+
+    .supported-formats {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .format-badge {
+      padding: 5px 12px;
+      background: rgba(0, 170, 255, 0.1);
+      border: 1px solid rgba(0, 170, 255, 0.3);
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #00aaff;
+    }
+
+    /* Analysis Container */
+    .analysis-container {
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    .analysis-container.active {
+      display: grid;
+    }
+
+    @media (max-width: 900px) {
+      .analysis-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .section {
+      background: rgba(15, 20, 25, 0.8);
+      border: 1px solid rgba(0, 255, 136, 0.15);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #00ff88;
+    }
+
+    .section-icon {
+      font-size: 18px;
+    }
+
+    /* Chart Preview */
+    .chart-preview {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      min-height: 200px;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .chart-image {
+      width: 100%;
+      display: block;
+      border-radius: 12px;
+    }
+
+    .scanning-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 10, 20, 0.7);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scanning-overlay.active {
+      display: flex;
+    }
+
+    .scan-beam {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #00ff88, transparent);
+      box-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88;
+      animation: scan 1.5s ease-in-out infinite;
+    }
+
+    .scanning-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #00ff88;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    /* Buttons */
+    .button-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'Rajdhani', sans-serif;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .btn-secondary:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-primary {
+      flex: 2;
+      background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+      border: none;
+      color: #000;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      letter-spacing: 2px;
+      box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(0, 255, 136, 0.4);
+    }
+
+    .btn-primary:disabled {
+      background: linear-gradient(135deg, #333 0%, #222 100%);
+      color: #666;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top-color: #666;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* Results Section */
+    .results-section {
+      display: none;
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    .results-section.active {
+      display: block;
+    }
+
+    /* Signal Card */
+    .signal-card {
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid;
+      margin-bottom: 15px;
+    }
+
+    .signal-card.buy {
+      background: rgba(0, 255, 136, 0.15);
+      border-color: #00ff88;
+    }
+
+    .signal-card.sell {
+      background: rgba(255, 68, 102, 0.15);
+      border-color: #ff4466;
+    }
+
+    .signal-card.hold {
+      background: rgba(255, 170, 0, 0.15);
+      border-color: #ffaa00;
+    }
+
+    .signal-main {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .signal-badge {
+      padding: 10px 25px;
+      border-radius: 8px;
+      font-size: 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      letter-spacing: 3px;
+      border: 2px solid;
+    }
+
+    .signal-badge.buy {
+      background: rgba(0, 255, 136, 0.15);
+      color: #00ff88;
+      border-color: #00ff88;
+    }
+
+    .signal-badge.sell {
+      background: rgba(255, 68, 102, 0.15);
+      color: #ff4466;
+      border-color: #ff4466;
+    }
+
+    .signal-badge.hold {
+      background: rgba(255, 170, 0, 0.15);
+      color: #ffaa00;
+      border-color: #ffaa00;
+    }
+
+    .token-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .token-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .timeframe {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .confidence-meter {
+      margin-top: 10px;
+    }
+
+    .confidence-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .confidence-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1s ease-out;
+    }
+
+    /* Stats Row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .stat-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 5px;
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .stat-value.bullish { color: #00ff88; }
+    .stat-value.bearish { color: #ff4466; }
+    .stat-value.neutral { color: #ffaa00; }
+    .stat-value.low { color: #00ff88; }
+    .stat-value.medium { color: #ffaa00; }
+    .stat-value.high { color: #ff4466; }
+
+    /* Levels Row */
+    .levels-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .level-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(0, 255, 136, 0.05);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .level-card.stop {
+      border-color: rgba(255, 68, 102, 0.3);
+      background: rgba(255, 68, 102, 0.05);
+    }
+
+    .level-icon {
+      font-size: 20px;
+    }
+
+    .level-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .level-value {
+      font-size: 14px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      color: #00ff88;
+    }
+
+    .level-card.stop .level-value {
+      color: #ff4466;
+    }
+
+    /* Patterns & Tags */
+    .patterns-section,
+    .levels-section {
+      margin-bottom: 15px;
+    }
+
+    .mini-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 10px;
+    }
+
+    .tag-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pattern-tag {
+      padding: 6px 12px;
+      background: rgba(0, 170, 255, 0.1);
+      border: 1px solid rgba(0, 170, 255, 0.3);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #00aaff;
+    }
+
+    .sr-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .level-tag {
+      padding: 5px 10px;
+      background: transparent;
+      border: 1px solid;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 600;
+    }
+
+    .level-tag.support {
+      border-color: #00ff88;
+      color: #00ff88;
+    }
+
+    .level-tag.resistance {
+      border-color: #ff4466;
+      color: #ff4466;
+    }
+
+    /* Analysis Text */
+    .analysis-text {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .analysis-content {
+      font-size: 14px;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Indicators */
+    .indicators-section {
+      margin-bottom: 15px;
+    }
+
+    .indicator-tag {
+      padding: 5px 10px;
+      background: rgba(138, 43, 226, 0.1);
+      border: 1px solid rgba(138, 43, 226, 0.3);
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #a855f7;
+    }
+
+    /* Disclaimer */
+    .disclaimer {
+      font-size: 11px;
+      color: rgba(255, 170, 0, 0.6);
+      text-align: center;
+      padding: 10px;
+      background: rgba(255, 170, 0, 0.05);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 170, 0, 0.1);
+    }
+
+    /* Hidden file input */
+    #file-input {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-overlay"></div>
+  <div class="scanline"></div>
+
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">
+        <svg viewBox="0 0 40 40" width="40" height="40">
+          <defs>
+            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00ff88" />
+              <stop offset="100%" stop-color="#00aaff" />
+            </linearGradient>
+          </defs>
+          <circle cx="20" cy="20" r="18" fill="none" stroke="url(#logoGrad)" stroke-width="2" />
+          <path d="M12 25 L18 15 L24 22 L30 12" fill="none" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="30" cy="12" r="3" fill="#00ff88" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="title">SHAZAM<span class="title-accent">CRYPTO</span></h1>
+        <p class="subtitle">AI-Powered Chart Analysis</p>
+      </div>
+    </div>
+    <div class="status-badge">
+      <span class="status-dot"></span>
+      NEURAL NET ACTIVE
+    </div>
+  </header>
+
+  <main>
+    <input type="file" id="file-input" accept="image/*">
+
+    <!-- Upload Zone -->
+    <div class="upload-zone" id="upload-zone">
+      <div class="upload-icon">
+        <svg viewBox="0 0 80 80" width="80" height="80">
+          <rect x="5" y="20" width="70" height="50" rx="4" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.5" />
+          <polyline points="20,45 35,30 50,45 55,40 70,55" fill="none" stroke="#00aaff" stroke-width="2" />
+          <circle cx="60" cy="32" r="6" fill="none" stroke="#00ff88" stroke-width="2" />
+          <path d="M40 5 L40 20 M30 12 L40 5 L50 12" fill="none" stroke="#00ff88" stroke-width="2.5" stroke-linecap="round" />
+        </svg>
+      </div>
+      <h2 class="upload-title">DROP YOUR CHART</h2>
+      <p class="upload-text">or click to select an image</p>
+      <div class="supported-formats">
+        <span class="format-badge">PNG</span>
+        <span class="format-badge">JPG</span>
+        <span class="format-badge">WEBP</span>
+      </div>
+    </div>
+
+    <!-- Analysis Container -->
+    <div class="analysis-container" id="analysis-container">
+      <!-- Chart Section -->
+      <div class="section">
+        <div class="section-header">
+          <span class="section-icon">📊</span>
+          CHART INPUT
+        </div>
+        <div class="chart-preview">
+          <img src="" alt="Chart" class="chart-image" id="chart-image">
+          <div class="scanning-overlay" id="scanning-overlay">
+            <div class="scan-beam"></div>
+            <p class="scanning-text">ANALYZING PATTERNS...</p>
+          </div>
+        </div>
+        <div class="button-row">
+          <button class="btn btn-secondary" id="new-chart-btn">← NEW CHART</button>
+          <button class="btn btn-primary" id="analyze-btn">
+            <span>⚡</span>
+            ANALYZE
+          </button>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div class="section results-section" id="results-section">
+        <div class="section-header">
+          <span class="section-icon">🧠</span>
+          AI ANALYSIS
+        </div>
+
+        <!-- Signal Card -->
+        <div class="signal-card" id="signal-card">
+          <div class="signal-main">
+            <span class="signal-badge" id="signal-badge">HOLD</span>
+            <div class="token-info">
+              <span class="token-name" id="token-name">Unknown</span>
+              <span class="timeframe" id="timeframe">-</span>
+            </div>
+          </div>
+          <div class="confidence-meter">
+            <div class="confidence-label">
+              <span>Confidence</span>
+              <span id="confidence-value">0%</span>
+            </div>
+            <div class="confidence-bar">
+              <div class="confidence-fill" id="confidence-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <span class="stat-label">TREND</span>
+            <span class="stat-value" id="trend-value">NEUTRAL</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">RISK</span>
+            <span class="stat-value" id="risk-value">MEDIUM</span>
+          </div>
+        </div>
+
+        <!-- Levels Row -->
+        <div class="levels-row" id="levels-row" style="display: none;">
+          <div class="level-card" id="target-card" style="display: none;">
+            <span class="level-icon">🎯</span>
+            <div>
+              <span class="level-label">TARGET</span>
+              <span class="level-value" id="target-value"></span>
+            </div>
+          </div>
+          <div class="level-card stop" id="stoploss-card" style="display: none;">
+            <span class="level-icon">🛑</span>
+            <div>
+              <span class="level-label">STOP LOSS</span>
+              <span class="level-value" id="stoploss-value"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Patterns -->
+        <div class="patterns-section" id="patterns-section" style="display: none;">
+          <span class="mini-label">PATTERNS DETECTED</span>
+          <div class="tag-container" id="patterns-container"></div>
+        </div>
+
+        <!-- Support/Resistance -->
+        <div class="levels-section" id="sr-section" style="display: none;">
+          <div class="sr-grid">
+            <div id="supports-group" style="display: none;">
+              <span class="mini-label">SUPPORTS</span>
+              <div class="tag-container" id="supports-container"></div>
+            </div>
+            <div id="resistances-group" style="display: none;">
+              <span class="mini-label">RESISTANCES</span>
+              <div class="tag-container" id="resistances-container"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Indicators -->
+        <div class="indicators-section" id="indicators-section" style="display: none;">
+          <span class="mini-label">INDICATORS VISIBLE</span>
+          <div class="tag-container" id="indicators-container"></div>
+        </div>
+
+        <!-- Analysis Text -->
+        <div class="analysis-text">
+          <span class="mini-label">DETAILED ANALYSIS</span>
+          <p class="analysis-content" id="analysis-content">-</p>
+        </div>
+
+        <!-- Disclaimer -->
+        <p class="disclaimer">
+          ⚠️ This is AI-generated analysis for educational purposes only. Not financial advice. DYOR.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // DOM Elements
+    const fileInput = document.getElementById('file-input');
+    const uploadZone = document.getElementById('upload-zone');
+    const analysisContainer = document.getElementById('analysis-container');
+    const chartImage = document.getElementById('chart-image');
+    const scanningOverlay = document.getElementById('scanning-overlay');
+    const newChartBtn = document.getElementById('new-chart-btn');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const resultsSection = document.getElementById('results-section');
+
+    let imageBase64 = null;
+    let isLoading = false;
+
+    // Upload Zone Events
+    uploadZone.addEventListener('click', () => fileInput.click());
+    
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('drag-over');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('drag-over');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      handleFile(file);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      handleFile(file);
+    });
+
+    function handleFile(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        imageBase64 = dataUrl.split(',')[1];
+        chartImage.src = dataUrl;
+        
+        uploadZone.style.display = 'none';
+        analysisContainer.classList.add('active');
+        resultsSection.classList.remove('active');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // New Chart Button
+    newChartBtn.addEventListener('click', () => {
+      imageBase64 = null;
+      chartImage.src = '';
+      fileInput.value = '';
+      uploadZone.style.display = 'block';
+      analysisContainer.classList.remove('active');
+      resultsSection.classList.remove('active');
+    });
+
+    // Analyze Button
+    analyzeBtn.addEventListener('click', analyzeChart);
+
+    async function analyzeChart() {
+      if (!imageBase64 || isLoading) return;
+
+      isLoading = true;
+      analyzeBtn.disabled = true;
+      analyzeBtn.innerHTML = '<span class="spinner"></span> SCANNING...';
+      scanningOverlay.classList.add('active');
+      resultsSection.classList.remove('active');
+
+      try {
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 1500,
+            messages: [{
+              role: "user",
+              content: [
+                {
+                  type: "image",
+                  source: {
+                    type: "base64",
+                    media_type: "image/png",
+                    data: imageBase64
+                  }
+                },
+                {
+                  type: "text",
+                  text: `You are an expert crypto technical analyst. Analyze this chart and respond ONLY with valid JSON (no markdown, no backticks) with this exact structure:
+{
+  "token": "detected token/pair name or 'Unknown'",
+  "timeframe": "detected or estimated timeframe",
+  "trend": "BULLISH" or "BEARISH" or "NEUTRAL",
+  "confidence": number between 0 and 100,
+  "patterns": ["list of detected chart patterns"],
+  "supports": ["identified support levels"],
+  "resistances": ["identified resistance levels"],
+  "indicators": ["visible indicators on the chart"],
+  "signal": "BUY" or "SELL" or "HOLD",
+  "analysis": "detailed analysis in 2-3 sentences",
+  "risk": "LOW" or "MEDIUM" or "HIGH",
+  "target": "price target if applicable or null",
+  "stoploss": "suggested stop loss level or null"
+}`
+                }
+              ]
+            }]
+          })
+        });
+
+        const data = await response.json();
+        const text = data.content?.[0]?.text || '';
+
+        try {
+          const cleanJson = text.replace(/```json|```/g, '').trim();
+          const analysis = JSON.parse(cleanJson);
+          displayResults(analysis);
+        } catch {
+          displayResults({
+            error: true,
+            analysis: text || "Unable to analyze this chart. Please try with a clearer image.",
+            trend: "NEUTRAL",
+            signal: "HOLD",
+            confidence: 0
+          });
+        }
+      } catch (error) {
+        displayResults({
+          error: true,
+          analysis: "Connection error. Please check your internet connection.",
+          trend: "NEUTRAL",
+          signal: "HOLD",
+          confidence: 0
+        });
+      }
+
+      isLoading = false;
+      analyzeBtn.disabled = false;
+      analyzeBtn.innerHTML = '<span>⚡</span> ANALYZE';
+      scanningOverlay.classList.remove('active');
+    }
+
+    function displayResults(analysis) {
+      // Signal Card
+      const signal = (analysis.signal || 'HOLD').toUpperCase();
+      const signalCard = document.getElementById('signal-card');
+      const signalBadge = document.getElementById('signal-badge');
+      
+      signalCard.className = 'signal-card ' + signal.toLowerCase();
+      signalBadge.className = 'signal-badge ' + signal.toLowerCase();
+      signalBadge.textContent = signal;
+
+      // Token Info
+      document.getElementById('token-name').textContent = analysis.token || 'Unknown';
+      document.getElementById('timeframe').textContent = analysis.timeframe || '-';
+
+      // Confidence
+      const confidence = analysis.confidence || 0;
+      const trend = (analysis.trend || 'NEUTRAL').toUpperCase();
+      document.getElementById('confidence-value').textContent = confidence + '%';
+      document.getElementById('confidence-value').style.color = getTrendColor(trend);
+      
+      const confidenceFill = document.getElementById('confidence-fill');
+      confidenceFill.style.width = confidence + '%';
+      confidenceFill.style.backgroundColor = getTrendColor(trend);
+
+      // Trend & Risk
+      const trendValue = document.getElementById('trend-value');
+      trendValue.textContent = (trend === 'BULLISH' ? '↑ ' : trend === 'BEARISH' ? '↓ ' : '') + trend;
+      trendValue.className = 'stat-value ' + trend.toLowerCase();
+
+      const risk = (analysis.risk || 'MEDIUM').toUpperCase();
+      const riskValue = document.getElementById('risk-value');
+      riskValue.textContent = risk;
+      riskValue.className = 'stat-value ' + risk.toLowerCase();
+
+      // Target & Stop Loss
+      const levelsRow = document.getElementById('levels-row');
+      const targetCard = document.getElementById('target-card');
+      const stoplossCard = document.getElementById('stoploss-card');
+
+      if (analysis.target || analysis.stoploss) {
+        levelsRow.style.display = 'grid';
+        
+        if (analysis.target) {
+          targetCard.style.display = 'flex';
+          document.getElementById('target-value').textContent = analysis.target;
+        } else {
+          targetCard.style.display = 'none';
+        }
+
+        if (analysis.stoploss) {
+          stoplossCard.style.display = 'flex';
+          document.getElementById('stoploss-value').textContent = analysis.stoploss;
+        } else {
+          stoplossCard.style.display = 'none';
+        }
+      } else {
+        levelsRow.style.display = 'none';
+      }
+
+      // Patterns
+      const patternsSection = document.getElementById('patterns-section');
+      const patternsContainer = document.getElementById('patterns-container');
+      if (analysis.patterns && analysis.patterns.length > 0) {
+        patternsSection.style.display = 'block';
+        patternsContainer.innerHTML = analysis.patterns
+          .map(p => `<span class="pattern-tag">${p}</span>`)
+          .join('');
+      } else {
+        patternsSection.style.display = 'none';
+      }
+
+      // Supports & Resistances
+      const srSection = document.getElementById('sr-section');
+      const supportsGroup = document.getElementById('supports-group');
+      const resistancesGroup = document.getElementById('resistances-group');
+      const supportsContainer = document.getElementById('supports-container');
+      const resistancesContainer = document.getElementById('resistances-container');
+
+      const hasSupports = analysis.supports && analysis.supports.length > 0;
+      const hasResistances = analysis.resistances && analysis.resistances.length > 0;
+
+      if (hasSupports || hasResistances) {
+        srSection.style.display = 'block';
+
+        if (hasSupports) {
+          supportsGroup.style.display = 'block';
+          supportsContainer.innerHTML = analysis.supports
+            .map(s => `<span class="level-tag support">${s}</span>`)
+            .join('');
+        } else {
+          supportsGroup.style.display = 'none';
+        }
+
+        if (hasResistances) {
+          resistancesGroup.style.display = 'block';
+          resistancesContainer.innerHTML = analysis.resistances
+            .map(r => `<span class="level-tag resistance">${r}</span>`)
+            .join('');
+        } else {
+          resistancesGroup.style.display = 'none';
+        }
+      } else {
+        srSection.style.display = 'none';
+      }
+
+      // Indicators
+      const indicatorsSection = document.getElementById('indicators-section');
+      const indicatorsContainer = document.getElementById('indicators-container');
+      if (analysis.indicators && analysis.indicators.length > 0) {
+        indicatorsSection.style.display = 'block';
+        indicatorsContainer.innerHTML = analysis.indicators
+          .map(i => `<span class="indicator-tag">${i}</span>`)
+          .join('');
+      } else {
+        indicatorsSection.style.display = 'none';
+      }
+
+      // Analysis Text
+      document.getElementById('analysis-content').textContent = analysis.analysis || '-';
+
+      // Show results
+      resultsSection.classList.add('active');
+    }
+
+    function getTrendColor(trend) {
+      if (trend === 'BULLISH') return '#00ff88';
+      if (trend === 'BEARISH') return '#ff4466';
+      return '#ffaa00';
+    }
+  </script>
+</body>
+</html>
