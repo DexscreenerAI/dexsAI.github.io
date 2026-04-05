@@ -13,15 +13,10 @@ body {
   background: #0a0a0f;
   color: #e0e0e0;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  overflow-x: hidden;
   position: relative;
 }
 
-/* Animated background grid */
 body::before {
   content: '';
   position: fixed;
@@ -33,202 +28,232 @@ body::before {
   animation: gridMove 20s linear infinite;
   z-index: 0;
 }
-@keyframes gridMove {
-  0% { transform: translate(0,0); }
-  100% { transform: translate(40px,40px); }
-}
+@keyframes gridMove { 0%{transform:translate(0,0)} 100%{transform:translate(40px,40px)} }
 
-/* Glow orb */
 body::after {
   content: '';
   position: fixed;
-  top: 30%;
-  left: 50%;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(0,212,255,0.08) 0%, transparent 70%);
+  top: 20%; left: 50%;
+  width: 800px; height: 800px;
+  background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
   transform: translate(-50%, -50%);
   z-index: 0;
 }
 
-.container {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  max-width: 650px;
-  padding: 20px;
-}
+.page { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 40px 20px 60px; }
 
-.badge {
-  display: inline-block;
-  padding: 6px 16px;
-  border: 1px solid rgba(0,212,255,0.3);
-  border-radius: 20px;
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: #00d4ff;
-  background: rgba(0,212,255,0.06);
-  margin-bottom: 30px;
-  text-transform: uppercase;
-}
-
-.logo {
-  font-size: 48px;
-  margin-bottom: 20px;
-  filter: drop-shadow(0 0 30px rgba(0,212,255,0.4));
-}
-
-h1 {
-  font-size: 32px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  margin-bottom: 12px;
-  background: linear-gradient(135deg, #00d4ff, #00ff88);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.subtitle {
-  font-size: 14px;
-  color: rgba(255,255,255,0.5);
-  letter-spacing: 1px;
-  margin-bottom: 40px;
-  line-height: 1.6;
-}
-
+/* HERO */
+.hero { text-align: center; margin-bottom: 50px; }
+.badge { display:inline-block; padding:6px 16px; border:1px solid rgba(0,212,255,0.3); border-radius:20px; font-size:10px; letter-spacing:2px; color:#00d4ff; background:rgba(0,212,255,0.06); margin-bottom:24px; text-transform:uppercase; }
+.logo { font-size: 56px; margin-bottom: 16px; filter: drop-shadow(0 0 30px rgba(0,212,255,0.4)); }
+h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; margin-bottom: 14px; background: linear-gradient(135deg, #00d4ff, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.subtitle { font-size: 13px; color: rgba(255,255,255,0.45); letter-spacing: 0.5px; margin-bottom: 30px; line-height: 1.7; max-width: 600px; margin-left: auto; margin-right: auto; }
 .coming-soon {
-  display: inline-block;
-  padding: 14px 40px;
-  border: 2px solid #00d4ff;
-  border-radius: 8px;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 4px;
-  color: #00d4ff;
-  background: rgba(0,212,255,0.05);
-  text-transform: uppercase;
-  position: relative;
-  overflow: hidden;
-  animation: pulse 2s ease-in-out infinite;
+  display:inline-block; padding:16px 48px; border:2px solid #00d4ff; border-radius:8px;
+  font-size:20px; font-weight:700; letter-spacing:5px; color:#00d4ff;
+  background:rgba(0,212,255,0.05); text-transform:uppercase;
+  position:relative; overflow:hidden; animation:pulse 2s ease-in-out infinite;
 }
-.coming-soon::before {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%;
-  width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(0,212,255,0.1), transparent);
-  animation: shimmer 3s infinite;
-}
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(0,212,255,0.2); }
-  50% { box-shadow: 0 0 40px rgba(0,212,255,0.4); }
-}
-@keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
+.coming-soon::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg, transparent, rgba(0,212,255,0.15), transparent); animation:shimmer 3s infinite; }
+@keyframes pulse { 0%,100%{box-shadow:0 0 20px rgba(0,212,255,0.2)} 50%{box-shadow:0 0 50px rgba(0,212,255,0.4)} }
+@keyframes shimmer { 0%{left:-100%} 100%{left:100%} }
 
-.features {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 40px;
-  text-align: left;
-}
+/* SECTION */
+.section { margin-bottom: 40px; }
+.section-label { font-size: 10px; letter-spacing: 3px; color: #00d4ff; margin-bottom: 16px; text-transform: uppercase; text-align: center; }
+.section-title { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 8px; color: #fff; }
+.section-desc { font-size: 11px; color: rgba(255,255,255,0.4); text-align: center; margin-bottom: 24px; line-height: 1.6; max-width: 650px; margin-left: auto; margin-right: auto; }
+
+/* FEATURES GRID */
+.features { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 40px; }
 .feature {
-  padding: 14px;
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 8px;
-  background: rgba(255,255,255,0.02);
+  padding: 18px 16px; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;
+  background: rgba(255,255,255,0.02); transition: all .2s;
 }
-.feature-icon { font-size: 18px; margin-bottom: 6px; }
-.feature-title { font-size: 11px; font-weight: 700; color: #00d4ff; letter-spacing: 1px; margin-bottom: 4px; }
-.feature-desc { font-size: 10px; color: rgba(255,255,255,0.4); line-height: 1.5; }
+.feature:hover { border-color: rgba(0,212,255,0.2); background: rgba(0,212,255,0.03); }
+.feature-icon { font-size: 20px; margin-bottom: 8px; }
+.feature-title { font-size: 11px; font-weight: 700; color: #00d4ff; letter-spacing: 1px; margin-bottom: 6px; }
+.feature-desc { font-size: 10px; color: rgba(255,255,255,0.4); line-height: 1.6; }
 
+/* API STACK */
+.api-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 40px; }
+.api-card {
+  padding: 14px; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+  background: rgba(255,255,255,0.02); text-align: center;
+}
+.api-card.premium { border-color: rgba(255,170,0,0.25); background: rgba(255,170,0,0.03); }
+.api-card.free { border-color: rgba(0,255,136,0.15); background: rgba(0,255,136,0.02); }
+.api-name { font-size: 11px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.api-type { font-size: 8px; letter-spacing: 1px; text-transform: uppercase; }
+.api-type.premium { color: #ffaa00; }
+.api-type.free { color: #00ff88; }
+.api-desc { font-size: 9px; color: rgba(255,255,255,0.35); margin-top: 6px; line-height: 1.4; }
+
+/* STATS */
+.stats-row { display: flex; justify-content: center; gap: 30px; margin-bottom: 40px; flex-wrap: wrap; }
+.stat { text-align: center; }
+.stat-value { font-size: 24px; font-weight: 800; color: #00d4ff; }
+.stat-value.green { color: #00ff88; }
+.stat-label { font-size: 9px; color: rgba(255,255,255,0.35); letter-spacing: 1px; margin-top: 4px; }
+
+/* BOTTOM */
 .back-link {
-  display: inline-block;
-  margin-top: 30px;
-  padding: 8px 20px;
-  font-size: 11px;
-  color: rgba(255,255,255,0.4);
-  text-decoration: none;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 6px;
-  transition: all .15s;
-  letter-spacing: 1px;
+  display:inline-block; margin-top:20px; padding:10px 24px; font-size:11px;
+  color:rgba(255,255,255,0.4); text-decoration:none; border:1px solid rgba(255,255,255,0.1);
+  border-radius:6px; transition:all .15s; letter-spacing:1px;
 }
-.back-link:hover { color: #00d4ff; border-color: rgba(0,212,255,0.3); }
-
-.terminal-line {
-  margin-top: 40px;
-  font-size: 11px;
-  color: rgba(0,212,255,0.4);
-  letter-spacing: 1px;
-}
-.terminal-line .cursor {
-  display: inline-block;
-  width: 8px;
-  height: 14px;
-  background: #00d4ff;
-  vertical-align: middle;
-  margin-left: 4px;
-  animation: blink 1s step-end infinite;
-}
+.back-link:hover { color:#00d4ff; border-color:rgba(0,212,255,0.3); }
+.terminal-line { margin-top:30px; font-size:11px; color:rgba(0,212,255,0.35); letter-spacing:1px; text-align:center; }
+.cursor { display:inline-block; width:8px; height:14px; background:#00d4ff; vertical-align:middle; margin-left:4px; animation:blink 1s step-end infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
+.divider { width: 60px; height: 2px; background: rgba(0,212,255,0.2); margin: 40px auto; border-radius: 2px; }
+
 @media (max-width: 600px) {
-  h1 { font-size: 22px; }
+  h1 { font-size: 24px; }
   .features { grid-template-columns: 1fr; }
-  .coming-soon { font-size: 14px; padding: 12px 30px; }
-  .logo { font-size: 36px; }
+  .api-grid { grid-template-columns: 1fr 1fr; }
+  .coming-soon { font-size: 16px; padding: 14px 32px; }
+  .logo { font-size: 40px; }
+  .stats-row { gap: 16px; }
+  .stat-value { font-size: 18px; }
 }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="badge">DexScreener AI Labs</div>
+<div class="page">
 
-  <div class="logo">🤖</div>
+  <!-- HERO -->
+  <div class="hero">
+    <div class="badge">DexScreener AI Labs</div>
+    <div class="logo">🤖</div>
+    <h1>SNIPER BOT</h1>
+    <p class="subtitle">
+      An autonomous AI-powered trading engine that combines premium & free data sources
+      with advanced artificial intelligence to find, analyze, and execute trades
+      with surgical precision — 24 hours a day, zero human intervention.
+    </p>
+    <div class="coming-soon">COMING SOON</div>
+  </div>
 
-  <h1>SNIPER BOT</h1>
+  <div class="divider"></div>
 
-  <p class="subtitle">
-    Autonomous AI-powered trading engine.<br>
-    Real entries. Smart exits. Zero emotions.
-  </p>
+  <!-- HOW IT WORKS -->
+  <div class="section">
+    <div class="section-label">How It Works</div>
+    <div class="section-title">Intelligence Meets Speed</div>
+    <div class="section-desc">
+      The bot continuously scans thousands of tokens across multiple blockchains every 35 seconds.
+      It cross-references data from premium APIs and free sources, runs AI-powered analysis on each candidate,
+      then monitors a 24-hour watchlist to find the perfect entry point before executing.
+    </div>
+  </div>
 
-  <div class="coming-soon">COMING SOON</div>
+  <!-- DATA SOURCES -->
+  <div class="section">
+    <div class="section-label">Data Sources</div>
+    <div class="section-title">Multi-Source Intelligence Stack</div>
+    <div class="section-desc">
+      Combining premium paid APIs with free public data sources for maximum coverage and accuracy.
+    </div>
+  </div>
+
+  <div class="api-grid">
+    <div class="api-card premium">
+      <div class="api-name">Helius RPC</div>
+      <div class="api-type premium">PREMIUM</div>
+      <div class="api-desc">Solana real-time transactions, holder distribution, whale tracking</div>
+    </div>
+    <div class="api-card premium">
+      <div class="api-name">Anthropic Claude</div>
+      <div class="api-type premium">PREMIUM AI</div>
+      <div class="api-desc">AI-powered token analysis, sentiment scoring, risk assessment</div>
+    </div>
+    <div class="api-card free">
+      <div class="api-name">DexScreener</div>
+      <div class="api-type free">FREE</div>
+      <div class="api-desc">Price, volume, liquidity, boosts, token profiles across all chains</div>
+    </div>
+    <div class="api-card free">
+      <div class="api-name">Pump.fun</div>
+      <div class="api-type free">FREE</div>
+      <div class="api-desc">Bonding curve progress, new launches, socials verification</div>
+    </div>
+    <div class="api-card free">
+      <div class="api-name">CoinGecko</div>
+      <div class="api-type free">FREE</div>
+      <div class="api-desc">Token security verification, trust scores, community data</div>
+    </div>
+    <div class="api-card free">
+      <div class="api-name">Rugcheck</div>
+      <div class="api-type free">FREE</div>
+      <div class="api-desc">Contract security analysis, mint authority, freeze checks</div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="section">
+    <div class="section-label">Core Features</div>
+    <div class="section-title">Built for Precision</div>
+  </div>
 
   <div class="features">
     <div class="feature">
       <div class="feature-icon">🎯</div>
-      <div class="feature-title">SMART ENTRY</div>
-      <div class="feature-desc">AI watchlist monitors 24h for the perfect entry point before executing</div>
+      <div class="feature-title">24H SMART WATCHLIST</div>
+      <div class="feature-desc">AI identifies promising tokens, then monitors them for up to 24 hours — waiting for the perfect dip entry instead of buying the top</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🧠</div>
+      <div class="feature-title">AI ENTRY ANALYSIS</div>
+      <div class="feature-desc">Checks buy pressure, momentum direction, volume trends, and holder distribution before every trade. Only enters on confirmed setups</div>
     </div>
     <div class="feature">
       <div class="feature-icon">🛡</div>
-      <div class="feature-title">RISK MANAGEMENT</div>
-      <div class="feature-desc">Dynamic stop-loss, take-profit levels, and position sizing based on portfolio</div>
+      <div class="feature-title">DYNAMIC RISK MANAGEMENT</div>
+      <div class="feature-desc">Position sizing at 1.5% of portfolio. Take-profit at +40%, trailing stops that widen as gains grow. Hard stop-loss at -20%</div>
     </div>
     <div class="feature">
       <div class="feature-icon">🌕</div>
-      <div class="feature-title">MOON BAG</div>
-      <div class="feature-desc">Automatically holds a portion of high-conviction trades for maximum upside</div>
+      <div class="feature-title">INFINITE MOON BAG</div>
+      <div class="feature-desc">On exceptional tokens (score 95+), 10% is kept as a moon bag with no trailing and no timeout — it rides until x50, x100 or beyond</div>
     </div>
     <div class="feature">
       <div class="feature-icon">⚡</div>
-      <div class="feature-title">MULTI-CHAIN</div>
-      <div class="feature-desc">Scans Solana & Ethereum simultaneously across 300+ keywords every 35 seconds</div>
+      <div class="feature-title">MULTI-CHAIN SCANNING</div>
+      <div class="feature-desc">Scans Solana & Ethereum simultaneously using 300+ keywords, pattern matching, and real-time boost detection every 35 seconds</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔒</div>
+      <div class="feature-title">ANTI-RUG PROTECTION</div>
+      <div class="feature-desc">Honeypot detection, liquidity pull alerts, holder concentration checks, and bonding curve verification before any trade</div>
     </div>
   </div>
 
-  <a href="./sniper_terminal.html" class="back-link">&larr; BACK TO TERMINAL</a>
-
-  <div class="terminal-line">
-    > initializing sniper_bot.exe<span class="cursor"></span>
+  <!-- STATS -->
+  <div class="section">
+    <div class="section-label">Engine Stats</div>
   </div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-value">300+</div><div class="stat-label">KEYWORDS / SCAN</div></div>
+    <div class="stat"><div class="stat-value green">35s</div><div class="stat-label">SCAN INTERVAL</div></div>
+    <div class="stat"><div class="stat-value">6</div><div class="stat-label">DATA SOURCES</div></div>
+    <div class="stat"><div class="stat-value green">24H</div><div class="stat-label">WATCHLIST</div></div>
+    <div class="stat"><div class="stat-value">2</div><div class="stat-label">CHAINS</div></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- BOTTOM -->
+  <div style="text-align:center">
+    <a href="./sniper_terminal.html" class="back-link">&larr; BACK TO TERMINAL</a>
+    <div class="terminal-line">
+      > initializing sniper_bot.exe<span class="cursor"></span>
+    </div>
+  </div>
+
 </div>
 
 </body>
