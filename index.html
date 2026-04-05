@@ -1994,8 +1994,7 @@ body {
   <div class="right-panel" id="rightPanel">
     <!-- Promoted Section -->
     <div class="rp-section rp-promoted">
-      <div class="rp-title" style="color:var(--yellow)">⭐ Promoted <a href="./shazam_crypto.html">Shazam</a>
-    <a href="./promote.html" style="margin-left:auto;font-size:9px;color:var(--cyan);text-decoration:none">+ Add yours</a></div>
+      <div class="rp-title" style="color:var(--yellow)">⭐ Promoted <a href="./promote.html" style="margin-left:auto;font-size:9px;color:var(--cyan);text-decoration:none">+ Add yours</a></div>
       <div id="rpPromoted"><div class="rp-empty">No promoted tokens</div></div>
     </div>
     
@@ -5206,8 +5205,7 @@ function renderMobilePromoted(container, promoted) {
   if (promoted.length === 0) {
     container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">
       No promoted tokens yet<br>
-      <a href="./shazam_crypto.html">Shazam</a>
-    <a href="./promote.html" style="color:var(--yellow);font-size:11px;margin-top:8px;display:inline-block">⭐ Promote your token →</a>
+      <a href="./promote.html" style="color:var(--yellow);font-size:11px;margin-top:8px;display:inline-block">⭐ Promote your token →</a>
     </div>`;
     return;
   }
@@ -5426,8 +5424,7 @@ async function loadPromotedTokens() {
 function renderPromotedTokens(container, promoted) {
   // Render right panel (desktop)
   if (promoted.length === 0) {
-    container.innerHTML = '<div class="rp-empty">No promoted tokens yet<br><a href="./shazam_crypto.html">Shazam</a>
-    <a href="./promote.html" style="color:var(--cyan);font-size:11px">Be the first! →</a></div>';
+    container.innerHTML = '<div class="rp-empty">No promoted tokens yet<br><a href="./promote.html" style="color:var(--cyan);font-size:11px">Be the first! →</a></div>';
     // Hide mobile banner
     const banner = document.getElementById('promoBanner');
     if (banner) banner.classList.add('hidden');
