@@ -35,8 +35,8 @@ border-bottom:1px solid #1a2636;backdrop-filter:blur(10px);
 .nav-logo img{height:28px;border-radius:6px;}
 .nav-logo span{font-family:‘JetBrains Mono’,monospace;font-weight:700;font-size:13px;letter-spacing:1px;}
 .nav-links{display:flex;gap:18px;}
-.nav-links a{font-family:‘JetBrains Mono’,monospace;font-size:11px;color:#64748b;text-decoration:none;letter-spacing:.5px;}
-.nav-links a:hover,.nav-links a.on{color:#00d4ff;}
+.nav-links a{font-family:’JetBrains Mono’,monospace;font-size:11px;font-weight:500;color:rgba(255,255,255,0.5);text-decoration:none;letter-spacing:.5px;}
+.nav-links a:hover,.nav-links a.on,.nav-links a.active{color:#00d4ff;}
 .nav-ham{display:none;background:#111a26;border:1px solid #1a2636;color:#fff;font-size:18px;padding:6px 10px;border-radius:6px;cursor:pointer;}
 .mob-menu{display:none;position:fixed;top:53px;left:0;right:0;background:#060a10;border-bottom:1px solid #1a2636;flex-direction:column;padding:12px;z-index:99;}
 .mob-menu.open{display:flex;}
@@ -62,20 +62,19 @@ border-bottom:1px solid #1a2636;backdrop-filter:blur(10px);
     <a href="./og-detector.html">OG Detector</a>
     <a href="./telegram-bot.html">Telegram Bot</a>
     <a href="./litepaper.html">Litepaper</a>
-    <a href="./extension.html">Extension</a>
   </div>
   <div style="display:flex;gap:12px;align-items:center"><a href="https://t.me/dexscreeneraitoken" target="_blank" style="color:#64748b;text-decoration:none;font-size:16px" title="Telegram">💬</a><a href="https://x.com/dexscreenerai" target="_blank" style="color:#64748b;text-decoration:none;font-size:14px" title="Twitter">𝕏</a></div>
   <button class="nav-ham" onclick="document.getElementById('mob').classList.toggle('open')">☰</button>
 </nav>
 <div class="mob-menu" id="mob">
-  <a href="./index.html">🏠 App</a>
-  <a href="./gems.html" style="color:#00d4ff">💎 Gems</a>
-  <a href="./sniper_terminal.html">🎯 Sniper</a>
-  <a href="./og-detector.html">🔍 OG Detector</a>
-  <a href="./telegram-bot.html">🤖 Telegram Bot</a>
-  <a href="./extension.html">🧩 Extension</a>
-  <a href="./promote.html">⭐ Promote</a>
-  <a href="./litepaper.html">📄 Litepaper</a>
+  <a href="./index.html">App</a>
+  <a href="./gems.html" class="active" style="color:#00d4ff">Gems</a>
+  <a href="./sniper_terminal.html">Sniper</a>
+  <a href="./og-detector.html">OG Detector</a>
+  <a href="./telegram-bot.html">Telegram Bot</a>
+  <a href="./litepaper.html">Litepaper</a>
+  <a href="https://t.me/dexscreeneraitoken" target="_blank">💬 Telegram</a>
+  <a href="https://x.com/dexscreenerai" target="_blank">𝕏 Twitter</a>
 </div>
 
 <!-- APP — rendered by JS like Scene Remixer -->
