@@ -2001,6 +2001,7 @@ body::before {
     <button class="ctrl-btn warning" id="closeAllBtn">⚠ CLOSE ALL</button>
     <span id="scanCounter" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#00d4ff;letter-spacing:1px;padding:8px 14px;border:1px solid rgba(0,212,255,0.2);border-radius:8px;background:rgba(0,212,255,0.06)">SCAN: 0</span>
     <span id="pnlBig" style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:800;color:#00ff88;letter-spacing:1px;padding:8px 16px;border:1px solid rgba(0,255,136,0.25);border-radius:8px;background:rgba(0,255,136,0.06)">P&L: $0</span>
+    <span id="uptimeBig" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#b388ff;letter-spacing:1px;padding:8px 14px;border:1px solid rgba(179,136,255,0.25);border-radius:8px;background:rgba(179,136,255,0.06)">UPTIME: --</span>
   </div>
   
   <!-- SCANNER STATUS -->
@@ -2397,6 +2398,7 @@ async function pollServerStatus() {
       $('pnlBig').style.borderColor = pnl >= 0 ? 'rgba(0,255,136,0.25)' : 'rgba(255,59,79,0.25)';
       $('pnlBig').style.background = pnl >= 0 ? 'rgba(0,255,136,0.06)' : 'rgba(255,59,79,0.06)';
     }
+    if ($('uptimeBig')) $('uptimeBig').textContent = 'UPTIME: ' + (state.uptime || '--');
 
     // Update status badges
     if (state.isRunning) {
