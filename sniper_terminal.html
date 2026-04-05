@@ -3909,22 +3909,10 @@ function renderCard(pos) {
         </div>
       </div>
 
-      <div class="pos-stats-row">
-        <div class="pos-stat">
-          <div class="pos-stat-label">SIZE</div>
-          <div class="pos-stat-value">$${currentSize.toFixed(0)}</div>
-        </div>
-        <div class="pos-stat">
-          <div class="pos-stat-label">${pos.trailingActivated ? 'TRAIL' : 'SL'}</div>
-          <div class="pos-stat-value ${pos.trailingActivated ? 'orange' : 'red'}">${pos.trailingActivated ? '-' + (pos.currentTrailDistance||20).toFixed(0) + '%' : '-60%'}</div>
-        </div>
-        <div class="pos-stat">
-          <div class="pos-stat-label">PEAK</div>
-          <div class="pos-stat-value green">+${highestPnlPct.toFixed(0)}%</div>
-        </div>
-        <div class="pos-stat">
-          <div class="pos-stat-label">TIME</div>
-          <div class="pos-stat-value">${holdMin}m</div>
+      <div class="pos-stats-row" style="grid-template-columns:1fr;gap:0">
+        <div class="pos-stat" style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px">
+          <span class="pos-stat-label" style="margin:0">TIME</span>
+          <span class="pos-stat-value" style="font-size:13px;font-weight:700">${holdMin}m</span>
         </div>
       </div>
 
@@ -3932,12 +3920,13 @@ function renderCard(pos) {
 
       ${tags ? '<div class="pos-tags">' + tags + '</div>' : ''}
 
-      <div class="pos-actions">
+      <div class="pos-actions" style="gap:5px;margin-top:8px">
         ${pos.isMoonBag
-          ? '<button onclick="sellMoon(' + (pos.id||0) + ')" class="pos-action-btn" style="border-color:#b388ff;color:#b388ff">SELL MOON</button>'
-          : '<button onclick="closePos(' + (pos.id||0) + ')" class="pos-action-btn close">CLOSE</button><button onclick="extendPos(' + (pos.id||0) + ')" class="pos-action-btn dex">+15min</button>'}
-        <a href="${pos.dexUrl || '#'}" target="_blank" class="pos-action-btn dex">DEX</a>
-        <a href="/?ca=${pos.address||''}" target="_blank" class="pos-action-btn">ANALYZE</a>
+          ? '<button onclick="sellMoon(' + (pos.id||0) + ')" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid #b388ff;background:rgba(179,136,255,0.08);color:#b388ff;cursor:pointer;transition:all .15s">SELL MOON</button>'
+          : '<button onclick="closePos(' + (pos.id||0) + ')" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--red);background:rgba(255,59,79,0.08);color:var(--red);cursor:pointer;transition:all .15s">CLOSE</button>' +
+            '<button onclick="extendPos(' + (pos.id||0) + ')" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--cyan);background:rgba(0,212,255,0.08);color:var(--cyan);cursor:pointer;transition:all .15s">+15min</button>'}
+        <a href="${pos.dexUrl || '#'}" target="_blank" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--green);background:rgba(0,255,136,0.08);color:var(--green);cursor:pointer;text-decoration:none;text-align:center;transition:all .15s">DEX</a>
+        <a href="/?ca=${pos.address||''}" target="_blank" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--yellow);background:rgba(255,170,0,0.08);color:var(--yellow);cursor:pointer;text-decoration:none;text-align:center;transition:all .15s">ANALYZE</a>
       </div>
     </div>`;
 }
