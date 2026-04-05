@@ -33,7 +33,15 @@
     <a href="./litepaper.html" class="active">Litepaper</a>
   </div>
   <div class="nav-socials"><a href="https://t.me/dexscreeneraitoken" target="_blank">💬</a><a href="https://x.com/dexscreenerai" target="_blank">𝕏</a></div>
+  <button onclick="document.getElementById('mobMenu').classList.toggle('open')" style="display:none;background:var(--card);border:1px solid var(--card-border);color:#fff;font-size:18px;padding:6px 10px;border-radius:6px;cursor:pointer" class="mob-btn">☰</button>
 </nav>
+<div id="mobMenu" style="display:none;position:fixed;top:53px;left:0;right:0;background:var(--bg);border-bottom:1px solid var(--card-border);flex-direction:column;padding:12px;z-index:999">
+  <a href="./index.html" style="padding:12px 16px;color:var(--text);text-decoration:none;font-family:var(--mono);font-size:12px;border-radius:8px">App</a>
+  <a href="./sniper_terminal.html" style="padding:12px 16px;color:var(--text);text-decoration:none;font-family:var(--mono);font-size:12px;border-radius:8px">Sniper</a>
+  <a href="./telegram-bot.html" style="padding:12px 16px;color:var(--text);text-decoration:none;font-family:var(--mono);font-size:12px;border-radius:8px">Telegram Bot</a>
+  <a href="./litepaper.html" style="padding:12px 16px;color:var(--cyan);text-decoration:none;font-family:var(--mono);font-size:12px;border-radius:8px;background:var(--card)">Litepaper</a>
+</div>
+<style>.mob-btn{display:none!important}#mobMenu.open{display:flex!important}@media(max-width:900px){.mob-btn{display:block!important}.nav-socials{display:none}}</style>
 
 <section class="hero">
   <div class="hero-badge">📄 OFFICIAL LITEPAPER — V1.0</div>

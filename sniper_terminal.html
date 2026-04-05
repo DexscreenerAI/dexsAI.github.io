@@ -3983,7 +3983,8 @@ function renderWatchlist() {
   wl.forEach(w => {
     const age = Math.floor((Date.now() - (w.addedAt||Date.now())) / 60000);
     const ageStr = age >= 1440 ? Math.floor(age/1440) + 'd' : age >= 60 ? Math.floor(age/60) + 'h' : age + 'm';
-    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.03)">';
+    const dexLink = 'https://dexscreener.com/solana/' + (w.address||'');
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer" onclick="window.open(\'' + dexLink + '\',\'_blank\')">';
     html += '<td style="padding:5px 6px;color:#00d4ff;font-weight:600">$' + esc(w.symbol||'???') + '</td>';
     html += '<td style="text-align:center;color:#00ff88">' + (w.score||0) + '</td>';
     html += '<td style="text-align:center;color:rgba(255,255,255,0.5)">' + (w.rechecks||0) + '</td>';
