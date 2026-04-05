@@ -3,730 +3,180 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OG Detector - Find the Original Contract | DexScreener AI</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>OG Detector — DexScreener AI</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
-  --bg: #0a0a0f;
-  --bg2: #12121a;
-  --bg3: #1a1a24;
-  --card: #1c1c28;
-  --border: #2a2a3a;
-  --cyan: #00d4aa;
-  --cyan-dim: rgba(0, 212, 170, 0.15);
-  --green: #00d4aa;
-  --red: #ff5252;
-  --yellow: #ffc107;
-  --purple: #b388ff;
-  --blue: #4da6ff;
-  --orange: #ff9500;
-  --text: #f0f0f0;
-  --text2: #a0a0a0;
-  --text3: #666;
-  --mono: 'JetBrains Mono', monospace;
-  --sans: 'DM Sans', sans-serif;
-}
-body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-  min-height: 100vh;
-}
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+:root{--bg:#060a10;--bg2:#0b1018;--card:#111a26;--card-border:#1a2636;--cyan:#00d4ff;--green:#00ff88;--red:#ff3b4f;--yellow:#ffaa00;--purple:#b388ff;--text:#dfe4ed;--text2:rgba(255,255,255,0.55);--text3:rgba(255,255,255,0.25);--mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;overflow-x:hidden;}
 
-/* Navigation */
-.nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: rgba(10, 10, 15, 0.95);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-  z-index: 100;
-  padding: 16px 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.nav-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-decoration: none;
-}
-.nav-logo img {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-}
-.nav-logo span {
-  font-family: var(--mono);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: 1px;
-}
-.nav-links {
-  display: flex;
-  gap: 18px;
-}
-.nav-links a {
-  color: var(--text2);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-.nav-links a:hover { color: var(--cyan); }
-.nav-links a.active { color: var(--orange); }
+/* Nav */
+.nav{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:rgba(6,10,16,0.95);border-bottom:1px solid var(--card-border);backdrop-filter:blur(10px);}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-family:var(--mono);font-weight:700;font-size:13px;}.nav-logo img{height:28px;}
+.nav-links{display:flex;gap:24px;}.nav-links a{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--text2);text-decoration:none;letter-spacing:.5px;transition:color .15s;}.nav-links a:hover,.nav-links a.active{color:var(--cyan);}
+.nav-socials{display:flex;gap:12px;align-items:center;}.nav-socials a{color:var(--text3);text-decoration:none;font-size:16px;transition:color .15s;}.nav-socials a:hover{color:var(--cyan);}
+.mob-btn{display:none;background:var(--card);border:1px solid var(--card-border);color:#fff;font-size:18px;padding:6px 10px;border-radius:6px;cursor:pointer;}
+.mob-menu{display:none;position:fixed;top:53px;left:0;right:0;background:var(--bg);border-bottom:1px solid var(--card-border);flex-direction:column;padding:12px;z-index:999;}
+.mob-menu.open{display:flex;}.mob-menu a{padding:12px 16px;color:var(--text);text-decoration:none;font-family:var(--mono);font-size:12px;border-radius:8px;}.mob-menu a:hover,.mob-menu a.on{background:var(--card);color:var(--cyan);}
+@media(max-width:900px){.nav-links{display:none;}.nav-socials{display:none;}.mob-btn{display:block;}}
 
-/* Mobile menu */
-.nav-menu-btn {
-  display: none;
-  background: none;
-  border: none;
-  color: var(--text);
-  font-size: 24px;
-  cursor: pointer;
-}
-/* Social icons (mobile) */
-.nav-social-icons {
-  display: none;
-  align-items: center;
-  gap: 12px;
-}
-.nav-social-icons a {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: var(--card);
-  color: var(--text2);
-  transition: all 0.15s;
-}
-.nav-social-icons a:hover {
-  background: var(--cyan-dim);
-  color: var(--cyan);
-}
-.nav-social-icons svg {
-  width: 18px;
-  height: 18px;
-}
+/* Hero */
+.hero{padding:140px 20px 60px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:1000px;height:1000px;background:radial-gradient(circle,rgba(0,212,255,0.15) 0%,rgba(0,255,136,0.08) 30%,transparent 60%);pointer-events:none;animation:pulse-bg 4s ease-in-out infinite;}
+@keyframes pulse-bg{0%,100%{opacity:.6;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.1)}}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(0,212,255,0.2),rgba(0,255,136,0.2));border:1px solid var(--cyan);padding:10px 24px;border-radius:30px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cyan);margin-bottom:30px;animation:glow 2s infinite;}
+@keyframes glow{0%,100%{box-shadow:0 0 5px rgba(0,212,255,0.3)}50%{box-shadow:0 0 20px rgba(0,212,255,0.5)}}
+.hero h1{font-family:var(--mono);font-size:clamp(32px,6vw,56px);font-weight:800;line-height:1.1;margin-bottom:20px;}
+.hero h1 .cyan{color:var(--cyan);}.hero h1 .green{color:var(--green);}
+.hero p{font-size:17px;color:var(--text2);max-width:600px;margin:0 auto 40px;}
 
-
-.nav-mobile-menu {
-  display: none;
-  position: fixed;
-  top: 64px;
-  left: 0;
-  right: 0;
-  background: rgba(10, 10, 15, 0.98);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-  padding: 16px;
-  z-index: 99;
-  flex-direction: column;
-  gap: 10px;
-}
-.nav-mobile-menu.open { display: flex; }
-.nav-mobile-menu a {
-  font-size: 14px;
-  padding: 12px 16px;
-  background: var(--card);
-  border-radius: 10px;
-  color: var(--text2);
-  text-decoration: none;
-}
-.nav-mobile-menu a:hover { color: var(--cyan); background: var(--bg3); }
-
-@media (max-width: 768px) {
-  .nav { padding: 12px 16px; }
-  .nav-links { display: none; }
-  .nav-menu-btn { display: block; }
-  .nav-social-icons { display: flex; }
-  .nav-logo span { display: none; }
-}
-
-/* Main Container */
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 110px 20px 40px;
-}
-
-/* Header */
-.header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-.header-icon {
-  font-size: 60px;
-  margin-bottom: 16px;
-}
-.header h1 {
-  font-family: var(--mono);
-  font-size: 36px;
-  font-weight: 700;
-  margin-bottom: 12px;
-  letter-spacing: 2px;
-}
-.header h1 span { color: var(--orange); }
-.header p {
-  font-size: 16px;
-  color: var(--text2);
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-/* Search Box */
-.search-box {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-}
-.search-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.search-input {
-  flex: 1;
-  padding: 14px 18px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.search-input:focus {
-  border-color: var(--orange);
-}
-.search-input::placeholder {
-  color: var(--text3);
-}
-.search-btn {
-  padding: 14px 28px;
-  background: var(--orange);
-  border: none;
-  border-radius: 10px;
-  color: #000;
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-.search-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(255, 149, 0, 0.3);
-}
-.search-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Chain Selector */
-.chain-selector {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.chain-btn {
-  padding: 10px 16px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text2);
-  font-family: var(--mono);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.chain-btn:hover {
-  border-color: var(--orange);
-  color: var(--text);
-}
-.chain-btn.active {
-  border-color: var(--orange);
-  background: rgba(255, 149, 0, 0.15);
-  color: var(--orange);
-}
+/* Search */
+.search-section{max-width:700px;margin:-20px auto 40px;padding:0 20px;position:relative;z-index:10;}
+.search-box{display:flex;gap:8px;margin-bottom:16px;}
+.search-input{flex:1;padding:16px 20px;background:var(--card);border:2px solid var(--card-border);border-radius:14px;color:var(--text);font-family:var(--mono);font-size:15px;outline:none;transition:border-color .2s;}
+.search-input:focus{border-color:var(--cyan);}
+.search-input::placeholder{color:var(--text3);}
+.search-btn{padding:16px 28px;background:linear-gradient(135deg,var(--cyan),#0099cc);color:#000;font-family:var(--mono);font-size:14px;font-weight:700;border:none;border-radius:14px;cursor:pointer;transition:all .25s;white-space:nowrap;}
+.search-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,212,255,0.4);}
+.search-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.chain-selector{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.chain-btn{padding:8px 16px;background:var(--card);border:1px solid var(--card-border);border-radius:10px;color:var(--text2);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;}
+.chain-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.chain-btn.active{background:rgba(0,212,255,0.1);border-color:var(--cyan);color:var(--cyan);}
 
 /* Results */
-.results-box {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  overflow: hidden;
-}
-.results-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.results-title {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--text2);
-  letter-spacing: 1px;
-}
-.results-count {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text3);
-}
-.results-list {
-  max-height: 500px;
-  overflow-y: auto;
-}
-.results-empty {
-  padding: 60px 20px;
-  text-align: center;
-  color: var(--text3);
-}
-.results-empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
+.results-box{max-width:900px;margin:0 auto 40px;padding:0 20px;display:none;}
+.results-header{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--card-border);margin-bottom:16px;}
+.results-title{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan);}
+.results-count{font-family:var(--mono);font-size:12px;color:var(--text3);}
 
-/* Loading */
-.loading {
-  padding: 60px 20px;
-  text-align: center;
-}
-.loading-spinner {
-  display: inline-flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-.loading-dot {
-  width: 10px;
-  height: 10px;
-  background: var(--orange);
-  border-radius: 50%;
-  animation: bounce 1.4s infinite ease-in-out both;
-}
-.loading-dot:nth-child(1) { animation-delay: -0.32s; }
-.loading-dot:nth-child(2) { animation-delay: -0.16s; }
-@keyframes bounce {
-  0%, 80%, 100% { transform: scale(0); }
-  40% { transform: scale(1); }
-}
-.loading-text {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--text2);
-}
+/* Result item */
+.result-item{background:linear-gradient(145deg,var(--card),var(--bg2));border:1px solid var(--card-border);border-radius:16px;padding:20px;margin-bottom:12px;transition:all .3s;position:relative;overflow:hidden;}
+.result-item::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--cyan),var(--green));opacity:0;transition:opacity .3s;}
+.result-item:hover{border-color:var(--cyan);transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,0.3);}
+.result-item:hover::before{opacity:1;}
+.result-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.result-badge{display:inline-block;padding:5px 12px;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.5px;}
+.result-badge.og{background:linear-gradient(135deg,rgba(0,255,136,0.2),rgba(0,255,136,0.1));color:var(--green);border:1px solid var(--green);box-shadow:0 0 15px rgba(0,255,136,0.2);}
+.result-badge.copy{background:var(--bg);color:var(--text3);border:1px solid var(--card-border);}
+.result-logo{width:44px;height:44px;border-radius:12px;object-fit:cover;border:2px solid var(--card-border);}
+.result-logo-placeholder{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(0,212,255,0.15),rgba(0,255,136,0.1));display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid var(--card-border);}
+.result-info{flex:1;min-width:150px;}
+.result-name{font-family:var(--mono);font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;}
+.result-ticker{color:var(--cyan);font-weight:600;}
+.result-meta{font-size:11px;color:var(--text3);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap;}
+.result-stats{text-align:right;min-width:80px;}
+.result-mc{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--green);display:block;}
+.result-liq{font-family:var(--mono);font-size:10px;color:var(--text3);}
+.result-chain{font-size:20px;}
+.result-actions{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;}
+.action-btn{padding:7px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text2);font-family:var(--mono);font-size:10px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .15s;}
+.action-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.action-btn.analyze{border-color:rgba(0,212,255,0.3);color:var(--cyan);}
+.action-btn.twitter{border-color:rgba(29,161,242,0.3);color:#1da1f2;}
+.action-btn.telegram{border-color:rgba(0,136,204,0.3);color:#0088cc;}
 
-/* Result Item */
-.result-item {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.15s;
-}
-.result-item:last-child { border-bottom: none; }
-.result-item:hover { background: var(--bg3); }
+/* Loading & Empty */
+.loading{text-align:center;padding:50px 20px;}
+.loading-spinner{display:flex;justify-content:center;gap:6px;margin-bottom:16px;}
+.loading-dot{width:10px;height:10px;border-radius:50%;background:var(--cyan);animation:bounce .6s infinite alternate;}
+.loading-dot:nth-child(2){animation-delay:.2s;}.loading-dot:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{to{opacity:.3;transform:translateY(-8px)}}
+.loading-text{font-family:var(--mono);font-size:12px;color:var(--text2);}
+.results-empty{text-align:center;padding:40px 20px;}.results-empty-icon{font-size:40px;margin-bottom:12px;}.results-empty p{color:var(--text2);font-size:14px;}
 
-.result-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
+/* Info */
+.info-section{max-width:700px;margin:0 auto 60px;padding:0 20px;}
+.info-box{background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:28px;}
+.info-title{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan);margin-bottom:12px;}
+.info-text{font-size:14px;color:var(--text2);line-height:1.7;}
 
-.result-rank {
-  width: 50px;
-  flex-shrink: 0;
-}
-.result-badge {
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-align: center;
-}
-.result-badge.og {
-  background: rgba(0, 212, 170, 0.2);
-  color: var(--green);
-  border: 1px solid rgba(0, 212, 170, 0.3);
-}
-.result-badge.copy {
-  background: rgba(255, 82, 82, 0.1);
-  color: var(--red);
-}
+/* Promo */
+.promo-banner{display:none;align-items:center;background:var(--bg2);border-bottom:1px solid var(--card-border);overflow:hidden;padding:8px 0;}
+.promo-banner.hidden{display:none!important;}
+.promo-scroll{display:flex;gap:20px;animation:scroll 30s linear infinite;white-space:nowrap;}
+@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.promo-item{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:6px;transition:background .15s;}
+.promo-item:hover{background:var(--card);}
+.promo-item img{width:20px;height:20px;border-radius:50%;}
+.promo-badge{font-size:8px;background:var(--yellow);color:#000;padding:1px 5px;border-radius:3px;font-weight:700;}
 
-.result-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--border);
-  object-fit: cover;
-  flex-shrink: 0;
-}
-.result-logo-placeholder {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  flex-shrink: 0;
-}
+/* Footer */
+.footer{padding:40px 20px;text-align:center;border-top:1px solid var(--card-border);}
+.footer a{font-family:var(--mono);font-size:12px;color:var(--text3);text-decoration:none;margin:0 12px;transition:color .15s;}.footer a:hover{color:var(--cyan);}
 
-.result-info {
-  flex: 1;
-  min-width: 0;
-}
-.result-name {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 2px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.result-ticker {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--orange);
-}
-.result-meta {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text3);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.result-stats {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  flex-shrink: 0;
-}
-.result-mc {
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-}
-.result-liq {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text3);
-}
-
-.result-chain {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-/* Actions Row */
-.result-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding-left: 64px;
-}
-.action-btn {
-  padding: 8px 14px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text2);
-  font-family: var(--mono);
-  font-size: 11px;
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-}
-.action-btn:hover {
-  border-color: var(--cyan);
-  color: var(--cyan);
-  background: var(--bg3);
-}
-.action-btn.analyze {
-  background: var(--orange);
-  border-color: var(--orange);
-  color: #000;
-  font-weight: 600;
-}
-.action-btn.analyze:hover {
-  background: #ffaa00;
-  transform: translateY(-1px);
-}
-.action-btn.twitter:hover { border-color: #1da1f2; color: #1da1f2; }
-.action-btn.telegram:hover { border-color: #0088cc; color: #0088cc; }
-.action-btn.website:hover { border-color: var(--purple); color: var(--purple); }
-
-/* Copy Button */
-.copy-btn {
-  padding: 6px 10px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text2);
-  font-family: var(--mono);
-  font-size: 10px;
-  cursor: pointer;
-  transition: all 0.15s;
-  flex-shrink: 0;
-}
-.copy-btn:hover {
-  border-color: var(--cyan);
-  color: var(--cyan);
-}
-
-/* Info Box */
-.info-box {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-top: 24px;
-}
-.info-title {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--orange);
-  letter-spacing: 1px;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.info-text {
-  font-size: 13px;
-  color: var(--text2);
-  line-height: 1.7;
-}
-
-/* Responsive - Tablet/Mobile */
-@media (max-width: 768px) {
-  .container { padding: 100px 16px 32px; }
-  .header { margin-bottom: 28px; }
-  .header h1 { font-size: 28px; letter-spacing: 1px; }
-  .header-icon { font-size: 48px; }
-  .header p { font-size: 14px; }
-
-  .search-box { padding: 16px; border-radius: 12px; }
-  .search-row { flex-direction: column; }
-  .search-btn { width: 100%; min-height: 44px; font-size: 14px; }
-  .search-input { min-height: 44px; font-size: 14px; }
-
-  .chain-btn { min-height: 44px; padding: 10px 14px; font-size: 12px; }
-
-  .results-box { border-radius: 12px; }
-  .results-header { padding: 14px 16px; }
-  .results-list { max-height: none; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-  .result-item { padding: 14px 16px; gap: 10px; }
-  .result-row { flex-wrap: wrap; gap: 10px; }
-  .result-rank { width: 40px; }
-  .result-badge { font-size: 9px; padding: 5px 8px; }
-  .result-info { min-width: 0; flex-basis: calc(100% - 110px); }
-  .result-name { font-size: 14px; }
-  .result-meta { font-size: 10px; flex-direction: column; gap: 4px; }
-  .result-stats {
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-  }
-
-  .result-actions {
-    padding-left: 0;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .action-btn {
-    min-height: 44px;
-    padding: 10px 14px;
-    font-size: 12px;
-    flex: 1 1 auto;
-    justify-content: center;
-  }
-  .copy-btn { min-height: 44px; padding: 10px 12px; font-size: 11px; }
-
-  .info-box { padding: 16px; border-radius: 10px; }
-  .info-text { font-size: 13px; }
-}
-
-/* Responsive - Small Mobile */
-@media (max-width: 600px) {
-  .container { padding: 90px 12px 24px; }
-  .header h1 { font-size: 22px; }
-  .header p { font-size: 13px; }
-  .result-info { flex-basis: 100%; }
-  .action-btn { flex: 1 1 calc(50% - 4px); min-width: 0; font-size: 11px; }
-}
-
-/* Promo Banner */
-.promo-banner {
-  position: fixed;
-  top: 64px;
-  left: 0;
-  right: 0;
-  background: linear-gradient(90deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 149, 0, 0.1) 100%);
-  border-bottom: 1px solid rgba(255, 193, 7, 0.2);
-  overflow: hidden;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  z-index: 99;
-}
-.promo-banner.hidden { display: none !important; }
-.promo-banner-inner {
-  display: flex;
-  gap: 60px;
-  animation: scrollPromo 30s linear infinite;
-  white-space: nowrap;
-}
-@keyframes scrollPromo {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-.promo-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 20px;
-  text-decoration: none;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 12px;
-  transition: color 0.15s;
-}
-.promo-item:hover { color: var(--yellow); }
-.promo-item img {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-}
-.promo-badge {
-  background: var(--yellow);
-  color: #000;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 9px;
-  font-weight: 700;
-}
+@media(max-width:768px){.hero h1{font-size:28px;}.search-box{flex-direction:column;}.result-row{flex-direction:column;align-items:flex-start;gap:10px;}.result-stats{text-align:left;}}
 </style>
 </head>
 <body>
 
-<!-- Navigation -->
+<!-- PROMO BANNER -->
+<div class="promo-banner" id="promoBanner"><div class="promo-scroll" id="promoBannerInner"></div></div>
+
+<!-- NAV -->
 <nav class="nav">
-  <a href="./index.html" class="nav-logo">
-    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="Logo">
-    <span>DEXSCREENER AI</span>
-  </a>
+  <a href="./index.html" class="nav-logo"><img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="">DEXSCREENER AI</a>
   <div class="nav-links">
     <a href="./index.html">App</a>
     <a href="./gems.html">Gems</a>
     <a href="./sniper_terminal.html">Sniper</a>
     <a href="./og-detector.html" class="active">OG Detector</a>
     <a href="./telegram-bot.html">Telegram Bot</a>
-    <a href="./extension.html">Extension</a>
-    <a href="./promote.html">Promote</a>
     <a href="./litepaper.html">Litepaper</a>
-  </div>  <div class="nav-social-icons">
-    <a href="https://t.me/dexscreeneraitoken" target="_blank" title="Telegram">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
-    </a>
-    <a href="https://x.com/dexscreenerai" target="_blank" title="Twitter">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-    </a>
   </div>
-
-  <button class="nav-menu-btn" onclick="toggleMenu()">☰</button>
+  <div class="nav-socials"><a href="https://t.me/dexscreeneraitoken" target="_blank">💬</a><a href="https://x.com/dexscreenerai" target="_blank">𝕏</a></div>
+  <button class="mob-btn" onclick="document.getElementById('mobMenu').classList.toggle('open')">☰</button>
 </nav>
-<div class="nav-mobile-menu" id="mobileMenu">
-  <a href="./index.html">🏠 App</a>
-  <a href="./gems.html">💎 Gems</a>
-  <a href="./sniper_terminal.html">🎯 Sniper</a>
-  <a href="./og-detector.html" class="active">🔍 OG Detector</a>
-  <a href="./telegram-bot.html">🤖 Telegram Bot</a>
-  <a href="./extension.html">🧩 Extension</a>
-  <a href="./promote.html">⭐ Promote</a>
-  <a href="./litepaper.html">📄 Litepaper</a>
+<div class="mob-menu" id="mobMenu">
+  <a href="./index.html">App</a><a href="./sniper_terminal.html">Sniper</a><a href="./og-detector.html" class="on">OG Detector</a><a href="./telegram-bot.html">Telegram Bot</a><a href="./litepaper.html">Litepaper</a>
 </div>
 
-<!-- PROMO BANNER -->
-<div class="promo-banner hidden" id="promoBanner">
-  <div class="promo-banner-inner" id="promoBannerInner"></div>
-</div>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🔍 FIND THE ORIGINAL CONTRACT</div>
+  <h1><span class="cyan">OG</span> <span class="green">Detector</span></h1>
+  <p>Search any token name. We find every version across all DEXs, sorted by deployment date. The first one is the <strong style="color:var(--green)">OG</strong>.</p>
+</section>
 
-<div class="container">
-  <!-- Header -->
-  <div class="header">
-    <div class="header-icon">🔍</div>
-    <h1>OG <span>DETECTOR</span></h1>
-    <p>Find the original contract. Enter a token name to discover which was deployed first and spot the copycats.</p>
-  </div>
-
-  <!-- Search Box -->
+<!-- SEARCH -->
+<div class="search-section">
   <div class="search-box">
-    <div class="search-row">
-      <input type="text" class="search-input" id="searchInput" placeholder="Enter token name (e.g. PEPE, WIF, BONK...)" onkeydown="if(event.key==='Enter')searchOG()">
-      <button class="search-btn" id="searchBtn" onclick="searchOG()">🔍 FIND OG</button>
-    </div>
-    <div class="chain-selector">
-      <button class="chain-btn active" data-chain="all" onclick="selectChain(this)">🌐 All Chains</button>
-      <button class="chain-btn" data-chain="solana" onclick="selectChain(this)">🟣 Solana</button>
-      <button class="chain-btn" data-chain="ethereum" onclick="selectChain(this)">🔵 Ethereum</button>
-      <button class="chain-btn" data-chain="bsc" onclick="selectChain(this)">🟡 BSC</button>
-      <button class="chain-btn" data-chain="base" onclick="selectChain(this)">🔷 Base</button>
-      <button class="chain-btn" data-chain="arbitrum" onclick="selectChain(this)">🔶 Arbitrum</button>
-    </div>
+    <input type="text" class="search-input" id="searchInput" placeholder="Enter token name... (e.g. PEPE, WIF, BONK)" onkeydown="if(event.key==='Enter')searchOG()">
+    <button class="search-btn" id="searchBtn" onclick="searchOG()">🔍 FIND OG</button>
   </div>
-
-  <!-- Results -->
-  <div class="results-box" id="resultsBox" style="display:none">
-    <div class="results-header">
-      <span class="results-title">📊 RESULTS</span>
-      <span class="results-count" id="resultsCount"></span>
-    </div>
-    <div class="results-list" id="resultsList"></div>
+  <div class="chain-selector">
+    <button class="chain-btn active" data-chain="all" onclick="selectChain(this)">🌐 All</button>
+    <button class="chain-btn" data-chain="solana" onclick="selectChain(this)">🟣 Solana</button>
+    <button class="chain-btn" data-chain="ethereum" onclick="selectChain(this)">🔵 Ethereum</button>
+    <button class="chain-btn" data-chain="bsc" onclick="selectChain(this)">🟡 BSC</button>
+    <button class="chain-btn" data-chain="base" onclick="selectChain(this)">🔷 Base</button>
+    <button class="chain-btn" data-chain="arbitrum" onclick="selectChain(this)">🔶 Arbitrum</button>
   </div>
+</div>
 
-  <!-- Info Box -->
+<!-- RESULTS -->
+<div class="results-box" id="resultsBox" style="display:none">
+  <div class="results-header">
+    <span class="results-title">📊 RESULTS</span>
+    <span class="results-count" id="resultsCount"></span>
+  </div>
+  <div class="results-list" id="resultsList"></div>
+</div>
+
+<!-- INFO -->
+<div class="info-section">
   <div class="info-box">
     <div class="info-title">💡 HOW IT WORKS</div>
     <div class="info-text">
-      Enter a token name like "PEPE" or "WIF". We search across all DEXs to find every token with that name, then sort by deployment date. The <strong style="color:var(--green)">OG</strong> badge marks the first deployed contract — the original. All others are marked as <strong style="color:var(--red)">COPY</strong>. Click any result to copy the contract address.
+      Enter a token name like "PEPE" or "WIF". We search across all DEXs to find every token with that name, then sort by deployment date. The <strong style="color:var(--green)">OG</strong> badge marks the first deployed contract — the original. All others are copies. Click any result to copy the contract address or analyze it.
     </div>
   </div>
 </div>
 
+<!-- FOOTER -->
+<div class="footer">
+  <a href="./index.html">App</a><a href="./sniper_terminal.html">Sniper</a><a href="./telegram-bot.html">Telegram</a><a href="https://t.me/dexscreeneraitoken" target="_blank">💬</a><a href="https://x.com/dexscreenerai" target="_blank">𝕏</a>
+</div>
 <script>
 let selectedChain = 'all';
 
