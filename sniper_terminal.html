@@ -2392,11 +2392,13 @@ const SNIPER_API = 'https://dexscreener-telegram-bot-production.up.railway.app/a
 // Always server mode — all users see same data
 let serverMode = true;
 let serverPollInterval = null;
+let serverState = null; // Store full server state for export
 
 async function pollServerStatus() {
   try {
     const res = await fetch(SNIPER_API + '/status', { signal: AbortSignal.timeout(5000) });
     const state = await res.json();
+    serverState = state; // Store for export
 
     // Update UI with server data
     balance = state.balance || 0;
@@ -4049,7 +4051,7 @@ function loadFromStorage() {
 }
 
 function exportData() {
-  const s = state || {};
+  const s = serverState || {};
   const pos = s.positions || [];
   const hist = s.history || [];
   const rows = [['Type','Symbol','Address','Chain','Score','TradeType','EntryPrice','CurrentPrice','PnL$','PnL%','Peak%','Size','DCA','MoonBag','HoldMin','Reason','Time'].join(',')];
