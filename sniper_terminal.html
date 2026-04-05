@@ -2079,6 +2079,17 @@ body::before {
     </div>
   </div>
   
+  <!-- WATCHLIST -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">👁 WATCHLIST</span>
+      <span class="panel-badge cyan" id="watchlistBadge">0</span>
+    </div>
+    <div class="panel-content" id="watchlistContainer" style="max-height:250px;overflow-y:auto;">
+      <div class="empty"><div class="empty-icon">👁</div><div class="empty-text">NO TOKENS WATCHED</div></div>
+    </div>
+  </div>
+
   <!-- BOTTOM: ACTIVITY LOG -->
   <div class="panel">
     <div class="panel-header">
@@ -2433,10 +2444,11 @@ async function pollServerStatus() {
     updateUI();
     renderPositions();
     renderHistory();
+    renderWatchlist();
 
-    // Show server logs
+    // Show server logs (last 10 only)
     if (state.logs && state.logs.length > 0) {
-      logs = state.logs.map(l => ({ time: l.time, icon: l.icon, text: l.text }));
+      logs = state.logs.slice(0, 10).map(l => ({ time: l.time, icon: l.icon, text: l.text }));
       renderLogs();
     }
   } catch (e) {
@@ -3960,6 +3972,30 @@ function renderCard(pos) {
         <a href="/?ca=${pos.address||''}" target="_blank" class="pos-action-btn">ANALYZE</a>
       </div>
     </div>`;
+}
+
+function renderWatchlist() {
+  const wl = serverState?.watchlistTokens || [];
+  $('watchlistBadge').textContent = wl.length;
+  const container = $('watchlistContainer');
+  if (wl.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">👁</div><div class="empty-text">NO TOKENS WATCHED</div></div>';
+    return;
+  }
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:10px;">';
+  html += '<tr style="color:rgba(255,255,255,0.35);font-size:9px;letter-spacing:1px;border-bottom:1px solid rgba(255,255,255,0.06)"><th style="text-align:left;padding:4px 6px">TOKEN</th><th>SCORE</th><th>RECHECKS</th><th>AGE</th></tr>';
+  wl.forEach(w => {
+    const age = Math.floor((Date.now() - (w.addedAt||Date.now())) / 60000);
+    const ageStr = age >= 1440 ? Math.floor(age/1440) + 'd' : age >= 60 ? Math.floor(age/60) + 'h' : age + 'm';
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.03)">';
+    html += '<td style="padding:5px 6px;color:#00d4ff;font-weight:600">$' + esc(w.symbol||'???') + '</td>';
+    html += '<td style="text-align:center;color:#00ff88">' + (w.score||0) + '</td>';
+    html += '<td style="text-align:center;color:rgba(255,255,255,0.5)">' + (w.rechecks||0) + '</td>';
+    html += '<td style="text-align:center;color:rgba(255,255,255,0.35)">' + ageStr + '</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  container.innerHTML = html;
 }
 
 function renderHistory() {
