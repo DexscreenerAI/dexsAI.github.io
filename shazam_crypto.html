@@ -184,6 +184,7 @@
           <div class="chart-actions">
             <button class="chart-btn chart-btn-secondary" onclick="resetChart()">← New</button>
             <a class="chart-btn chart-btn-secondary" id="dexLink" href="#" target="_blank" style="text-decoration:none">🔗 Dex</a>
+            <span id="socialLinks" style="display:flex;gap:6px"></span>
             <button class="chart-btn chart-btn-primary" id="analyzeBtn" onclick="captureAndAnalyze()">⚡ ANALYZE</button>
           </div>
         </div>
@@ -257,7 +258,14 @@ async function searchTokens(query) {
       const sells5m = pair.txns?.m5?.sells || 0;
       const buys1h = pair.txns?.h1?.buys || 0;
       const sells1h = pair.txns?.h1?.sells || 0;
-      const tokenData = {symbol,name,chain,price,change,logo,pairAddress,mc,liq,vol,chg5m,chg1h,chg6h,buys5m,sells5m,buys1h,sells1h};
+      const socials = pair.info?.socials || [];
+      const websites = pair.info?.websites || [];
+      const twitter = socials.find(s => (s.type||s.platform||'').match(/twitter|x/i))?.url || '';
+      const telegram = socials.find(s => (s.type||s.platform||'').match(/telegram/i))?.url || '';
+      const website = websites[0]?.url || '';
+      const dexUrl = pair.url || `https://dexscreener.com/${chain}/${pairAddress}`;
+      const address = pair.baseToken?.address || '';
+      const tokenData = {symbol,name,chain,price,change,logo,pairAddress,mc,liq,vol,chg5m,chg1h,chg6h,buys5m,sells5m,buys1h,sells1h,twitter,telegram,website,dexUrl,address};
       html += `<div class="search-result-item" onclick='selectToken(${JSON.stringify(tokenData).replace(/'/g,"&#39;")})'>
         <div class="result-icon">${logo ? `<img src="${logo}" onerror="this.parentElement.innerHTML='🪙'">` : '🪙'}</div>
         <div class="result-info"><div class="result-name">$${symbol}</div><div class="result-details"><span class="result-chain">${chain}</span><span>${name}</span></div></div>
@@ -281,6 +289,13 @@ function selectToken(token) {
   document.getElementById('chartIframe').src = `https://dexscreener.com/${token.chain}/${token.pairAddress}?embed=1&theme=dark&trades=0&info=0`;
   document.getElementById('dexLink').href = `https://dexscreener.com/${token.chain}/${token.pairAddress}`;
   document.getElementById('analysisContent').innerHTML = `<div class="analysis-empty"><div class="analysis-empty-icon">📊</div><p class="analysis-empty-text">Click <strong>ANALYZE</strong> to scan<br>the $${token.symbol} chart</p></div>`;
+  // Social links
+  let socHtml = '';
+  if (token.twitter) socHtml += `<a href="${token.twitter}" target="_blank" style="padding:4px 10px;border:1px solid rgba(29,161,242,0.3);border-radius:6px;color:#1da1f2;font-family:var(--mono);font-size:10px;text-decoration:none;font-weight:600">𝕏</a>`;
+  if (token.telegram) socHtml += `<a href="${token.telegram}" target="_blank" style="padding:4px 10px;border:1px solid rgba(0,136,204,0.3);border-radius:6px;color:#0088cc;font-family:var(--mono);font-size:10px;text-decoration:none;font-weight:600">💬 TG</a>`;
+  if (token.website) socHtml += `<a href="${token.website}" target="_blank" style="padding:4px 10px;border:1px solid rgba(0,212,255,0.3);border-radius:6px;color:var(--cyan);font-family:var(--mono);font-size:10px;text-decoration:none;font-weight:600">🌐</a>`;
+  if (token.address) socHtml += `<button onclick="navigator.clipboard.writeText('${token.address}');this.textContent='✓ Copied';setTimeout(()=>this.textContent='📋 CA',1500)" style="padding:4px 10px;border:1px solid var(--card-border);border-radius:6px;color:var(--text2);font-family:var(--mono);font-size:10px;background:none;cursor:pointer;font-weight:600">📋 CA</button>`;
+  document.getElementById('socialLinks').innerHTML = socHtml;
   chartContainer.classList.add('active');
 }
 
