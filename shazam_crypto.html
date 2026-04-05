@@ -247,7 +247,18 @@ async function searchTokens(query) {
       const price = parseFloat(pair.priceUsd) || 0, change = parseFloat(pair.priceChange?.h24) || 0;
       const logo = pair.info?.imageUrl || '', pairAddress = pair.pairAddress || '';
       const changeClass = change >= 0 ? 'up' : 'down', changeSign = change >= 0 ? '+' : '';
-      html += `<div class="search-result-item" onclick='selectToken(${JSON.stringify({symbol,name,chain,price,change,logo,pairAddress})})'>
+      const mc = parseFloat(pair.marketCap) || 0;
+      const liq = parseFloat(pair.liquidity?.usd) || 0;
+      const vol = parseFloat(pair.volume?.h24) || 0;
+      const chg5m = parseFloat(pair.priceChange?.m5) || 0;
+      const chg1h = parseFloat(pair.priceChange?.h1) || 0;
+      const chg6h = parseFloat(pair.priceChange?.h6) || 0;
+      const buys5m = pair.txns?.m5?.buys || 0;
+      const sells5m = pair.txns?.m5?.sells || 0;
+      const buys1h = pair.txns?.h1?.buys || 0;
+      const sells1h = pair.txns?.h1?.sells || 0;
+      const tokenData = {symbol,name,chain,price,change,logo,pairAddress,mc,liq,vol,chg5m,chg1h,chg6h,buys5m,sells5m,buys1h,sells1h};
+      html += `<div class="search-result-item" onclick='selectToken(${JSON.stringify(tokenData).replace(/'/g,"&#39;")})'>
         <div class="result-icon">${logo ? `<img src="${logo}" onerror="this.parentElement.innerHTML='🪙'">` : '🪙'}</div>
         <div class="result-info"><div class="result-name">$${symbol}</div><div class="result-details"><span class="result-chain">${chain}</span><span>${name}</span></div></div>
         <div style="text-align:right"><div class="result-price">$${formatPrice(price)}</div><div class="result-change ${changeClass}">${changeSign}${change.toFixed(2)}%</div></div>
@@ -302,12 +313,26 @@ async function captureAndAnalyze() {
 }
 
 async function analyzeWithAI(imageBase64, token) {
-  const prompt = `You are an expert crypto technical analyst. ${imageBase64 ? 'Analyze this chart image' : 'Based on available data'} for $${token.symbol} (${token.name}) on ${token.chain}.
-Current price: $${formatPrice(token.price)}
-24h change: ${token.change >= 0 ? '+' : ''}${token.change.toFixed(2)}%
+  const fN = n => n >= 1e9 ? (n/1e9).toFixed(2)+'B' : n >= 1e6 ? (n/1e6).toFixed(2)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : (n||0).toFixed(0);
+  const t = token;
+  const prompt = `You are an expert crypto analyst. Analyze $${t.symbol} (${t.name}) on ${t.chain}.${imageBase64 ? ' A chart image is attached.' : ''}
+
+LIVE DATA:
+Price: $${formatPrice(t.price)}
+Market Cap: $${fN(t.mc || 0)}
+Liquidity: $${fN(t.liq || 0)}
+Volume 24h: $${fN(t.vol || 0)}
+5min: ${(t.chg5m||0) > 0 ? '+' : ''}${(t.chg5m||0).toFixed(1)}%
+1h: ${(t.chg1h||0) > 0 ? '+' : ''}${(t.chg1h||0).toFixed(1)}%
+6h: ${(t.chg6h||0) > 0 ? '+' : ''}${(t.chg6h||0).toFixed(1)}%
+24h: ${(t.change||0) > 0 ? '+' : ''}${(t.change||0).toFixed(1)}%
+Buys 5m: ${t.buys5m||0} | Sells 5m: ${t.sells5m||0}
+Buys 1h: ${t.buys1h||0} | Sells 1h: ${t.sells1h||0}
+
+Give a confident, decisive analysis using this REAL data. Never say "insufficient data".
 
 Respond ONLY with valid JSON (no markdown, no backticks):
-{"token":"${token.symbol}","timeframe":"detected timeframe","trend":"BULLISH/BEARISH/NEUTRAL","confidence":0-100,"patterns":["patterns"],"supports":["levels"],"resistances":["levels"],"indicators":["indicators"],"signal":"BUY/SELL/HOLD","analysis":"2-3 sentences","risk":"LOW/MEDIUM/HIGH","target":"price or null","stoploss":"price or null"}`;
+{"token":"${t.symbol}","timeframe":"5m/1h/6h","trend":"BULLISH/BEARISH/NEUTRAL","confidence":0-100,"patterns":["2-3 patterns"],"supports":["2 price levels"],"resistances":["2 price levels"],"indicators":["2-3 indicators"],"signal":"BUY/SELL/HOLD","analysis":"2-3 decisive sentences using the real data above","risk":"LOW/MEDIUM/HIGH","target":"realistic target price","stoploss":"stop loss price"}`;
 
   try {
     const response = await fetch(API_PROXY_URL, {
