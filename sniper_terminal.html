@@ -2016,20 +2016,17 @@ body::before {
     </div>
   </div>
   
-  <!-- LEFT COLUMN: SCANNER -->
+  <!-- LEFT COLUMN: WATCHLIST -->
   <div class="panel">
     <div class="panel-header">
-      <span class="panel-title">OPPORTUNITY SCANNER</span>
-      <span class="panel-badge cyan" id="scannerBadge">0 FOUND</span>
+      <span class="panel-title">👁 WATCHLIST</span>
+      <span class="panel-badge cyan" id="watchlistBadge">0</span>
     </div>
-    <div class="panel-content" id="scannerContainer">
-      <div class="empty">
-        <div class="empty-icon">🔍</div>
-        <div class="empty-text">SCANNING FOR OPPORTUNITIES...</div>
-      </div>
+    <div class="panel-content" id="watchlistContainer" style="max-height:350px;overflow-y:auto;">
+      <div class="empty"><div class="empty-icon">👁</div><div class="empty-text">NO TOKENS WATCHED</div></div>
     </div>
   </div>
-  
+
   <!-- CENTER: POSITIONS - 2 columns -->
   <div class="panel" style="grid-row: span 2;">
     <div class="panel-header">
@@ -2051,8 +2048,8 @@ body::before {
       </div>
     </div>
   </div>
-  
-  <!-- RIGHT COLUMN: LIVE MARKETS + LEADERBOARD -->
+
+  <!-- RIGHT: TRADE HISTORY -->
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title">TRADE HISTORY</span>
@@ -2065,17 +2062,6 @@ body::before {
       </div>
     </div>
   </div>
-  
-  <!-- WATCHLIST -->
-  <div class="panel">
-    <div class="panel-header">
-      <span class="panel-title">👁 WATCHLIST</span>
-      <span class="panel-badge cyan" id="watchlistBadge">0</span>
-    </div>
-    <div class="panel-content" id="watchlistContainer" style="max-height:250px;overflow-y:auto;">
-      <div class="empty"><div class="empty-icon">👁</div><div class="empty-text">NO TOKENS WATCHED</div></div>
-    </div>
-  </div>
 
   <!-- BOTTOM: ACTIVITY LOG -->
   <div class="panel">
@@ -2085,18 +2071,7 @@ body::before {
     </div>
     <div class="panel-content" id="logContainer"></div>
   </div>
-  
-  <!-- PNL CURVE -->
-  <div class="panel">
-    <div class="panel-header">
-      <span class="panel-title">PNL CURVE</span>
-      <span class="panel-badge green" id="pnlCurveValue">+$0</span>
-    </div>
-    <div class="panel-content">
-      <div class="pnl-chart" id="pnlChart"></div>
-    </div>
-  </div>
-  
+
 </div>
 
 <!-- SETTINGS MODAL -->
@@ -3557,7 +3532,7 @@ async function scan() {
   
   oppsTotal = tradingOpportunities.length;
   $('oppsCount').textContent = oppsTotal;
-  $('scannerBadge').textContent = `${opportunities.length} FOUND`;
+  if ($('scannerBadge')) $('scannerBadge').textContent = `${opportunities.length} FOUND`;
   $('scannerText').textContent = `✅ ${oppsTotal} tradeable / ${opportunities.length} total`;
   
   // Render ALL opportunities (not just tradeable)
@@ -3755,14 +3730,13 @@ function updateUI() {
   $('longCount').textContent = positions.filter(p => p.tradeType === 'LONG').length;
   $('moonCount').textContent = positions.filter(p => p.tradeType === 'MOON').length;
   
-  $('pnlCurveValue').textContent = (totalPnL >= 0 ? '+' : '') + '$' + totalPnL.toFixed(0);
-  $('pnlCurveValue').className = 'panel-badge ' + (totalPnL >= 0 ? 'green' : 'red');
   
   $('positionsBadge').textContent = positions.length + ' OPEN';
 }
 
 function renderScanner(opportunities) {
   const container = $('scannerContainer');
+  if (!container) return;
   if (opportunities.length === 0) {
     container.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">SCANNING<span class="cursor"></span></div></div>';
     return;
@@ -4017,6 +3991,7 @@ function renderHistory() {
 
 function renderPnlChart() {
   const container = $('pnlChart');
+  if (!container) return;
   if (pnlHistory.length === 0) {
     container.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-text">NO DATA</div></div>';
     return;
