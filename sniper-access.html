@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DexScreener AI — Sniper Bot Access</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap');
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: #0a0a0f;
+  color: #e0e0e0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Animated background grid */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridMove 20s linear infinite;
+  z-index: 0;
+}
+@keyframes gridMove {
+  0% { transform: translate(0,0); }
+  100% { transform: translate(40px,40px); }
+}
+
+/* Glow orb */
+body::after {
+  content: '';
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(0,212,255,0.08) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  z-index: 0;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 650px;
+  padding: 20px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border: 1px solid rgba(0,212,255,0.3);
+  border-radius: 20px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #00d4ff;
+  background: rgba(0,212,255,0.06);
+  margin-bottom: 30px;
+  text-transform: uppercase;
+}
+
+.logo {
+  font-size: 48px;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 30px rgba(0,212,255,0.4));
+}
+
+h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #00d4ff, #00ff88);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 1px;
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+.coming-soon {
+  display: inline-block;
+  padding: 14px 40px;
+  border: 2px solid #00d4ff;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #00d4ff;
+  background: rgba(0,212,255,0.05);
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  animation: pulse 2s ease-in-out infinite;
+}
+.coming-soon::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0,212,255,0.1), transparent);
+  animation: shimmer 3s infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(0,212,255,0.2); }
+  50% { box-shadow: 0 0 40px rgba(0,212,255,0.4); }
+}
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 40px;
+  text-align: left;
+}
+.feature {
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+}
+.feature-icon { font-size: 18px; margin-bottom: 6px; }
+.feature-title { font-size: 11px; font-weight: 700; color: #00d4ff; letter-spacing: 1px; margin-bottom: 4px; }
+.feature-desc { font-size: 10px; color: rgba(255,255,255,0.4); line-height: 1.5; }
+
+.back-link {
+  display: inline-block;
+  margin-top: 30px;
+  padding: 8px 20px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  transition: all .15s;
+  letter-spacing: 1px;
+}
+.back-link:hover { color: #00d4ff; border-color: rgba(0,212,255,0.3); }
+
+.terminal-line {
+  margin-top: 40px;
+  font-size: 11px;
+  color: rgba(0,212,255,0.4);
+  letter-spacing: 1px;
+}
+.terminal-line .cursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: #00d4ff;
+  vertical-align: middle;
+  margin-left: 4px;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+@media (max-width: 600px) {
+  h1 { font-size: 22px; }
+  .features { grid-template-columns: 1fr; }
+  .coming-soon { font-size: 14px; padding: 12px 30px; }
+  .logo { font-size: 36px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="badge">DexScreener AI Labs</div>
+
+  <div class="logo">🤖</div>
+
+  <h1>SNIPER BOT</h1>
+
+  <p class="subtitle">
+    Autonomous AI-powered trading engine.<br>
+    Real entries. Smart exits. Zero emotions.
+  </p>
+
+  <div class="coming-soon">COMING SOON</div>
+
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">🎯</div>
+      <div class="feature-title">SMART ENTRY</div>
+      <div class="feature-desc">AI watchlist monitors 24h for the perfect entry point before executing</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🛡</div>
+      <div class="feature-title">RISK MANAGEMENT</div>
+      <div class="feature-desc">Dynamic stop-loss, take-profit levels, and position sizing based on portfolio</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🌕</div>
+      <div class="feature-title">MOON BAG</div>
+      <div class="feature-desc">Automatically holds a portion of high-conviction trades for maximum upside</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">MULTI-CHAIN</div>
+      <div class="feature-desc">Scans Solana & Ethereum simultaneously across 300+ keywords every 35 seconds</div>
+    </div>
+  </div>
+
+  <a href="./sniper_terminal.html" class="back-link">&larr; BACK TO TERMINAL</a>
+
+  <div class="terminal-line">
+    > initializing sniper_bot.exe<span class="cursor"></span>
+  </div>
+</div>
+
+</body>
+</html>
