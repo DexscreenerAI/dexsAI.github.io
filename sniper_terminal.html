@@ -3753,7 +3753,6 @@ function updateUI() {
   pnlEl.className = 'top-stat-value ' + (totalPnL >= 0 ? 'green' : 'red');
   
   $('balance').textContent = '$' + balance.toFixed(0);
-  $('securedPnl').textContent = '+$' + securedPnL.toFixed(0);
   $('winRate').textContent = (totalTrades > 0 ? ((wins / totalTrades) * 100).toFixed(0) : '--') + '%';
   $('totalTrades').textContent = totalTrades;
   
