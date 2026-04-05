@@ -1854,7 +1854,6 @@ body {
     </button>
     <div class="nav-quick-menu">
       <a href="./sniper_terminal.html">🎯 Sniper</a>
-      <a href="./compare.html">⚖️ Compare</a>
       <a href="./gems.html">💎 Gems</a>
       <a href="./promote.html">⭐ Promote</a>
       <a href="./og-detector.html">🔍 OG Detector</a>
@@ -1885,7 +1884,6 @@ body {
   <a href="./index.html" class="active">🏠 App</a>
   <a href="./sniper_terminal.html">🎯 Sniper</a>
   <a href="./gems.html">💎 Gem Hunter</a>
-  <a href="./compare.html">⚖️ Comparator</a>
   <a href="./promote.html">⭐ Promote</a>
   <a href="./og-detector.html">🎯 OG Detector</a>
   <a href="./telegram-bot.html">🤖 Telegram Bot</a>
@@ -7038,7 +7036,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // AUTO-ANALYZE FROM URL PARAMETER OR LOCALSTORAGE
 // ═══════════════════════════════════════════
 (function checkPendingAnalysis() {
-  // Check localStorage first (from gems.html or compare.html)
   const pending = localStorage.getItem('pendingAnalysis');
   if (pending) {
     try {
