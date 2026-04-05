@@ -3900,7 +3900,7 @@ function renderCard(pos) {
           <div class="pos-logo">${typeof renderLogo === 'function' ? renderLogo(pos.logo, symbol) : symbol[0]}</div>
           <div class="pos-details">
             <div class="pos-symbol">$${esc(symbol)} <span class="pos-type ${typeClass}">${esc(label)}</span></div>
-            <div class="pos-chain">MC: $${fN(entryMC)} • Score: ${score}</div>
+            <div class="pos-chain">${(pos.chain === 'ethereum' ? '🔵 ETH' : '🟣 SOL')} • MC: $${fN(entryMC)} • Score: ${score}</div>
           </div>
         </div>
         <div class="pos-pnl">
