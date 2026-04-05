@@ -1856,7 +1856,7 @@ body::before {
   /* SCAN COUNTER in controls */
   #scanCounter { font-size: 12px !important; padding: 6px 10px !important; }
 
-  /* POSITIONS — stack columns on mobile */
+  /* POSITIONS - stack columns on mobile */
   #positionsContainer { flex-direction: column !important; }
 
   /* POSITION CARDS */
@@ -2035,7 +2035,7 @@ body::before {
     </div>
   </div>
   
-  <!-- CENTER: POSITIONS — 2 columns -->
+  <!-- CENTER: POSITIONS - 2 columns -->
   <div class="panel" style="grid-row: span 2;">
     <div class="panel-header">
       <span class="panel-title">ACTIVE POSITIONS</span>
@@ -2390,9 +2390,9 @@ const AI_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/c
 const SNIPER_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/sniper';
 
 // ═══════════════════════════════════════════════════════
-// SERVER MODE — Connect to backend sniper engine
+// SERVER MODE - Connect to backend sniper engine
 // ═══════════════════════════════════════════════════════
-// Always server mode — all users see same data
+// Always server mode - all users see same data
 let serverMode = true;
 let serverPollInterval = null;
 let serverState = null; // Store full server state for export
@@ -2808,7 +2808,7 @@ function startBot() {
   $('modeBadge').textContent = 'LIVE';
   $('modeBadge').className = 'status-badge live';
   $('scannerDot').classList.add('active');
-  addLog('🚀', '<span class="green">Bot started</span> — Scanning...');
+  addLog('🚀', '<span class="green">Bot started</span> - Scanning...');
   
   scan();
   scanInterval = setInterval(scan, 30000); // Scan every 30s instead of 40s
@@ -4082,7 +4082,7 @@ function loadFromStorage() {
 function exportData() {
   const s = serverState || {};
 
-  // Full raw JSON export — everything the server knows
+  // Full raw JSON export - everything the server knows
   const exportObj = {
     exportDate: new Date().toISOString(),
     // STATS
@@ -4104,7 +4104,7 @@ function exportData() {
     },
     // SETTINGS
     settings: s.settings || {},
-    // OPEN POSITIONS — full detail
+    // OPEN POSITIONS - full detail
     openPositions: (s.positions || []).map(p => ({
       symbol: p.symbol,
       address: p.address,
@@ -4142,7 +4142,7 @@ function exportData() {
       holdersCount: p.analysis?.holders?.totalHolders || null,
       bondingCurve: p.analysis?.bondingCurve?.progress || null,
     })),
-    // CLOSED TRADES — full detail
+    // CLOSED TRADES - full detail
     closedTrades: (s.history || []).map(h => ({
       symbol: h.symbol,
       address: h.address,
@@ -4244,7 +4244,7 @@ function toggleMobileMenu() {
 }
 
 // ═══════════════════════════════════════════════════════
-// INIT — SERVER MODE (all users see same data)
+// INIT - SERVER MODE (all users see same data)
 // ═══════════════════════════════════════════════════════
 updateUI();
 renderPositions();
@@ -4270,7 +4270,7 @@ const bootSequence = [
   { delay: 200, icon: '🌐', text: '<span class="text-dim">Connecting to server...</span>' },
   { delay: 600, icon: '📡', text: '<span class="text-dim">DexScreener AI Backend...</span> <span class="green">OK</span>' },
   { delay: 1000, icon: '🛡️', text: '<span class="text-dim">Anti-rug + Smart Entry...</span> <span class="green">ACTIVE</span>' },
-  { delay: 1400, icon: '💻', text: '<span class="green glitch">SNIPER//TERMINAL</span> v3.0 — SERVER MODE' },
+  { delay: 1400, icon: '💻', text: '<span class="green glitch">SNIPER//TERMINAL</span> v3.0 - SERVER MODE' },
   { delay: 1600, icon: '🚀', text: '<span class="cyan">Live data.</span> All users see the same trades.' },
 ];
 
