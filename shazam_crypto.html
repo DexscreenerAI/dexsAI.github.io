@@ -150,16 +150,18 @@
 <body>
 <nav style="position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:rgba(6,10,16,0.95);border-bottom:1px solid var(--card-border);backdrop-filter:blur(10px)">
   <a href="./index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-family:var(--mono);font-weight:700;font-size:13px"><img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" style="height:28px" alt="">DEXSCREENER AI</a>
-  <div style="display:flex;gap:12px;align-items:center"><a href="https://t.me/dexscreeneraitoken" target="_blank" style="color:var(--text3);text-decoration:none;font-size:16px">💬</a><a href="https://x.com/dexscreenerai" target="_blank" style="color:var(--text3);text-decoration:none;font-size:14px">𝕏</a><button class="sh-ham" onclick="document.getElementById('shMob').classList.add('open')">☰</button></div>
+  <div class="sh-nav-links" style="display:flex;gap:18px"><a href="./index.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">App</a><a href="./gems.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Gems</a><a href="./sniper_terminal.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Sniper</a><a href="./og-detector.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">OG Detector</a><a href="./telegram-bot.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Telegram Bot</a><a href="./shazam_crypto.html" style="font-family:var(--mono);font-size:11px;color:var(--cyan);text-decoration:none">Shazam</a><a href="./promote.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Promote</a><a href="./litepaper.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Litepaper</a></div>
+  <div style="display:flex;gap:12px;align-items:center"><a href="https://t.me/dexscreeneraitoken" target="_blank" style="color:rgba(255,255,255,0.22);text-decoration:none;font-size:16px">💬</a><a href="https://x.com/dexscreenerai" target="_blank" style="color:rgba(255,255,255,0.22);text-decoration:none;font-size:14px">𝕏</a><button class="sh-ham" onclick="document.getElementById('shMob').classList.add('open')">☰</button></div>
 </nav>
 <style>
-.sh-ham{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px 8px;z-index:1002}
+.sh-ham{display:none;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px 8px;z-index:1002}
 .sh-mob{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(6,10,16,0.98);z-index:1001;flex-direction:column;align-items:center;justify-content:center;gap:0}
 .sh-mob.open{display:flex}
 .sh-mob a{font-family:var(--mono);font-size:16px;color:var(--text2);text-decoration:none;padding:18px 40px;width:100%;text-align:center;border-bottom:1px solid var(--card-border);transition:color 0.2s}
 .sh-mob a:first-child{border-top:1px solid var(--card-border)}
 .sh-mob a:hover,.sh-mob a.active{color:var(--cyan)}
 .sh-mob .sh-mob-close{position:absolute;top:16px;right:20px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer}
+@media(max-width:900px){.sh-nav-links{display:none!important}.sh-ham{display:block}}
 </style>
 <div class="sh-mob" id="shMob">
   <button class="sh-mob-close" onclick="document.getElementById('shMob').classList.remove('open')">✕</button>
