@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOL TRACKER — DexScreener AI</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100vh;background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#1a2636;border-radius:4px;}
+
+:root{
+–bg:#060a10;–bg2:#0b1018;–bg3:#101822;
+–card:#111a26;–card-border:#1a2636;
+–cyan:#00d4ff;–cyan-dim:rgba(0,212,255,0.12);
+–green:#00ff88;–green-dim:rgba(0,255,136,0.1);
+–red:#ff3b4f;–red-dim:rgba(255,59,79,0.1);
+–yellow:#ffaa00;–yellow-dim:rgba(255,170,0,0.1);
+–orange:#ff6b2b;
+–text:#dfe4ed;–text2:rgba(255,255,255,0.5);–text3:rgba(255,255,255,0.25);
+–mono:‘JetBrains Mono’,monospace;–sans:‘DM Sans’,sans-serif;
+}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glow{0%,100%{box-shadow:0 0 12px rgba(0,212,255,0.15)}50%{box-shadow:0 0 24px rgba(0,212,255,0.3)}}
+@keyframes crownBob{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-3px) rotate(5deg)}}
+@keyframes haloSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(6,10,16,0.95);border-bottom:1px solid var(–card-border);backdrop-filter:blur(10px);}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;}
+.nav-logo img{height:28px;border-radius:6px;}
+.nav-logo span{font-family:var(–mono);font-weight:700;font-size:13px;letter-spacing:1px;}
+.nav-links{display:flex;gap:18px;}
+.nav-links a{font-family:var(–mono);font-size:11px;font-weight:500;color:var(–text2);text-decoration:none;letter-spacing:.5px;transition:color .2s;cursor:pointer;}
+.nav-links a:hover,.nav-links a.active{color:var(–cyan);}
+.nav-ham{display:none;background:var(–card);border:1px solid var(–card-border);color:#fff;font-size:18px;padding:6px 10px;border-radius:6px;cursor:pointer;}
+.mob-menu{display:none;position:fixed;top:53px;left:0;right:0;background:var(–bg);border-bottom:1px solid var(–card-border);flex-direction:column;padding:12px;z-index:99;}
+.mob-menu.open{display:flex;}
+.mob-menu a{padding:12px 16px;color:var(–text);text-decoration:none;font-family:var(–mono);font-size:12px;border-radius:8px;cursor:pointer;}
+.mob-menu a:hover{background:var(–card);color:var(–cyan);}
+@media(max-width:900px){.nav-links{display:none;}.nav-ham{display:block;}}
+
+/* MAIN */
+.main{max-width:720px;margin:0 auto;padding:70px 16px 40px;}
+
+/* SECTION TABS (top-level navigation between Feed/Leaderboard/Channels/Tokens) */
+.section-tabs{
+display:flex;gap:0;margin-bottom:24px;
+background:var(–bg2);border:1px solid var(–card-border);border-radius:10px;
+overflow-x:auto;width:100%;
+}
+.section-tab{
+flex:1;padding:12px 8px;font-family:var(–mono);font-size:11px;font-weight:600;
+color:var(–text3);cursor:pointer;transition:all .2s;letter-spacing:.5px;
+border:none;background:none;text-align:center;white-space:nowrap;
+}
+.section-tab:hover{color:var(–text2);}
+.section-tab.active{background:var(–card);color:var(–cyan);}
+
+/* SECTION PANELS */
+.panel{display:none;}
+.panel.active{display:block;animation:fadeIn .3s ease;}
+
+/* ══════════════════════════════════════ */
+/* FEED */
+/* ══════════════════════════════════════ */
+.feed-header{font-family:var(–mono);font-size:18px;font-weight:800;margin-bottom:4px;color:#fff;}
+.feed-sub{font-family:var(–mono);font-size:11px;color:var(–text3);margin-bottom:20px;}
+.feed-list{display:flex;flex-direction:column;gap:1px;}
+.feed-item{
+display:flex;align-items:center;gap:12px;
+padding:14px 12px;background:var(–bg2);
+border-bottom:1px solid rgba(26,38,54,0.5);
+transition:background .2s;cursor:pointer;
+animation:fadeIn .3s ease both;
+}
+.feed-item:hover{background:var(–bg3);}
+.feed-avatar{width:38px;height:38px;border-radius:50%;background:var(–card);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden;}
+.feed-avatar img{width:100%;height:100%;object-fit:cover;}
+.feed-info{flex:1;min-width:0;}
+.feed-name{font-family:var(–mono);font-size:12px;font-weight:600;color:#fff;display:flex;align-items:center;gap:6px;}
+.feed-name .arrow{color:var(–text3);font-size:10px;}
+.feed-token{font-family:var(–mono);font-size:12px;font-weight:700;color:var(–cyan);}
+.feed-pct{font-family:var(–mono);font-size:12px;font-weight:700;margin-left:8px;}
+.feed-pct.up{color:var(–green);}
+.feed-pct.down{color:var(–red);}
+.feed-time{font-family:var(–mono);font-size:10px;color:var(–text3);flex-shrink:0;}
+.feed-live{display:flex;align-items:center;gap:6px;margin-bottom:16px;}
+.feed-live-dot{width:8px;height:8px;border-radius:50%;background:var(–green);animation:pulse 1.5s infinite;}
+.feed-live span{font-family:var(–mono);font-size:10px;color:var(–green);letter-spacing:1px;text-transform:uppercase;}
+
+/* ══════════════════════════════════════ */
+/* LEADERBOARD */
+/* ══════════════════════════════════════ */
+.lb-title{font-family:var(–mono);font-size:18px;font-weight:800;color:#fff;margin-bottom:4px;}
+.lb-sub{font-family:var(–mono);font-size:11px;color:var(–text3);margin-bottom:16px;}
+.sub-tabs{display:flex;gap:0;margin-bottom:20px;background:var(–bg2);border:1px solid var(–card-border);border-radius:8px;overflow:hidden;width:fit-content;}
+.sub-tab{padding:8px 20px;font-family:var(–mono);font-size:11px;font-weight:600;color:var(–text3);cursor:pointer;border:none;background:none;transition:all .2s;}
+.sub-tab:hover{color:var(–text2);}
+.sub-tab.active{background:var(–card);color:var(–cyan);}
+.lb-list{display:flex;flex-direction:column;gap:6px;}
+.lb-row{
+display:flex;align-items:center;gap:12px;
+background:var(–bg2);border:1px solid var(–card-border);border-radius:10px;
+padding:12px 14px;transition:all .25s;cursor:pointer;
+animation:fadeIn .35s ease both;
+}
+.lb-row:hover{border-color:#1e3a50;background:var(–bg3);transform:translateX(3px);}
+.lb-row.gold{border-color:rgba(0,212,255,0.3);background:linear-gradient(135deg,rgba(0,212,255,0.05),rgba(0,255,136,0.03));animation:fadeIn .35s ease both,glow 3s ease-in-out infinite;}
+.lb-rank{font-family:var(–mono);font-size:13px;font-weight:700;color:var(–text3);width:22px;text-align:center;flex-shrink:0;}
+.lb-row.gold .lb-rank{color:var(–yellow);}
+.lb-crown{display:inline-block;animation:crownBob 2s ease-in-out infinite;}
+.lb-av{width:40px;height:40px;border-radius:50%;background:var(–card);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:2px solid var(–card-border);transition:border-color .2s;}
+.lb-row:hover .lb-av{border-color:var(–cyan);}
+.lb-row.gold .lb-av{border-color:rgba(0,212,255,0.4);}
+.lb-info{flex:1;min-width:0;}
+.lb-name{font-family:var(–mono);font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-detail{font-family:var(–mono);font-size:10px;color:var(–text3);margin-top:2px;}
+.lb-badges{display:flex;gap:5px;flex-shrink:0;}
+.badge{font-family:var(–mono);font-size:9px;font-weight:600;padding:3px 7px;border-radius:4px;}
+.badge-green{background:var(–green-dim);color:var(–green);border:1px solid rgba(0,255,136,0.2);}
+.badge-yellow{background:var(–yellow-dim);color:var(–yellow);border:1px solid rgba(255,170,0,0.2);}
+.badge-red{background:var(–red-dim);color:var(–red);border:1px solid rgba(255,59,79,0.2);}
+.lb-mult{text-align:right;flex-shrink:0;min-width:65px;}
+.lb-mult .val{font-family:var(–mono);font-size:16px;font-weight:800;color:var(–green);}
+.lb-mult .unit{font-family:var(–mono);font-size:9px;color:var(–text3);display:block;}
+
+/* ══════════════════════════════════════ */
+/* CHANNELS */
+/* ══════════════════════════════════════ */
+.ch-header{font-family:var(–mono);font-size:18px;font-weight:800;color:#fff;margin-bottom:16px;}
+.search-bar{
+display:flex;gap:10px;margin-bottom:16px;
+}
+.search-input{
+flex:1;background:var(–bg2);border:1px solid var(–card-border);border-radius:8px;
+padding:10px 14px;color:#fff;font-family:var(–mono);font-size:12px;
+outline:none;transition:border-color .2s;
+}
+.search-input::placeholder{color:var(–text3);}
+.search-input:focus{border-color:var(–cyan);}
+.filter-btn{
+background:var(–bg2);border:1px solid var(–card-border);border-radius:8px;
+padding:10px 14px;color:var(–text2);font-family:var(–mono);font-size:11px;
+cursor:pointer;display:flex;align-items:center;gap:4px;
+}
+.ch-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:400px){.ch-grid{grid-template-columns:1fr;}}
+
+.ch-card{
+background:var(–bg2);border:1px solid var(–card-border);border-radius:12px;
+padding:14px;cursor:pointer;transition:all .25s;
+animation:fadeIn .35s ease both;position:relative;overflow:hidden;
+}
+.ch-card:hover{border-color:var(–cyan);transform:translateY(-2px);}
+.ch-card.hot{border-color:rgba(255,107,43,0.4);}
+.ch-card.new{border-color:rgba(0,212,255,0.3);}
+.ch-card.consistent{border-color:rgba(0,255,136,0.3);}
+
+.ch-watchers{font-family:var(–mono);font-size:9px;color:var(–text3);display:flex;align-items:center;gap:4px;margin-bottom:10px;}
+.ch-avatar-wrap{width:80px;height:80px;margin:0 auto 10px;position:relative;}
+.ch-avatar-circle{
+width:80px;height:80px;border-radius:50%;overflow:hidden;
+display:flex;align-items:center;justify-content:center;font-size:36px;
+background:var(–card);border:3px solid var(–card-border);
+position:relative;z-index:1;
+}
+.ch-card.hot .ch-avatar-circle{border-color:var(–orange);}
+.ch-card.consistent .ch-avatar-circle{border-color:var(–green);}
+.ch-card.new .ch-avatar-circle{border-color:var(–cyan);}
+.ch-halo{
+position:absolute;top:-4px;left:-4px;right:-4px;bottom:-4px;
+border-radius:50%;border:2px solid transparent;
+}
+.ch-card.hot .ch-halo{border-color:rgba(255,107,43,0.3);animation:haloSpin 6s linear infinite;border-top-color:var(–orange);}
+.ch-card.consistent .ch-halo{border-color:rgba(0,255,136,0.2);border-top-color:var(–green);}
+.ch-name{font-family:var(–mono);font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ch-handle{font-family:var(–mono);font-size:10px;color:var(–text3);margin-top:2px;}
+.ch-stats{display:flex;justify-content:space-between;align-items:flex-end;margin-top:8px;}
+.ch-stat-label{font-family:var(–mono);font-size:9px;color:var(–text3);}
+.ch-stat-val{font-family:var(–mono);font-size:14px;font-weight:800;}
+.ch-stat-val.green{color:var(–green);}
+.ch-stat-val.orange{color:var(–orange);}
+.ch-stat-val.cyan{color:var(–cyan);}
+
+/* ══════════════════════════════════════ */
+/* TOKENS */
+/* ══════════════════════════════════════ */
+.tk-header{font-family:var(–mono);font-size:18px;font-weight:800;color:#fff;margin-bottom:16px;}
+.tk-filter{
+display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;
+}
+.tk-filter-btn{
+background:var(–bg2);border:1px solid var(–card-border);border-radius:6px;
+padding:7px 14px;font-family:var(–mono);font-size:10px;font-weight:600;
+color:var(–text3);cursor:pointer;transition:all .2s;
+}
+.tk-filter-btn.active{color:var(–cyan);border-color:rgba(0,212,255,0.3);background:var(–cyan-dim);}
+
+.tk-card{
+background:var(–bg2);border:1px solid var(–card-border);border-radius:12px;
+padding:16px;margin-bottom:10px;animation:fadeIn .35s ease both;
+}
+.tk-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;}
+.tk-icon{width:50px;height:50px;border-radius:8px;background:var(–card);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:1px solid var(–card-border);}
+.tk-name-wrap{flex:1;}
+.tk-name{font-family:var(–mono);font-size:16px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;}
+.tk-copy{font-size:12px;color:var(–text3);cursor:pointer;}
+.tk-links{display:flex;gap:8px;margin-top:4px;}
+.tk-links a{font-size:12px;color:var(–text3);text-decoration:none;}
+.tk-mc-wrap{text-align:right;flex-shrink:0;}
+.tk-mc-label{font-family:var(–mono);font-size:9px;color:var(–text3);}
+.tk-mc{font-family:var(–mono);font-size:16px;font-weight:800;color:var(–green);}
+.tk-vol{font-family:var(–mono);font-size:11px;color:var(–text2);}
+.tk-ath-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.tk-pct{font-family:var(–mono);font-size:11px;font-weight:700;}
+.tk-pct.up{color:var(–green);}
+.tk-pct.down{color:var(–red);}
+.tk-bar{flex:1;height:6px;background:var(–card);border-radius:3px;overflow:hidden;position:relative;}
+.tk-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(–green),var(–yellow));}
+.tk-ath-label{font-family:var(–mono);font-size:9px;color:var(–text3);}
+.tk-ath-val{font-family:var(–mono);font-size:10px;color:var(–text2);}
+.tk-meta{font-family:var(–mono);font-size:10px;color:var(–text3);margin-bottom:10px;}
+.tk-calls{display:flex;flex-direction:column;gap:6px;}
+.tk-call{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid rgba(26,38,54,0.4);}
+.tk-call-av{width:28px;height:28px;border-radius:50%;background:var(–card);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.tk-call-mc{font-family:var(–mono);font-size:11px;color:var(–text2);flex:1;}
+.tk-call-mult{font-family:var(–mono);font-size:12px;font-weight:700;}
+.tk-call-mult.green{color:var(–green);}
+.tk-call-mult.white{color:var(–text2);}
+.tk-call-time{font-family:var(–mono);font-size:10px;color:var(–text3);}
+.tk-view-more{font-family:var(–mono);font-size:10px;color:var(–cyan);cursor:pointer;margin-top:4px;padding:4px 0;}
+.tk-badges{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.tk-badge{font-family:var(–mono);font-size:9px;padding:4px 10px;border-radius:4px;background:var(–card);border:1px solid var(–card-border);color:var(–text2);cursor:pointer;}
+
+/* ══════════════════════════════════════ */
+/* SUBMIT MODAL */
+/* ══════════════════════════════════════ */
+.modal-overlay{
+position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);
+z-index:200;display:none;align-items:center;justify-content:center;
+backdrop-filter:blur(4px);padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+background:var(–bg2);border:1px solid var(–card-border);border-radius:14px;
+padding:28px 24px;width:100%;max-width:440px;animation:slideUp .3s ease;
+}
+.modal-title{font-family:var(–mono);font-size:16px;font-weight:800;color:#fff;margin-bottom:4px;}
+.modal-desc{font-family:var(–mono);font-size:11px;color:var(–text3);margin-bottom:20px;}
+.modal-close{position:absolute;top:16px;right:20px;background:none;border:none;color:var(–text2);font-size:20px;cursor:pointer;}
+.form-group{margin-bottom:16px;}
+.form-label{font-family:var(–mono);font-size:11px;font-weight:600;color:var(–text2);margin-bottom:6px;display:block;}
+.form-input{
+width:100%;background:var(–bg);border:1px solid var(–card-border);border-radius:8px;
+padding:10px 14px;color:#fff;font-family:var(–mono);font-size:12px;outline:none;
+transition:border-color .2s;
+}
+.form-input::placeholder{color:var(–text3);}
+.form-input:focus{border-color:var(–cyan);}
+.form-file{
+display:flex;align-items:center;gap:10px;
+}
+.form-file-btn{
+background:var(–card);border:1px solid var(–card-border);border-radius:6px;
+padding:8px 14px;font-family:var(–mono);font-size:11px;color:var(–text2);cursor:pointer;
+}
+.form-file-name{font-family:var(–mono);font-size:10px;color:var(–text3);}
+.submit-btn{
+width:100%;padding:12px;background:linear-gradient(135deg,var(–cyan),var(–green));
+border:none;border-radius:8px;font-family:var(–mono);font-size:12px;font-weight:700;
+color:#060a10;cursor:pointer;transition:opacity .2s;margin-top:8px;
+}
+.submit-btn:hover{opacity:.85;}
+
+/* FOOTER ACTIONS */
+.footer-actions{
+display:flex;gap:12px;margin-top:24px;justify-content:center;flex-wrap:wrap;
+}
+.footer-action{
+font-family:var(–mono);font-size:11px;color:var(–text3);
+display:flex;align-items:center;gap:6px;cursor:pointer;
+padding:8px 16px;border:1px solid var(–card-border);border-radius:8px;
+background:var(–bg2);transition:all .2s;text-decoration:none;
+}
+.footer-action:hover{border-color:var(–cyan);color:var(–cyan);}
+
+.footer{text-align:center;padding:30px 0 20px;font-family:var(–mono);font-size:10px;color:var(–text3);}
+</style>
+
+</head>
+<body>
+
+<!-- NAV -->
+
+<nav class="nav">
+  <a href="./index.html" class="nav-logo">
+    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="">
+    <span>DEXSCREENER AI</span>
+  </a>
+  <div class="nav-links">
+    <a href="./index.html">App</a>
+    <a href="./gems.html">Gems</a>
+    <a href="./sniper_terminal.html">Sniper</a>
+    <a href="./og-detector.html">OG Detector</a>
+    <a href="./kol-tracker.html" class="active">KOL Tracker</a>
+    <a href="./telegram-bot.html">Bot</a>
+    <a href="./litepaper.html">Litepaper</a>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center">
+    <a href="https://t.me/dexscreeneraitoken" target="_blank" style="color:#64748b;text-decoration:none;font-size:16px">💬</a>
+    <a href="https://x.com/dexscreenerai" target="_blank" style="color:#64748b;text-decoration:none;font-size:14px">𝕏</a>
+  </div>
+  <button class="nav-ham" onclick="document.getElementById('mob').classList.toggle('open')">☰</button>
+</nav>
+<div class="mob-menu" id="mob">
+  <a href="./index.html">App</a>
+  <a href="./gems.html">Gems</a>
+  <a href="./sniper_terminal.html">Sniper</a>
+  <a href="./og-detector.html">OG Detector</a>
+  <a href="./kol-tracker.html" style="color:#00d4ff">KOL Tracker</a>
+  <a href="./telegram-bot.html">Bot</a>
+  <a href="./litepaper.html">Litepaper</a>
+</div>
+
+<div class="main">
+
+  <!-- SECTION TABS -->
+
+  <div class="section-tabs">
+    <button class="section-tab active" data-section="feed">⚡ Feed</button>
+    <button class="section-tab" data-section="leaderboard">🏆 Leaderboard</button>
+    <button class="section-tab" data-section="channels">📡 Channels</button>
+    <button class="section-tab" data-section="tokens">🪙 Tokens</button>
+  </div>
+
+  <!-- ════════════════════════════════ -->
+
+  <!-- FEED PANEL -->
+
+  <!-- ════════════════════════════════ -->
+
+  <div class="panel active" id="panel-feed">
+    <div class="feed-header">Real-Time Telegram Calls</div>
+    <div class="feed-sub">Live KOL calls tracked across channels</div>
+    <div class="feed-live"><div class="feed-live-dot"></div><span>Live</span></div>
+    <div class="search-bar">
+      <input class="search-input" placeholder="Search channels..." id="feedSearch">
+    </div>
+    <div class="feed-list" id="feedList"></div>
+  </div>
+
+  <!-- ════════════════════════════════ -->
+
+  <!-- LEADERBOARD PANEL -->
+
+  <!-- ════════════════════════════════ -->
+
+  <div class="panel" id="panel-leaderboard">
+    <div class="lb-title">Leaderboard</div>
+    <div class="lb-sub">Top performers ranked by returns</div>
+    <div class="sub-tabs" id="lbTabs">
+      <button class="sub-tab active" data-period="daily">Daily</button>
+      <button class="sub-tab" data-period="weekly">Weekly</button>
+      <button class="sub-tab" data-period="monthly">Monthly</button>
+    </div>
+    <div class="lb-list" id="lbList"></div>
+  </div>
+
+  <!-- ════════════════════════════════ -->
+
+  <!-- CHANNELS PANEL -->
+
+  <!-- ════════════════════════════════ -->
+
+  <div class="panel" id="panel-channels">
+    <div class="ch-header">Channels</div>
+    <div class="search-bar">
+      <input class="search-input" placeholder="Search channels..." id="chSearch">
+      <button class="filter-btn">⚙ Filter</button>
+    </div>
+    <div class="sub-tabs" id="chTabs" style="margin-bottom:16px">
+      <button class="sub-tab active" data-filter="all">All</button>
+      <button class="sub-tab" data-filter="hot">Hot</button>
+      <button class="sub-tab" data-filter="consistent">Consistent</button>
+      <button class="sub-tab" data-filter="new">New</button>
+    </div>
+    <div class="ch-grid" id="chGrid"></div>
+  </div>
+
+  <!-- ════════════════════════════════ -->
+
+  <!-- TOKENS PANEL -->
+
+  <!-- ════════════════════════════════ -->
+
+  <div class="panel" id="panel-tokens">
+    <div class="tk-header">Real-Time Telegram Calls</div>
+    <div class="search-bar">
+      <input class="search-input" placeholder="Search channels..." id="tkSearch">
+      <button class="filter-btn">⚙ Filter</button>
+    </div>
+    <div class="tk-filter" id="tkMcFilter">
+      <button class="tk-filter-btn active" data-mc="all">All</button>
+      <button class="tk-filter-btn" data-mc="1m">$1M+</button>
+      <button class="tk-filter-btn" data-mc="5m">$5M+</button>
+      <button class="tk-filter-btn" data-mc="10m">$10M+</button>
+    </div>
+    <div id="tkList"></div>
+  </div>
+
+  <!-- FOOTER ACTIONS -->
+
+  <div class="footer-actions">
+    <a class="footer-action" href="https://x.com/dexscreenerai" target="_blank">𝕏 Follow on X</a>
+    <div class="footer-action" onclick="openModal()">👤 Submit KOL</div>
+  </div>
+
+  <div class="footer">DEXSCREENER AI — KOL TRACKER v1.0</div>
+</div>
+
+<!-- SUBMIT KOL MODAL -->
+
+<div class="modal-overlay" id="submitModal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">New KOL Listing Request</div>
+    <div class="modal-desc">Provide the details of the KOL you'd like us to track.</div>
+    <div class="form-group">
+      <label class="form-label">X (Twitter) URL</label>
+      <input class="form-input" placeholder="https://x.com/username">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Main Telegram Channel</label>
+      <input class="form-input" placeholder="https://t.me/channelname">
+    </div>
+    <div class="form-group">
+      <label class="form-label">KOL Channel Avatar (png, jpg)</label>
+      <div class="form-file">
+        <label class="form-file-btn">Choose File<input type="file" accept="image/*" hidden></label>
+        <span class="form-file-name">No file chosen</span>
+      </div>
+    </div>
+    <button class="submit-btn">Submit Request</button>
+  </div>
+</div>
+
+<script>
+// ── MOCK DATA ──
+const FEED = [
+  {name:"Binnu's Journal",avatar:"🧑‍💼",token:"CAVEMAN",pct:6,up:true,time:"9m"},
+  {name:"Chapo Terminal",avatar:"🥷",token:"PUMPATHON",pct:-27,up:false,time:"12m"},
+  {name:"MJs Neverland",avatar:"👩",token:"Alex",pct:-21,up:false,time:"16m"},
+  {name:"Bingo Book",avatar:"🐱‍👤",token:"MERT",pct:-80,up:false,time:"33m"},
+  {name:"MJs Neverland",avatar:"👩",token:"MERT",pct:-77,up:false,time:"35m"},
+  {name:"Binnu's Journal",avatar:"🧑‍💼",token:"Roman",pct:-45,up:false,time:"35m"},
+  {name:"Finding Meta",avatar:"🧠",token:"TG",pct:4,up:true,time:"41m"},
+  {name:"Tim Cooks",avatar:"🍳",token:"Chiikawa",pct:-58,up:false,time:"43m"},
+  {name:"Doraemon X100",avatar:"🐱",token:"milkers",pct:37,up:true,time:"45m"},
+  {name:"GemFinder Pro",avatar:"💎",token:"BONK",pct:124,up:true,time:"1h"},
+  {name:"Alpha Signals",avatar:"📡",token:"WIF",pct:18,up:true,time:"1h"},
+  {name:"DegenKing",avatar:"👑",token:"PEPE",pct:-12,up:false,time:"2h"},
+];
+
+const LB = {
+  daily:[
+    {name:"Bingo Book",avatar:"🐱‍👤",mult:23.4,token:"stonks",wr:92,calls:12},
+    {name:"Shadow OnChain",avatar:"🥷",mult:19.7,token:"stonks",wr:88,calls:9},
+    {name:"Ben Based",avatar:"🔥",mult:13.9,token:"stonks",wr:95,calls:15},
+    {name:"Winshoot Alphas",avatar:"🎯",mult:13.2,token:"stonks",wr:78,calls:22},
+    {name:"Cauli's Quants",avatar:"🧮",mult:11.4,token:"Bebe",wr:85,calls:8},
+    {name:"Niom's Blackbook",avatar:"📓",mult:10.8,token:"FNUT",wr:90,calls:11},
+    {name:"Binnu's Journal",avatar:"📰",mult:10.3,token:"FNUT",wr:82,calls:14},
+    {name:"HTown Love's House",avatar:"🏠",mult:6.5,token:"foreskin",wr:74,calls:18},
+    {name:"Inye's Trades",avatar:"📊",mult:5.9,token:"Bebe",wr:80,calls:7},
+    {name:"Hopium Select",avatar:"🌈",mult:5.9,token:"Time",wr:87,calls:10},
+  ],
+  weekly:[
+    {name:"Shadow OnChain",avatar:"🥷",mult:42.1,token:"PEPE",wr:94,calls:35},
+    {name:"Bingo Book",avatar:"🐱‍👤",mult:38.5,token:"stonks",wr:91,calls:28},
+    {name:"Ben Based",avatar:"🔥",mult:29.3,token:"WIF",wr:88,calls:22},
+    {name:"Cauli's Quants",avatar:"🧮",mult:22.7,token:"BONK",wr:85,calls:18},
+    {name:"Winshoot Alphas",avatar:"🎯",mult:18.4,token:"JUP",wr:82,calls:30},
+    {name:"Niom's Blackbook",avatar:"📓",mult:15.2,token:"RAY",wr:90,calls:14},
+    {name:"Binnu's Journal",avatar:"📰",mult:12.8,token:"FNUT",wr:79,calls:25},
+    {name:"HTown Love's House",avatar:"🏠",mult:9.6,token:"TIME",wr:72,calls:35},
+  ],
+  monthly:[
+    {name:"Geppetto Degen",avatar:"🎭",mult:11.3,token:"avg",wr:100,calls:45},
+    {name:"Cowboys Degeneracy",avatar:"🤠",mult:11.3,token:"avg",wr:100,calls:38},
+    {name:"Yeezus' Prophets",avatar:"✝️",mult:4.6,token:"avg",wr:100,calls:52},
+    {name:"Degens By Gem",avatar:"💎",mult:8.0,token:"avg",wr:100,calls:30},
+    {name:"WicTrades",avatar:"🔮",mult:4.8,token:"avg",wr:100,calls:28},
+    {name:"Ozen's Gems",avatar:"🪨",mult:10.2,token:"avg",wr:100,calls:22},
+    {name:"Rex's Channel",avatar:"🦖",mult:4.4,token:"avg",wr:100,calls:35},
+    {name:"Fomo's Dojo",avatar:"🥋",mult:5.7,token:"avg",wr:100,calls:20},
+    {name:"Nicotine Lounge",avatar:"🚬",mult:4.5,token:"avg",wr:100,calls:18},
+    {name:"Reckless Moonshot",avatar:"🌙",mult:3.9,token:"avg",wr:100,calls:40},
+  ]
+};
+
+const CHANNELS = [
+  {name:"Yeezus' Prophets",handle:"@cryptoyeezussss",avatar:"✝️",watching:461,streak:15,wr:100,type:"hot"},
+  {name:"Degens By Gem",handle:"@0nlygem",avatar:"💎",watching:178,streak:6,wr:100,type:"hot"},
+  {name:"Reckless Moonshot",handle:"@abdullah_tecofc",avatar:"🌙",watching:34,streak:5,wr:100,type:"hot"},
+  {name:"Lumen Degens",handle:"@LumenCalls",avatar:"💡",watching:13,streak:5,wr:100,type:"hot"},
+  {name:"Geppetto Degen",handle:"@Geppetto_88",avatar:"🎭",watching:134,streak:4,wr:100,type:"consistent"},
+  {name:"Cowboys Degeneracy",handle:"@CryptoCowboy_AU",avatar:"🤠",watching:187,streak:4,wr:100,type:"consistent"},
+  {name:"Nicotine Lounge",handle:"@dedn",avatar:"🚬",watching:25,streak:3,wr:100,type:"consistent"},
+  {name:"Rex's Channel",handle:"@rexcalls",avatar:"🦖",watching:23,streak:3,wr:100,type:"consistent"},
+  {name:"Only Paper Ape",handle:"@Giga_ape_KOL",avatar:"🦍",watching:0,streak:0,wr:0,type:"new",age:"29m"},
+  {name:"Badass Degen",handle:"@notbadass2k",avatar:"😎",watching:0,streak:0,wr:0,type:"new",age:"19h"},
+  {name:"Chapo Terminal",handle:"@chapoliquidity",avatar:"🥷",watching:0,streak:0,wr:0,type:"new",age:"20h",calls:3,avgMult:1.2},
+  {name:"Finding Meta",handle:"@casviranda",avatar:"🧠",watching:0,streak:0,wr:0,type:"new",age:"1d",calls:5,avgMult:1.3},
+];
+
+const TOKENS = [
+  {name:"GTA$",mc:5500000,vol:156400,pct:8.1,up:true,ath:5500000,firstCall:"4d",callers:[
+    {avatar:"🐱‍👤",mc:"5.1M",mult:1.1,green:false,time:"2m"},
+    {avatar:"🔥",mc:"3.2M",mult:1.8,green:false,time:"1d"},
+    {avatar:"🎯",mc:"3.2M",mult:1.8,green:false,time:"1d"},
+    {avatar:"💎",mc:"2.5M",mult:2.2,green:true,time:"1d"},
+    {avatar:"🥷",mc:"2.5M",mult:2.2,green:true,time:"1d"},
+  ],totalCalls:7,badges:["Padre","Axiom","GMGN"]},
+  {name:"milkers",mc:1210000,vol:1700000,pct:2.0,up:true,ath:1900000,firstCall:"3d",callers:[
+    {avatar:"🐱",mc:"882K",mult:1.4,green:false,time:"48m"},
+    {avatar:"🤠",mc:"845K",mult:2.2,green:true,time:"2d"},
+    {avatar:"🎭",mc:"720K",mult:1.8,green:false,time:"2d"},
+  ],totalCalls:4,badges:["Axiom","GMGN"]},
+  {name:"CAVEMAN",mc:890000,vol:420000,pct:6.0,up:true,ath:1200000,firstCall:"2d",callers:[
+    {avatar:"📰",mc:"650K",mult:1.4,green:false,time:"9m"},
+    {avatar:"🧮",mc:"500K",mult:1.8,green:false,time:"1d"},
+  ],totalCalls:3,badges:["Padre"]},
+];
+
+// ── RENDERERS ──
+function renderFeed(search=''){
+  const list = document.getElementById('feedList');
+  const filtered = FEED.filter(f => !search || f.name.toLowerCase().includes(search) || f.token.toLowerCase().includes(search));
+  list.innerHTML = filtered.map((f,i) => `
+    <div class="feed-item" style="animation-delay:${i*0.03}s">
+      <div class="feed-avatar">${f.avatar}</div>
+      <div class="feed-info">
+        <div class="feed-name">
+          ${f.name} <span class="arrow">→</span>
+          <span class="feed-token">${f.token}</span>
+          <span class="feed-pct ${f.up?'up':'down'}">${f.up?'↑':'↓'} ${Math.abs(f.pct)}%</span>
+        </div>
+      </div>
+      <div class="feed-time">${f.time}</div>
+    </div>`).join('');
+}
+
+function renderLB(period='daily'){
+  const list = document.getElementById('lbList');
+  const items = LB[period];
+  document.querySelectorAll('#lbTabs .sub-tab').forEach(t=>t.classList.toggle('active',t.dataset.period===period));
+  list.innerHTML = items.map((k,i)=>{
+    const gold = i===0;
+    const wrClass = k.wr>=90?'badge-green':k.wr>=75?'badge-yellow':'badge-red';
+    return `
+    <div class="lb-row ${gold?'gold':''}" style="animation-delay:${i*0.04}s">
+      <div class="lb-rank">${gold?'<span class="lb-crown">👑</span>':i+1}</div>
+      <div class="lb-av">${k.avatar}</div>
+      <div class="lb-info">
+        <div class="lb-name">${k.name}</div>
+        <div class="lb-detail">${k.calls} calls · ${k.token}</div>
+      </div>
+      <div class="lb-badges"><span class="badge ${wrClass}">${k.wr}% WR</span></div>
+      <div class="lb-mult"><span class="val">${k.mult}x</span><span class="unit">${period==='daily'?'best':'avg'}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderChannels(filter='all',search=''){
+  const grid = document.getElementById('chGrid');
+  document.querySelectorAll('#chTabs .sub-tab').forEach(t=>t.classList.toggle('active',t.dataset.filter===filter));
+  let items = CHANNELS;
+  if(filter!=='all') items = items.filter(c=>c.type===filter);
+  if(search) items = items.filter(c=>c.name.toLowerCase().includes(search)||c.handle.toLowerCase().includes(search));
+  
+  grid.innerHTML = items.map((c,i)=>{
+    const cardClass = c.type==='hot'?'hot':c.type==='consistent'?'consistent':c.type==='new'?'new':'';
+    let statHtml='';
+    if(c.type==='hot'){
+      statHtml=`<div><div class="ch-stat-label">STREAK</div><div class="ch-stat-val orange">${c.streak}</div></div>`;
+    } else if(c.type==='consistent'){
+      statHtml=`<div><div class="ch-stat-label">WIN RATE</div><div class="ch-stat-val green">${c.wr}%</div></div>`;
+    } else if(c.type==='new'){
+      statHtml=`<div><div class="ch-stat-label">NEW</div><div class="ch-stat-val cyan">${c.age||'–'}</div></div>`;
+      if(c.calls) statHtml=`<div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${c.calls} calls · ${c.wr}% WR · ${c.avgMult}x avg</div>`;
+    }
+    return `
+    <div class="ch-card ${cardClass}" style="animation-delay:${i*0.05}s">
+      <div class="ch-watchers">👁 ${c.watching} watching</div>
+      <div class="ch-avatar-wrap">
+        <div class="ch-halo"></div>
+        <div class="ch-avatar-circle">${c.avatar}</div>
+      </div>
+      <div class="ch-name">${c.name}</div>
+      <div class="ch-handle">${c.handle}</div>
+      <div class="ch-stats">${statHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function fmtMc(n){
+  if(n>=1e6) return '$'+( n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return '$'+(n/1e3).toFixed(0)+'K';
+  return '$'+n;
+}
+
+function renderTokens(mcFilter='all',search=''){
+  const el = document.getElementById('tkList');
+  document.querySelectorAll('#tkMcFilter .tk-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.mc===mcFilter));
+  let items = TOKENS;
+  if(mcFilter==='1m') items=items.filter(t=>t.mc>=1e6);
+  if(mcFilter==='5m') items=items.filter(t=>t.mc>=5e6);
+  if(mcFilter==='10m') items=items.filter(t=>t.mc>=10e6);
+  if(search) items=items.filter(t=>t.name.toLowerCase().includes(search));
+
+  el.innerHTML = items.map((t,i)=>{
+    const athPct = Math.min(100,Math.round(t.mc/t.ath*100));
+    return `
+    <div class="tk-card" style="animation-delay:${i*0.06}s">
+      <div class="tk-top">
+        <div class="tk-icon">🪙</div>
+        <div class="tk-name-wrap">
+          <div class="tk-name">${t.name} <span class="tk-copy">📋</span></div>
+          <div class="tk-links"><a href="#">🌐</a></div>
+        </div>
+        <div class="tk-mc-wrap">
+          <div class="tk-mc-label">MC</div>
+          <div class="tk-mc">${fmtMc(t.mc)}</div>
+          <div class="tk-vol">V ${fmtMc(t.vol)}</div>
+        </div>
+      </div>
+      <div class="tk-ath-bar">
+        <span class="tk-pct ${t.up?'up':'down'}">↑${t.pct}%</span>
+        <div class="tk-bar"><div class="tk-bar-fill" style="width:${athPct}%"></div></div>
+        <span class="tk-ath-label">ATH</span>
+        <span class="tk-ath-val">${fmtMc(t.ath)}</span>
+      </div>
+      <div class="tk-meta">First call ${t.firstCall}</div>
+      <div class="tk-calls">
+        ${t.callers.map(c=>`
+          <div class="tk-call">
+            <div class="tk-call-av">${c.avatar}</div>
+            <div class="tk-call-mc">${c.mc}</div>
+            <div class="tk-call-mult ${c.green?'green':'white'}">${c.mult}x</div>
+            <div class="tk-call-time">${c.time}</div>
+          </div>`).join('')}
+      </div>
+      ${t.totalCalls>t.callers.length?`<div class="tk-view-more">View ${t.totalCalls} calls</div>`:''}
+      <div class="tk-badges">${t.badges.map(b=>`<span class="tk-badge">${b}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── SECTION SWITCHING ──
+document.querySelectorAll('.section-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.section-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-'+tab.dataset.section).classList.add('active');
+  });
+});
+
+// ── SUB-TAB EVENTS ──
+document.querySelectorAll('#lbTabs .sub-tab').forEach(t=>t.addEventListener('click',()=>renderLB(t.dataset.period)));
+document.querySelectorAll('#chTabs .sub-tab').forEach(t=>t.addEventListener('click',()=>renderChannels(t.dataset.filter,document.getElementById('chSearch').value.toLowerCase())));
+document.querySelectorAll('#tkMcFilter .tk-filter-btn').forEach(b=>b.addEventListener('click',()=>renderTokens(b.dataset.mc,document.getElementById('tkSearch').value.toLowerCase())));
+
+// ── SEARCH ──
+document.getElementById('feedSearch').addEventListener('input',e=>renderFeed(e.target.value.toLowerCase()));
+document.getElementById('chSearch').addEventListener('input',e=>{
+  const activeFilter = document.querySelector('#chTabs .sub-tab.active').dataset.filter;
+  renderChannels(activeFilter,e.target.value.toLowerCase());
+});
+document.getElementById('tkSearch').addEventListener('input',e=>{
+  const activeMc = document.querySelector('#tkMcFilter .tk-filter-btn.active').dataset.mc;
+  renderTokens(activeMc,e.target.value.toLowerCase());
+});
+
+// ── MODAL ──
+function openModal(){document.getElementById('submitModal').classList.add('open');}
+function closeModal(){document.getElementById('submitModal').classList.remove('open');}
+document.getElementById('submitModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+
+// File input label
+document.querySelector('.form-file-btn input')?.addEventListener('change',function(){
+  const name = this.files[0]?.name||'No file chosen';
+  this.closest('.form-file').querySelector('.form-file-name').textContent=name;
+});
+
+// ── INIT ──
+renderFeed();
+renderLB('daily');
+renderChannels('all');
+renderTokens('all');
+</script>
+
+</body>
+</html>
