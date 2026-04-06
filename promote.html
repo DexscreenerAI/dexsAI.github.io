@@ -286,6 +286,40 @@ body {
   max-width: 500px;
   margin: 0 auto;
 }
+.hero-price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 24px;
+  padding: 16px 36px;
+  background: linear-gradient(135deg, rgba(179,136,255,0.2) 0%, rgba(0,212,255,0.15) 100%);
+  border: 2px solid var(--purple);
+  border-radius: 16px;
+  animation: glow-purple 2s infinite;
+}
+@keyframes glow-purple {
+  0%, 100% { box-shadow: 0 0 10px rgba(179,136,255,0.3); }
+  50% { box-shadow: 0 0 30px rgba(179,136,255,0.5); }
+}
+.hero-price-val {
+  font-family: var(--mono);
+  font-size: 52px;
+  font-weight: 900;
+  color: #fff;
+}
+.hero-price-unit {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--purple);
+}
+.hero-price-sub {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 2px;
+}
 
 /* Benefits - 4 columns now */
 .benefits {
@@ -764,6 +798,11 @@ body {
       <span class="green">In Front</span> of <span class="cyan">Traders</span>
     </h1>
     <p>Banner on every page + Telegram post + Twitter post + <strong>Buy Bot</strong> in our group. Everything you need to create hype.</p>
+    <div class="hero-price">
+      <span class="hero-price-val">1</span>
+      <span class="hero-price-unit">SOL</span>
+      <span class="hero-price-sub">ONLY</span>
+    </div>
   </div>
 
   <!-- Benefits - Now 4 columns -->
