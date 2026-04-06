@@ -565,7 +565,7 @@ function buildGem(c){
     price:parseFloat(p.priceUsd)||0,mc,liq,vol,
     chg1h:parseFloat(p.priceChange?.h1)||0,chg24h:parseFloat(p.priceChange?.h24)||0,
     buyRatio:b+s>0?Math.round(b/(b+s)*100):50,txns:b+s,age:Math.round(age),
-    score:c.score,src:c.src,isCTO,logo:c.icon||'',
+    score:c.score,src:c.src,isCTO,logo:c.icon||p.info?.imageUrl||`https://dd.dexscreener.com/ds-data/tokens/${p.chainId}/${p.baseToken?.address}.png`||'',
     rugStatus:c.rugStatus||'unknown',rugReason:c.rugReason||'',
     twitter:p.info?.socials?.find(x=>x.type==='twitter')?.url||'',
     website:p.info?.websites?.[0]?.url||'',
