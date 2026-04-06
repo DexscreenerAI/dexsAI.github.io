@@ -13,41 +13,38 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 40px;
-  background: rgba(10,12,15,0.98);
+  background: rgba(6,10,16,0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  justify-content: space-between;
+  padding: 12px 24px;
   z-index: 1000;
-  gap: 8px;
 }
 
 .nav-logo {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   text-decoration: none;
-  color: var(--green);
-  font-size: 11px;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 1px;
-  margin-right: 12px;
 }
 
 .nav-logo img {
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 2px;
-  flex: 1;
-  overflow-x: auto;
+  gap: 24px;
 }
 
 .nav-links::-webkit-scrollbar { height: 0; }
@@ -55,52 +52,36 @@
 .nav-link {
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 9px;
+  font-family: var(--font);
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.5px;
-  padding: 6px 10px;
-  border-radius: 3px;
-  transition: all 0.1s;
+  transition: color .15s;
   white-space: nowrap;
-  border: 1px solid transparent;
 }
 
 .nav-link:hover {
-  color: var(--text);
-  background: var(--bg-card);
-  border-color: var(--border);
+  color: var(--cyan);
 }
 
 .nav-link.active {
   color: var(--cyan);
-  background: var(--cyan-dim);
-  border-color: var(--cyan);
 }
 
 .nav-socials {
   display: flex;
-  gap: 6px;
-  margin-left: auto;
+  gap: 12px;
+  align-items: center;
 }
 
 .nav-social {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 12px;
-  transition: all 0.1s;
+  font-size: 16px;
+  transition: color .15s;
 }
 
 .nav-social:hover {
-  background: var(--cyan-dim);
-  border-color: var(--cyan);
   color: var(--cyan);
 }
 
