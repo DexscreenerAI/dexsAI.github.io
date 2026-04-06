@@ -63,17 +63,18 @@ body {
 }
 .nav-links {
   display: flex;
-  gap: 18px;
+  gap: 24px;
 }
 .nav-links a {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
   color: var(--text2);
   text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  transition: color 0.2s;
+  letter-spacing: .5px;
+  transition: color .15s;
 }
-.nav-links a:hover { color: var(--cyan); }
-.nav-links a.active { color: var(--cyan); }
+.nav-links a:hover, .nav-links a.active { color: var(--cyan); }
 
 /* Mobile menu */
 .nav-menu-btn {
