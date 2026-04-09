@@ -7,15 +7,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    :root{--bg:#060a10;--bg2:#0b1018;--bg3:#101822;--card:#111a26;--card-border:#1a2636;--cyan:#00d4ff;--green:#00ff88;--red:#ff3b4f;--yellow:#ffaa00;--purple:#b388ff;--text:#dfe4ed;--text2:rgba(255,255,255,0.5);--text3:rgba(255,255,255,0.22);--mono:'JetBrains Mono',monospace;--sans:'Rajdhani',sans-serif}
+    :root{--bg:#060a10;--bg2:#0b1018;--bg3:#101822;--card:#111a26;--card-border:#1a2636;--cyan:#ff3b4f;--green:#ff1744;--red:#ff3b4f;--yellow:#ffaa00;--purple:#b388ff;--text:#dfe4ed;--text2:rgba(255,255,255,0.5);--text3:rgba(255,255,255,0.22);--mono:'JetBrains Mono',monospace;--sans:'Rajdhani',sans-serif}
     *{margin:0;padding:0;box-sizing:border-box}
     body{min-height:100vh;background:var(--bg);font-family:var(--sans);color:var(--text);overflow-x:hidden}
-    .grid-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background-image:linear-gradient(rgba(0,255,136,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.02) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0}
-    .scanline{position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(0,255,136,0.4),transparent);animation:scanline 4s linear infinite;pointer-events:none;z-index:1}
+    .grid-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background-image:linear-gradient(rgba(255,23,68,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,23,68,0.02) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0}
+    .scanline{position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,23,68,0.4),transparent);animation:scanline 4s linear infinite;pointer-events:none;z-index:1}
     @keyframes scanline{0%{top:-10%}100%{top:110%}}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
     @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes glow{0%,100%{box-shadow:0 0 20px rgba(0,255,136,0.3)}50%{box-shadow:0 0 40px rgba(0,255,136,0.6)}}
+    @keyframes glow{0%,100%{box-shadow:0 0 20px rgba(255,23,68,0.3)}50%{box-shadow:0 0 40px rgba(255,23,68,0.6)}}
     @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     @keyframes scan{0%{top:0}100%{top:100%}}
     header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;padding-top:70px;border-bottom:1px solid var(--card-border);position:relative;z-index:100;background:rgba(6,10,16,0.9);backdrop-filter:blur(10px)}
@@ -23,14 +23,14 @@
     .logo-icon{animation:glow 2s ease-in-out infinite;border-radius:50%}
     .title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;letter-spacing:2px;color:#fff}
     .title-accent{background:linear-gradient(90deg,var(--green),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    .subtitle{font-size:10px;letter-spacing:3px;color:rgba(0,255,136,0.5);text-transform:uppercase}
-    .status-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);border-radius:16px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:1px;color:var(--green)}
+    .subtitle{font-size:10px;letter-spacing:3px;color:rgba(255,23,68,0.5);text-transform:uppercase}
+    .status-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,23,68,0.1);border:1px solid rgba(255,23,68,0.3);border-radius:16px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:1px;color:var(--green)}
     .status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease-in-out infinite}
     .search-section{padding:24px;position:relative;z-index:50}
     .search-container{max-width:800px;margin:0 auto}
     .search-box{position:relative}
     .search-input{width:100%;padding:16px 20px 16px 50px;background:var(--bg3);border:2px solid var(--card-border);border-radius:12px;color:var(--text);font-family:var(--mono);font-size:14px;outline:none;transition:all 0.2s}
-    .search-input:focus{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,212,255,0.2)}
+    .search-input:focus{border-color:var(--cyan);box-shadow:0 0 20px rgba(255,59,79,0.2)}
     .search-input::placeholder{color:var(--text3)}
     .search-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:18px;opacity:0.5}
     .search-results{position:absolute;top:100%;left:0;right:0;margin-top:8px;background:var(--card);border:1px solid var(--card-border);border-radius:12px;max-height:400px;overflow-y:auto;display:none;z-index:1000;box-shadow:0 10px 40px rgba(0,0,0,0.5)}
@@ -52,10 +52,10 @@
     .mode-tabs{display:flex;justify-content:center;gap:12px;margin-top:20px}
     .mode-tab{padding:10px 24px;background:transparent;border:1px solid var(--card-border);border-radius:8px;color:var(--text2);font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px}
     .mode-tab:hover{border-color:var(--cyan);color:var(--cyan)}
-    .mode-tab.active{background:rgba(0,212,255,0.1);border-color:var(--cyan);color:var(--cyan)}
+    .mode-tab.active{background:rgba(255,59,79,0.1);border-color:var(--cyan);color:var(--cyan)}
     main{padding:0 24px 24px;max-width:1400px;margin:0 auto;position:relative;z-index:10}
-    .upload-zone{border:2px dashed var(--card-border);border-radius:16px;padding:60px 40px;text-align:center;cursor:pointer;transition:all 0.3s;background:rgba(0,255,136,0.02);max-width:600px;margin:0 auto}
-    .upload-zone:hover,.upload-zone.drag-over{border-color:var(--green);background:rgba(0,255,136,0.06)}
+    .upload-zone{border:2px dashed var(--card-border);border-radius:16px;padding:60px 40px;text-align:center;cursor:pointer;transition:all 0.3s;background:rgba(255,23,68,0.02);max-width:600px;margin:0 auto}
+    .upload-zone:hover,.upload-zone.drag-over{border-color:var(--green);background:rgba(255,23,68,0.06)}
     .upload-icon{margin-bottom:16px;opacity:0.7}
     .upload-title{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;letter-spacing:2px;color:#fff;margin-bottom:8px}
     .upload-text{color:var(--text3);font-size:13px}
@@ -91,7 +91,7 @@
     .chart-btn-secondary{background:transparent;border:1px solid var(--card-border);color:var(--text2)}
     .chart-btn-secondary:hover{border-color:var(--cyan);color:var(--cyan)}
     .chart-btn-primary{background:linear-gradient(135deg,var(--green) 0%,#00cc6a 100%);border:none;color:#000;font-weight:700}
-    .chart-btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 15px rgba(0,255,136,0.3)}
+    .chart-btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 15px rgba(255,23,68,0.3)}
     .chart-btn-primary:disabled{background:var(--bg3);color:var(--text3);cursor:not-allowed;transform:none;box-shadow:none}
     .chart-frame{position:relative;width:100%;height:450px;background:var(--bg)}
     .chart-frame iframe{width:100%;height:100%;border:none}
@@ -107,12 +107,12 @@
     .analysis-empty-icon{font-size:48px;opacity:0.3;margin-bottom:16px}
     .analysis-empty-text{font-size:13px;line-height:1.6}
     .signal-card{border-radius:12px;padding:16px;border:1px solid;margin-bottom:14px;animation:fadeIn 0.3s ease}
-    .signal-card.buy{background:rgba(0,255,136,0.1);border-color:var(--green)}
+    .signal-card.buy{background:rgba(255,23,68,0.1);border-color:var(--green)}
     .signal-card.sell{background:rgba(255,59,79,0.1);border-color:var(--red)}
     .signal-card.hold{background:rgba(255,170,0,0.1);border-color:var(--yellow)}
     .signal-main{display:flex;align-items:center;gap:12px;margin-bottom:12px}
     .signal-badge{padding:8px 18px;border-radius:6px;font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;letter-spacing:2px;border:2px solid}
-    .signal-badge.buy{background:rgba(0,255,136,0.15);color:var(--green);border-color:var(--green)}
+    .signal-badge.buy{background:rgba(255,23,68,0.15);color:var(--green);border-color:var(--green)}
     .signal-badge.sell{background:rgba(255,59,79,0.15);color:var(--red);border-color:var(--red)}
     .signal-badge.hold{background:rgba(255,170,0,0.15);color:var(--yellow);border-color:var(--yellow)}
     .signal-token{font-size:15px;font-weight:700;color:#fff}
@@ -149,7 +149,7 @@
 </head>
 <body>
 <nav style="position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:rgba(6,10,16,0.95);border-bottom:1px solid var(--card-border);backdrop-filter:blur(10px)">
-  <a href="./index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-family:var(--mono);font-weight:700;font-size:13px"><img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" style="height:28px" alt="">DEXSCREENER AI</a>
+  <a href="./index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-family:var(--mono);font-weight:700;font-size:13px"><img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" style="height:28px" alt="">$ByeBoss</a>
   <div class="sh-nav-links" style="display:flex;gap:24px"><a href="./index.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">App</a><a href="./gems.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Gems</a><a href="./sniper_terminal.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Sniper</a><a href="./og-detector.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">OG Detector</a><a href="./telegram-bot.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Telegram Bot</a><a href="./litepaper.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Litepaper</a><a href="./extension.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Extension</a><a href="./shazam_crypto.html" style="font-family:var(--mono);font-size:11px;color:var(--cyan);text-decoration:none">Shazam</a><a href="./promote.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Promote</a></div>
   <div style="display:flex;gap:12px;align-items:center"><a href="https://t.me/dexscreeneraitoken" target="_blank" style="color:rgba(255,255,255,0.22);text-decoration:none;font-size:16px">💬</a><a href="https://x.com/dexscreenerai" target="_blank" style="color:rgba(255,255,255,0.22);text-decoration:none;font-size:14px">𝕏</a><button class="sh-ham" onclick="document.getElementById('shMob').classList.add('open')">☰</button></div>
 </nav>
@@ -181,7 +181,7 @@
   <header>
     <div class="logo-container">
       <div class="logo-icon">
-        <svg viewBox="0 0 36 36" width="36" height="36"><defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00ff88"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient></defs><circle cx="18" cy="18" r="16" fill="none" stroke="url(#logoGrad)" stroke-width="2"/><path d="M10 22 L15 14 L21 19 L27 10" fill="none" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="27" cy="10" r="2.5" fill="#00ff88"/></svg>
+        <svg viewBox="0 0 36 36" width="36" height="36"><defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff1744"/><stop offset="100%" stop-color="#ff3b4f"/></linearGradient></defs><circle cx="18" cy="18" r="16" fill="none" stroke="url(#logoGrad)" stroke-width="2"/><path d="M10 22 L15 14 L21 19 L27 10" fill="none" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="27" cy="10" r="2.5" fill="#ff1744"/></svg>
       </div>
       <div><h1 class="title">SHAZAM<span class="title-accent">CRYPTO</span></h1><p class="subtitle">AI Chart Scanner</p></div>
     </div>
@@ -207,7 +207,7 @@
   <main>
     <div class="upload-zone hidden" id="uploadZone">
       <div class="upload-icon">
-        <svg viewBox="0 0 64 64" width="64" height="64"><rect x="4" y="16" width="56" height="40" rx="4" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.5"/><polyline points="16,36 28,24 40,36 44,32 56,44" fill="none" stroke="#00d4ff" stroke-width="2"/><circle cx="48" cy="26" r="5" fill="none" stroke="#00ff88" stroke-width="2"/><path d="M32 4 L32 16 M24 10 L32 4 L40 10" fill="none" stroke="#00ff88" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 64 64" width="64" height="64"><rect x="4" y="16" width="56" height="40" rx="4" fill="none" stroke="#ff1744" stroke-width="2" opacity="0.5"/><polyline points="16,36 28,24 40,36 44,32 56,44" fill="none" stroke="#ff3b4f" stroke-width="2"/><circle cx="48" cy="26" r="5" fill="none" stroke="#ff1744" stroke-width="2"/><path d="M32 4 L32 16 M24 10 L32 4 L40 10" fill="none" stroke="#ff1744" stroke-width="2.5" stroke-linecap="round"/></svg>
       </div>
       <h2 class="upload-title">DROP YOUR CHART</h2>
       <p class="upload-text">or click to select an image</p>
@@ -332,7 +332,7 @@ function selectToken(token) {
   let socHtml = '';
   if (token.twitter) socHtml += `<a href="${token.twitter}" target="_blank" style="padding:4px 10px;border:1px solid rgba(29,161,242,0.3);border-radius:6px;color:#1da1f2;font-family:var(--mono);font-size:10px;text-decoration:none;font-weight:600">𝕏</a>`;
   if (token.telegram) socHtml += `<a href="${token.telegram}" target="_blank" style="padding:4px 10px;border:1px solid rgba(0,136,204,0.3);border-radius:6px;color:#0088cc;font-family:var(--mono);font-size:10px;text-decoration:none;font-weight:600">💬 TG</a>`;
-  if (token.website) socHtml += `<a href="${token.website}" target="_blank" style="padding:4px 10px;border:1px solid rgba(0,212,255,0.3);border-radius:6px;color:var(--cyan);font-family:var(--mono);font-size:10px;text-decoration:none;font-weight:600">🌐</a>`;
+  if (token.website) socHtml += `<a href="${token.website}" target="_blank" style="padding:4px 10px;border:1px solid rgba(255,59,79,0.3);border-radius:6px;color:var(--cyan);font-family:var(--mono);font-size:10px;text-decoration:none;font-weight:600">🌐</a>`;
   if (token.address) socHtml += `<button onclick="navigator.clipboard.writeText('${token.address}');this.textContent='✓ Copied';setTimeout(()=>this.textContent='📋 CA',1500)" style="padding:4px 10px;border:1px solid var(--card-border);border-radius:6px;color:var(--text2);font-family:var(--mono);font-size:10px;background:none;cursor:pointer;font-weight:600">📋 CA</button>`;
   document.getElementById('socialLinks').innerHTML = socHtml;
   chartContainer.classList.add('active');

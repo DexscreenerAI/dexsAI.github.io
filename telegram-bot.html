@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🤖 AI Trading Bot — DexScreener AI</title>
-<link rel="icon" type="image/png" href="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png">
+<title>🤖 AI Trading Bot — $ByeBoss</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
 :root {
@@ -12,8 +12,8 @@
   --bg2: #0b1018;
   --card: #111a26;
   --card-border: #1a2636;
-  --cyan: #00d4ff;
-  --green: #00ff88;
+  --cyan: #ff3b4f;
+  --green: #ff1744;
   --red: #ff3b4f;
   --yellow: #ffaa00;
   --purple: #b388ff;
@@ -80,7 +80,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); line-he
   position: absolute;
   top: -200px; left: 50%; transform: translateX(-50%);
   width: 1000px; height: 1000px;
-  background: radial-gradient(circle, rgba(0,255,136,0.2) 0%, rgba(0,212,255,0.1) 30%, transparent 60%);
+  background: radial-gradient(circle, rgba(255,23,68,0.2) 0%, rgba(255,59,79,0.1) 30%, transparent 60%);
   pointer-events: none;
   animation: pulse-bg 4s ease-in-out infinite;
 }
@@ -92,7 +92,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); line-he
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, rgba(0,255,136,0.2) 0%, rgba(0,212,255,0.2) 100%);
+  background: linear-gradient(135deg, rgba(255,23,68,0.2) 0%, rgba(255,59,79,0.2) 100%);
   border: 1px solid var(--green);
   padding: 10px 24px;
   border-radius: 30px;
@@ -104,8 +104,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); line-he
   animation: glow 2s infinite;
 }
 @keyframes glow {
-  0%, 100% { box-shadow: 0 0 5px rgba(0,255,136,0.3), 0 0 20px rgba(0,255,136,0.2); }
-  50% { box-shadow: 0 0 20px rgba(0,255,136,0.5), 0 0 40px rgba(0,255,136,0.3); }
+  0%, 100% { box-shadow: 0 0 5px rgba(255,23,68,0.3), 0 0 20px rgba(255,23,68,0.2); }
+  50% { box-shadow: 0 0 20px rgba(255,23,68,0.5), 0 0 40px rgba(255,23,68,0.3); }
 }
 .hero h1 {
   font-family: var(--mono);
@@ -153,11 +153,11 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); line-he
 .btn-primary {
   background: linear-gradient(135deg, var(--green) 0%, #00cc6a 100%);
   color: #000;
-  box-shadow: 0 6px 30px rgba(0,255,136,0.4);
+  box-shadow: 0 6px 30px rgba(255,23,68,0.4);
 }
 .btn-primary:hover {
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 12px 40px rgba(0,255,136,0.5);
+  box-shadow: 0 12px 40px rgba(255,23,68,0.5);
 }
 .btn-secondary {
   background: var(--card);
@@ -165,7 +165,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); line-he
   color: var(--cyan);
 }
 .btn-secondary:hover {
-  background: rgba(0,212,255,0.1);
+  background: rgba(255,59,79,0.1);
   transform: translateY(-4px);
 }
 
@@ -258,7 +258,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); line-he
 .feature-icon {
   width: 56px;
   height: 56px;
-  background: linear-gradient(135deg, rgba(0,212,255,0.15) 0%, rgba(0,255,136,0.1) 100%);
+  background: linear-gradient(135deg, rgba(255,59,79,0.15) 0%, rgba(255,23,68,0.1) 100%);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -282,7 +282,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); line-he
   display: inline-block;
   margin-top: 18px;
   padding: 6px 14px;
-  background: rgba(0,255,136,0.12);
+  background: rgba(255,23,68,0.12);
   border: 1px solid var(--green);
   border-radius: 20px;
   font-family: var(--mono);
@@ -441,7 +441,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); line-he
   margin-top: 4px;
 }
 .signal-box {
-  background: linear-gradient(135deg, rgba(0,255,136,0.15) 0%, rgba(0,255,136,0.05) 100%);
+  background: linear-gradient(135deg, rgba(255,23,68,0.15) 0%, rgba(255,23,68,0.05) 100%);
   border: 2px solid var(--green);
   border-radius: 14px;
   padding: 20px;
@@ -529,7 +529,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); line-he
 }
 .social-btn:hover {
   border-color: var(--cyan);
-  background: rgba(0,212,255,0.1);
+  background: rgba(255,59,79,0.1);
 }
 
 /* How It Works */
@@ -586,7 +586,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); line-he
   position: absolute;
   bottom: -100px; left: 50%; transform: translateX(-50%);
   width: 800px; height: 800px;
-  background: radial-gradient(circle, rgba(0,255,136,0.15) 0%, transparent 50%);
+  background: radial-gradient(circle, rgba(255,23,68,0.15) 0%, transparent 50%);
   pointer-events: none;
 }
 .cta-box {
@@ -597,7 +597,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); line-he
   border-radius: 30px;
   padding: 60px 50px;
   position: relative;
-  box-shadow: 0 0 60px rgba(0,255,136,0.2);
+  box-shadow: 0 0 60px rgba(255,23,68,0.2);
 }
 .cta-emoji {
   font-size: 60px;
@@ -672,8 +672,8 @@ footer {
 <!-- Navigation -->
 <nav class="nav">
   <a href="./index.html" class="nav-logo">
-    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="Logo">
-    <span>DEXSCREENER AI</span>
+    <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="Logo">
+    <span>$ByeBoss</span>
   </a>
   <div class="nav-links">
     <a href="./index.html">App</a>
@@ -718,7 +718,7 @@ footer {
     Powered by Claude AI — the same $500/month AI that hedge funds use. We made it free for you.
   </p>
   <div class="hero-cta">
-    <a href="https://t.me/dexscreenerDEXAI_Bot" target="_blank" class="btn btn-primary">
+    <a href="https://t.me/dexscreenerByeBoss_Bot" target="_blank" class="btn btn-primary">
       🤖 Open Bot — It's Free
     </a>
     <a href="https://t.me/dexscreeneraitoken" target="_blank" class="btn btn-secondary">
@@ -811,7 +811,7 @@ footer {
       <div class="demo-header">
         <div class="demo-avatar">🤖</div>
         <div class="demo-info">
-          <div class="demo-name">DexScreener AI Bot</div>
+          <div class="demo-name">$ByeBoss Bot</div>
           <div class="demo-status">Online — Ready to analyze</div>
         </div>
       </div>
@@ -936,7 +936,7 @@ footer {
       Every day, traders lose money on rugs and bad entries. Our AI helps you avoid the traps and find the gems. It's free. It's fast. It's waiting for you.
     </p>
     <div class="cta-buttons">
-      <a href="https://t.me/dexscreenerDEXAI_Bot" target="_blank" class="btn btn-primary">
+      <a href="https://t.me/dexscreenerByeBoss_Bot" target="_blank" class="btn btn-primary">
         🤖 Start Analyzing Now
       </a>
       <a href="https://t.me/dexscreeneraitoken" target="_blank" class="btn btn-secondary">
@@ -964,7 +964,7 @@ footer {
     <a href="https://t.me/dexscreeneraitoken" target="_blank">Telegram</a>
     <a href="https://x.com/dexscreenerai" target="_blank">Twitter</a>
   </div>
-  <p class="copyright">© 2026 DexScreener AI — Free Forever</p>
+  <p class="copyright">© 2026 $ByeBoss — Free Forever</p>
 </footer>
 
 </body>

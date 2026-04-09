@@ -4,8 +4,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Scene Remixer — DexScreener AI Studio</title>
-<link rel="icon" type="image/png" href="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png">
+<title>Scene Remixer — $ByeBoss Studio</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -35,8 +35,8 @@ button:hover { filter:brightness(1.1) !important; }
   font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
   letter-spacing: 0.5px; transition: color .15s;
 }
-.nav-link:hover { color: #00d4ff; }
-.nav-link.active { color: #00d4ff; }
+.nav-link:hover { color: #ff3b4f; }
+.nav-link.active { color: #ff3b4f; }
 .mobile-menu-btn {
   display: none; background: none; border: none; color: #dfe4ed;
   font-size: 24px; cursor: pointer; padding: 4px; margin-left: auto;
@@ -52,14 +52,14 @@ button:hover { filter:brightness(1.1) !important; }
   font-size: 12px; padding: 12px 16px; border-radius: 8px; transition: background 0.15s;
 }
 .mobile-menu a:hover { background: #101822; }
-.mobile-menu a.active { color: #00d4ff; background: rgba(0,212,255,0.12); }
+.mobile-menu a.active { color: #ff3b4f; background: rgba(255,59,79,0.12); }
 .nav-social-icons { display: none; align-items: center; gap: 12px; margin-left: auto; margin-right: 12px; }
 .nav-social-icons a {
   display: flex; align-items: center; justify-content: center;
   width: 36px; height: 36px; border-radius: 8px; background: #101822;
   color: rgba(255,255,255,0.50); transition: all 0.15s;
 }
-.nav-social-icons a:hover { background: rgba(0,212,255,0.12); color: #00d4ff; }
+.nav-social-icons a:hover { background: rgba(255,59,79,0.12); color: #ff3b4f; }
 .nav-social-icons svg { width: 18px; height: 18px; }
 @media (max-width: 900px) {
   .nav-links { display: none; }
@@ -73,8 +73,8 @@ button:hover { filter:brightness(1.1) !important; }
 <!-- NAVBAR -->
 <nav class="navbar">
   <a href="./index.html" class="nav-logo">
-    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="DexScreener AI">
-    <span>DEXSCREENER AI</span>
+    <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="$ByeBoss">
+    <span>$ByeBoss</span>
   </a>
   <div class="nav-links">
     <a href="./index.html" class="nav-link">App</a>
@@ -134,8 +134,8 @@ const STYLES = [
 const V = {
   bg:"#060a10", bg2:"#0b1018", bg3:"#101822",
   card:"#111a26", cb:"#1a2636",
-  cy:"#00d4ff", cd:"rgba(0,212,255,0.12)",
-  gr:"#00ff88", rd:"#ff3b4f", yl:"#ffaa00",
+  cy:"#ff3b4f", cd:"rgba(255,59,79,0.12)",
+  gr:"#ff1744", rd:"#ff3b4f", yl:"#ffaa00",
   t:"#dfe4ed", t2:"rgba(255,255,255,0.50)", t3:"rgba(255,255,255,0.22)",
   m:"'JetBrains Mono',monospace", s:"'DM Sans',sans-serif",
 };
@@ -173,18 +173,18 @@ function render(){
 
   document.getElementById('app').innerHTML = `
   <div style="min-height:100vh;background:${V.bg};color:${V.t};font-family:${V.s};-webkit-font-smoothing:antialiased;position:relative;overflow:hidden;">
-    <div style="position:fixed;top:-40%;left:50%;transform:translateX(-50%);width:120%;height:60%;background:radial-gradient(ellipse at center,rgba(0,212,255,0.04) 0%,transparent 70%);pointer-events:none;z-index:0;"></div>
+    <div style="position:fixed;top:-40%;left:50%;transform:translateX(-50%);width:120%;height:60%;background:radial-gradient(ellipse at center,rgba(255,59,79,0.04) 0%,transparent 70%);pointer-events:none;z-index:0;"></div>
     <div style="position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0 16px 80px;">
 
       <!-- HEADER -->
       <div style="padding:80px 0 20px;">
         <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:40px;height:40px;border-radius:10px;background:${V.cd};border:1px solid rgba(0,212,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <div style="width:40px;height:40px;border-radius:10px;background:${V.cd};border:1px solid rgba(255,59,79,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${V.cy}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           </div>
           <div>
             <div style="font-family:${V.m};font-size:18px;font-weight:700;color:#fff;letter-spacing:2px;">SCENE REMIXER</div>
-            <div style="font-family:${V.m};font-size:8px;letter-spacing:3px;color:${V.cy};margin-top:1px;font-weight:600;">DEXSCREENER AI STUDIO</div>
+            <div style="font-family:${V.m};font-size:8px;letter-spacing:3px;color:${V.cy};margin-top:1px;font-weight:600;">$ByeBoss STUDIO</div>
           </div>
         </div>
         <p style="color:${V.t2};font-size:12px;margin:12px 0 0;">Pick scenes · Upload your character · AI generates one image per scene</p>
@@ -236,7 +236,7 @@ function render(){
                 <img src="${url}" style="width:100%;height:100%;object-fit:cover;display:block;filter:${active?'brightness(0.85)':'brightness(0.5) saturate(0.4)'};transition:filter .25s;">
                 ${active?`
                   <div style="position:absolute;top:5px;right:5px;background:${V.cy};border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px ${V.cy};font-family:${V.m};font-size:10px;font-weight:700;color:#000;">${idx+1}</div>
-                  <div style="position:absolute;top:0;left:0;right:0;height:30%;background:linear-gradient(180deg,rgba(0,212,255,0.08),transparent);animation:scanline 2.5s ease-in-out infinite;pointer-events:none;"></div>
+                  <div style="position:absolute;top:0;left:0;right:0;height:30%;background:linear-gradient(180deg,rgba(255,59,79,0.08),transparent);animation:scanline 2.5s ease-in-out infinite;pointer-events:none;"></div>
                 `:''}
                 ${isCustom?`<button onclick="removeScene(event,${i})" style="position:absolute;top:5px;left:5px;width:18px;height:18px;border-radius:50%;background:${V.rd};border:1px solid ${V.bg};color:#fff;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:${V.m};font-weight:700;z-index:2;">✕</button>`:''}
               </div>`;
@@ -262,7 +262,7 @@ function render(){
         </div>
 
         <!-- ═══ GENERATE ═══ -->
-        <button onclick="generate()" ${loading||!ready?'disabled':''} style="width:100%;padding:16px;border:none;border-radius:8px;background:linear-gradient(135deg,${V.cy},#0090b3);color:#000;font-size:13px;font-weight:700;letter-spacing:3px;cursor:${loading?'wait':!ready?'not-allowed':'pointer'};font-family:${V.m};box-shadow:0 4px 24px rgba(0,212,255,0.2);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;opacity:${!ready?'0.35':'1'};">
+        <button onclick="generate()" ${loading||!ready?'disabled':''} style="width:100%;padding:16px;border:none;border-radius:8px;background:linear-gradient(135deg,${V.cy},#0090b3);color:#000;font-size:13px;font-weight:700;letter-spacing:3px;cursor:${loading?'wait':!ready?'not-allowed':'pointer'};font-family:${V.m};box-shadow:0 4px 24px rgba(255,59,79,0.2);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;opacity:${!ready?'0.35':'1'};">
           ${loading?`
             <span style="display:flex;align-items:center;justify-content:center;gap:10px;">
               <span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,0.3);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite;"></span>
@@ -292,7 +292,7 @@ function render(){
               </div>
               <img src="${r.img}" style="width:100%;border-radius:6px;display:block;border:1px solid ${V.cb};">
               <div style="display:flex;gap:8px;margin-top:10px;">
-                <button onclick="downloadOne(${ri})" style="flex:1;padding:10px;background:${V.cd};color:${V.cy};border:1px solid rgba(0,212,255,0.25);border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;font-family:${V.m};letter-spacing:1px;display:flex;align-items:center;justify-content:center;gap:6px;">
+                <button onclick="downloadOne(${ri})" style="flex:1;padding:10px;background:${V.cd};color:${V.cy};border:1px solid rgba(255,59,79,0.25);border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;font-family:${V.m};letter-spacing:1px;display:flex;align-items:center;justify-content:center;gap:6px;">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>DOWNLOAD
                 </button>
               </div>
@@ -311,7 +311,7 @@ function render(){
       </div>
 
       <div style="text-align:center;padding:32px 0 16px;border-top:1px solid ${V.cb};margin-top:32px;">
-        <span style="font-family:${V.m};font-size:9px;color:${V.t3};letter-spacing:2px;">POWERED BY DEXSCREENER AI × CLAUDE × FLUX</span>
+        <span style="font-family:${V.m};font-size:9px;color:${V.t3};letter-spacing:2px;">POWERED BY $ByeBoss × CLAUDE × FLUX</span>
       </div>
     </div>
   </div>`;

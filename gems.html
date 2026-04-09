@@ -4,8 +4,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GEM DETECTOR — DexScreener AI</title>
-<link rel="icon" type="image/png" href="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png">
+<title>GEM DETECTOR — $ByeBoss</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -36,12 +36,12 @@ border-bottom:1px solid #1a2636;backdrop-filter:blur(10px);
 .nav-logo span{font-family:‘JetBrains Mono’,monospace;font-weight:700;font-size:13px;letter-spacing:1px;}
 .nav-links{display:flex;gap:24px;}
 .nav-links a{font-family:’JetBrains Mono’,monospace;font-size:11px;font-weight:500;color:rgba(255,255,255,0.5);text-decoration:none;letter-spacing:.5px;}
-.nav-links a:hover,.nav-links a.on,.nav-links a.active{color:#00d4ff;}
+.nav-links a:hover,.nav-links a.on,.nav-links a.active{color:#ff3b4f;}
 .nav-ham{display:none;background:#111a26;border:1px solid #1a2636;color:#fff;font-size:18px;padding:6px 10px;border-radius:6px;cursor:pointer;}
 .mob-menu{display:none;position:fixed;top:53px;left:0;right:0;background:#060a10;border-bottom:1px solid #1a2636;flex-direction:column;padding:12px;z-index:99;}
 .mob-menu.open{display:flex;}
 .mob-menu a{padding:12px 16px;color:#dfe4ed;text-decoration:none;font-family:‘JetBrains Mono’,monospace;font-size:12px;border-radius:8px;}
-.mob-menu a:hover{background:#111a26;color:#00d4ff;}
+.mob-menu a:hover{background:#111a26;color:#ff3b4f;}
 @media(max-width:900px){.nav-links{display:none;}.nav-ham{display:block;}}
 </style>
 
@@ -52,8 +52,8 @@ border-bottom:1px solid #1a2636;backdrop-filter:blur(10px);
 
 <nav class="nav">
   <a href="./index.html" class="nav-logo">
-    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="">
-    <span>DEXSCREENER AI</span>
+    <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="">
+    <span>$ByeBoss</span>
   </a>
   <div class="nav-links">
     <a href="./index.html">App</a>
@@ -71,7 +71,7 @@ border-bottom:1px solid #1a2636;backdrop-filter:blur(10px);
 </nav>
 <div class="mob-menu" id="mob">
   <a href="./index.html">App</a>
-  <a href="./gems.html" class="active" style="color:#00d4ff">Gems</a>
+  <a href="./gems.html" class="active" style="color:#ff3b4f">Gems</a>
   <a href="./sniper_terminal.html">Sniper</a>
   <a href="./og-detector.html">OG Detector</a>
   <a href="./telegram-bot.html">Telegram Bot</a>
@@ -97,8 +97,8 @@ const ts=()=>new Date().toLocaleTimeString('en-US',{hour12:false});
 const C={
   bg:'#060a10',bg2:'#0b1018',bg3:'#101822',
   card:'#111a26',cb:'#1a2636',
-  cy:'#00d4ff',cd:'rgba(0,212,255,0.12)',
-  gr:'#00ff88',gd:'rgba(0,255,136,0.1)',
+  cy:'#ff3b4f',cd:'rgba(255,59,79,0.12)',
+  gr:'#ff1744',gd:'rgba(255,23,68,0.1)',
   rd:'#ff3b4f',yl:'#ffaa00',pu:'#a855f7',go:'#ffd700',
   t:'#dfe4ed',t2:'rgba(255,255,255,0.5)',t3:'rgba(255,255,255,0.22)',
   m:"'JetBrains Mono',monospace",s:"'DM Sans',sans-serif"
@@ -134,16 +134,16 @@ function render(){
 
   $('app').innerHTML=`
   <div style="min-height:100vh;background:${C.bg};color:${C.t};font-family:${C.s};position:relative;">
-    <div style="position:fixed;top:-40%;left:50%;transform:translateX(-50%);width:120%;height:60%;background:radial-gradient(ellipse at center,rgba(0,212,255,0.04) 0%,transparent 70%);pointer-events:none;z-index:0;"></div>
+    <div style="position:fixed;top:-40%;left:50%;transform:translateX(-50%);width:120%;height:60%;background:radial-gradient(ellipse at center,rgba(255,59,79,0.04) 0%,transparent 70%);pointer-events:none;z-index:0;"></div>
     <div style="position:relative;z-index:1;max-width:520px;margin:0 auto;padding:0 16px 60px;padding-top:64px;">
 
       <!-- HEADER -->
       <div style="padding:20px 0 16px;">
         <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:40px;height:40px;border-radius:10px;background:${C.cd};border:1px solid rgba(0,212,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">💎</div>
+          <div style="width:40px;height:40px;border-radius:10px;background:${C.cd};border:1px solid rgba(255,59,79,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">💎</div>
           <div>
             <div style="font-family:${C.m};font-size:18px;font-weight:700;color:#fff;letter-spacing:2px;">GEM DETECTOR</div>
-            <div style="font-family:${C.m};font-size:8px;letter-spacing:3px;color:${C.cy};margin-top:1px;font-weight:600;">DEXSCREENER AI STUDIO</div>
+            <div style="font-family:${C.m};font-size:8px;letter-spacing:3px;color:${C.cy};margin-top:1px;font-weight:600;">$ByeBoss STUDIO</div>
           </div>
         </div>
         <p style="color:${C.t2};font-size:12px;margin:12px 0 0;">Auto-scanning 12+ sources · Top 10 gems · Scores update live</p>
@@ -188,7 +188,7 @@ function render(){
 
       <!-- FOOTER -->
       <div style="text-align:center;padding:28px 0 12px;border-top:1px solid ${C.cb};margin-top:24px;">
-        <span style="font-family:${C.m};font-size:9px;color:${C.t3};letter-spacing:2px;">POWERED BY DEXSCREENER AI × RUGCHECK</span>
+        <span style="font-family:${C.m};font-size:9px;color:${C.t3};letter-spacing:2px;">POWERED BY $ByeBoss × RUGCHECK</span>
         <p style="font-size:9px;color:${C.t3};margin-top:6px;">⚠️ DYOR — Not financial advice. Always verify on-chain data.</p>
       </div>
 
@@ -246,7 +246,7 @@ function renderGemCard(g,i){
         <a href="${g.website||'#'}" target="_blank" style="width:24px;height:24px;border-radius:4px;background:${C.bg};border:1px solid ${C.cb};display:flex;align-items:center;justify-content:center;color:${g.website?C.t2:C.t3};text-decoration:none;font-size:10px;${g.website?'':'opacity:.3;pointer-events:none;'}">🌐</a>
       </div>
       <div style="display:flex;gap:4px;">
-        <button onclick="window.open('https://dexscreener.com/${g.chain}/${g.pairAddress}','_blank')" style="padding:6px 10px;border-radius:5px;font-family:${C.m};font-size:9px;font-weight:700;background:${C.cd};color:${C.cy};border:1px solid rgba(0,212,255,0.25);cursor:pointer;letter-spacing:.5px;">📊 DEX</button>
+        <button onclick="window.open('https://dexscreener.com/${g.chain}/${g.pairAddress}','_blank')" style="padding:6px 10px;border-radius:5px;font-family:${C.m};font-size:9px;font-weight:700;background:${C.cd};color:${C.cy};border:1px solid rgba(255,59,79,0.25);cursor:pointer;letter-spacing:.5px;">📊 DEX</button>
         <button onclick="window.open('index.html?ca=${g.address}&action=analyze','_blank')" style="padding:6px 10px;border-radius:5px;font-family:${C.m};font-size:9px;font-weight:700;background:linear-gradient(135deg,${C.go},${C.yl});color:#000;border:none;cursor:pointer;letter-spacing:.5px;">🏠 APP</button>
       </div>
     </div>

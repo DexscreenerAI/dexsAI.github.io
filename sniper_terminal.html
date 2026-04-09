@@ -1891,8 +1891,8 @@ body::before {
      ═══════════════════════════════════════════════════════ -->
 <nav class="navbar">
   <a href="./index.html" class="nav-logo">
-    <img src="https://i.ibb.co/DH9f2N8X/97069894-3988-4278-bb76-85e863640cfe.png" alt="Logo">
-    <span>DEXSCREENER AI</span>
+    <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="Logo">
+    <span>$ByeBoss</span>
   </a>
   <div class="nav-links">
     <a href="./index.html" class="nav-link">App</a>
@@ -1941,7 +1941,7 @@ body::before {
   
   <div class="status-badges">
     <span class="status-badge stopped" id="modeBadge">STOPPED</span>
-    <a href="./sniper-access.html" style="text-decoration:none;padding:5px 14px;font-size:10px;font-weight:600;letter-spacing:1px;border:1px solid var(--cyan);border-radius:4px;color:var(--cyan);background:rgba(0,212,255,0.08);cursor:pointer;transition:all .15s;font-family:'JetBrains Mono',monospace;" onmouseover="this.style.background='rgba(0,212,255,0.2)'" onmouseout="this.style.background='rgba(0,212,255,0.08)'">🤖 ACCESS THE BOT</a>
+    <a href="./sniper-access.html" style="text-decoration:none;padding:5px 14px;font-size:10px;font-weight:600;letter-spacing:1px;border:1px solid var(--cyan);border-radius:4px;color:var(--cyan);background:rgba(255,59,79,0.08);cursor:pointer;transition:all .15s;font-family:'JetBrains Mono',monospace;" onmouseover="this.style.background='rgba(255,59,79,0.2)'" onmouseout="this.style.background='rgba(255,59,79,0.08)'">🤖 ACCESS THE BOT</a>
   </div>
 </div>
 
@@ -1957,8 +1957,8 @@ body::before {
     <button class="ctrl-btn" id="cacheBtn">↻ CACHE</button>
     <button class="ctrl-btn" id="exportBtn">↑ EXPORT</button>
     <button class="ctrl-btn warning" id="closeAllBtn">⚠ CLOSE ALL</button>
-    <span id="scanCounter" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#00d4ff;letter-spacing:1px;padding:8px 14px;border:1px solid rgba(0,212,255,0.2);border-radius:8px;background:rgba(0,212,255,0.06)">SCAN: 0</span>
-    <span id="pnlBig" style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:800;color:#00ff88;letter-spacing:1px;padding:8px 16px;border:1px solid rgba(0,255,136,0.25);border-radius:8px;background:rgba(0,255,136,0.06)">P&L: $0</span>
+    <span id="scanCounter" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#ff3b4f;letter-spacing:1px;padding:8px 14px;border:1px solid rgba(255,59,79,0.2);border-radius:8px;background:rgba(255,59,79,0.06)">SCAN: 0</span>
+    <span id="pnlBig" style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:800;color:#ff1744;letter-spacing:1px;padding:8px 16px;border:1px solid rgba(255,23,68,0.25);border-radius:8px;background:rgba(255,23,68,0.06)">P&L: $0</span>
     <span id="uptimeBig" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#b388ff;letter-spacing:1px;padding:8px 14px;border:1px solid rgba(179,136,255,0.25);border-radius:8px;background:rgba(179,136,255,0.06)">UPTIME: --</span>
   </div>
   
@@ -1995,7 +1995,7 @@ body::before {
     </div>
     <div class="panel-content" id="positionsContainer" style="display:flex;gap:12px;">
       <div style="flex:1;min-width:0;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#00ff88;letter-spacing:1px;padding:6px 0;border-bottom:1px solid rgba(0,255,136,0.2);margin-bottom:8px;">▲ WINNING <span id="winCount" style="opacity:0.6">0</span></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#ff1744;letter-spacing:1px;padding:6px 0;border-bottom:1px solid rgba(255,23,68,0.2);margin-bottom:8px;">▲ WINNING <span id="winCount" style="opacity:0.6">0</span></div>
         <div id="winningGrid">
           <div class="empty"><div class="empty-icon">📈</div><div class="empty-text">No winners</div></div>
         </div>
@@ -2352,9 +2352,9 @@ async function pollServerStatus() {
     if ($('pnlBig')) {
       const pnl = state.totalPnL || 0;
       $('pnlBig').textContent = 'P&L: ' + (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(0);
-      $('pnlBig').style.color = pnl >= 0 ? '#00ff88' : '#ff3b4f';
-      $('pnlBig').style.borderColor = pnl >= 0 ? 'rgba(0,255,136,0.25)' : 'rgba(255,59,79,0.25)';
-      $('pnlBig').style.background = pnl >= 0 ? 'rgba(0,255,136,0.06)' : 'rgba(255,59,79,0.06)';
+      $('pnlBig').style.color = pnl >= 0 ? '#ff1744' : '#ff3b4f';
+      $('pnlBig').style.borderColor = pnl >= 0 ? 'rgba(255,23,68,0.25)' : 'rgba(255,59,79,0.25)';
+      $('pnlBig').style.background = pnl >= 0 ? 'rgba(255,23,68,0.06)' : 'rgba(255,59,79,0.06)';
     }
     if ($('uptimeBig')) $('uptimeBig').textContent = 'UPTIME: ' + (state.uptime || '--');
 
@@ -3732,7 +3732,7 @@ function renderScanner(opportunities) {
       <div class="scanner-row">
         <span class="scanner-token">
           <div class="scanner-logo">${renderLogo(logoUrl, symbol)}</div>
-          <a href="${dexUrl}" target="_blank" class="scanner-token-link" title="Open on DexScreener">↗</a>
+          <a href="${dexUrl}" target="_blank" class="scanner-token-link" title="Open on $ByeBoss">↗</a>
           $${esc(symbol)}
           <span style="font-size:8px;color:var(--text-muted);font-weight:400">${chain}</span>
         </span>
@@ -3849,8 +3849,8 @@ function renderCard(pos) {
 
     let tags = '';
     if (pos.isMoonBag) tags += '<span class="pos-tag" style="background:rgba(179,136,255,0.2);color:#b388ff">🌕 MOON BAG ∞</span>';
-    if ((pos.tpLevel || 0) > 0) tags += '<span class="pos-tag" style="background:rgba(0,255,136,0.15);color:#00ff88">TP' + pos.tpLevel + '</span>';
-    if ((pos.totalDcaAdded || 0) > 0) tags += '<span class="pos-tag" style="background:rgba(0,212,255,0.15);color:#00d4ff">DCA +$' + pos.totalDcaAdded.toFixed(0) + '</span>';
+    if ((pos.tpLevel || 0) > 0) tags += '<span class="pos-tag" style="background:rgba(255,23,68,0.15);color:#ff1744">TP' + pos.tpLevel + '</span>';
+    if ((pos.totalDcaAdded || 0) > 0) tags += '<span class="pos-tag" style="background:rgba(255,59,79,0.15);color:#ff3b4f">DCA +$' + pos.totalDcaAdded.toFixed(0) + '</span>';
     if (pos.trailingActivated) tags += '<span class="pos-tag trailing">📈 ' + trailingHigh.toFixed(0) + '%</span>';
     if (dcaSecured > 0) tags += '<span class="pos-tag secured">🔒 +$' + dcaSecured.toFixed(0) + '</span>';
 
@@ -3884,8 +3884,8 @@ function renderCard(pos) {
         ${pos.isMoonBag
           ? '<button onclick="sellMoon(' + (pos.id||0) + ')" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid #b388ff;background:rgba(179,136,255,0.08);color:#b388ff;cursor:pointer;transition:all .15s">SELL MOON</button>'
           : '<button onclick="closePos(' + (pos.id||0) + ')" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--red);background:rgba(255,59,79,0.08);color:var(--red);cursor:pointer;transition:all .15s">CLOSE</button>' +
-            '<button onclick="extendPos(' + (pos.id||0) + ')" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--cyan);background:rgba(0,212,255,0.08);color:var(--cyan);cursor:pointer;transition:all .15s">+15min</button>'}
-        <a href="${pos.dexUrl || '#'}" target="_blank" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--green);background:rgba(0,255,136,0.08);color:var(--green);cursor:pointer;text-decoration:none;text-align:center;transition:all .15s">DEX</a>
+            '<button onclick="extendPos(' + (pos.id||0) + ')" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--cyan);background:rgba(255,59,79,0.08);color:var(--cyan);cursor:pointer;transition:all .15s">+15min</button>'}
+        <a href="${pos.dexUrl || '#'}" target="_blank" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--green);background:rgba(255,23,68,0.08);color:var(--green);cursor:pointer;text-decoration:none;text-align:center;transition:all .15s">DEX</a>
         <a href="/?ca=${pos.address||''}" target="_blank" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--yellow);background:rgba(255,170,0,0.08);color:var(--yellow);cursor:pointer;text-decoration:none;text-align:center;transition:all .15s">ANALYZE</a>
       </div>
     </div>`;
@@ -3906,8 +3906,8 @@ function renderWatchlist() {
     const ageStr = age >= 1440 ? Math.floor(age/1440) + 'd' : age >= 60 ? Math.floor(age/60) + 'h' : age + 'm';
     const dexLink = 'https://dexscreener.com/solana/' + (w.address||'');
     html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer" onclick="window.open(\'' + dexLink + '\',\'_blank\')">';
-    html += '<td style="padding:5px 6px;color:#00d4ff;font-weight:600">$' + esc(w.symbol||'???') + '</td>';
-    html += '<td style="text-align:center;color:#00ff88">' + (w.score||0) + '</td>';
+    html += '<td style="padding:5px 6px;color:#ff3b4f;font-weight:600">$' + esc(w.symbol||'???') + '</td>';
+    html += '<td style="text-align:center;color:#ff1744">' + (w.score||0) + '</td>';
     html += '<td style="text-align:center;color:rgba(255,255,255,0.5)">' + (w.rechecks||0) + '</td>';
     html += '<td style="text-align:center;color:rgba(255,255,255,0.35)">' + ageStr + '</td>';
     html += '</tr>';
@@ -4194,7 +4194,7 @@ serverPollInterval = setInterval(pollServerStatus, 5000);
 const bootSequence = [
   { delay: 0, icon: '⚡', text: '<span class="cyan">INITIALIZING TERMINAL...</span>' },
   { delay: 200, icon: '🌐', text: '<span class="text-dim">Connecting to server...</span>' },
-  { delay: 600, icon: '📡', text: '<span class="text-dim">DexScreener AI Backend...</span> <span class="green">OK</span>' },
+  { delay: 600, icon: '📡', text: '<span class="text-dim">$ByeBoss Backend...</span> <span class="green">OK</span>' },
   { delay: 1000, icon: '🛡️', text: '<span class="text-dim">Anti-rug + Smart Entry...</span> <span class="green">ACTIVE</span>' },
   { delay: 1400, icon: '💻', text: '<span class="green glitch">SNIPER//TERMINAL</span> v3.0 - SERVER MODE' },
   { delay: 1600, icon: '🚀', text: '<span class="cyan">Live data.</span> All users see the same trades.' },
