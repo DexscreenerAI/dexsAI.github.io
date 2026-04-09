@@ -139,6 +139,23 @@
     .analysis-text{background:var(--bg);border-radius:8px;padding:12px;margin-bottom:14px}
     .analysis-text p{font-size:13px;line-height:1.6;color:var(--text)}
     .disclaimer{font-size:10px;color:rgba(255,170,0,0.5);text-align:center;padding:10px;background:rgba(255,170,0,0.05);border-radius:6px;border:1px solid rgba(255,170,0,0.1)}
+    .trending-card{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s}
+    .trending-card:hover{border-color:var(--cyan);transform:translateY(-2px)}
+    .trending-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .trending-card-icon{width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:16px}
+    .trending-card-icon img{width:100%;height:100%;object-fit:cover}
+    .trending-card-name{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan)}
+    .trending-card-chain{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase}
+    .trending-card-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+    .trending-card-stat{background:var(--bg);border-radius:6px;padding:6px;text-align:center}
+    .trending-card-stat-val{font-family:var(--mono);font-size:12px;font-weight:700}
+    .trending-card-stat-lbl{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.5px}
+    .history-item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:12px 16px;cursor:pointer;transition:all .2s}
+    .history-item:hover{border-color:var(--cyan)}
+    .history-signal{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px}
+    .history-signal.buy{background:rgba(255,23,68,0.15);color:var(--green)}
+    .history-signal.sell{background:rgba(255,59,79,0.15);color:var(--red)}
+    .history-signal.hold{background:rgba(255,170,0,0.15);color:var(--yellow)}
     #file-input{display:none}
     .hidden{display:none!important}
     ::-webkit-scrollbar{width:4px}
@@ -194,9 +211,29 @@
       <div class="mode-tabs">
         <button class="mode-tab active" id="tabSearch" onclick="setMode('search')">🔎 Search Token</button>
         <button class="mode-tab" id="tabUpload" onclick="setMode('upload')">📷 Upload Chart</button>
+        <button class="mode-tab" id="tabTrending" onclick="setMode('trending')">🔥 Trending</button>
+        <button class="mode-tab" id="tabHistory" onclick="setMode('history')">📜 History</button>
       </div>
     </div>
   </section>
+
+  <!-- Trending Section -->
+  <div class="trending-section hidden" id="trendingSection">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:0 24px">
+      <span style="font-family:var(--mono);font-size:14px;font-weight:700;color:#fff">🔥 TRENDING NOW</span>
+      <button onclick="loadTrending()" style="background:none;border:1px solid var(--card-border);color:var(--text2);font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:6px;cursor:pointer">↻ Refresh</button>
+    </div>
+    <div id="trendingGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;padding:0 24px"></div>
+  </div>
+
+  <!-- History Section -->
+  <div class="history-section hidden" id="historySection">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:0 24px">
+      <span style="font-family:var(--mono);font-size:14px;font-weight:700;color:#fff">📜 ANALYSIS HISTORY</span>
+      <button onclick="clearHistory()" style="background:none;border:1px solid var(--card-border);color:var(--red);font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:6px;cursor:pointer">Clear All</button>
+    </div>
+    <div id="historyList" style="display:flex;flex-direction:column;gap:8px;padding:0 24px"></div>
+  </div>
 
   <input type="file" id="file-input" accept="image/*">
 
@@ -244,6 +281,7 @@
 const API_PROXY_URL = 'https://dexscreener-telegram-bot-production.up.railway.app/api/analyze-chart';
 
 let currentMode = 'search', currentToken = null, isAnalyzing = false, searchTimeout = null;
+const analysisHistory = JSON.parse(localStorage.getItem('shazam_history') || '[]');
 const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
 const uploadZone = document.getElementById('uploadZone');
@@ -253,10 +291,86 @@ const fileInput = document.getElementById('file-input');
 function setMode(mode) {
   currentMode = mode;
   document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(mode === 'search' ? 'tabSearch' : 'tabUpload').classList.add('active');
-  if (mode === 'upload') { uploadZone.classList.remove('hidden'); chartContainer.classList.remove('active'); searchResults.classList.remove('active'); }
-  else { uploadZone.classList.add('hidden'); if (currentToken) chartContainer.classList.add('active'); }
+  const tabMap = {search:'tabSearch',upload:'tabUpload',trending:'tabTrending',history:'tabHistory'};
+  document.getElementById(tabMap[mode])?.classList.add('active');
+  // Hide all sections
+  uploadZone.classList.add('hidden');
+  document.getElementById('trendingSection').classList.add('hidden');
+  document.getElementById('historySection').classList.add('hidden');
+  chartContainer.classList.remove('active');
+  searchResults.classList.remove('active');
+  // Show relevant section
+  if (mode === 'upload') uploadZone.classList.remove('hidden');
+  else if (mode === 'search' && currentToken) chartContainer.classList.add('active');
+  else if (mode === 'trending') { document.getElementById('trendingSection').classList.remove('hidden'); loadTrending(); }
+  else if (mode === 'history') { document.getElementById('historySection').classList.remove('hidden'); renderHistory(); }
 }
+
+async function loadTrending() {
+  const grid = document.getElementById('trendingGrid');
+  grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-family:var(--mono);font-size:12px">Loading trending tokens...</div>';
+  try {
+    const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1');
+    const data = await res.json();
+    const tokens = (Array.isArray(data) ? data : []).filter(t => t.chainId === 'solana' || t.chainId === 'ethereum').slice(0, 12);
+    if (!tokens.length) { grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">No trending tokens</div>'; return; }
+    // Fetch pair data for each token
+    const pairPromises = tokens.map(t => fetch(`https://api.dexscreener.com/latest/dex/tokens/${t.tokenAddress}`).then(r=>r.json()).catch(()=>null));
+    const pairResults = await Promise.all(pairPromises);
+    let html = '';
+    pairResults.forEach((d, i) => {
+      if (!d?.pairs?.length) return;
+      const p = d.pairs[0];
+      const sym = p.baseToken?.symbol || '???';
+      const chain = p.chainId || '?';
+      const price = parseFloat(p.priceUsd) || 0;
+      const mc = parseFloat(p.marketCap) || 0;
+      const chg24 = parseFloat(p.priceChange?.h24) || 0;
+      const vol = parseFloat(p.volume?.h24) || 0;
+      const logo = p.info?.imageUrl || '';
+      const chgColor = chg24 >= 0 ? 'var(--green)' : 'var(--red)';
+      const chgSign = chg24 >= 0 ? '+' : '';
+      const tokenData = JSON.stringify({symbol:sym,name:p.baseToken?.name||sym,chain,price,change:chg24,logo,pairAddress:p.pairAddress,mc,liq:parseFloat(p.liquidity?.usd)||0,vol,chg5m:parseFloat(p.priceChange?.m5)||0,chg1h:parseFloat(p.priceChange?.h1)||0,chg6h:parseFloat(p.priceChange?.h6)||0,buys5m:p.txns?.m5?.buys||0,sells5m:p.txns?.m5?.sells||0,buys1h:p.txns?.h1?.buys||0,sells1h:p.txns?.h1?.sells||0,twitter:(p.info?.socials||[]).find(s=>(s.type||'').match(/twitter/i))?.url||'',telegram:(p.info?.socials||[]).find(s=>(s.type||'').match(/telegram/i))?.url||'',website:(p.info?.websites||[])[0]?.url||'',dexUrl:p.url||'',address:p.baseToken?.address||''}).replace(/'/g,"&#39;");
+      html += `<div class="trending-card" onclick='selectToken(${tokenData});setMode("search")'>
+        <div class="trending-card-head">
+          <div class="trending-card-icon">${logo?`<img src="${logo}" onerror="this.parentElement.innerHTML='🪙'">`:'🪙'}</div>
+          <div><div class="trending-card-name">$${sym}</div><div class="trending-card-chain">${chain}</div></div>
+          <div style="margin-left:auto;font-family:var(--mono);font-size:13px;font-weight:700;color:${chgColor}">${chgSign}${chg24.toFixed(1)}%</div>
+        </div>
+        <div class="trending-card-stats">
+          <div class="trending-card-stat"><div class="trending-card-stat-val" style="color:#fff">$${formatPrice(price)}</div><div class="trending-card-stat-lbl">PRICE</div></div>
+          <div class="trending-card-stat"><div class="trending-card-stat-val" style="color:var(--cyan)">${mc>=1e6?(mc/1e6).toFixed(1)+'M':mc>=1e3?(mc/1e3).toFixed(0)+'K':mc.toFixed(0)}</div><div class="trending-card-stat-lbl">MC</div></div>
+          <div class="trending-card-stat"><div class="trending-card-stat-val" style="color:var(--yellow)">${vol>=1e6?(vol/1e6).toFixed(1)+'M':vol>=1e3?(vol/1e3).toFixed(0)+'K':vol.toFixed(0)}</div><div class="trending-card-stat-lbl">VOL 24H</div></div>
+        </div>
+      </div>`;
+    });
+    grid.innerHTML = html || '<div style="text-align:center;padding:40px;color:var(--text3)">No data</div>';
+  } catch { grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Failed to load trending</div>'; }
+}
+
+function saveToHistory(token, analysis) {
+  const entry = { token: token.symbol, chain: token.chain, signal: analysis.signal || 'HOLD', trend: analysis.trend || 'NEUTRAL', confidence: analysis.confidence || 0, target: analysis.target || '-', time: Date.now(), tokenData: token };
+  analysisHistory.unshift(entry);
+  if (analysisHistory.length > 50) analysisHistory.pop();
+  localStorage.setItem('shazam_history', JSON.stringify(analysisHistory));
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!analysisHistory.length) { list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-family:var(--mono);font-size:12px">No analyses yet</div>'; return; }
+  list.innerHTML = analysisHistory.map(h => {
+    const ago = Math.floor((Date.now() - h.time) / 60000);
+    const timeStr = ago < 60 ? `${ago}m ago` : ago < 1440 ? `${Math.floor(ago/60)}h ago` : `${Math.floor(ago/1440)}d ago`;
+    const sigClass = (h.signal||'hold').toLowerCase();
+    return `<div class="history-item" onclick='selectToken(${JSON.stringify(h.tokenData).replace(/'/g,"&#39;")});setMode("search")'>
+      <span class="history-signal ${sigClass}">${h.signal}</span>
+      <div style="flex:1"><div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--cyan)">$${h.token}</div><div style="font-family:var(--mono);font-size:10px;color:var(--text3)">${h.chain} · ${h.trend} · ${h.confidence}%</div></div>
+      <div style="text-align:right"><div style="font-family:var(--mono);font-size:11px;color:var(--text2)">🎯 ${h.target}</div><div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${timeStr}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function clearHistory() { analysisHistory.length = 0; localStorage.removeItem('shazam_history'); renderHistory(); }
 
 searchInput.addEventListener('input', e => {
   const query = e.target.value.trim();
@@ -410,6 +524,8 @@ function displayAnalysis(a) {
   if (a.indicators?.length) html += `<div class="tags-section"><div class="tags-label">INDICATORS</div><div class="tags-container">${a.indicators.map(i => `<span class="tag tag-indicator">${i}</span>`).join('')}</div></div>`;
   html += `<div class="analysis-text"><div class="tags-label">ANALYSIS</div><p>${a.analysis || '-'}</p></div><div class="disclaimer">⚠️ AI analysis for educational purposes only. Not financial advice. DYOR.</div>`;
   document.getElementById('analysisContent').innerHTML = html;
+  // Save to history
+  if (currentToken && !a.error) saveToHistory(currentToken, a);
 }
 
 // Upload Mode
