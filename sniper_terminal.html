@@ -2814,7 +2814,7 @@ async function askAI(prompt) {
       signal: AbortSignal.timeout(15000)
     });
     const data = await res.json();
-    return data.response || data.message || '';
+    return data.answer || data.response || data.message || '';
   } catch (e) { return ''; }
 }
 
