@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>$ByeBoss — AI Sniper Results</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;overflow-x:hidden;min-height:100vh}
+:root{--red:#ff3b4f;--red2:#ff1744;--dark-red:#cc0033;--bg:#060a10;--bg2:#0b1018;--card:#111a26;--border:#1a2636;--text:#dfe4ed;--text2:rgba(255,255,255,0.5);--text3:rgba(255,255,255,0.25);--yellow:#ffaa00;--green:#00ff88;--mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif}
+
+.container{max-width:800px;margin:0 auto;padding:40px 20px 60px}
+
+/* Header */
+.header{text-align:center;margin-bottom:50px;position:relative}
+.header::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(255,59,79,0.12) 0%,rgba(255,23,68,0.05) 40%,transparent 70%);pointer-events:none}
+.logo{width:80px;height:80px;border-radius:20px;margin-bottom:16px;position:relative;z-index:1}
+.brand{font-family:var(--mono);font-size:36px;font-weight:900;color:#fff;letter-spacing:2px;position:relative;z-index:1}
+.brand span{color:var(--red)}
+.tagline{font-family:var(--mono);font-size:13px;color:var(--red);letter-spacing:3px;margin-top:6px;text-transform:uppercase}
+.subtitle{font-family:var(--mono);font-size:14px;color:var(--text2);margin-top:20px;line-height:1.6}
+.live-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:rgba(255,59,79,0.1);border:1px solid rgba(255,59,79,0.3);border-radius:20px;font-family:var(--mono);font-size:11px;color:var(--red);font-weight:700;letter-spacing:1px;margin-top:16px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,59,79,0.5)}50%{opacity:.6;box-shadow:0 0 0 8px rgba(255,59,79,0)}}
+
+/* Stats Grid */
+.stats-title{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:3px;text-transform:uppercase;text-align:center;margin-bottom:16px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:40px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 14px;text-align:center}
+.stat-value{font-family:var(--mono);font-size:24px;font-weight:800;margin-bottom:4px}
+.stat-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase}
+.stat-highlight{border-color:rgba(255,59,79,0.3);background:linear-gradient(135deg,rgba(255,59,79,0.08),rgba(255,23,68,0.04))}
+.stat-highlight .stat-value{color:var(--red)}
+
+/* Agents Section */
+.section-title{font-family:var(--mono);font-size:18px;font-weight:800;color:#fff;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.agents{display:flex;flex-direction:column;gap:12px;margin-bottom:40px}
+.agent{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;gap:16px;align-items:flex-start;transition:all .2s}
+.agent:hover{border-color:var(--red);transform:translateX(4px)}
+.agent-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.agent-scout .agent-icon{background:rgba(255,170,0,0.12);border:1px solid rgba(255,170,0,0.2)}
+.agent-security .agent-icon{background:rgba(255,59,79,0.12);border:1px solid rgba(255,59,79,0.2)}
+.agent-exit .agent-icon{background:rgba(179,136,255,0.12);border:1px solid rgba(179,136,255,0.2)}
+.agent-name{font-family:var(--mono);font-size:14px;font-weight:700;color:#fff;margin-bottom:4px}
+.agent-role{font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:8px}
+.agent-details{font-size:12px;color:var(--text3);line-height:1.6}
+.agent-details strong{color:var(--text2)}
+
+/* Top Trades */
+.trades{display:flex;flex-direction:column;gap:6px;margin-bottom:40px}
+.trade{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px}
+.trade-rank{font-family:var(--mono);font-size:11px;color:var(--text3);width:20px;text-align:center;flex-shrink:0}
+.trade-symbol{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--red);min-width:100px}
+.trade-bar{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.trade-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--red),var(--red2))}
+.trade-pnl{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--green);min-width:80px;text-align:right}
+.trade-pct{font-family:var(--mono);font-size:11px;color:var(--text2);min-width:55px;text-align:right}
+
+/* Protection */
+.protections{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:40px}
+.protection{display:flex;align-items:center;gap:10px;background:var(--bg2);border-radius:8px;padding:12px 14px}
+.protection-icon{font-size:16px}
+.protection-text{font-family:var(--mono);font-size:11px;color:var(--text2)}
+.protection-text strong{color:#fff}
+
+/* Before/After */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:40px}
+.compare-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+.compare-box.bad{border-color:rgba(255,59,79,0.2)}
+.compare-box.good{border-color:rgba(0,255,136,0.2)}
+.compare-label{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:8px}
+.compare-value{font-family:var(--mono);font-size:28px;font-weight:800}
+.compare-sub{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px}
+
+/* Footer CTA */
+.cta{text-align:center;padding:40px 0;border-top:1px solid var(--border)}
+.cta-brand{font-family:var(--mono);font-size:28px;font-weight:900;color:#fff;margin-bottom:6px}
+.cta-brand span{color:var(--red)}
+.cta-tag{font-family:var(--mono);font-size:14px;color:var(--red);letter-spacing:2px;margin-bottom:20px}
+.cta-links{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.cta-link{font-family:var(--mono);font-size:12px;font-weight:600;padding:10px 20px;border-radius:8px;text-decoration:none;transition:all .2s}
+.cta-link.primary{background:var(--red);color:#000}
+.cta-link.primary:hover{background:var(--red2);transform:translateY(-2px)}
+.cta-link.secondary{border:1px solid var(--border);color:var(--text2)}
+.cta-link.secondary:hover{border-color:var(--red);color:var(--red)}
+.disclaimer{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:20px;letter-spacing:1px}
+
+@media(max-width:600px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .protections{grid-template-columns:1fr}
+  .compare{grid-template-columns:1fr}
+  .stat-value{font-size:18px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" class="logo" alt="$ByeBoss">
+    <div class="brand">$<span>ByeBoss</span></div>
+    <div class="tagline">Salary is a Scam</div>
+    <div class="subtitle">I built an AI sniper bot that trades meme coins autonomously.<br>3 AI agents. 105 trades. 44 hours straight.</div>
+    <div class="live-badge"><span class="live-dot"></span>AUTONOMOUS — ZERO HUMAN INPUT</div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-title">44H Session Results</div>
+  <div class="stats-grid">
+    <div class="stat stat-highlight"><div class="stat-value">45.7%</div><div class="stat-label">Win Rate</div></div>
+    <div class="stat"><div class="stat-value" style="color:#fff">105</div><div class="stat-label">Trades</div></div>
+    <div class="stat"><div class="stat-value" style="color:var(--green)">+$683</div><div class="stat-label">Best Trade</div></div>
+    <div class="stat"><div class="stat-value" style="color:var(--yellow)">$2,539</div><div class="stat-label">Secured P&L</div></div>
+  </div>
+
+  <!-- 3 AGENTS -->
+  <div class="section-title">🤖 3 AI Agents Working Together</div>
+  <div class="agents">
+    <div class="agent agent-scout">
+      <div class="agent-icon">🔍</div>
+      <div>
+        <div class="agent-name">SCOUT AGENT</div>
+        <div class="agent-role">"Is this token worth trading?"</div>
+        <div class="agent-details">Analyzes <strong>momentum, volume, buy pressure, entry timing</strong>. Default mode: DEGEN. Only skips tokens that are already dead or pumped 100%+. Scans 300+ tokens every 35 seconds.</div>
+      </div>
+    </div>
+    <div class="agent agent-security">
+      <div class="agent-icon">🛡️</div>
+      <div>
+        <div class="agent-name">SECURITY AGENT</div>
+        <div class="agent-role">"Is this a scam?"</div>
+        <div class="agent-details">Runs <strong>RugCheck.xyz + GoPlus Security</strong> on every token. Detects honeypots, sell tax, freeze authority, mint authority. Only blocks confirmed scams — doesn't reject normal meme volatility.</div>
+      </div>
+    </div>
+    <div class="agent agent-exit">
+      <div class="agent-icon">🤖</div>
+      <div>
+        <div class="agent-name">EXIT AGENT</div>
+        <div class="agent-role">"Should I sell now?"</div>
+        <div class="agent-details">Monitors every open position <strong>every 5 minutes</strong>. Analyzes live momentum vs peak, volume trend, buy/sell ratio. Sells when momentum dies. Captured: METHANE +$639, MONA +$321, emi +$316.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP TRADES -->
+  <div class="section-title">🏆 Top Trades — All by AI</div>
+  <div class="trades">
+    <div class="trade"><span class="trade-rank">1</span><span class="trade-symbol">$Harry</span><div class="trade-bar"><div class="trade-bar-fill" style="width:100%"></div></div><span class="trade-pnl">+$683</span><span class="trade-pct">+62.7%</span></div>
+    <div class="trade"><span class="trade-rank">2</span><span class="trade-symbol">$METHANE</span><div class="trade-bar"><div class="trade-bar-fill" style="width:93%"></div></div><span class="trade-pnl">+$639</span><span class="trade-pct">+79.5%</span></div>
+    <div class="trade"><span class="trade-rank">3</span><span class="trade-symbol">$MONA</span><div class="trade-bar"><div class="trade-bar-fill" style="width:47%"></div></div><span class="trade-pnl">+$321</span><span class="trade-pct">+32.1%</span></div>
+    <div class="trade"><span class="trade-rank">4</span><span class="trade-symbol">$emi</span><div class="trade-bar"><div class="trade-bar-fill" style="width:46%"></div></div><span class="trade-pnl">+$316</span><span class="trade-pct">+24.3%</span></div>
+    <div class="trade"><span class="trade-rank">5</span><span class="trade-symbol">$Asset</span><div class="trade-bar"><div class="trade-bar-fill" style="width:44%"></div></div><span class="trade-pnl">+$303</span><span class="trade-pct">+25.9%</span></div>
+    <div class="trade"><span class="trade-rank">6</span><span class="trade-symbol">$TORTELLINI</span><div class="trade-bar"><div class="trade-bar-fill" style="width:39%"></div></div><span class="trade-pnl">+$267</span><span class="trade-pct">+17.8%</span></div>
+    <div class="trade"><span class="trade-rank">7</span><span class="trade-symbol">$SHH</span><div class="trade-bar"><div class="trade-bar-fill" style="width:34%"></div></div><span class="trade-pnl">+$234</span><span class="trade-pct">+18.5%</span></div>
+    <div class="trade"><span class="trade-rank">8</span><span class="trade-symbol">$AGI</span><div class="trade-bar"><div class="trade-bar-fill" style="width:33%"></div></div><span class="trade-pnl">+$231</span><span class="trade-pct">+22.3%</span></div>
+    <div class="trade"><span class="trade-rank">9</span><span class="trade-symbol">$PND</span><div class="trade-bar"><div class="trade-bar-fill" style="width:29%"></div></div><span class="trade-pnl">+$202</span><span class="trade-pct">+21.1%</span></div>
+  </div>
+
+  <!-- BEFORE / AFTER -->
+  <div class="section-title">📊 Before vs After AI Agents</div>
+  <div class="compare">
+    <div class="compare-box bad">
+      <div class="compare-label">BEFORE — WORST TRADE</div>
+      <div class="compare-value" style="color:var(--red)">-$1,094</div>
+      <div class="compare-sub">Single rug wiped 3 winning trades</div>
+    </div>
+    <div class="compare-box good">
+      <div class="compare-label">AFTER — WORST TRADE</div>
+      <div class="compare-value" style="color:var(--green)">-$238</div>
+      <div class="compare-sub">Max loss capped. No single trade kills you.</div>
+    </div>
+  </div>
+
+  <!-- PROTECTIONS -->
+  <div class="section-title">🛡️ Risk Management</div>
+  <div class="protections">
+    <div class="protection"><span class="protection-icon">🔒</span><span class="protection-text"><strong>$300 max loss</strong> per trade</span></div>
+    <div class="protection"><span class="protection-icon">🔍</span><span class="protection-text"><strong>RugCheck + GoPlus</strong> on every entry</span></div>
+    <div class="protection"><span class="protection-icon">📈</span><span class="protection-text"><strong>Trailing stop at +6%</strong> locks profits</span></div>
+    <div class="protection"><span class="protection-icon">🚫</span><span class="protection-text"><strong>No DCA</strong> — never doubles down</span></div>
+    <div class="protection"><span class="protection-icon">⏱️</span><span class="protection-text"><strong>AI EXIT every 5min</strong> monitors positions</span></div>
+    <div class="protection"><span class="protection-icon">💧</span><span class="protection-text"><strong>Liq drop detection</strong> at -30%</span></div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <div class="cta-brand">$<span>ByeBoss</span></div>
+    <div class="cta-tag">Salary is a Scam. Let AI do the work.</div>
+    <div class="cta-links">
+      <a href="https://byeboss.live" target="_blank" class="cta-link primary">🔴 byeboss.live</a>
+      <a href="https://t.me/SalaryIsScam" target="_blank" class="cta-link secondary">💬 Telegram</a>
+      <a href="https://x.com/salaryisscam" target="_blank" class="cta-link secondary">𝕏 Twitter</a>
+    </div>
+    <div class="disclaimer">NFA. DYOR. Past performance does not guarantee future results.</div>
+  </div>
+
+</div>
+</body>
+</html>
