@@ -472,15 +472,33 @@ function addSignal(sig) {
   const liq = sig.entryLiquidity || 0;
   const vol = sig.entryVolume || 0;
   const pnl = sig.pnlPct || 0;
+  const chain = sig.chain || 'solana';
+  const addr = sig.address || '';
+  const dexUrl = sig.dexUrl || `https://dexscreener.com/${chain}/${addr}`;
+  const logoUrl = `https://dd.dexscreener.com/ds-data/tokens/${chain}/${addr}.png`;
+  const hasSocials = sig.hasSocials || false;
+  const reasons = sig.analysisReasons || [];
 
   const el = document.createElement('div');
   el.className = 'signal';
-  el.id = `sig-${sig.address}`;
+  el.id = `sig-${addr}`;
   el.innerHTML = `
     <div class="signal-head">
-      <span class="signal-symbol">$${sig.symbol}</span>
-      <span class="signal-score">Score ${sig.score}</span>
-      <span class="signal-agents">🔍✅ 🛡️✅ ${sig.tradeType}</span>
+      <img src="${logoUrl}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:32px;height:32px;border-radius:50%;background:var(--bg2)">
+      <span style="display:none;width:32px;height:32px;border-radius:50%;background:var(--bg2);align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🪙</span>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="signal-symbol">$${sig.symbol}</span>
+          <span class="signal-score">Score ${sig.score}</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase">${chain}</span>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <a href="${dexUrl}" target="_blank" style="font-family:var(--mono);font-size:9px;color:var(--red);text-decoration:none;padding:2px 6px;border:1px solid rgba(255,59,79,0.3);border-radius:4px">📈 Chart</a>
+          ${hasSocials ? '<span style="font-family:var(--mono);font-size:9px;color:var(--green);padding:2px 6px;border:1px solid rgba(0,255,136,0.3);border-radius:4px">🐦 Socials</span>' : ''}
+          ${reasons.map(r => `<span style="font-family:var(--mono);font-size:8px;color:var(--text3);padding:2px 4px">${r}</span>`).join('')}
+        </div>
+      </div>
+      <span class="signal-agents">${sig.tradeType || 'LONG'}</span>
     </div>
     <div class="signal-data">
       <div class="signal-stat"><div class="signal-stat-val">${fN(mc)}</div><div class="signal-stat-lbl">MC</div></div>
@@ -489,7 +507,7 @@ function addSignal(sig) {
       <div class="signal-stat"><div class="signal-stat-val" style="color:${pnl>=0?'var(--green)':'var(--red)'}">${pnl>=0?'+':''}${pnl.toFixed(1)}%</div><div class="signal-stat-lbl">P&L</div></div>
     </div>
     <div class="signal-actions">
-      <button class="btn-buy" onclick="handleBuy('${sig.symbol}','${sig.address}',${amount})" ${!walletAddress?'disabled':''}>
+      <button class="btn-buy" onclick="handleBuy('${sig.symbol}','${addr}',${amount})" ${!walletAddress?'disabled':''}>
         ⚡ BUY ${amount} SOL
       </button>
       <button class="btn-skip" onclick="this.closest('.signal').remove()">SKIP</button>
@@ -497,7 +515,6 @@ function addSignal(sig) {
   `;
 
   list.insertBefore(el, list.firstChild);
-  // Keep max 10 signals
   while (list.children.length > 10) list.removeChild(list.lastChild);
 }
 
@@ -510,17 +527,22 @@ function renderSniperPositions(sniperPos) {
 
   let html = '';
 
-  // My real positions (bought via this page)
+  // My real positions
   positions.forEach((p, i) => {
-    html += `<div class="position">
+    const chain = p.chain || 'solana';
+    const logoUrl = `https://dd.dexscreener.com/ds-data/tokens/${chain}/${p.address}.png`;
+    const dexUrl = `https://dexscreener.com/${chain}/${p.address}`;
+    html += `<div class="position" style="border-color:rgba(0,255,136,0.3)">
       <div class="pos-head">
+        <img src="${logoUrl}" onerror="this.style.display='none'" style="width:28px;height:28px;border-radius:50%;background:var(--bg2)">
         <span class="pos-symbol">$${p.symbol}</span>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--green)">REAL</span>
-        <span class="pos-pnl green">--.-%</span>
+        <span style="font-family:var(--mono);font-size:9px;color:#000;background:var(--green);padding:2px 6px;border-radius:4px;font-weight:700">REAL</span>
+        <span class="pos-pnl green" style="margin-left:auto">--.-%</span>
       </div>
       <div class="pos-details">
-        <span>Spent: ${p.solSpent} SOL</span>
-        <span>${new Date(p.time).toLocaleTimeString()}</span>
+        <span>💰 ${p.solSpent} SOL</span>
+        <span>⏱ ${new Date(p.time).toLocaleTimeString()}</span>
+        <a href="${dexUrl}" target="_blank" style="color:var(--red);text-decoration:none;font-family:var(--mono);font-size:10px">📈 Chart</a>
       </div>
       <div class="pos-actions">
         <button class="btn-sell" onclick="handleSell(${i})">SELL ALL</button>
@@ -528,19 +550,34 @@ function renderSniperPositions(sniperPos) {
     </div>`;
   });
 
-  // Sniper paper positions (for reference)
+  // Sniper paper positions
   sniperPos.forEach(p => {
     const pnlClass = p.pnlPct >= 0 ? 'green' : 'red';
-    html += `<div class="position" style="opacity:0.6">
+    const chain = p.chain || 'solana';
+    const logoUrl = `https://dd.dexscreener.com/ds-data/tokens/${chain}/${p.address}.png`;
+    const dexUrl = p.dexUrl || `https://dexscreener.com/${chain}/${p.pairAddress || p.address}`;
+    const holdMin = p.holdMinutes || 0;
+    const trailing = p.trailingActivated ? '📈 Trail ON' : '';
+    const socials = p.hasSocials ? '🐦' : '';
+
+    html += `<div class="position">
       <div class="pos-head">
+        <img src="${logoUrl}" onerror="this.style.display='none'" style="width:28px;height:28px;border-radius:50%;background:var(--bg2)">
         <span class="pos-symbol">$${p.symbol}</span>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">PAPER</span>
-        <span class="pos-pnl ${pnlClass}">${p.pnlPct>=0?'+':''}${p.pnlPct.toFixed(1)}%</span>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--text3);padding:2px 6px;border:1px solid var(--border);border-radius:4px">PAPER</span>
+        ${socials ? `<span style="font-size:12px">${socials}</span>` : ''}
+        <span class="pos-pnl ${pnlClass}" style="margin-left:auto">${p.pnlPct>=0?'+':''}${p.pnlPct.toFixed(1)}%</span>
       </div>
       <div class="pos-details">
         <span>MC: $${fN(p.entryMarketCap||0)}</span>
-        <span>Hold: ${p.holdMinutes||0}min</span>
+        <span>Liq: $${fN(p.entryLiquidity||0)}</span>
+        <span>⏱ ${holdMin}min</span>
         <span>TP: ${p.tpLevel||0}</span>
+        ${trailing ? `<span style="color:var(--green)">${trailing}</span>` : ''}
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <a href="${dexUrl}" target="_blank" style="font-family:var(--mono);font-size:9px;color:var(--red);text-decoration:none;padding:3px 8px;border:1px solid rgba(255,59,79,0.3);border-radius:4px">📈 Chart</a>
+        <button onclick="navigator.clipboard.writeText('${p.address}');this.textContent='✓'" style="font-family:var(--mono);font-size:9px;color:var(--text3);background:none;border:1px solid var(--border);padding:3px 8px;border-radius:4px;cursor:pointer">📋 CA</button>
       </div>
     </div>`;
   });
