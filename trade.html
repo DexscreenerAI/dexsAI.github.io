@@ -128,6 +128,9 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
     <button class="wallet-btn connect" id="walletBtn" onclick="connectWallet()">
       🔌 Connect Phantom
     </button>
+    <button class="wallet-btn" id="disconnectBtn" onclick="disconnectWallet()" style="display:none;background:none;border:1px solid var(--border);color:var(--red);font-size:11px;padding:6px 12px">
+      ✕
+    </button>
   </div>
 </nav>
 
@@ -246,6 +249,7 @@ async function connectWallet() {
 
     document.getElementById('walletBtn').className = 'wallet-btn connected';
     document.getElementById('walletBtn').innerHTML = `🟢 ${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}`;
+    document.getElementById('disconnectBtn').style.display = 'block';
     document.getElementById('walletInfo').classList.add('show');
     document.getElementById('walletAddr').textContent = walletAddress;
 
@@ -256,6 +260,22 @@ async function connectWallet() {
     console.error('Wallet connect failed:', e);
     alert('Connection refused. Open Phantom and try again.');
   }
+}
+
+async function disconnectWallet() {
+  try {
+    if (provider) await provider.disconnect();
+  } catch(e) {}
+  walletAddress = null;
+  provider = null;
+  solBalance = 0;
+  document.getElementById('walletBtn').className = 'wallet-btn connect';
+  document.getElementById('walletBtn').innerHTML = '🔌 Connect Phantom';
+  document.getElementById('disconnectBtn').style.display = 'none';
+  document.getElementById('walletInfo').classList.remove('show');
+  document.getElementById('solBalance').textContent = '0.00';
+  document.getElementById('usdValue').textContent = '$0.00';
+  addLog('🔌 Wallet disconnected');
 }
 
 async function updateBalance() {
