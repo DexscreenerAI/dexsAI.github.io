@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>$ByeBoss — Live Trade</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-height:100vh}
+:root{--bg:#060a10;--bg2:#0b1018;--bg3:#101822;--card:#111a26;--border:#1a2636;--red:#ff3b4f;--red2:#ff1744;--green:#00ff88;--yellow:#ffaa00;--text:#dfe4ed;--text2:rgba(255,255,255,0.5);--text3:rgba(255,255,255,0.25);--mono:'JetBrains Mono',monospace}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(6,10,16,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(10px)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-family:var(--mono);font-weight:700;font-size:13px}
+.nav-logo img{height:28px;border-radius:6px}
+.nav-right{display:flex;align-items:center;gap:12px}
+
+/* WALLET BTN */
+.wallet-btn{padding:8px 16px;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;border:none}
+.wallet-btn.connect{background:var(--red);color:#000}
+.wallet-btn.connect:hover{background:var(--red2);transform:translateY(-1px)}
+.wallet-btn.connected{background:var(--bg3);border:1px solid var(--border);color:var(--green)}
+.wallet-btn.connected:hover{border-color:var(--red)}
+
+/* MAIN */
+.main{max-width:700px;margin:0 auto;padding:70px 16px 100px}
+
+/* CONFIG PANEL */
+.config{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+.config-title{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text2);letter-spacing:1px;margin-bottom:12px}
+.config-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.config-row:last-child{margin-bottom:0}
+.config-label{font-family:var(--mono);font-size:11px;color:var(--text3);min-width:100px}
+.config-input{flex:1;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:#fff;font-family:var(--mono);font-size:13px;outline:none}
+.config-input:focus{border-color:var(--red)}
+.config-unit{font-family:var(--mono);font-size:11px;color:var(--text3)}
+
+/* AUTO MODE TOGGLE */
+.auto-toggle{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;cursor:pointer;transition:all .2s}
+.auto-toggle:hover{border-color:var(--red)}
+.auto-toggle.active{border-color:var(--red);background:rgba(255,59,79,0.08)}
+.toggle-switch{width:40px;height:22px;border-radius:11px;background:var(--bg3);position:relative;transition:background .2s;flex-shrink:0}
+.toggle-switch::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--text3);transition:all .2s}
+.auto-toggle.active .toggle-switch{background:var(--red)}
+.auto-toggle.active .toggle-switch::after{left:21px;background:#fff}
+.toggle-text{font-family:var(--mono);font-size:12px;color:var(--text2)}
+.toggle-text strong{color:#fff}
+
+/* WALLET INFO */
+.wallet-info{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;display:none}
+.wallet-info.show{display:block}
+.wallet-bal{display:flex;justify-content:space-between;align-items:center}
+.wallet-bal-val{font-family:var(--mono);font-size:24px;font-weight:800;color:#fff}
+.wallet-bal-label{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px}
+.wallet-addr{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:8px;cursor:pointer}
+.wallet-addr:hover{color:var(--red)}
+
+/* SIGNALS */
+.section-title{font-family:var(--mono);font-size:13px;font-weight:700;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.5s infinite}
+
+.signal-list{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;min-height:60px}
+.signal{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;animation:fadeIn .3s ease;transition:all .2s}
+.signal:hover{border-color:var(--red)}
+.signal-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.signal-symbol{font-family:var(--mono);font-size:16px;font-weight:800;color:var(--red)}
+.signal-score{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(255,59,79,0.15);color:var(--red);font-weight:700}
+.signal-agents{font-family:var(--mono);font-size:10px;color:var(--text3);margin-left:auto}
+.signal-data{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.signal-stat{background:var(--bg2);border-radius:6px;padding:6px;text-align:center}
+.signal-stat-val{font-family:var(--mono);font-size:12px;font-weight:700;color:#fff}
+.signal-stat-lbl{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.5px}
+.signal-actions{display:flex;gap:8px}
+.btn-buy{flex:1;padding:10px;background:var(--red);border:none;border-radius:8px;color:#000;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+.btn-buy:hover{background:var(--red2);transform:translateY(-1px)}
+.btn-buy:disabled{background:var(--bg3);color:var(--text3);cursor:not-allowed;transform:none}
+.btn-skip{padding:10px 16px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--mono);font-size:12px;cursor:pointer}
+.btn-skip:hover{border-color:var(--red);color:var(--red)}
+
+/* POSITIONS */
+.position{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;animation:fadeIn .3s ease}
+.pos-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.pos-symbol{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--red)}
+.pos-pnl{font-family:var(--mono);font-size:14px;font-weight:700;margin-left:auto}
+.pos-pnl.green{color:var(--green)}
+.pos-pnl.red{color:var(--red)}
+.pos-details{display:flex;gap:12px;margin-bottom:8px;font-family:var(--mono);font-size:10px;color:var(--text3)}
+.pos-actions{display:flex;gap:8px}
+.btn-sell{flex:1;padding:8px;background:rgba(255,59,79,0.15);border:1px solid var(--red);border-radius:6px;color:var(--red);font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer}
+.btn-sell:hover{background:var(--red);color:#000}
+
+/* HISTORY */
+.history-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px}
+.history-item:last-child{border-bottom:none}
+
+/* EMPTY */
+.empty{text-align:center;padding:30px;color:var(--text3);font-family:var(--mono);font-size:12px}
+
+/* STATUS */
+.status-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--text3)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
+.status-dot.live{background:var(--green);animation:pulse 1.5s infinite}
+.status-dot.off{background:var(--red)}
+
+/* SPINNER */
+.spinner{width:14px;height:14px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+
+@media(max-width:500px){
+  .signal-data{grid-template-columns:repeat(2,1fr)}
+  .config-row{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="./index.html" class="nav-logo">
+    <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="">
+    $ByeBoss
+  </a>
+  <div class="nav-right">
+    <button class="wallet-btn connect" id="walletBtn" onclick="connectWallet()">
+      🔌 Connect Phantom
+    </button>
+  </div>
+</nav>
+
+<div class="main">
+
+  <!-- WALLET INFO -->
+  <div class="wallet-info" id="walletInfo">
+    <div class="wallet-bal">
+      <div>
+        <div class="wallet-bal-label">SOL BALANCE</div>
+        <div class="wallet-bal-val" id="solBalance">0.00</div>
+      </div>
+      <div style="text-align:right">
+        <div class="wallet-bal-label">USD VALUE</div>
+        <div style="font-family:var(--mono);font-size:16px;color:var(--text2)" id="usdValue">$0.00</div>
+      </div>
+    </div>
+    <div class="wallet-addr" id="walletAddr" onclick="navigator.clipboard.writeText(this.textContent);this.textContent='✓ Copied';setTimeout(()=>this.textContent=walletAddress,1500)">-</div>
+  </div>
+
+  <!-- CONFIG -->
+  <div class="config">
+    <div class="config-title">⚙️ TRADE CONFIG</div>
+    <div class="config-row">
+      <span class="config-label">Amount / trade</span>
+      <input class="config-input" type="number" id="tradeAmount" value="0.5" min="0.01" max="100" step="0.1">
+      <span class="config-unit">SOL</span>
+    </div>
+    <div class="config-row">
+      <span class="config-label">Slippage</span>
+      <input class="config-input" type="number" id="slippage" value="15" min="1" max="50" step="1">
+      <span class="config-unit">%</span>
+    </div>
+    <div class="config-row">
+      <span class="config-label">Auto sell at</span>
+      <input class="config-input" type="number" id="autoSellPct" value="20" min="5" max="500" step="5">
+      <span class="config-unit">% profit</span>
+    </div>
+  </div>
+
+  <!-- AUTO MODE -->
+  <div class="auto-toggle" id="autoToggle" onclick="toggleAutoMode()">
+    <div class="toggle-switch"></div>
+    <div class="toggle-text"><strong>AUTO MODE</strong> — Buy automatically when all 3 AI agents approve</div>
+  </div>
+
+  <!-- LIVE SIGNALS -->
+  <div class="section-title"><span class="live-dot"></span> LIVE SIGNALS</div>
+  <div class="signal-list" id="signalList">
+    <div class="empty">Waiting for sniper signals...</div>
+  </div>
+
+  <!-- OPEN POSITIONS -->
+  <div class="section-title">📊 OPEN POSITIONS</div>
+  <div id="positionList">
+    <div class="empty">No open positions</div>
+  </div>
+
+  <!-- TRADE HISTORY -->
+  <div class="section-title" style="margin-top:24px">📜 TRADE HISTORY</div>
+  <div id="historyList">
+    <div class="empty">No trades yet</div>
+  </div>
+
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <span class="status-dot" id="statusDot"></span>
+  <span id="statusText">Disconnected</span>
+  <span style="margin-left:auto" id="lastScan">-</span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
+const SNIPER_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/sniper';
+const JUPITER_API = 'https://quote-api.jup.ag/v6';
+const SOL_MINT = 'So11111111111111111111111111111111111111112';
+const LAMPORTS = 1_000_000_000;
+
+let walletAddress = null;
+let solBalance = 0;
+let solPrice = 0;
+let autoMode = false;
+let positions = []; // {symbol, address, mint, entryPrice, amount, solSpent, time}
+let tradeHistory = JSON.parse(localStorage.getItem('byeboss_trades') || '[]');
+let lastSignals = [];
+let pollTimer = null;
+
+// ═══════════════════════════════════════════════════════════════
+// PHANTOM WALLET
+// ═══════════════════════════════════════════════════════════════
+async function connectWallet() {
+  try {
+    if (!window.solana || !window.solana.isPhantom) {
+      window.open('https://phantom.app/', '_blank');
+      return;
+    }
+    const resp = await window.solana.connect();
+    walletAddress = resp.publicKey.toString();
+
+    document.getElementById('walletBtn').className = 'wallet-btn connected';
+    document.getElementById('walletBtn').innerHTML = `🟢 ${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}`;
+    document.getElementById('walletInfo').classList.add('show');
+    document.getElementById('walletAddr').textContent = walletAddress;
+
+    await updateBalance();
+    startPolling();
+  } catch (e) {
+    console.error('Wallet connect failed:', e);
+  }
+}
+
+async function updateBalance() {
+  if (!walletAddress) return;
+  try {
+    const conn = new (await getSolanaWeb3()).Connection('https://api.mainnet-beta.solana.com');
+    const pubkey = new (await getSolanaWeb3()).PublicKey(walletAddress);
+    const bal = await conn.getBalance(pubkey);
+    solBalance = bal / LAMPORTS;
+    document.getElementById('solBalance').textContent = solBalance.toFixed(4);
+
+    // Get SOL price
+    const res = await fetch('https://api.dexscreener.com/latest/dex/tokens/So11111111111111111111111111111111111111112');
+    const data = await res.json();
+    solPrice = parseFloat(data.pairs?.[0]?.priceUsd) || 130;
+    document.getElementById('usdValue').textContent = `$${(solBalance * solPrice).toFixed(2)}`;
+  } catch (e) {}
+}
+
+// Lazy load solana web3
+let _web3 = null;
+async function getSolanaWeb3() {
+  if (_web3) return _web3;
+  // Use CDN
+  await new Promise((resolve) => {
+    if (window.solanaWeb3) { _web3 = window.solanaWeb3; resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js';
+    s.onload = () => { _web3 = window.solanaWeb3; resolve(); };
+    document.head.appendChild(s);
+  });
+  return _web3;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JUPITER SWAP
+// ═══════════════════════════════════════════════════════════════
+async function buyToken(tokenMint, solAmount) {
+  if (!walletAddress) { alert('Connect wallet first'); return null; }
+  if (solAmount > solBalance) { alert('Insufficient SOL balance'); return null; }
+
+  try {
+    const amountLamports = Math.floor(solAmount * LAMPORTS);
+    const slippage = parseInt(document.getElementById('slippage').value) * 100; // bps
+
+    // 1. Get quote
+    const quoteRes = await fetch(`${JUPITER_API}/quote?inputMint=${SOL_MINT}&outputMint=${tokenMint}&amount=${amountLamports}&slippageBps=${slippage}`);
+    const quote = await quoteRes.json();
+    if (quote.error) throw new Error(quote.error);
+
+    // 2. Get swap transaction
+    const swapRes = await fetch(`${JUPITER_API}/swap`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        quoteResponse: quote,
+        userPublicKey: walletAddress,
+        wrapAndUnwrapSol: true,
+      })
+    });
+    const swap = await swapRes.json();
+    if (swap.error) throw new Error(swap.error);
+
+    // 3. Sign & send via Phantom
+    const web3 = await getSolanaWeb3();
+    const tx = web3.Transaction.from(Buffer.from(swap.swapTransaction, 'base64'));
+    const signed = await window.solana.signTransaction(tx);
+    const conn = new web3.Connection('https://api.mainnet-beta.solana.com');
+    const sig = await conn.sendRawTransaction(signed.serialize());
+    await conn.confirmTransaction(sig, 'confirmed');
+
+    // Update balance
+    await updateBalance();
+    return { signature: sig, outAmount: quote.outAmount, tokenMint };
+
+  } catch (e) {
+    console.error('Buy failed:', e);
+    alert('Swap failed: ' + e.message);
+    return null;
+  }
+}
+
+async function sellToken(tokenMint, tokenAmount) {
+  if (!walletAddress) return null;
+  try {
+    const slippage = parseInt(document.getElementById('slippage').value) * 100;
+
+    const quoteRes = await fetch(`${JUPITER_API}/quote?inputMint=${tokenMint}&outputMint=${SOL_MINT}&amount=${tokenAmount}&slippageBps=${slippage}`);
+    const quote = await quoteRes.json();
+    if (quote.error) throw new Error(quote.error);
+
+    const swapRes = await fetch(`${JUPITER_API}/swap`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        quoteResponse: quote,
+        userPublicKey: walletAddress,
+        wrapAndUnwrapSol: true,
+      })
+    });
+    const swap = await swapRes.json();
+
+    const web3 = await getSolanaWeb3();
+    const tx = web3.Transaction.from(Buffer.from(swap.swapTransaction, 'base64'));
+    const signed = await window.solana.signTransaction(tx);
+    const conn = new web3.Connection('https://api.mainnet-beta.solana.com');
+    const sig = await conn.sendRawTransaction(signed.serialize());
+    await conn.confirmTransaction(sig, 'confirmed');
+
+    await updateBalance();
+    return { signature: sig, outAmount: quote.outAmount };
+  } catch (e) {
+    console.error('Sell failed:', e);
+    alert('Sell failed: ' + e.message);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SNIPER POLLING — Get live signals
+// ═══════════════════════════════════════════════════════════════
+function startPolling() {
+  document.getElementById('statusDot').className = 'status-dot live';
+  document.getElementById('statusText').textContent = 'Connected to sniper';
+  pollSignals();
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(pollSignals, 5000);
+}
+
+async function pollSignals() {
+  try {
+    const res = await fetch(SNIPER_API + '/status', { signal: AbortSignal.timeout(5000) });
+    const state = await res.json();
+
+    document.getElementById('lastScan').textContent = `Trades: ${state.totalTrades || 0} | Win: ${state.winRate || '0%'}`;
+
+    // Show open positions from sniper as signals
+    const sniperPositions = state.positions || [];
+    const newSignals = sniperPositions.filter(p => !lastSignals.find(s => s.address === p.address));
+
+    if (newSignals.length > 0) {
+      newSignals.forEach(sig => {
+        addSignal(sig);
+        // Auto-buy if enabled
+        if (autoMode && walletAddress) {
+          const amount = parseFloat(document.getElementById('tradeAmount').value);
+          handleBuy(sig.symbol, sig.address, amount, sig);
+        }
+      });
+    }
+    lastSignals = sniperPositions;
+
+    // Update sniper positions display
+    renderSniperPositions(sniperPositions);
+
+  } catch (e) {
+    document.getElementById('statusDot').className = 'status-dot off';
+    document.getElementById('statusText').textContent = 'Connection lost — retrying...';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UI RENDERING
+// ═══════════════════════════════════════════════════════════════
+function fN(n) { return n >= 1e9 ? (n/1e9).toFixed(2)+'B' : n >= 1e6 ? (n/1e6).toFixed(2)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : (n||0).toFixed(0); }
+
+function addSignal(sig) {
+  const list = document.getElementById('signalList');
+  if (list.querySelector('.empty')) list.innerHTML = '';
+
+  const amount = parseFloat(document.getElementById('tradeAmount').value);
+  const mc = sig.entryMarketCap || 0;
+  const liq = sig.entryLiquidity || 0;
+  const vol = sig.entryVolume || 0;
+  const pnl = sig.pnlPct || 0;
+
+  const el = document.createElement('div');
+  el.className = 'signal';
+  el.id = `sig-${sig.address}`;
+  el.innerHTML = `
+    <div class="signal-head">
+      <span class="signal-symbol">$${sig.symbol}</span>
+      <span class="signal-score">Score ${sig.score}</span>
+      <span class="signal-agents">🔍✅ 🛡️✅ ${sig.tradeType}</span>
+    </div>
+    <div class="signal-data">
+      <div class="signal-stat"><div class="signal-stat-val">${fN(mc)}</div><div class="signal-stat-lbl">MC</div></div>
+      <div class="signal-stat"><div class="signal-stat-val">${fN(liq)}</div><div class="signal-stat-lbl">LIQ</div></div>
+      <div class="signal-stat"><div class="signal-stat-val">${fN(vol)}</div><div class="signal-stat-lbl">VOL</div></div>
+      <div class="signal-stat"><div class="signal-stat-val" style="color:${pnl>=0?'var(--green)':'var(--red)'}">${pnl>=0?'+':''}${pnl.toFixed(1)}%</div><div class="signal-stat-lbl">P&L</div></div>
+    </div>
+    <div class="signal-actions">
+      <button class="btn-buy" onclick="handleBuy('${sig.symbol}','${sig.address}',${amount})" ${!walletAddress?'disabled':''}>
+        ⚡ BUY ${amount} SOL
+      </button>
+      <button class="btn-skip" onclick="this.closest('.signal').remove()">SKIP</button>
+    </div>
+  `;
+
+  list.insertBefore(el, list.firstChild);
+  // Keep max 10 signals
+  while (list.children.length > 10) list.removeChild(list.lastChild);
+}
+
+function renderSniperPositions(sniperPos) {
+  const list = document.getElementById('positionList');
+  if (!sniperPos.length && !positions.length) {
+    list.innerHTML = '<div class="empty">No open positions</div>';
+    return;
+  }
+
+  let html = '';
+
+  // My real positions (bought via this page)
+  positions.forEach((p, i) => {
+    html += `<div class="position">
+      <div class="pos-head">
+        <span class="pos-symbol">$${p.symbol}</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--green)">REAL</span>
+        <span class="pos-pnl green">--.-%</span>
+      </div>
+      <div class="pos-details">
+        <span>Spent: ${p.solSpent} SOL</span>
+        <span>${new Date(p.time).toLocaleTimeString()}</span>
+      </div>
+      <div class="pos-actions">
+        <button class="btn-sell" onclick="handleSell(${i})">SELL ALL</button>
+      </div>
+    </div>`;
+  });
+
+  // Sniper paper positions (for reference)
+  sniperPos.forEach(p => {
+    const pnlClass = p.pnlPct >= 0 ? 'green' : 'red';
+    html += `<div class="position" style="opacity:0.6">
+      <div class="pos-head">
+        <span class="pos-symbol">$${p.symbol}</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">PAPER</span>
+        <span class="pos-pnl ${pnlClass}">${p.pnlPct>=0?'+':''}${p.pnlPct.toFixed(1)}%</span>
+      </div>
+      <div class="pos-details">
+        <span>MC: $${fN(p.entryMarketCap||0)}</span>
+        <span>Hold: ${p.holdMinutes||0}min</span>
+        <span>TP: ${p.tpLevel||0}</span>
+      </div>
+    </div>`;
+  });
+
+  list.innerHTML = html;
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!tradeHistory.length) { list.innerHTML = '<div class="empty">No trades yet</div>'; return; }
+  list.innerHTML = tradeHistory.slice(0, 20).map(h => {
+    const icon = h.type === 'BUY' ? '🟢' : '🔴';
+    return `<div class="history-item">
+      <span>${icon}</span>
+      <span style="color:var(--red);font-weight:700;min-width:80px">$${h.symbol}</span>
+      <span>${h.type} ${h.amount} SOL</span>
+      <span style="margin-left:auto;color:var(--text3)">${new Date(h.time).toLocaleTimeString()}</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TRADE HANDLERS
+// ═══════════════════════════════════════════════════════════════
+async function handleBuy(symbol, address, solAmount, sig) {
+  const btn = document.querySelector(`#sig-${address} .btn-buy`);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> BUYING...'; }
+
+  const result = await buyToken(address, solAmount);
+  if (result) {
+    positions.push({
+      symbol, address, mint: address,
+      entryPrice: 0, amount: result.outAmount,
+      solSpent: solAmount, time: Date.now()
+    });
+    tradeHistory.unshift({ symbol, type: 'BUY', amount: solAmount, time: Date.now(), sig: result.signature });
+    localStorage.setItem('byeboss_trades', JSON.stringify(tradeHistory));
+    renderHistory();
+
+    // Remove signal card
+    const sigEl = document.getElementById(`sig-${address}`);
+    if (sigEl) sigEl.remove();
+  }
+  if (btn) { btn.disabled = false; btn.innerHTML = `⚡ BUY ${solAmount} SOL`; }
+}
+
+async function handleSell(posIndex) {
+  const pos = positions[posIndex];
+  if (!pos) return;
+
+  const result = await sellToken(pos.mint, pos.amount);
+  if (result) {
+    const solOut = parseInt(result.outAmount) / LAMPORTS;
+    tradeHistory.unshift({ symbol: pos.symbol, type: 'SELL', amount: solOut.toFixed(4), time: Date.now(), sig: result.signature });
+    localStorage.setItem('byeboss_trades', JSON.stringify(tradeHistory));
+    positions.splice(posIndex, 1);
+    renderHistory();
+    pollSignals(); // Refresh UI
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUTO MODE
+// ═══════════════════════════════════════════════════════════════
+function toggleAutoMode() {
+  autoMode = !autoMode;
+  document.getElementById('autoToggle').classList.toggle('active', autoMode);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+renderHistory();
+
+// Auto-reconnect Phantom if previously connected
+if (window.solana?.isPhantom) {
+  window.solana.connect({ onlyIfTrusted: true }).then(resp => {
+    walletAddress = resp.publicKey.toString();
+    document.getElementById('walletBtn').className = 'wallet-btn connected';
+    document.getElementById('walletBtn').innerHTML = `🟢 ${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}`;
+    document.getElementById('walletInfo').classList.add('show');
+    document.getElementById('walletAddr').textContent = walletAddress;
+    updateBalance();
+    startPolling();
+  }).catch(() => {});
+}
+
+// Start polling even without wallet (to show signals)
+setTimeout(() => { if (!pollTimer) startPolling(); }, 2000);
+</script>
+</body>
+</html>
