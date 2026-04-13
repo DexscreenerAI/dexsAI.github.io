@@ -44,7 +44,7 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
 .auto-toggle{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;cursor:pointer;transition:all .2s}
 .auto-toggle:hover{border-color:var(--red)}
 .auto-toggle.active{border-color:var(--red);background:rgba(255,59,79,0.08)}
-.toggle-switch{width:40px;height:22px;border-radius:11px;background:var(--bg3);position:relative;transition:background .2s;flex-shrink:0}
+.toggle-switch{width:40px;height:22px;min-width:40px;border-radius:11px;background:var(--bg3);position:relative;transition:background .2s;flex-shrink:0}
 .toggle-switch::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--text3);transition:all .2s}
 .auto-toggle.active .toggle-switch{background:var(--red)}
 .auto-toggle.active .toggle-switch::after{left:21px;background:#fff}
@@ -102,6 +102,18 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
 .empty{text-align:center;padding:30px;color:var(--text3);font-family:var(--mono);font-size:12px}
 
 /* STATUS */
+/* TOKEN HOLDINGS */
+.holding{display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg2);border-radius:8px;transition:all .15s}
+.holding:hover{background:var(--bg3)}
+.holding-logo{width:28px;height:28px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;overflow:hidden;flex-shrink:0}
+.holding-logo img{width:100%;height:100%;object-fit:cover}
+.holding-info{flex:1;min-width:0}
+.holding-symbol{font-family:var(--mono);font-size:12px;font-weight:700;color:#fff}
+.holding-name{font-family:var(--mono);font-size:9px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.holding-right{text-align:right;flex-shrink:0}
+.holding-amount{font-family:var(--mono);font-size:11px;font-weight:600;color:#fff}
+.holding-usd{font-family:var(--mono);font-size:10px;color:var(--text3)}
+
 .status-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--text3)}
 .status-dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
 .status-dot.live{background:var(--green);animation:pulse 1.5s infinite}
@@ -144,38 +156,41 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
         <div class="wallet-bal-val" id="solBalance">0.00</div>
       </div>
       <div style="text-align:right">
-        <div class="wallet-bal-label">USD VALUE</div>
-        <div style="font-family:var(--mono);font-size:16px;color:var(--text2)" id="usdValue">$0.00</div>
+        <div class="wallet-bal-label">TOTAL VALUE</div>
+        <div style="font-family:var(--mono);font-size:20px;font-weight:800;color:#fff" id="usdValue">$0.00</div>
       </div>
     </div>
     <div class="wallet-addr" id="walletAddr" onclick="navigator.clipboard.writeText(this.textContent);this.textContent='✓ Copied';setTimeout(()=>this.textContent=walletAddress,1500)">-</div>
-  </div>
 
-  <!-- CONFIG -->
-  <div class="config">
-    <div class="config-title">⚙️ TRADE CONFIG</div>
-    <div class="config-row">
-      <span class="config-label">Amount / trade</span>
-      <input class="config-input" type="number" id="tradeAmount" value="0.5" min="0.01" max="100" step="0.1">
-      <span class="config-unit">SOL</span>
-    </div>
-    <div class="config-row">
-      <span class="config-label">Slippage</span>
-      <input class="config-input" type="number" id="slippage" value="15" min="1" max="50" step="1">
-      <span class="config-unit">%</span>
+    <!-- TOKEN HOLDINGS -->
+    <div id="tokenHoldings" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">YOUR TOKENS</div>
+      <div id="holdingsList" style="display:flex;flex-direction:column;gap:6px">
+        <div style="text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:8px">Connect wallet to see tokens</div>
+      </div>
     </div>
   </div>
 
-  <!-- AUTO MODE -->
-  <div class="auto-toggle" id="autoToggle" onclick="toggleAutoMode()">
-    <div class="toggle-switch"></div>
-    <div class="toggle-text"><strong>AUTO MODE</strong> — Buy automatically when sniper buys</div>
-  </div>
-
-  <!-- AUTO SELL -->
-  <div class="auto-toggle" id="autoSellToggle" onclick="toggleAutoSell()">
-    <div class="toggle-switch"></div>
-    <div class="toggle-text"><strong>AUTO SELL</strong> — Sell automatically when sniper sells (follows AI EXIT, TRAIL, etc.)</div>
+  <!-- CONFIG BAR (compact) -->
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;flex:1;min-width:140px">
+      <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">💰</span>
+      <input class="config-input" type="number" id="tradeAmount" value="0.5" min="0.01" max="100" step="0.1" style="padding:4px 8px;font-size:12px;width:60px">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">SOL</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-width:100px">
+      <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">⚙️</span>
+      <input class="config-input" type="number" id="slippage" value="15" min="1" max="50" step="1" style="padding:4px 8px;font-size:12px;width:40px">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">%</span>
+    </div>
+    <div class="auto-toggle" id="autoToggle" onclick="toggleAutoMode()" style="margin:0;flex:1;min-width:140px;padding:8px 12px">
+      <div class="toggle-switch" style="width:32px;height:18px;min-width:32px"><span style="display:none"></span></div>
+      <div class="toggle-text" style="font-size:10px"><strong>AUTO BUY</strong></div>
+    </div>
+    <div class="auto-toggle" id="autoSellToggle" onclick="toggleAutoSell()" style="margin:0;flex:1;min-width:140px;padding:8px 12px">
+      <div class="toggle-switch" style="width:32px;height:18px;min-width:32px"><span style="display:none"></span></div>
+      <div class="toggle-text" style="font-size:10px"><strong>AUTO SELL</strong></div>
+    </div>
   </div>
 
   <!-- LIVE SIGNALS -->
@@ -255,6 +270,7 @@ async function connectWallet() {
 
     await loadSolanaWeb3();
     await updateBalance();
+    await loadTokenHoldings();
     startPolling();
   } catch (e) {
     console.error('Wallet connect failed:', e);
@@ -295,6 +311,102 @@ async function updateBalance() {
     } catch(e) { solPrice = 130; }
     document.getElementById('usdValue').textContent = `$${(solBalance * solPrice).toFixed(2)}`;
   } catch (e) { console.error('Balance error:', e); }
+}
+
+async function loadTokenHoldings() {
+  if (!walletAddress) return;
+  const list = document.getElementById('holdingsList');
+  list.innerHTML = '<div style="text-align:center;padding:8px"><span class="spinner" style="color:var(--text3)"></span></div>';
+
+  try {
+    // Fetch all token accounts via Helius DAS API (free, no key needed for this)
+    const res = await fetch('https://api.mainnet-beta.solana.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0', id: 1,
+        method: 'getTokenAccountsByOwner',
+        params: [walletAddress, { programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' }, { encoding: 'jsonParsed' }]
+      }),
+      signal: AbortSignal.timeout(10000)
+    });
+    const data = await res.json();
+    const accounts = data.result?.value || [];
+
+    // Filter tokens with balance > 0
+    const tokens = accounts
+      .map(a => {
+        const info = a.account.data.parsed.info;
+        return { mint: info.mint, amount: parseFloat(info.tokenAmount.uiAmountString) || 0, decimals: info.tokenAmount.decimals };
+      })
+      .filter(t => t.amount > 0)
+      .sort((a, b) => b.amount - a.amount);
+
+    if (!tokens.length) {
+      list.innerHTML = '<div style="text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:8px">No tokens found</div>';
+      return;
+    }
+
+    // Fetch token info from DexScreener for top 20
+    const topTokens = tokens.slice(0, 20);
+    let html = '';
+    let totalUsd = solBalance * solPrice;
+
+    // SOL first
+    html += `<div class="holding">
+      <div class="holding-logo"><img src="https://dd.dexscreener.com/ds-data/tokens/solana/So11111111111111111111111111111111111111112.png" onerror="this.parentElement.innerHTML='◎'"></div>
+      <div class="holding-info"><div class="holding-symbol">SOL</div><div class="holding-name">Solana</div></div>
+      <div class="holding-right"><div class="holding-amount">${solBalance.toFixed(4)}</div><div class="holding-usd">$${(solBalance * solPrice).toFixed(2)}</div></div>
+    </div>`;
+
+    // Fetch prices in batch
+    const mintList = topTokens.map(t => t.mint).join(',');
+    let priceMap = {};
+    try {
+      const priceRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${topTokens.slice(0,5).map(t=>t.mint).join(',')}`, { signal: AbortSignal.timeout(8000) });
+      const priceData = await priceRes.json();
+      if (priceData.pairs) {
+        priceData.pairs.forEach(p => {
+          if (p.baseToken?.address && !priceMap[p.baseToken.address]) {
+            priceMap[p.baseToken.address] = {
+              price: parseFloat(p.priceUsd) || 0,
+              symbol: p.baseToken.symbol || '???',
+              name: p.baseToken.name || '',
+              chain: p.chainId || 'solana',
+              pairAddress: p.pairAddress
+            };
+          }
+        });
+      }
+    } catch(e) {}
+
+    for (const t of topTokens) {
+      const info = priceMap[t.mint];
+      const symbol = info?.symbol || t.mint.slice(0,4) + '...';
+      const name = info?.name || t.mint.slice(0,8) + '...';
+      const price = info?.price || 0;
+      const usdVal = t.amount * price;
+      totalUsd += usdVal;
+      const logoUrl = `https://dd.dexscreener.com/ds-data/tokens/solana/${t.mint}.png`;
+      const dexUrl = info?.pairAddress ? `https://dexscreener.com/solana/${info.pairAddress}` : `https://dexscreener.com/solana/${t.mint}`;
+
+      html += `<a href="${dexUrl}" target="_blank" class="holding" style="text-decoration:none;color:inherit">
+        <div class="holding-logo"><img src="${logoUrl}" onerror="this.parentElement.innerHTML='🪙'"></div>
+        <div class="holding-info"><div class="holding-symbol">$${symbol}</div><div class="holding-name">${name}</div></div>
+        <div class="holding-right">
+          <div class="holding-amount">${t.amount >= 1e6 ? (t.amount/1e6).toFixed(1)+'M' : t.amount >= 1e3 ? (t.amount/1e3).toFixed(1)+'K' : t.amount.toFixed(2)}</div>
+          <div class="holding-usd">${price > 0 ? '$'+usdVal.toFixed(2) : '-'}</div>
+        </div>
+      </a>`;
+    }
+
+    list.innerHTML = html;
+    document.getElementById('usdValue').textContent = `$${totalUsd.toFixed(2)}`;
+
+  } catch(e) {
+    console.error('Token load error:', e);
+    list.innerHTML = '<div style="text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:8px">Failed to load tokens</div>';
+  }
 }
 
 // Load Solana web3.js from CDN
@@ -676,6 +788,7 @@ if (provider) {
     document.getElementById('walletAddr').textContent = walletAddress;
     await loadSolanaWeb3();
     await updateBalance();
+    await loadTokenHoldings();
     startPolling();
   }).catch(() => {});
 }
@@ -683,8 +796,8 @@ if (provider) {
 // Start polling even without wallet (to show signals)
 setTimeout(() => { if (!pollTimer) startPolling(); }, 2000);
 
-// Refresh balance every 30s
-setInterval(() => { if (walletAddress) updateBalance(); }, 30000);
+// Refresh balance + tokens every 30s
+setInterval(() => { if (walletAddress) { updateBalance(); loadTokenHoldings(); } }, 30000);
 </script>
 </body>
 </html>
