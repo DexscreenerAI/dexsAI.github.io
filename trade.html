@@ -161,17 +161,18 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
       <input class="config-input" type="number" id="slippage" value="15" min="1" max="50" step="1">
       <span class="config-unit">%</span>
     </div>
-    <div class="config-row">
-      <span class="config-label">Auto sell at</span>
-      <input class="config-input" type="number" id="autoSellPct" value="20" min="5" max="500" step="5">
-      <span class="config-unit">% profit</span>
-    </div>
   </div>
 
   <!-- AUTO MODE -->
   <div class="auto-toggle" id="autoToggle" onclick="toggleAutoMode()">
     <div class="toggle-switch"></div>
-    <div class="toggle-text"><strong>AUTO MODE</strong> — Buy automatically when all 3 AI agents approve</div>
+    <div class="toggle-text"><strong>AUTO MODE</strong> — Buy automatically when sniper buys</div>
+  </div>
+
+  <!-- AUTO SELL -->
+  <div class="auto-toggle" id="autoSellToggle" onclick="toggleAutoSell()">
+    <div class="toggle-switch"></div>
+    <div class="toggle-text"><strong>AUTO SELL</strong> — Sell automatically when sniper sells (follows AI EXIT, TRAIL, etc.)</div>
   </div>
 
   <!-- LIVE SIGNALS -->
@@ -209,26 +210,38 @@ const SNIPER_API = 'https://dexscreener-telegram-bot-production.up.railway.app/a
 const JUPITER_API = 'https://quote-api.jup.ag/v6';
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
 const LAMPORTS = 1_000_000_000;
+const RPC_URL = 'https://api.mainnet-beta.solana.com';
 
+let provider = null; // Phantom provider
 let walletAddress = null;
 let solBalance = 0;
 let solPrice = 0;
 let autoMode = false;
-let positions = []; // {symbol, address, mint, entryPrice, amount, solSpent, time}
+let autoSell = false;
+let positions = JSON.parse(localStorage.getItem('byeboss_positions') || '[]');
 let tradeHistory = JSON.parse(localStorage.getItem('byeboss_trades') || '[]');
-let lastSignals = [];
+let previousSniperAddresses = new Set(); // Track sniper positions to detect sells
 let pollTimer = null;
 
 // ═══════════════════════════════════════════════════════════════
-// PHANTOM WALLET
+// PHANTOM WALLET — Support both old and new provider
 // ═══════════════════════════════════════════════════════════════
+function getProvider() {
+  if (window.phantom?.solana?.isPhantom) return window.phantom.solana;
+  if (window.solana?.isPhantom) return window.solana;
+  return null;
+}
+
 async function connectWallet() {
+  provider = getProvider();
+  if (!provider) {
+    // Phantom not installed — open install page
+    window.open('https://phantom.app/', '_blank');
+    return;
+  }
+
   try {
-    if (!window.solana || !window.solana.isPhantom) {
-      window.open('https://phantom.app/', '_blank');
-      return;
-    }
-    const resp = await window.solana.connect();
+    const resp = await provider.connect();
     walletAddress = resp.publicKey.toString();
 
     document.getElementById('walletBtn').className = 'wallet-btn connected';
@@ -236,50 +249,53 @@ async function connectWallet() {
     document.getElementById('walletInfo').classList.add('show');
     document.getElementById('walletAddr').textContent = walletAddress;
 
+    await loadSolanaWeb3();
     await updateBalance();
     startPolling();
   } catch (e) {
     console.error('Wallet connect failed:', e);
+    alert('Connection refused. Open Phantom and try again.');
   }
 }
 
 async function updateBalance() {
-  if (!walletAddress) return;
+  if (!walletAddress || !_web3) return;
   try {
-    const conn = new (await getSolanaWeb3()).Connection('https://api.mainnet-beta.solana.com');
-    const pubkey = new (await getSolanaWeb3()).PublicKey(walletAddress);
+    const conn = new _web3.Connection(RPC_URL);
+    const pubkey = new _web3.PublicKey(walletAddress);
     const bal = await conn.getBalance(pubkey);
     solBalance = bal / LAMPORTS;
     document.getElementById('solBalance').textContent = solBalance.toFixed(4);
 
     // Get SOL price
-    const res = await fetch('https://api.dexscreener.com/latest/dex/tokens/So11111111111111111111111111111111111111112');
-    const data = await res.json();
-    solPrice = parseFloat(data.pairs?.[0]?.priceUsd) || 130;
+    try {
+      const res = await fetch('https://api.dexscreener.com/latest/dex/tokens/So11111111111111111111111111111111111111112');
+      const data = await res.json();
+      solPrice = parseFloat(data.pairs?.[0]?.priceUsd) || 130;
+    } catch(e) { solPrice = 130; }
     document.getElementById('usdValue').textContent = `$${(solBalance * solPrice).toFixed(2)}`;
-  } catch (e) {}
+  } catch (e) { console.error('Balance error:', e); }
 }
 
-// Lazy load solana web3
+// Load Solana web3.js from CDN
 let _web3 = null;
-async function getSolanaWeb3() {
-  if (_web3) return _web3;
-  // Use CDN
-  await new Promise((resolve) => {
+function loadSolanaWeb3() {
+  return new Promise((resolve) => {
+    if (_web3) { resolve(); return; }
     if (window.solanaWeb3) { _web3 = window.solanaWeb3; resolve(); return; }
     const s = document.createElement('script');
     s.src = 'https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js';
     s.onload = () => { _web3 = window.solanaWeb3; resolve(); };
+    s.onerror = () => { alert('Failed to load Solana library'); resolve(); };
     document.head.appendChild(s);
   });
-  return _web3;
 }
 
 // ═══════════════════════════════════════════════════════════════
 // JUPITER SWAP
 // ═══════════════════════════════════════════════════════════════
 async function buyToken(tokenMint, solAmount) {
-  if (!walletAddress) { alert('Connect wallet first'); return null; }
+  if (!walletAddress || !provider) { alert('Connect wallet first'); return null; }
   if (solAmount > solBalance) { alert('Insufficient SOL balance'); return null; }
 
   try {
@@ -304,27 +320,26 @@ async function buyToken(tokenMint, solAmount) {
     const swap = await swapRes.json();
     if (swap.error) throw new Error(swap.error);
 
-    // 3. Sign & send via Phantom
-    const web3 = await getSolanaWeb3();
-    const tx = web3.Transaction.from(Buffer.from(swap.swapTransaction, 'base64'));
-    const signed = await window.solana.signTransaction(tx);
-    const conn = new web3.Connection('https://api.mainnet-beta.solana.com');
-    const sig = await conn.sendRawTransaction(signed.serialize());
-    await conn.confirmTransaction(sig, 'confirmed');
+    // 3. Deserialize, sign via Phantom, send
+    const txBuf = Uint8Array.from(atob(swap.swapTransaction), c => c.charCodeAt(0));
+    const tx = _web3.VersionedTransaction.deserialize(txBuf);
+    const signed = await provider.signTransaction(tx);
+    const conn = new _web3.Connection(RPC_URL);
+    const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: true });
 
-    // Update balance
+    addLog(`✅ BUY $${tokenMint.slice(0,6)}... — tx: ${sig.slice(0,12)}...`);
     await updateBalance();
     return { signature: sig, outAmount: quote.outAmount, tokenMint };
 
   } catch (e) {
     console.error('Buy failed:', e);
-    alert('Swap failed: ' + e.message);
+    addLog(`❌ BUY FAILED: ${e.message}`);
     return null;
   }
 }
 
 async function sellToken(tokenMint, tokenAmount) {
-  if (!walletAddress) return null;
+  if (!walletAddress || !provider) return null;
   try {
     const slippage = parseInt(document.getElementById('slippage').value) * 100;
 
@@ -342,21 +357,28 @@ async function sellToken(tokenMint, tokenAmount) {
       })
     });
     const swap = await swapRes.json();
+    if (swap.error) throw new Error(swap.error);
 
-    const web3 = await getSolanaWeb3();
-    const tx = web3.Transaction.from(Buffer.from(swap.swapTransaction, 'base64'));
-    const signed = await window.solana.signTransaction(tx);
-    const conn = new web3.Connection('https://api.mainnet-beta.solana.com');
-    const sig = await conn.sendRawTransaction(signed.serialize());
-    await conn.confirmTransaction(sig, 'confirmed');
+    const txBuf = Uint8Array.from(atob(swap.swapTransaction), c => c.charCodeAt(0));
+    const tx = _web3.VersionedTransaction.deserialize(txBuf);
+    const signed = await provider.signTransaction(tx);
+    const conn = new _web3.Connection(RPC_URL);
+    const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: true });
 
+    addLog(`✅ SELL — tx: ${sig.slice(0,12)}...`);
     await updateBalance();
     return { signature: sig, outAmount: quote.outAmount };
   } catch (e) {
     console.error('Sell failed:', e);
-    alert('Sell failed: ' + e.message);
+    addLog(`❌ SELL FAILED: ${e.message}`);
     return null;
   }
+}
+
+function addLog(msg) {
+  const status = document.getElementById('statusText');
+  status.textContent = msg;
+  console.log('[ByeBoss]', msg);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -376,24 +398,38 @@ async function pollSignals() {
     const state = await res.json();
 
     document.getElementById('lastScan').textContent = `Trades: ${state.totalTrades || 0} | Win: ${state.winRate || '0%'}`;
+    document.getElementById('statusDot').className = 'status-dot live';
 
-    // Show open positions from sniper as signals
     const sniperPositions = state.positions || [];
-    const newSignals = sniperPositions.filter(p => !lastSignals.find(s => s.address === p.address));
+    const currentAddresses = new Set(sniperPositions.map(p => p.address));
 
-    if (newSignals.length > 0) {
-      newSignals.forEach(sig => {
+    // DETECT NEW BUYS — sniper opened a new position
+    sniperPositions.forEach(sig => {
+      if (!previousSniperAddresses.has(sig.address)) {
         addSignal(sig);
         // Auto-buy if enabled
         if (autoMode && walletAddress) {
           const amount = parseFloat(document.getElementById('tradeAmount').value);
           handleBuy(sig.symbol, sig.address, amount, sig);
         }
+      }
+    });
+
+    // DETECT SELLS — sniper closed a position (was in previous, not in current)
+    if (autoSell && walletAddress && previousSniperAddresses.size > 0) {
+      previousSniperAddresses.forEach(addr => {
+        if (!currentAddresses.has(addr)) {
+          // Sniper sold this token — sell our matching position
+          const posIdx = positions.findIndex(p => p.address === addr);
+          if (posIdx !== -1) {
+            addLog(`🤖 AUTO SELL $${positions[posIdx].symbol} — sniper exited`);
+            handleSell(posIdx);
+          }
+        }
       });
     }
-    lastSignals = sniperPositions;
 
-    // Update sniper positions display
+    previousSniperAddresses = currentAddresses;
     renderSniperPositions(sniperPositions);
 
   } catch (e) {
@@ -520,6 +556,7 @@ async function handleBuy(symbol, address, solAmount, sig) {
       entryPrice: 0, amount: result.outAmount,
       solSpent: solAmount, time: Date.now()
     });
+    savePositions();
     tradeHistory.unshift({ symbol, type: 'BUY', amount: solAmount, time: Date.now(), sig: result.signature });
     localStorage.setItem('byeboss_trades', JSON.stringify(tradeHistory));
     renderHistory();
@@ -541,17 +578,29 @@ async function handleSell(posIndex) {
     tradeHistory.unshift({ symbol: pos.symbol, type: 'SELL', amount: solOut.toFixed(4), time: Date.now(), sig: result.signature });
     localStorage.setItem('byeboss_trades', JSON.stringify(tradeHistory));
     positions.splice(posIndex, 1);
+    savePositions();
     renderHistory();
-    pollSignals(); // Refresh UI
+    pollSignals();
   }
 }
 
+function savePositions() {
+  localStorage.setItem('byeboss_positions', JSON.stringify(positions));
+}
+
 // ═══════════════════════════════════════════════════════════════
-// AUTO MODE
+// TOGGLES
 // ═══════════════════════════════════════════════════════════════
 function toggleAutoMode() {
   autoMode = !autoMode;
   document.getElementById('autoToggle').classList.toggle('active', autoMode);
+  addLog(autoMode ? '🤖 Auto BUY enabled' : '⏸️ Auto BUY disabled');
+}
+
+function toggleAutoSell() {
+  autoSell = !autoSell;
+  document.getElementById('autoSellToggle').classList.toggle('active', autoSell);
+  addLog(autoSell ? '🤖 Auto SELL enabled — follows sniper exits' : '⏸️ Auto SELL disabled');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -560,20 +609,25 @@ function toggleAutoMode() {
 renderHistory();
 
 // Auto-reconnect Phantom if previously connected
-if (window.solana?.isPhantom) {
-  window.solana.connect({ onlyIfTrusted: true }).then(resp => {
+provider = getProvider();
+if (provider) {
+  provider.connect({ onlyIfTrusted: true }).then(async (resp) => {
     walletAddress = resp.publicKey.toString();
     document.getElementById('walletBtn').className = 'wallet-btn connected';
     document.getElementById('walletBtn').innerHTML = `🟢 ${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}`;
     document.getElementById('walletInfo').classList.add('show');
     document.getElementById('walletAddr').textContent = walletAddress;
-    updateBalance();
+    await loadSolanaWeb3();
+    await updateBalance();
     startPolling();
   }).catch(() => {});
 }
 
 // Start polling even without wallet (to show signals)
 setTimeout(() => { if (!pollTimer) startPolling(); }, 2000);
+
+// Refresh balance every 30s
+setInterval(() => { if (walletAddress) updateBalance(); }, 30000);
 </script>
 </body>
 </html>
