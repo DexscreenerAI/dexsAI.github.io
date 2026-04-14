@@ -320,8 +320,13 @@ async function updateGlobalBurnCounter() {
 }
 
 function setBurnAmount(account, amount) {
-  burnAmounts[account] = parseFloat(amount);
-  renderTokens();
+  const t = tokenAccounts.find(t => t.account === account);
+  let amt = parseFloat(amount);
+  if (t && amt > t.amount) amt = t.amount;
+  if (amt < 0) amt = 0;
+  burnAmounts[account] = amt;
+  // Update display without full re-render (avoids slider jump)
+  document.getElementById('selectedCount').textContent = selected.size;
 }
 
 function toggleToken(account) {
@@ -376,14 +381,15 @@ async function burnSelected() {
       const tokenInfo = tokenAccounts.find(t => t.account === accountAddr);
       if (!tokenInfo) continue;
       const progId = tokenInfo.programId || TOKEN_CLASSIC;
-      const amountToBurn = burnAmounts[accountAddr] ?? tokenInfo.amount;
-      const burnAll = amountToBurn >= tokenInfo.amount;
+      let amountToBurn = burnAmounts[accountAddr] ?? tokenInfo.amount;
+      if (amountToBurn > tokenInfo.amount) amountToBurn = tokenInfo.amount;
+      const burnAll = amountToBurn >= tokenInfo.amount * 0.999; // treat 99.9%+ as "all"
 
       const tx = new solanaWeb3.Transaction();
 
-      // If not burning all, first burn the tokens (instruction 8)
-      if (!burnAll && amountToBurn > 0) {
-        const rawAmt = BigInt(Math.floor(amountToBurn * Math.pow(10, tokenInfo.decimals)));
+      // Always burn the tokens first (instruction 8)
+      if (amountToBurn > 0) {
+        const rawAmt = BigInt(Math.round(amountToBurn * Math.pow(10, tokenInfo.decimals)));
         const burnData = new Uint8Array(9);
         burnData[0] = 8; // Burn instruction
         const view = new DataView(burnData.buffer);
