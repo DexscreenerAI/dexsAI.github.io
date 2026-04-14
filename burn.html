@@ -161,7 +161,7 @@ async function loadTokens() {
 
   try {
     // Use RPC directly with getParsedTokenAccountsByOwner
-    const res = await fetch('https://api.mainnet-beta.solana.com', {
+    const res = await fetch('https://rpc.ankr.com/solana', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -293,7 +293,7 @@ async function burnSelected() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> BURNING...';
 
-  const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+  const conn = new solanaWeb3.Connection('https://rpc.ankr.com/solana');
   const TOKEN_PROGRAM = new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
   let burned = 0;
   let failed = 0;
