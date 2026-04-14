@@ -228,7 +228,7 @@ const SNIPER_API = 'https://dexscreener-telegram-bot-production.up.railway.app/a
 const JUPITER_API = 'https://quote-api.jup.ag/v6';
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
 const LAMPORTS = 1_000_000_000;
-const RPC_URL = 'https://rpc.ankr.com/solana';
+const RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=e2f9fdd3-dffc-40b8-abb7-3fb07aadeb55';
 
 let provider = null; // Phantom provider
 let walletAddress = null;
@@ -321,7 +321,7 @@ async function loadTokenHoldings() {
 
   try {
     // Fetch all token accounts via Helius DAS API (free, no key needed for this)
-    const res = await fetch('https://rpc.ankr.com/solana', {
+    const res = await fetch('https://mainnet.helius-rpc.com/?api-key=e2f9fdd3-dffc-40b8-abb7-3fb07aadeb55', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

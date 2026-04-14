@@ -115,7 +115,30 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
 
 <script src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
 <script>
-const SOL_RENT_PER_ACCOUNT = 0.00203928;
+const SOLANA_RPCS = [
+  'https://mainnet.helius-rpc.com/?api-key=e2f9fdd3-dffc-40b8-abb7-3fb07aadeb55',
+  'https://solana-mainnet.g.alchemy.com/v2/demo',
+  'https://rpc.ankr.com/solana',
+  'https://api.mainnet-beta.solana.com',
+];
+
+async function rpcCall(method, params) {
+  for (const rpc of SOLANA_RPCS) {
+    try {
+      const res = await fetch(rpc, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+        signal: AbortSignal.timeout(10000)
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.error) continue;
+      return data.result;
+    } catch(e) { continue; }
+  }
+  throw new Error('All RPCs failed');
+}
 let provider = null;
 let walletAddress = null;
 let tokenAccounts = [];
@@ -160,23 +183,12 @@ async function loadTokens() {
   list.innerHTML = '<div class="empty"><span class="spinner"></span> Scanning wallet...</div>';
 
   try {
-    // Use RPC directly with getParsedTokenAccountsByOwner
-    const res = await fetch('https://rpc.ankr.com/solana', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0', id: 1,
-        method: 'getTokenAccountsByOwner',
-        params: [
-          walletAddress,
-          { programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' },
-          { encoding: 'jsonParsed' }
-        ]
-      }),
-      signal: AbortSignal.timeout(15000)
-    });
-    const data = await res.json();
-    const accounts = data.result?.value || [];
+    const result = await rpcCall('getTokenAccountsByOwner', [
+      walletAddress,
+      { programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' },
+      { encoding: 'jsonParsed' }
+    ]);
+    const accounts = result?.value || [];
 
     console.log(`Found ${accounts.length} token accounts`);
 
@@ -293,7 +305,7 @@ async function burnSelected() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> BURNING...';
 
-  const conn = new solanaWeb3.Connection('https://rpc.ankr.com/solana');
+  const conn = new solanaWeb3.Connection(SOLANA_RPCS[0]);
   const TOKEN_PROGRAM = new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
   let burned = 0;
   let failed = 0;
