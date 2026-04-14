@@ -114,12 +114,11 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
 </div>
 
 <script src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
-<script src="https://unpkg.com/@solana/spl-token@0.3.8/lib/index.iife.min.js"></script>
 <script>
-const SOL_RENT_PER_ACCOUNT = 0.00203928; // ~rent per token account
+const SOL_RENT_PER_ACCOUNT = 0.00203928;
 let provider = null;
 let walletAddress = null;
-let tokenAccounts = []; // {mint, amount, decimals, account, symbol, name, logoUrl, usdValue}
+let tokenAccounts = [];
 let selected = new Set();
 
 function getProvider() {
@@ -161,38 +160,57 @@ async function loadTokens() {
   list.innerHTML = '<div class="empty"><span class="spinner"></span> Scanning wallet...</div>';
 
   try {
-    const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
-    const pubkey = new solanaWeb3.PublicKey(walletAddress);
+    // Use RPC directly with getParsedTokenAccountsByOwner
+    const res = await fetch('https://api.mainnet-beta.solana.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0', id: 1,
+        method: 'getTokenAccountsByOwner',
+        params: [
+          walletAddress,
+          { programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' },
+          { encoding: 'jsonParsed' }
+        ]
+      }),
+      signal: AbortSignal.timeout(15000)
+    });
+    const data = await res.json();
+    const accounts = data.result?.value || [];
 
-    const res = await conn.getParsedTokenAccountsByOwner(pubkey, { programId: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA') });
+    console.log(`Found ${accounts.length} token accounts`);
 
-    tokenAccounts = res.value.map(a => {
+    tokenAccounts = accounts.map(a => {
       const info = a.account.data.parsed.info;
       return {
         mint: info.mint,
         amount: parseFloat(info.tokenAmount.uiAmountString) || 0,
         decimals: info.tokenAmount.decimals,
         rawAmount: info.tokenAmount.amount,
-        account: a.pubkey.toString(),
+        account: a.pubkey,
         symbol: '',
         name: '',
         logoUrl: `https://dd.dexscreener.com/ds-data/tokens/solana/${info.mint}.png`,
         usdValue: 0
       };
-    }).sort((a, b) => a.amount - b.amount); // worthless first
+    });
 
     document.getElementById('tokenCount').textContent = tokenAccounts.length;
     document.getElementById('rentRecover').textContent = (tokenAccounts.length * SOL_RENT_PER_ACCOUNT).toFixed(4);
 
-    // Fetch names for top tokens via DexScreener
-    const mints = tokenAccounts.slice(0, 30).map(t => t.mint);
-    for (let i = 0; i < mints.length; i += 5) {
-      const batch = mints.slice(i, i + 5).join(',');
+    if (!tokenAccounts.length) {
+      list.innerHTML = '<div class="empty">No tokens found in wallet</div>';
+      return;
+    }
+
+    // Fetch names via DexScreener (batches of 5)
+    for (let i = 0; i < Math.min(tokenAccounts.length, 30); i += 5) {
+      const batch = tokenAccounts.slice(i, i + 5).map(t => t.mint).join(',');
       try {
-        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${batch}`, { signal: AbortSignal.timeout(5000) });
-        const data = await res.json();
-        if (data.pairs) {
-          data.pairs.forEach(p => {
+        const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${batch}`, { signal: AbortSignal.timeout(5000) });
+        const d = await r.json();
+        if (d.pairs) {
+          d.pairs.forEach(p => {
             const t = tokenAccounts.find(t => t.mint === p.baseToken?.address);
             if (t && !t.symbol) {
               t.symbol = p.baseToken.symbol;
@@ -206,6 +224,7 @@ async function loadTokens() {
 
     renderTokens();
   } catch(e) {
+    console.error('Load error:', e);
     list.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
   }
 }
@@ -275,6 +294,7 @@ async function burnSelected() {
   btn.innerHTML = '<span class="spinner"></span> BURNING...';
 
   const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+  const TOKEN_PROGRAM = new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
   let burned = 0;
   let failed = 0;
 
@@ -283,15 +303,19 @@ async function burnSelected() {
       const el = document.getElementById(`tok-${accountAddr}`);
       if (el) el.classList.add('burning');
 
-      // Create close account instruction
-      const tx = new solanaWeb3.Transaction().add(
-        splToken.createCloseAccountInstruction(
-          new solanaWeb3.PublicKey(accountAddr),  // account to close
-          new solanaWeb3.PublicKey(walletAddress), // rent destination
-          new solanaWeb3.PublicKey(walletAddress), // owner
-        )
-      );
+      // Build CloseAccount instruction manually (index 9 in Token program)
+      const keys = [
+        { pubkey: new solanaWeb3.PublicKey(accountAddr), isSigner: false, isWritable: true },   // account to close
+        { pubkey: new solanaWeb3.PublicKey(walletAddress), isSigner: false, isWritable: true },  // rent destination
+        { pubkey: new solanaWeb3.PublicKey(walletAddress), isSigner: true, isWritable: false },  // owner
+      ];
+      const closeIx = new solanaWeb3.TransactionInstruction({
+        programId: TOKEN_PROGRAM,
+        keys,
+        data: Buffer.from([9]) // CloseAccount = instruction index 9
+      });
 
+      const tx = new solanaWeb3.Transaction().add(closeIx);
       tx.feePayer = new solanaWeb3.PublicKey(walletAddress);
       tx.recentBlockhash = (await conn.getLatestBlockhash()).blockhash;
 
