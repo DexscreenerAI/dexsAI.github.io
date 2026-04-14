@@ -259,7 +259,8 @@ function renderTokens() {
     const isSelected = selected.has(t.account);
     const burnAmt = burnAmounts[t.account] ?? t.amount;
     const fmtAmt = n => n >= 1e9 ? (n/1e9).toFixed(1)+'B' : n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : n.toFixed(2);
-    const logoUrl = t.logoUrl || `https://dd.dexscreener.com/ds-data/tokens/solana/${t.mint}.png`;
+    const isByeBoss = t.mint === BYEBOSS_MINT || sym.toLowerCase().includes('byeboss') || sym.toLowerCase().includes('bye');
+    const logoUrl = isByeBoss ? 'https://i.ibb.co/XxT1q0Fg/IMG-9805.png' : (t.logoUrl || `https://dd.dexscreener.com/ds-data/tokens/solana/${t.mint}.png`);
     const dexUrl = `https://dexscreener.com/solana/${t.mint}`;
 
     return `<div class="token-item ${isSelected ? 'selected' : ''}" id="tok-${t.account}">
