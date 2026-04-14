@@ -91,11 +91,17 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
   </div>
 
   <!-- STATS -->
+  <!-- GLOBAL BURN COUNTER -->
+  <div style="background:linear-gradient(135deg,rgba(255,59,79,0.1),rgba(255,23,68,0.05));border:1px solid rgba(255,59,79,0.3);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px">
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:6px">🔥 $BYEBOSS BURNED GLOBALLY (ON-CHAIN)</div>
+    <div style="font-family:var(--mono);font-size:28px;font-weight:900;color:var(--red)" id="globalBurned">...</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px">Supply: <span id="currentSupply">...</span> / 1,000,000,000</div>
+  </div>
+
   <div class="burn-stats">
-    <div class="burn-stat"><div class="burn-stat-val" id="tokenCount">0</div><div class="burn-stat-lbl">TOKENS</div></div>
+    <div class="burn-stat"><div class="burn-stat-val" id="tokenCount">0</div><div class="burn-stat-lbl">YOUR TOKENS</div></div>
     <div class="burn-stat"><div class="burn-stat-val red" id="selectedCount">0</div><div class="burn-stat-lbl">SELECTED</div></div>
     <div class="burn-stat"><div class="burn-stat-val" id="rentRecover" style="color:var(--green)">0</div><div class="burn-stat-lbl">SOL RECOVER</div></div>
-    <div class="burn-stat" style="border-color:rgba(255,59,79,0.3);background:rgba(255,59,79,0.05)"><div class="burn-stat-val red" id="totalBurnedDisplay">0</div><div class="burn-stat-lbl">🔥 TOTAL BURNED</div></div>
   </div>
 
   <!-- ACTIONS -->
@@ -296,12 +302,20 @@ function formatBurnAmt(n) {
 }
 
 let burnAmounts = {}; // account -> amount to burn
-let lifetimeBurned = JSON.parse(localStorage.getItem('byeboss_burned') || '{}'); // {mint: totalAmount}
+const BYEBOSS_MINT = 'BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump';
+const INITIAL_SUPPLY = 1_000_000_000;
 
-function updateBurnedDisplay() {
-  const total = Object.values(lifetimeBurned).reduce((s, v) => s + v, 0);
-  const el = document.getElementById('totalBurnedDisplay');
-  el.textContent = total >= 1e9 ? (total/1e9).toFixed(1)+'B' : total >= 1e6 ? (total/1e6).toFixed(1)+'M' : total >= 1e3 ? (total/1e3).toFixed(0)+'K' : total.toFixed(0);
+async function updateGlobalBurnCounter() {
+  try {
+    const result = await rpcCall('getTokenSupply', [BYEBOSS_MINT]);
+    const currentSupply = parseFloat(result?.value?.uiAmountString) || 0;
+    const burned = INITIAL_SUPPLY - currentSupply;
+    const fmt = n => n >= 1e6 ? (n/1e6).toFixed(2)+'M' : n >= 1e3 ? (n/1e3).toFixed(0)+'K' : n.toFixed(0);
+    document.getElementById('globalBurned').textContent = fmt(burned);
+    document.getElementById('currentSupply').textContent = fmt(currentSupply);
+  } catch(e) {
+    document.getElementById('globalBurned').textContent = '—';
+  }
 }
 
 function setBurnAmount(account, amount) {
@@ -430,21 +444,17 @@ async function burnSelected() {
     }
   }
 
-  // Save burn counter
-  if (totalBurned > 0) {
-    lifetimeBurned['all'] = (lifetimeBurned['all'] || 0) + totalBurned;
-    localStorage.setItem('byeboss_burned', JSON.stringify(lifetimeBurned));
-    updateBurnedDisplay();
-  }
+  // Refresh global counter
+  await updateGlobalBurnCounter();
 
-  alert(`🔥 Burned ${burned} tokens (${formatBurnAmt(totalBurned)} tokens)!\n${failed > 0 ? `${failed} failed.\n` : ''}~${(burned * SOL_RENT_PER_ACCOUNT).toFixed(4)} SOL recovered.`);
+  alert(`🔥 Burned ${burned} token${burned > 1 ? 's' : ''} (${formatBurnAmt(totalBurned)} tokens)!\n${failed > 0 ? `${failed} failed.\n` : ''}~${(burned * SOL_RENT_PER_ACCOUNT).toFixed(4)} SOL recovered.`);
   renderTokens();
   btn.disabled = false;
   btn.textContent = '🔥 SELECT TOKENS TO BURN';
 }
 
-// Init burn counter display
-updateBurnedDisplay();
+// Init global burn counter
+updateGlobalBurnCounter();
 
 // Auto-reconnect
 provider = getProvider();
