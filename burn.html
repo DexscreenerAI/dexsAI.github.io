@@ -115,6 +115,7 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
 
 <script src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
 <script>
+const SOL_RENT_PER_ACCOUNT = 0.00203928;
 const RPC_PROXY = 'https://dexscreener-telegram-bot-production.up.railway.app/api/rpc';
 
 async function rpcCall(method, params) {
@@ -172,13 +173,14 @@ async function loadTokens() {
   list.innerHTML = '<div class="empty"><span class="spinner"></span> Scanning wallet...</div>';
 
   try {
+    console.log('Wallet:', walletAddress);
     const result = await rpcCall('getTokenAccountsByOwner', [
       walletAddress,
       { programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' },
       { encoding: 'jsonParsed' }
     ]);
+    console.log('RPC result:', JSON.stringify(result).slice(0, 500));
     const accounts = result?.value || [];
-
     console.log(`Found ${accounts.length} token accounts`);
 
     tokenAccounts = accounts.map(a => {
