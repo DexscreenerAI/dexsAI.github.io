@@ -250,19 +250,38 @@ function renderTokens() {
     const sym = t.symbol || t.mint.slice(0, 6) + '...';
     const name = t.name || t.mint.slice(0, 12) + '...';
     const isSelected = selected.has(t.account);
-    const isWorthless = t.usdValue < 0.01;
-    const amtStr = t.amount >= 1e9 ? (t.amount/1e9).toFixed(1)+'B' : t.amount >= 1e6 ? (t.amount/1e6).toFixed(1)+'M' : t.amount >= 1e3 ? (t.amount/1e3).toFixed(1)+'K' : t.amount.toFixed(2);
+    const burnAmt = burnAmounts[t.account] ?? t.amount;
+    const fmtAmt = n => n >= 1e9 ? (n/1e9).toFixed(1)+'B' : n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : n.toFixed(2);
+    const logoUrl = t.logoUrl || `https://dd.dexscreener.com/ds-data/tokens/solana/${t.mint}.png`;
+    const dexUrl = `https://dexscreener.com/solana/${t.mint}`;
 
-    return `<div class="token-item ${isSelected ? 'selected' : ''}" id="tok-${t.account}" onclick="toggleToken('${t.account}')">
-      <div class="token-check ${isSelected ? 'checked' : ''}">${isSelected ? '✓' : ''}</div>
-      <div class="token-logo"><img src="${t.logoUrl}" onerror="this.parentElement.innerHTML='🪙'"></div>
-      <div class="token-info">
+    return `<div class="token-item ${isSelected ? 'selected' : ''}" id="tok-${t.account}">
+      <div class="token-check ${isSelected ? 'checked' : ''}" onclick="toggleToken('${t.account}')">${isSelected ? '✓' : ''}</div>
+      <a href="${dexUrl}" target="_blank" style="text-decoration:none">
+        <div class="token-logo"><img src="${logoUrl}" onerror="this.onerror=null;this.src='';this.parentElement.innerHTML='🪙'" style="width:32px;height:32px;border-radius:50%"></div>
+      </a>
+      <div class="token-info" onclick="toggleToken('${t.account}')" style="cursor:pointer">
         <div class="token-symbol">$${sym}</div>
-        <div class="token-name">${name}</div>
+        <div class="token-name">${name} · <span style="color:var(--text3)">${t.mint.slice(0,6)}...</span></div>
       </div>
-      <div class="token-amount">
-        <div class="token-bal">${amtStr}</div>
-        <div class="token-usd">${t.usdValue > 0.01 ? '$'+t.usdValue.toFixed(2) : isWorthless ? '💀 worthless' : '-'}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:120px">
+        <div class="token-bal" style="font-size:11px">Balance: ${fmtAmt(t.amount)}</div>
+        ${isSelected ? `
+          <div style="display:flex;align-items:center;gap:4px;width:100%">
+            <input type="range" min="0" max="${t.amount}" step="${t.amount/100 || 1}" value="${burnAmt}"
+              oninput="setBurnAmount('${t.account}',this.value);this.nextElementSibling.textContent=formatBurnAmt(this.value)"
+              onclick="event.stopPropagation()"
+              style="flex:1;accent-color:var(--red);height:4px;cursor:pointer">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--red);min-width:40px;text-align:right">${fmtAmt(burnAmt)}</span>
+          </div>
+          <div style="display:flex;gap:4px;width:100%">
+            <button onclick="event.stopPropagation();setBurnAmount('${t.account}',${t.amount * 0.25})" style="flex:1;padding:2px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text3);font-family:var(--mono);font-size:8px;cursor:pointer">25%</button>
+            <button onclick="event.stopPropagation();setBurnAmount('${t.account}',${t.amount * 0.5})" style="flex:1;padding:2px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text3);font-family:var(--mono);font-size:8px;cursor:pointer">50%</button>
+            <button onclick="event.stopPropagation();setBurnAmount('${t.account}',${t.amount})" style="flex:1;padding:2px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--red);font-family:var(--mono);font-size:8px;cursor:pointer;font-weight:700">MAX</button>
+          </div>
+        ` : `
+          <div class="token-usd">${t.usdValue > 0.01 ? '$'+t.usdValue.toFixed(2) : '💀'}</div>
+        `}
       </div>
     </div>`;
   }).join('');
@@ -270,16 +289,36 @@ function renderTokens() {
   updateBurnBtn();
 }
 
+function formatBurnAmt(n) {
+  n = parseFloat(n);
+  return n >= 1e9 ? (n/1e9).toFixed(1)+'B' : n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : n.toFixed(2);
+}
+
+let burnAmounts = {}; // account -> amount to burn
+
+function setBurnAmount(account, amount) {
+  burnAmounts[account] = parseFloat(amount);
+  renderTokens();
+}
+
 function toggleToken(account) {
-  if (selected.has(account)) selected.delete(account);
-  else selected.add(account);
+  if (selected.has(account)) {
+    selected.delete(account);
+    delete burnAmounts[account];
+  } else {
+    selected.add(account);
+    const t = tokenAccounts.find(t => t.account === account);
+    if (t) burnAmounts[account] = t.amount; // default: burn all
+  }
   renderTokens();
 }
 
 function selectAll() {
-  // Select all tokens worth < $0.01
   tokenAccounts.forEach(t => {
-    if (t.usdValue < 0.01) selected.add(t.account);
+    if (t.usdValue < 0.01) {
+      selected.add(t.account);
+      burnAmounts[t.account] = t.amount;
+    }
   });
   renderTokens();
 }
@@ -305,28 +344,51 @@ async function burnSelected() {
   let burned = 0;
   let failed = 0;
 
-  for (const accountAddr of selected) {
+  for (const accountAddr of [...selected]) {
     try {
       const el = document.getElementById(`tok-${accountAddr}`);
       if (el) el.classList.add('burning');
 
-      // Find which program this token uses
       const tokenInfo = tokenAccounts.find(t => t.account === accountAddr);
-      const progId = tokenInfo?.programId || TOKEN_CLASSIC;
+      if (!tokenInfo) continue;
+      const progId = tokenInfo.programId || TOKEN_CLASSIC;
+      const amountToBurn = burnAmounts[accountAddr] ?? tokenInfo.amount;
+      const burnAll = amountToBurn >= tokenInfo.amount;
 
-      // Build CloseAccount instruction manually (index 9 in Token program)
-      const keys = [
-        { pubkey: new solanaWeb3.PublicKey(accountAddr), isSigner: false, isWritable: true },
-        { pubkey: new solanaWeb3.PublicKey(walletAddress), isSigner: false, isWritable: true },
-        { pubkey: new solanaWeb3.PublicKey(walletAddress), isSigner: true, isWritable: false },
-      ];
-      const closeIx = new solanaWeb3.TransactionInstruction({
-        programId: new solanaWeb3.PublicKey(progId),
-        keys,
-        data: Buffer.from([9])
-      });
+      const tx = new solanaWeb3.Transaction();
 
-      const tx = new solanaWeb3.Transaction().add(closeIx);
+      // If not burning all, first burn the tokens (instruction 8)
+      if (!burnAll && amountToBurn > 0) {
+        const rawAmt = BigInt(Math.floor(amountToBurn * Math.pow(10, tokenInfo.decimals)));
+        const burnData = new Uint8Array(9);
+        burnData[0] = 8; // Burn instruction
+        const view = new DataView(burnData.buffer);
+        view.setBigUint64(1, rawAmt, true); // little-endian amount
+
+        tx.add(new solanaWeb3.TransactionInstruction({
+          programId: new solanaWeb3.PublicKey(progId),
+          keys: [
+            { pubkey: new solanaWeb3.PublicKey(accountAddr), isSigner: false, isWritable: true },
+            { pubkey: new solanaWeb3.PublicKey(tokenInfo.mint), isSigner: false, isWritable: true },
+            { pubkey: new solanaWeb3.PublicKey(walletAddress), isSigner: true, isWritable: false },
+          ],
+          data: burnData
+        }));
+      }
+
+      // If burning all, also close the account to recover rent
+      if (burnAll) {
+        tx.add(new solanaWeb3.TransactionInstruction({
+          programId: new solanaWeb3.PublicKey(progId),
+          keys: [
+            { pubkey: new solanaWeb3.PublicKey(accountAddr), isSigner: false, isWritable: true },
+            { pubkey: new solanaWeb3.PublicKey(walletAddress), isSigner: false, isWritable: true },
+            { pubkey: new solanaWeb3.PublicKey(walletAddress), isSigner: true, isWritable: false },
+          ],
+          data: Buffer.from([9]) // CloseAccount
+        }));
+      }
+
       tx.feePayer = new solanaWeb3.PublicKey(walletAddress);
       tx.recentBlockhash = (await conn.getLatestBlockhash()).blockhash;
 
@@ -336,7 +398,12 @@ async function burnSelected() {
 
       burned++;
       selected.delete(accountAddr);
-      tokenAccounts = tokenAccounts.filter(t => t.account !== accountAddr);
+      delete burnAmounts[accountAddr];
+      if (burnAll) {
+        tokenAccounts = tokenAccounts.filter(t => t.account !== accountAddr);
+      } else {
+        tokenInfo.amount -= amountToBurn;
+      }
     } catch(e) {
       console.error('Burn failed:', accountAddr, e.message);
       failed++;
