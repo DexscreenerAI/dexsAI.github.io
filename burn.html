@@ -174,23 +174,26 @@ async function loadTokens() {
 
   try {
     console.log('Wallet:', walletAddress);
-    const result = await rpcCall('getTokenAccountsByOwner', [
-      walletAddress,
-      { programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' },
-      { encoding: 'jsonParsed' }
+
+    // Fetch from BOTH token programs (classic + Token-2022)
+    const [result1, result2] = await Promise.all([
+      rpcCall('getTokenAccountsByOwner', [walletAddress, { programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' }, { encoding: 'jsonParsed' }]),
+      rpcCall('getTokenAccountsByOwner', [walletAddress, { programId: 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb' }, { encoding: 'jsonParsed' }])
     ]);
-    console.log('RPC result:', JSON.stringify(result).slice(0, 500));
-    const accounts = result?.value || [];
-    console.log(`Found ${accounts.length} token accounts`);
+
+    const accounts = [...(result1?.value || []), ...(result2?.value || [])];
+    console.log(`Found ${accounts.length} token accounts (classic: ${result1?.value?.length || 0}, token-2022: ${result2?.value?.length || 0})`);
 
     tokenAccounts = accounts.map(a => {
       const info = a.account.data.parsed.info;
+      const owner = a.account.owner; // program that owns this account
       return {
         mint: info.mint,
         amount: parseFloat(info.tokenAmount.uiAmountString) || 0,
         decimals: info.tokenAmount.decimals,
         rawAmount: info.tokenAmount.amount,
         account: a.pubkey,
+        programId: owner, // TokenkegQ... or Tokenz...
         symbol: '',
         name: '',
         logoUrl: `https://dd.dexscreener.com/ds-data/tokens/solana/${info.mint}.png`,
@@ -297,7 +300,8 @@ async function burnSelected() {
   btn.innerHTML = '<span class="spinner"></span> BURNING...';
 
   const conn = new solanaWeb3.Connection(RPC_PROXY);
-  const TOKEN_PROGRAM = new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+  const TOKEN_CLASSIC = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+  const TOKEN_2022 = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';
   let burned = 0;
   let failed = 0;
 
@@ -306,16 +310,20 @@ async function burnSelected() {
       const el = document.getElementById(`tok-${accountAddr}`);
       if (el) el.classList.add('burning');
 
+      // Find which program this token uses
+      const tokenInfo = tokenAccounts.find(t => t.account === accountAddr);
+      const progId = tokenInfo?.programId || TOKEN_CLASSIC;
+
       // Build CloseAccount instruction manually (index 9 in Token program)
       const keys = [
-        { pubkey: new solanaWeb3.PublicKey(accountAddr), isSigner: false, isWritable: true },   // account to close
-        { pubkey: new solanaWeb3.PublicKey(walletAddress), isSigner: false, isWritable: true },  // rent destination
-        { pubkey: new solanaWeb3.PublicKey(walletAddress), isSigner: true, isWritable: false },  // owner
+        { pubkey: new solanaWeb3.PublicKey(accountAddr), isSigner: false, isWritable: true },
+        { pubkey: new solanaWeb3.PublicKey(walletAddress), isSigner: false, isWritable: true },
+        { pubkey: new solanaWeb3.PublicKey(walletAddress), isSigner: true, isWritable: false },
       ];
       const closeIx = new solanaWeb3.TransactionInstruction({
-        programId: TOKEN_PROGRAM,
+        programId: new solanaWeb3.PublicKey(progId),
         keys,
-        data: Buffer.from([9]) // CloseAccount = instruction index 9
+        data: Buffer.from([9])
       });
 
       const tx = new solanaWeb3.Transaction().add(closeIx);
