@@ -94,7 +94,8 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
   <div class="burn-stats">
     <div class="burn-stat"><div class="burn-stat-val" id="tokenCount">0</div><div class="burn-stat-lbl">TOKENS</div></div>
     <div class="burn-stat"><div class="burn-stat-val red" id="selectedCount">0</div><div class="burn-stat-lbl">SELECTED</div></div>
-    <div class="burn-stat"><div class="burn-stat-val" id="rentRecover" style="color:var(--green)">0</div><div class="burn-stat-lbl">SOL RECOVERABLE</div></div>
+    <div class="burn-stat"><div class="burn-stat-val" id="rentRecover" style="color:var(--green)">0</div><div class="burn-stat-lbl">SOL RECOVER</div></div>
+    <div class="burn-stat" style="border-color:rgba(255,59,79,0.3);background:rgba(255,59,79,0.05)"><div class="burn-stat-val red" id="totalBurnedDisplay">0</div><div class="burn-stat-lbl">🔥 TOTAL BURNED</div></div>
   </div>
 
   <!-- ACTIONS -->
@@ -295,6 +296,13 @@ function formatBurnAmt(n) {
 }
 
 let burnAmounts = {}; // account -> amount to burn
+let lifetimeBurned = JSON.parse(localStorage.getItem('byeboss_burned') || '{}'); // {mint: totalAmount}
+
+function updateBurnedDisplay() {
+  const total = Object.values(lifetimeBurned).reduce((s, v) => s + v, 0);
+  const el = document.getElementById('totalBurnedDisplay');
+  el.textContent = total >= 1e9 ? (total/1e9).toFixed(1)+'B' : total >= 1e6 ? (total/1e6).toFixed(1)+'M' : total >= 1e3 ? (total/1e3).toFixed(0)+'K' : total.toFixed(0);
+}
 
 function setBurnAmount(account, amount) {
   burnAmounts[account] = parseFloat(amount);
@@ -338,11 +346,12 @@ async function burnSelected() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> BURNING...';
 
-  const conn = new solanaWeb3.Connection(RPC_PROXY);
+  const conn = new solanaWeb3.Connection(RPC_PROXY, { wsEndpoint: false, commitment: 'confirmed' });
   const TOKEN_CLASSIC = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
   const TOKEN_2022 = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';
   let burned = 0;
   let failed = 0;
+  let totalBurned = 0;
 
   for (const accountAddr of [...selected]) {
     try {
@@ -394,9 +403,18 @@ async function burnSelected() {
 
       const signed = await provider.signTransaction(tx);
       const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: true });
-      await conn.confirmTransaction(sig, 'confirmed');
+
+      // Poll for confirmation instead of WebSocket
+      for (let attempt = 0; attempt < 15; attempt++) {
+        await new Promise(r => setTimeout(r, 2000));
+        try {
+          const status = await rpcCall('getSignatureStatuses', [[sig]]);
+          if (status?.value?.[0]?.confirmationStatus === 'confirmed' || status?.value?.[0]?.confirmationStatus === 'finalized') break;
+        } catch(e) {}
+      }
 
       burned++;
+      totalBurned += amountToBurn;
       selected.delete(accountAddr);
       delete burnAmounts[accountAddr];
       if (burnAll) {
@@ -412,11 +430,21 @@ async function burnSelected() {
     }
   }
 
-  alert(`🔥 Burned ${burned} tokens! ${failed > 0 ? `${failed} failed.` : ''}\n~${(burned * SOL_RENT_PER_ACCOUNT).toFixed(4)} SOL recovered.`);
+  // Save burn counter
+  if (totalBurned > 0) {
+    lifetimeBurned['all'] = (lifetimeBurned['all'] || 0) + totalBurned;
+    localStorage.setItem('byeboss_burned', JSON.stringify(lifetimeBurned));
+    updateBurnedDisplay();
+  }
+
+  alert(`🔥 Burned ${burned} tokens (${formatBurnAmt(totalBurned)} tokens)!\n${failed > 0 ? `${failed} failed.\n` : ''}~${(burned * SOL_RENT_PER_ACCOUNT).toFixed(4)} SOL recovered.`);
   renderTokens();
   btn.disabled = false;
   btn.textContent = '🔥 SELECT TOKENS TO BURN';
 }
+
+// Init burn counter display
+updateBurnedDisplay();
 
 // Auto-reconnect
 provider = getProvider();
