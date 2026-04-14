@@ -408,7 +408,7 @@ async function burnSelected() {
             { pubkey: new solanaWeb3.PublicKey(walletAddress), isSigner: false, isWritable: true },
             { pubkey: new solanaWeb3.PublicKey(walletAddress), isSigner: true, isWritable: false },
           ],
-          data: Buffer.from([9]) // CloseAccount
+          data: new Uint8Array([9]) // CloseAccount
         }));
       }
 
