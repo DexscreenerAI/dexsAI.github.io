@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>$ByeBoss — Token Burner</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-height:100vh}
+:root{--bg:#060a10;--bg2:#0b1018;--bg3:#101822;--card:#111a26;--border:#1a2636;--red:#ff3b4f;--red2:#ff1744;--green:#00ff88;--yellow:#ffaa00;--text:#dfe4ed;--text2:rgba(255,255,255,0.5);--text3:rgba(255,255,255,0.25);--mono:'JetBrains Mono',monospace}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes burn{0%{transform:scale(1);opacity:1}50%{transform:scale(1.1);filter:brightness(2)}100%{transform:scale(0);opacity:0}}
+
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(6,10,16,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(10px)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-family:var(--mono);font-weight:700;font-size:13px}
+.nav-logo img{height:28px;border-radius:6px}
+.nav-right{display:flex;align-items:center;gap:8px}
+.wallet-btn{padding:8px 16px;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;border:none}
+.wallet-btn.connect{background:var(--red);color:#000}
+.wallet-btn.connect:hover{background:var(--red2)}
+.wallet-btn.connected{background:var(--bg3);border:1px solid var(--border);color:var(--green)}
+.wallet-btn.disc{background:none;border:1px solid var(--border);color:var(--red);font-size:11px;padding:6px 12px}
+
+.main{max-width:600px;margin:0 auto;padding:70px 16px 60px}
+
+/* HERO */
+.hero{text-align:center;padding:30px 0 24px}
+.hero-icon{font-size:48px;margin-bottom:12px}
+.hero h1{font-family:var(--mono);font-size:24px;font-weight:800;color:#fff;margin-bottom:6px}
+.hero h1 span{color:var(--red)}
+.hero p{font-family:var(--mono);font-size:12px;color:var(--text3);line-height:1.6}
+
+/* STATS */
+.burn-stats{display:flex;gap:10px;margin-bottom:20px}
+.burn-stat{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.burn-stat-val{font-family:var(--mono);font-size:20px;font-weight:800;color:#fff}
+.burn-stat-val.red{color:var(--red)}
+.burn-stat-lbl{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-top:4px}
+
+/* TOKEN LIST */
+.token-list{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.token-item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;transition:all .2s;animation:fadeIn .3s ease}
+.token-item:hover{border-color:var(--red)}
+.token-item.selected{border-color:var(--red);background:rgba(255,59,79,0.06)}
+.token-item.burning{animation:burn .6s ease forwards}
+.token-logo{width:32px;height:32px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:14px;overflow:hidden;flex-shrink:0}
+.token-logo img{width:100%;height:100%;object-fit:cover}
+.token-info{flex:1;min-width:0}
+.token-symbol{font-family:var(--mono);font-size:13px;font-weight:700;color:#fff}
+.token-name{font-family:var(--mono);font-size:9px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.token-amount{text-align:right;flex-shrink:0}
+.token-bal{font-family:var(--mono);font-size:12px;font-weight:600;color:#fff}
+.token-usd{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.token-check{width:20px;height:20px;border-radius:4px;border:2px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:all .15s}
+.token-check.checked{background:var(--red);border-color:var(--red);color:#000}
+
+/* BURN BTN */
+.burn-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--red),var(--red2));border:none;border-radius:10px;color:#000;font-family:var(--mono);font-size:14px;font-weight:800;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:1px;margin-bottom:12px}
+.burn-btn:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(255,59,79,0.4)}
+.burn-btn:disabled{background:var(--bg3);color:var(--text3);cursor:not-allowed;transform:none;box-shadow:none}
+.burn-all{width:100%;padding:10px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--mono);font-size:11px;cursor:pointer;margin-bottom:20px}
+.burn-all:hover{border-color:var(--red);color:var(--red)}
+
+.empty{text-align:center;padding:40px;color:var(--text3);font-family:var(--mono);font-size:12px}
+.spinner{width:14px;height:14px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+
+.disclaimer{text-align:center;font-family:var(--mono);font-size:9px;color:var(--text3);padding:20px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="./index.html" class="nav-logo">
+    <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="">$ByeBoss
+  </a>
+  <div class="nav-right">
+    <button class="wallet-btn connect" id="walletBtn" onclick="connectWallet()">🔌 Connect Phantom</button>
+    <button class="wallet-btn disc" id="discBtn" onclick="disconnectWallet()" style="display:none">Disconnect</button>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="hero">
+    <div class="hero-icon">🔥</div>
+    <h1>Token <span>Burner</span></h1>
+    <p>Burn worthless tokens from your wallet.<br>Close token accounts and recover SOL rent.</p>
+  </div>
+
+  <!-- STATS -->
+  <div class="burn-stats">
+    <div class="burn-stat"><div class="burn-stat-val" id="tokenCount">0</div><div class="burn-stat-lbl">TOKENS</div></div>
+    <div class="burn-stat"><div class="burn-stat-val red" id="selectedCount">0</div><div class="burn-stat-lbl">SELECTED</div></div>
+    <div class="burn-stat"><div class="burn-stat-val" id="rentRecover" style="color:var(--green)">0</div><div class="burn-stat-lbl">SOL RECOVERABLE</div></div>
+  </div>
+
+  <!-- ACTIONS -->
+  <button class="burn-all" onclick="selectAll()">☑ Select All Worthless Tokens</button>
+
+  <!-- TOKEN LIST -->
+  <div id="tokenList">
+    <div class="empty">Connect wallet to scan tokens</div>
+  </div>
+
+  <!-- BURN BUTTON -->
+  <button class="burn-btn" id="burnBtn" onclick="burnSelected()" disabled>🔥 BURN SELECTED TOKENS</button>
+
+  <div class="disclaimer">
+    ⚠️ Burning tokens is IRREVERSIBLE. This closes the token account and sends the rent (~0.002 SOL per account) back to your wallet. Only burn tokens you're sure are worthless.
+  </div>
+</div>
+
+<script src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
+<script src="https://unpkg.com/@solana/spl-token@0.3.8/lib/index.iife.min.js"></script>
+<script>
+const SOL_RENT_PER_ACCOUNT = 0.00203928; // ~rent per token account
+let provider = null;
+let walletAddress = null;
+let tokenAccounts = []; // {mint, amount, decimals, account, symbol, name, logoUrl, usdValue}
+let selected = new Set();
+
+function getProvider() {
+  if (window.phantom?.solana?.isPhantom) return window.phantom.solana;
+  if (window.solana?.isPhantom) return window.solana;
+  return null;
+}
+
+async function connectWallet() {
+  localStorage.removeItem('burner_disconnected');
+  provider = getProvider();
+  if (!provider) { window.open('https://phantom.app/', '_blank'); return; }
+  try {
+    const resp = await provider.connect();
+    walletAddress = resp.publicKey.toString();
+    document.getElementById('walletBtn').className = 'wallet-btn connected';
+    document.getElementById('walletBtn').innerHTML = `🟢 ${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}`;
+    document.getElementById('discBtn').style.display = 'block';
+    await loadTokens();
+  } catch(e) { alert('Connection refused'); }
+}
+
+async function disconnectWallet() {
+  try { if (provider) await provider.disconnect(); } catch(e){}
+  walletAddress = null;
+  provider = null;
+  localStorage.setItem('burner_disconnected', 'true');
+  document.getElementById('walletBtn').className = 'wallet-btn connect';
+  document.getElementById('walletBtn').innerHTML = '🔌 Connect Phantom';
+  document.getElementById('discBtn').style.display = 'none';
+  document.getElementById('tokenList').innerHTML = '<div class="empty">Connect wallet to scan tokens</div>';
+  document.getElementById('tokenCount').textContent = '0';
+  document.getElementById('selectedCount').textContent = '0';
+  document.getElementById('rentRecover').textContent = '0';
+}
+
+async function loadTokens() {
+  const list = document.getElementById('tokenList');
+  list.innerHTML = '<div class="empty"><span class="spinner"></span> Scanning wallet...</div>';
+
+  try {
+    const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+    const pubkey = new solanaWeb3.PublicKey(walletAddress);
+
+    const res = await conn.getParsedTokenAccountsByOwner(pubkey, { programId: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA') });
+
+    tokenAccounts = res.value.map(a => {
+      const info = a.account.data.parsed.info;
+      return {
+        mint: info.mint,
+        amount: parseFloat(info.tokenAmount.uiAmountString) || 0,
+        decimals: info.tokenAmount.decimals,
+        rawAmount: info.tokenAmount.amount,
+        account: a.pubkey.toString(),
+        symbol: '',
+        name: '',
+        logoUrl: `https://dd.dexscreener.com/ds-data/tokens/solana/${info.mint}.png`,
+        usdValue: 0
+      };
+    }).sort((a, b) => a.amount - b.amount); // worthless first
+
+    document.getElementById('tokenCount').textContent = tokenAccounts.length;
+    document.getElementById('rentRecover').textContent = (tokenAccounts.length * SOL_RENT_PER_ACCOUNT).toFixed(4);
+
+    // Fetch names for top tokens via DexScreener
+    const mints = tokenAccounts.slice(0, 30).map(t => t.mint);
+    for (let i = 0; i < mints.length; i += 5) {
+      const batch = mints.slice(i, i + 5).join(',');
+      try {
+        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${batch}`, { signal: AbortSignal.timeout(5000) });
+        const data = await res.json();
+        if (data.pairs) {
+          data.pairs.forEach(p => {
+            const t = tokenAccounts.find(t => t.mint === p.baseToken?.address);
+            if (t && !t.symbol) {
+              t.symbol = p.baseToken.symbol;
+              t.name = p.baseToken.name;
+              t.usdValue = t.amount * (parseFloat(p.priceUsd) || 0);
+            }
+          });
+        }
+      } catch(e) {}
+    }
+
+    renderTokens();
+  } catch(e) {
+    list.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+
+function renderTokens() {
+  const list = document.getElementById('tokenList');
+  if (!tokenAccounts.length) { list.innerHTML = '<div class="empty">No tokens found</div>'; return; }
+
+  // Sort: $ByeBoss first, then by value (lowest first = most burnable)
+  const sorted = [...tokenAccounts].sort((a, b) => {
+    if (a.symbol === 'ByeBoss' || a.symbol === 'BYEBOSS') return -1;
+    if (b.symbol === 'ByeBoss' || b.symbol === 'BYEBOSS') return 1;
+    return a.usdValue - b.usdValue;
+  });
+
+  list.innerHTML = sorted.map((t, i) => {
+    const sym = t.symbol || t.mint.slice(0, 6) + '...';
+    const name = t.name || t.mint.slice(0, 12) + '...';
+    const isSelected = selected.has(t.account);
+    const isWorthless = t.usdValue < 0.01;
+    const amtStr = t.amount >= 1e9 ? (t.amount/1e9).toFixed(1)+'B' : t.amount >= 1e6 ? (t.amount/1e6).toFixed(1)+'M' : t.amount >= 1e3 ? (t.amount/1e3).toFixed(1)+'K' : t.amount.toFixed(2);
+
+    return `<div class="token-item ${isSelected ? 'selected' : ''}" id="tok-${t.account}" onclick="toggleToken('${t.account}')">
+      <div class="token-check ${isSelected ? 'checked' : ''}">${isSelected ? '✓' : ''}</div>
+      <div class="token-logo"><img src="${t.logoUrl}" onerror="this.parentElement.innerHTML='🪙'"></div>
+      <div class="token-info">
+        <div class="token-symbol">$${sym}</div>
+        <div class="token-name">${name}</div>
+      </div>
+      <div class="token-amount">
+        <div class="token-bal">${amtStr}</div>
+        <div class="token-usd">${t.usdValue > 0.01 ? '$'+t.usdValue.toFixed(2) : isWorthless ? '💀 worthless' : '-'}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  updateBurnBtn();
+}
+
+function toggleToken(account) {
+  if (selected.has(account)) selected.delete(account);
+  else selected.add(account);
+  renderTokens();
+}
+
+function selectAll() {
+  // Select all tokens worth < $0.01
+  tokenAccounts.forEach(t => {
+    if (t.usdValue < 0.01) selected.add(t.account);
+  });
+  renderTokens();
+}
+
+function updateBurnBtn() {
+  const btn = document.getElementById('burnBtn');
+  const count = selected.size;
+  document.getElementById('selectedCount').textContent = count;
+  document.getElementById('rentRecover').textContent = (count * SOL_RENT_PER_ACCOUNT).toFixed(4);
+  btn.disabled = count === 0;
+  btn.textContent = count > 0 ? `🔥 BURN ${count} TOKEN${count > 1 ? 'S' : ''} — Recover ~${(count * SOL_RENT_PER_ACCOUNT).toFixed(4)} SOL` : '🔥 SELECT TOKENS TO BURN';
+}
+
+async function burnSelected() {
+  if (!walletAddress || !provider || selected.size === 0) return;
+  const btn = document.getElementById('burnBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> BURNING...';
+
+  const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+  let burned = 0;
+  let failed = 0;
+
+  for (const accountAddr of selected) {
+    try {
+      const el = document.getElementById(`tok-${accountAddr}`);
+      if (el) el.classList.add('burning');
+
+      // Create close account instruction
+      const tx = new solanaWeb3.Transaction().add(
+        splToken.createCloseAccountInstruction(
+          new solanaWeb3.PublicKey(accountAddr),  // account to close
+          new solanaWeb3.PublicKey(walletAddress), // rent destination
+          new solanaWeb3.PublicKey(walletAddress), // owner
+        )
+      );
+
+      tx.feePayer = new solanaWeb3.PublicKey(walletAddress);
+      tx.recentBlockhash = (await conn.getLatestBlockhash()).blockhash;
+
+      const signed = await provider.signTransaction(tx);
+      const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: true });
+      await conn.confirmTransaction(sig, 'confirmed');
+
+      burned++;
+      selected.delete(accountAddr);
+      tokenAccounts = tokenAccounts.filter(t => t.account !== accountAddr);
+    } catch(e) {
+      console.error('Burn failed:', accountAddr, e.message);
+      failed++;
+      const el = document.getElementById(`tok-${accountAddr}`);
+      if (el) el.classList.remove('burning');
+    }
+  }
+
+  alert(`🔥 Burned ${burned} tokens! ${failed > 0 ? `${failed} failed.` : ''}\n~${(burned * SOL_RENT_PER_ACCOUNT).toFixed(4)} SOL recovered.`);
+  renderTokens();
+  btn.disabled = false;
+  btn.textContent = '🔥 SELECT TOKENS TO BURN';
+}
+
+// Auto-reconnect
+provider = getProvider();
+if (provider && localStorage.getItem('burner_disconnected') !== 'true') {
+  provider.connect({ onlyIfTrusted: true }).then(async (resp) => {
+    walletAddress = resp.publicKey.toString();
+    document.getElementById('walletBtn').className = 'wallet-btn connected';
+    document.getElementById('walletBtn').innerHTML = `🟢 ${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}`;
+    document.getElementById('discBtn').style.display = 'block';
+    await loadTokens();
+  }).catch(() => {});
+}
+</script>
+</body>
+</html>
