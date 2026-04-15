@@ -28,7 +28,10 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
 .wallet-btn.connected:hover{border-color:var(--red)}
 
 /* MAIN */
-.main{max-width:700px;margin:0 auto;padding:70px 16px 100px}
+.trade-layout{display:grid;grid-template-columns:320px 1fr;gap:16px;max-width:1200px;margin:0 auto;padding:60px 16px 100px}
+.trade-left{display:flex;flex-direction:column;gap:12px}
+.trade-right{display:flex;flex-direction:column;gap:0}
+@media(max-width:800px){.trade-layout{grid-template-columns:1fr;padding-top:60px}}
 
 /* CONFIG PANEL */
 .config{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
@@ -160,70 +163,86 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
   </div>
 </nav>
 
-<div class="main">
-
-  <!-- WALLET INFO -->
-  <div class="wallet-info" id="walletInfo">
-    <div class="wallet-bal">
-      <div>
-        <div class="wallet-bal-label">SOL BALANCE</div>
-        <div class="wallet-bal-val" id="solBalance">0.00</div>
+<div class="trade-layout">
+  <!-- LEFT: WALLET & PORTFOLIO -->
+  <div class="trade-left">
+    <!-- WALLET INFO -->
+    <div class="wallet-info" id="walletInfo">
+      <div class="wallet-bal">
+        <div>
+          <div class="wallet-bal-label">SOL BALANCE</div>
+          <div class="wallet-bal-val" id="solBalance">0.00</div>
+        </div>
+        <div style="text-align:right">
+          <div class="wallet-bal-label">TOTAL VALUE</div>
+          <div style="font-family:var(--mono);font-size:20px;font-weight:800;color:#fff" id="usdValue">$0.00</div>
+        </div>
       </div>
-      <div style="text-align:right">
-        <div class="wallet-bal-label">TOTAL VALUE</div>
-        <div style="font-family:var(--mono);font-size:20px;font-weight:800;color:#fff" id="usdValue">$0.00</div>
-      </div>
+      <div class="wallet-addr" id="walletAddr" onclick="navigator.clipboard.writeText(this.textContent);this.textContent='✓ Copied';setTimeout(()=>this.textContent=walletAddress,1500)">-</div>
     </div>
-    <div class="wallet-addr" id="walletAddr" onclick="navigator.clipboard.writeText(this.textContent);this.textContent='✓ Copied';setTimeout(()=>this.textContent=walletAddress,1500)">-</div>
 
     <!-- TOKEN HOLDINGS -->
-    <div id="tokenHoldings" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">YOUR TOKENS</div>
-      <div id="holdingsList" style="display:flex;flex-direction:column;gap:6px">
-        <div style="text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:8px">Connect wallet to see tokens</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">💼 YOUR TOKENS</div>
+      <div id="holdingsList" style="display:flex;flex-direction:column;gap:4px;max-height:400px;overflow-y:auto">
+        <div style="text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:16px">Connect wallet to see tokens</div>
+      </div>
+    </div>
+
+    <!-- TRADE HISTORY -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">📜 TRADE HISTORY</div>
+      <div id="historyList" style="max-height:200px;overflow-y:auto">
+        <div class="empty" style="padding:16px">No trades yet</div>
       </div>
     </div>
   </div>
 
-  <!-- CONFIG BAR (compact) -->
-  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-    <div style="display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;flex:1;min-width:140px">
-      <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">💰</span>
-      <input class="config-input" type="number" id="tradeAmount" value="0.5" min="0.01" max="100" step="0.1" style="padding:4px 8px;font-size:12px;width:60px">
-      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">SOL</span>
+  <!-- RIGHT: SNIPER SIGNALS & POSITIONS -->
+  <div class="trade-right">
+    <!-- CONFIG BAR -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;flex:1;min-width:100px">
+        <span style="font-size:10px">💰</span>
+        <input class="config-input" type="number" id="tradeAmount" value="0.5" min="0.01" max="100" step="0.1" style="padding:3px 6px;font-size:11px;width:50px">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">SOL</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;min-width:70px">
+        <span style="font-size:10px">⚙️</span>
+        <input class="config-input" type="number" id="slippage" value="15" min="1" max="50" step="1" style="padding:3px 6px;font-size:11px;width:35px">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">%</span>
+      </div>
+      <div class="auto-toggle" id="autoToggle" onclick="toggleAutoMode()" style="margin:0;flex:1;min-width:100px;padding:6px 10px">
+        <div class="toggle-switch" style="width:28px;height:16px;min-width:28px"><span style="display:none"></span></div>
+        <div class="toggle-text" style="font-size:9px"><strong>AUTO BUY</strong></div>
+      </div>
+      <div class="auto-toggle" id="autoSellToggle" onclick="toggleAutoSell()" style="margin:0;flex:1;min-width:100px;padding:6px 10px">
+        <div class="toggle-switch" style="width:28px;height:16px;min-width:28px"><span style="display:none"></span></div>
+        <div class="toggle-text" style="font-size:9px"><strong>AUTO SELL</strong></div>
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-width:100px">
-      <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">⚙️</span>
-      <input class="config-input" type="number" id="slippage" value="15" min="1" max="50" step="1" style="padding:4px 8px;font-size:12px;width:40px">
-      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">%</span>
-    </div>
-    <div class="auto-toggle" id="autoToggle" onclick="toggleAutoMode()" style="margin:0;flex:1;min-width:140px;padding:8px 12px">
-      <div class="toggle-switch" style="width:32px;height:18px;min-width:32px"><span style="display:none"></span></div>
-      <div class="toggle-text" style="font-size:10px"><strong>AUTO BUY</strong></div>
-    </div>
-    <div class="auto-toggle" id="autoSellToggle" onclick="toggleAutoSell()" style="margin:0;flex:1;min-width:140px;padding:8px 12px">
-      <div class="toggle-switch" style="width:32px;height:18px;min-width:32px"><span style="display:none"></span></div>
-      <div class="toggle-text" style="font-size:10px"><strong>AUTO SELL</strong></div>
-    </div>
-  </div>
 
-  <!-- LIVE SIGNALS -->
-  <div class="section-title"><span class="live-dot"></span> LIVE SIGNALS</div>
-  <div class="signal-list" id="signalList">
-    <div class="empty">Waiting for sniper signals...</div>
-  </div>
+    <!-- SNIPER ALERTS -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span class="live-dot"></span>
+        <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#fff">SNIPER ALERTS</span>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:auto" id="alertCount">0 signals</span>
+      </div>
+      <div class="signal-list" id="signalList" style="max-height:300px;overflow-y:auto">
+        <div class="empty" style="padding:20px">Waiting for sniper signals...</div>
+      </div>
+    </div>
 
-  <!-- OPEN POSITIONS -->
-  <div class="section-title">📊 OPEN POSITIONS</div>
-  <div id="positionList">
-    <div class="empty">No open positions</div>
+    <!-- OPEN POSITIONS -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px">
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;margin-bottom:10px">📊 OPEN POSITIONS</div>
+      <div id="positionList" style="max-height:300px;overflow-y:auto">
+        <div class="empty" style="padding:20px">No open positions</div>
+      </div>
+    </div>
   </div>
-
-  <!-- TRADE HISTORY -->
-  <div class="section-title" style="margin-top:24px">📜 TRADE HISTORY</div>
-  <div id="historyList">
-    <div class="empty">No trades yet</div>
-  </div>
+</div>
 
 </div>
 
@@ -405,14 +424,19 @@ async function loadTokenHoldings() {
       const logoUrl = `https://dd.dexscreener.com/ds-data/tokens/solana/${t.mint}.png`;
       const dexUrl = info?.pairAddress ? `https://dexscreener.com/solana/${info.pairAddress}` : `https://dexscreener.com/solana/${t.mint}`;
 
-      html += `<a href="${dexUrl}" target="_blank" class="holding" style="text-decoration:none;color:inherit">
-        <div class="holding-logo"><img src="${logoUrl}" onerror="this.parentElement.innerHTML='🪙'"></div>
+      const fmtAmt = t.amount >= 1e6 ? (t.amount/1e6).toFixed(1)+'M' : t.amount >= 1e3 ? (t.amount/1e3).toFixed(1)+'K' : t.amount.toFixed(2);
+      html += `<div class="holding">
+        <a href="${dexUrl}" target="_blank" style="text-decoration:none"><div class="holding-logo"><img src="${logoUrl}" onerror="this.parentElement.innerHTML='🪙'"></div></a>
         <div class="holding-info"><div class="holding-symbol">$${symbol}</div><div class="holding-name">${name}</div></div>
         <div class="holding-right">
-          <div class="holding-amount">${t.amount >= 1e6 ? (t.amount/1e6).toFixed(1)+'M' : t.amount >= 1e3 ? (t.amount/1e3).toFixed(1)+'K' : t.amount.toFixed(2)}</div>
+          <div class="holding-amount">${fmtAmt}</div>
           <div class="holding-usd">${price > 0 ? '$'+usdVal.toFixed(2) : '-'}</div>
         </div>
-      </a>`;
+        <div style="display:flex;flex-direction:column;gap:3px;margin-left:4px">
+          <button onclick="event.stopPropagation();quickSell('${t.mint}','${t.rawAmount}','${symbol}')" style="padding:3px 8px;background:rgba(255,59,79,0.15);border:1px solid rgba(255,59,79,0.3);border-radius:4px;color:var(--red);font-family:var(--mono);font-size:8px;font-weight:700;cursor:pointer">SELL</button>
+          <button onclick="event.stopPropagation();quickBuy('${t.mint}','${symbol}')" style="padding:3px 8px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.2);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:8px;font-weight:700;cursor:pointer">BUY+</button>
+        </div>
+      </div>`;
     }
 
     list.innerHTML = html;
@@ -578,6 +602,7 @@ async function pollSignals() {
 
     previousSniperAddresses = currentAddresses;
     renderSniperPositions(sniperPositions);
+    document.getElementById('alertCount').textContent = `${sniperPositions.length} active`;
 
   } catch (e) {
     document.getElementById('statusDot').className = 'status-dot off';
@@ -785,6 +810,36 @@ function toggleAutoSell() {
   autoSell = !autoSell;
   document.getElementById('autoSellToggle').classList.toggle('active', autoSell);
   addLog(autoSell ? '🤖 Auto SELL enabled — follows sniper exits' : '⏸️ Auto SELL disabled');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// QUICK BUY / SELL from portfolio
+// ═══════════════════════════════════════════════════════════════
+async function quickSell(mint, rawAmount, symbol) {
+  if (!walletAddress || !provider) { alert('Connect wallet first'); return; }
+  if (!confirm(`Sell ALL $${symbol}?`)) return;
+  addLog(`🔴 Selling $${symbol}...`);
+  const result = await sellToken(mint, rawAmount);
+  if (result) {
+    tradeHistory.unshift({ symbol, type: 'SELL', amount: (parseInt(result.outAmount)/LAMPORTS).toFixed(4), time: Date.now() });
+    localStorage.setItem('byeboss_trades', JSON.stringify(tradeHistory));
+    renderHistory();
+    await loadTokenHoldings();
+  }
+}
+
+async function quickBuy(mint, symbol) {
+  if (!walletAddress || !provider) { alert('Connect wallet first'); return; }
+  const amount = parseFloat(document.getElementById('tradeAmount').value);
+  if (!confirm(`Buy $${symbol} for ${amount} SOL?`)) return;
+  addLog(`🟢 Buying $${symbol}...`);
+  const result = await buyToken(mint, amount);
+  if (result) {
+    tradeHistory.unshift({ symbol, type: 'BUY', amount, time: Date.now() });
+    localStorage.setItem('byeboss_trades', JSON.stringify(tradeHistory));
+    renderHistory();
+    await loadTokenHoldings();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
