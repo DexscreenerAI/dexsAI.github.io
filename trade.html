@@ -126,6 +126,7 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
   .signal-data{grid-template-columns:repeat(2,1fr)}
   .config-row{flex-wrap:wrap}
 }
+@media(max-width:900px){.trade-nav{display:none!important}}
 </style>
 </head>
 <body>
@@ -136,7 +137,20 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
     <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="">
     $ByeBoss
   </a>
+  <div class="trade-nav" style="display:flex;gap:24px">
+    <a href="./index.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">App</a>
+    <a href="./gems.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Gems</a>
+    <a href="./sniper_terminal.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Sniper</a>
+    <a href="./og-detector.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">OG Detector</a>
+    <a href="./shazam_crypto.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Shazam</a>
+    <a href="./promote.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Promote</a>
+    <a href="./burn.html" style="font-family:var(--mono);font-size:11px;color:#ff3b4f;text-decoration:none;font-weight:700">🔥 Burn</a>
+    <a href="./trade.html" style="font-family:var(--mono);font-size:11px;color:#ff3b4f;text-decoration:none;font-weight:700">💎 Trade</a>
+    <a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank" style="font-family:var(--mono);font-size:11px;color:#ff3b4f;text-decoration:none;font-weight:700">📈 Chart</a>
+  </div>
   <div class="nav-right">
+    <a href="https://t.me/SalaryIsScam" target="_blank" style="color:rgba(255,255,255,0.25);text-decoration:none;font-size:16px">💬</a>
+    <a href="https://x.com/byebossonsol" target="_blank" style="color:rgba(255,255,255,0.25);text-decoration:none;font-size:14px">𝕏</a>
     <button class="wallet-btn connect" id="walletBtn" onclick="connectWallet()">
       🔌 Connect Phantom
     </button>
