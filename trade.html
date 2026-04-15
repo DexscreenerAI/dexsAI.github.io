@@ -353,19 +353,15 @@ async function loadTokenHoldings() {
   list.innerHTML = '<div style="text-align:center;padding:8px"><span class="spinner" style="color:var(--text3)"></span></div>';
 
   try {
-    // Fetch all token accounts via Helius DAS API (free, no key needed for this)
-    const res = await fetch('https://dexscreener-telegram-bot-production.up.railway.app/api/rpc', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0', id: 1,
-        method: 'getTokenAccountsByOwner',
-        params: [walletAddress, { programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' }, { encoding: 'jsonParsed' }]
-      }),
-      signal: AbortSignal.timeout(10000)
-    });
-    const data = await res.json();
-    const accounts = data.result?.value || [];
+    // Fetch from BOTH token programs (classic + Token-2022)
+    const RPC = 'https://dexscreener-telegram-bot-production.up.railway.app/api/rpc';
+    const [res1, res2] = await Promise.all([
+      fetch(RPC, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getTokenAccountsByOwner',params:[walletAddress,{programId:'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'},{encoding:'jsonParsed'}]}), signal:AbortSignal.timeout(10000) }),
+      fetch(RPC, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({jsonrpc:'2.0',id:2,method:'getTokenAccountsByOwner',params:[walletAddress,{programId:'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb'},{encoding:'jsonParsed'}]}), signal:AbortSignal.timeout(10000) })
+    ]);
+    const d1 = await res1.json();
+    const d2 = await res2.json();
+    const accounts = [...(d1.result?.value || []), ...(d2.result?.value || [])];
 
     // Filter tokens with balance > 0
     const tokens = accounts
