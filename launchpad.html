@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>Byeboss — Launchpad</title>
+<meta name="description" content="Launch your token on Pump.fun from Byeboss. Anti-rug aggregator feed included." />
+<link rel="icon" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
+<style>
+:root {
+  --bg: #060a10;
+  --bg2: #0b1018;
+  --bg3: #101822;
+  --card: #111a26;
+  --border: #1a2636;
+  --red: #ff3b4f;
+  --red2: #ff1744;
+  --green: #00ff88;
+  --yellow: #ffaa00;
+  --text: #dfe4ed;
+  --text2: rgba(255,255,255,0.5);
+  --text3: rgba(255,255,255,0.25);
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+body { min-height: 100vh; overflow-x: hidden; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea { font-family: inherit; color: var(--text); }
+input:focus, textarea:focus { outline: none; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #263447; }
+
+/* NAV */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; background: rgba(6,10,16,0.88); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-left { display: flex; align-items: center; gap: 28px; }
+.logo { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-weight: 800; letter-spacing: 0.5px; font-size: 15px; }
+.logo img { width: 28px; height: 28px; border-radius: 6px; }
+.nav-links { display: flex; align-items: center; gap: 6px; }
+.nav-links a {
+  padding: 7px 12px; border-radius: 8px; font-family: var(--mono); font-size: 12px;
+  font-weight: 500; color: var(--text2); transition: all 0.15s;
+}
+.nav-links a:hover { color: var(--text); background: var(--bg3); }
+.nav-links a.active { color: var(--red); background: rgba(255,59,79,0.1); }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.btn-primary {
+  padding: 9px 18px; background: linear-gradient(135deg, var(--red), var(--red2));
+  color: #000; font-family: var(--mono); font-weight: 700; font-size: 12px;
+  border-radius: 8px; letter-spacing: 0.3px; transition: all 0.15s;
+  text-transform: uppercase;
+}
+.btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,59,79,0.35); }
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-ghost {
+  padding: 8px 14px; background: var(--bg3); border: 1px solid var(--border);
+  font-family: var(--mono); font-weight: 600; font-size: 12px; color: var(--text);
+  border-radius: 8px; transition: all 0.15s;
+}
+.btn-ghost:hover { border-color: var(--red); color: var(--red); }
+.wallet-chip {
+  padding: 8px 14px; background: var(--bg3); border: 1px solid var(--border);
+  font-family: var(--mono); font-size: 12px; color: var(--green); border-radius: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.wallet-chip .dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); }
+.mobile-toggle { display: none; }
+
+/* LAYOUT */
+.main { padding: 90px 24px 60px; max-width: 1280px; margin: 0 auto; }
+
+/* HERO */
+.hero { text-align: center; padding: 40px 0 32px; }
+.hero h1 {
+  font-family: var(--mono); font-weight: 800; font-size: clamp(32px, 5vw, 52px);
+  letter-spacing: -1px; margin-bottom: 14px;
+  background: linear-gradient(135deg, #fff 0%, var(--red) 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero p { color: var(--text2); font-size: 16px; max-width: 560px; margin: 0 auto; }
+.hero-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  max-width: 720px; margin: 32px auto 0;
+}
+.stat {
+  padding: 18px; background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  text-align: center;
+}
+.stat-val { font-family: var(--mono); font-weight: 700; font-size: 22px; color: var(--red); }
+.stat-lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; font-family: var(--mono); }
+
+/* GRID */
+.grid {
+  display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; margin-top: 40px;
+}
+
+/* PANEL */
+.panel {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  overflow: hidden;
+}
+.panel-head {
+  padding: 18px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-head h2 { font-family: var(--mono); font-size: 15px; font-weight: 700; letter-spacing: 0.3px; }
+.panel-body { padding: 20px; }
+
+/* FORM */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid > .full { grid-column: 1 / -1; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label {
+  font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.field label .count { color: var(--text3); font-weight: 400; margin-left: 6px; }
+.field input, .field textarea {
+  background: var(--bg2); border: 1px solid var(--border); padding: 12px;
+  border-radius: 8px; font-size: 14px; transition: border-color 0.15s;
+  width: 100%; font-family: var(--sans);
+}
+.field input.mono, .field textarea.mono { font-family: var(--mono); }
+.field input:focus, .field textarea:focus { border-color: var(--red); }
+.field textarea { resize: vertical; min-height: 80px; }
+.field .hint { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+.field .err { font-size: 11px; color: var(--red); font-family: var(--mono); }
+
+/* IMAGE UPLOAD */
+.img-drop {
+  border: 2px dashed var(--border); border-radius: 8px; padding: 20px;
+  text-align: center; cursor: pointer; transition: all 0.15s; background: var(--bg2);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.img-drop:hover { border-color: var(--red); }
+.img-drop.has-image { border-style: solid; padding: 0; overflow: hidden; min-height: 140px; position: relative; }
+.img-drop input[type=file] { display: none; }
+.img-drop .placeholder { color: var(--text2); font-size: 13px; font-family: var(--mono); }
+.img-drop .placeholder small { color: var(--text3); display: block; margin-top: 4px; font-size: 11px; }
+.img-drop img { width: 100%; height: 180px; object-fit: cover; display: block; }
+.img-drop .remove-btn {
+  position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(0,0,0,0.7); color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; z-index: 2;
+}
+
+/* COST BOX */
+.cost-box {
+  margin-top: 14px; padding: 14px; background: rgba(255,170,0,0.08);
+  border: 1px solid rgba(255,170,0,0.25); border-radius: 8px;
+  font-family: var(--mono); font-size: 12px; line-height: 1.6; color: var(--text);
+}
+.cost-box strong { color: var(--yellow); }
+
+/* LAUNCH BUTTON */
+.launch-btn {
+  width: 100%; padding: 16px; margin-top: 16px;
+  background: linear-gradient(135deg, var(--red), var(--red2)); color: #000;
+  font-family: var(--mono); font-weight: 800; font-size: 15px; letter-spacing: 0.5px;
+  border-radius: 10px; text-transform: uppercase; transition: all 0.15s;
+}
+.launch-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(255,59,79,0.45); }
+.launch-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* FLOW STEPS */
+.flow { margin-top: 14px; padding: 14px; background: var(--bg2); border-radius: 8px; border: 1px solid var(--border); }
+.flow-step {
+  display: flex; align-items: center; gap: 10px; padding: 6px 0;
+  font-family: var(--mono); font-size: 12px;
+}
+.flow-step .dot {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--border); flex-shrink: 0;
+}
+.flow-step.pending .dot { background: var(--border); }
+.flow-step.active .dot { background: var(--yellow); animation: pulse 1.4s infinite; }
+.flow-step.done .dot { background: var(--green); }
+.flow-step.error .dot { background: var(--red); }
+.flow-step.active { color: var(--yellow); }
+.flow-step.done { color: var(--green); }
+.flow-step.error { color: var(--red); }
+.flow-step.pending { color: var(--text3); }
+
+/* FEED */
+.feed-filters {
+  display: flex; gap: 8px; flex-wrap: wrap; padding: 0 20px 14px;
+}
+.chip {
+  padding: 6px 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: 20px;
+  font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text2);
+  cursor: pointer; transition: all 0.15s; user-select: none;
+}
+.chip:hover { color: var(--text); border-color: #2a3a50; }
+.chip.on { background: rgba(255,59,79,0.15); border-color: var(--red); color: var(--red); }
+
+.feed-list { display: flex; flex-direction: column; gap: 10px; padding: 0 20px 20px; max-height: 780px; overflow-y: auto; }
+.feed-sep {
+  font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 1px; padding: 10px 0 2px;
+  display: flex; align-items: center; gap: 8px;
+}
+.feed-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.token-card {
+  display: grid; grid-template-columns: 44px 1fr auto; gap: 12px;
+  padding: 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+  cursor: pointer; transition: all 0.15s;
+  animation: fadeIn 0.35s ease;
+}
+.token-card:hover { border-color: #2a3a50; background: var(--bg3); transform: translateX(2px); }
+.token-card.byeboss { border: 1px solid var(--yellow); background: linear-gradient(90deg, rgba(255,170,0,0.06), transparent); }
+.token-logo {
+  width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
+  background: var(--bg3); display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-weight: 700; color: var(--text2); font-size: 16px;
+  flex-shrink: 0;
+}
+.token-main { min-width: 0; }
+.token-line1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.token-name { font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--text); }
+.token-sym { font-family: var(--mono); font-size: 12px; color: var(--red); font-weight: 600; }
+.token-age { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+.token-line2 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; font-family: var(--mono); font-size: 11px; color: var(--text2); }
+.token-line2 b { color: var(--text); font-weight: 600; }
+.token-badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.badge {
+  padding: 3px 8px; border-radius: 4px; font-family: var(--mono); font-size: 10px;
+  font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; white-space: nowrap;
+}
+.badge.safe { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
+.badge.locked { background: rgba(0,255,136,0.08); color: var(--green); border: 1px solid rgba(0,255,136,0.25); }
+.badge.warn { background: rgba(255,170,0,0.1); color: var(--yellow); border: 1px solid rgba(255,170,0,0.3); }
+.badge.danger { background: rgba(255,59,79,0.1); color: var(--red); border: 1px solid rgba(255,59,79,0.3); }
+.badge.gold { background: rgba(255,170,0,0.15); color: var(--yellow); border: 1px solid var(--yellow); }
+
+.feed-loader {
+  padding: 40px 20px; text-align: center; color: var(--text3);
+  font-family: var(--mono); font-size: 12px;
+}
+.spinner {
+  width: 22px; height: 22px; border: 2px solid var(--border); border-top-color: var(--red);
+  border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px;
+}
+
+/* MODAL */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
+  z-index: 1000; display: flex; align-items: center; justify-content: center;
+  padding: 20px; animation: fadeIn 0.2s;
+}
+.modal {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 32px; max-width: 480px; width: 100%; text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+.modal .big-icon { font-size: 56px; margin-bottom: 12px; }
+.modal h3 { font-family: var(--mono); font-size: 20px; font-weight: 800; margin-bottom: 10px; }
+.modal p { color: var(--text2); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+.modal .mint {
+  font-family: var(--mono); font-size: 11px; color: var(--text3); word-break: break-all;
+  padding: 10px; background: var(--bg2); border-radius: 6px; margin-bottom: 16px;
+}
+.modal-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.modal-actions a {
+  flex: 1; min-width: 140px; padding: 11px 14px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 8px;
+  font-family: var(--mono); font-size: 12px; font-weight: 600;
+  transition: all 0.15s;
+}
+.modal-actions a:hover { border-color: var(--red); color: var(--red); }
+.modal-actions .close-btn {
+  flex: 1; min-width: 140px; padding: 11px 14px;
+  background: linear-gradient(135deg, var(--red), var(--red2)); color: #000;
+  font-family: var(--mono); font-size: 12px; font-weight: 700;
+  border-radius: 8px; text-transform: uppercase;
+}
+
+/* TOAST */
+.toast {
+  position: fixed; top: 80px; right: 24px; z-index: 2000;
+  padding: 14px 18px; background: var(--card); border: 1px solid var(--border);
+  border-left: 3px solid var(--red); border-radius: 8px;
+  font-family: var(--mono); font-size: 13px; max-width: 360px;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.toast.success { border-left-color: var(--green); }
+.toast.warn { border-left-color: var(--yellow); }
+
+/* ANIM */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .nav-links { display: none; }
+  .mobile-toggle { display: flex; }
+  .grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .hero-stats { grid-template-columns: 1fr; }
+  .main { padding: 80px 14px 40px; }
+  .nav { padding: 12px 14px; }
+}
+
+/* MOBILE MENU */
+.mobile-menu {
+  position: fixed; top: 60px; left: 0; right: 0; background: var(--bg2);
+  border-bottom: 1px solid var(--border); padding: 10px; z-index: 99;
+  display: none; flex-direction: column; gap: 4px;
+}
+.mobile-menu.open { display: flex; }
+.mobile-menu a {
+  padding: 10px 14px; font-family: var(--mono); font-size: 13px;
+  color: var(--text2); border-radius: 6px;
+}
+.mobile-menu a:hover, .mobile-menu a.active { color: var(--red); background: var(--bg3); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-left">
+    <a href="index.html" class="logo">
+      <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="Byeboss" />
+      <span>BYEBOSS</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">App</a>
+      <a href="gems.html">Gems</a>
+      <a href="sniper_terminal.html">Sniper</a>
+      <a href="og-detector.html">OG Detector</a>
+      <a href="shazam_crypto.html">Shazam</a>
+      <a href="promote.html">Promote</a>
+      <a href="burn.html">🔥 Burn</a>
+      <a href="trade.html">💎 Trade</a>
+      <a href="launchpad.html" class="active">🚀 Launchpad</a>
+      <a href="https://dexscreener.com/solana" target="_blank" rel="noopener">📈 Chart</a>
+    </div>
+  </div>
+  <div class="nav-right">
+    <button class="btn-ghost mobile-toggle" id="mobileToggle" aria-label="Menu">☰</button>
+    <a class="btn-ghost" href="https://t.me/SalaryIsScam" target="_blank" rel="noopener">Telegram</a>
+    <button id="walletBtn" class="btn-primary">Connect Phantom</button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">App</a>
+  <a href="gems.html">Gems</a>
+  <a href="sniper_terminal.html">Sniper</a>
+  <a href="og-detector.html">OG Detector</a>
+  <a href="shazam_crypto.html">Shazam</a>
+  <a href="promote.html">Promote</a>
+  <a href="burn.html">🔥 Burn</a>
+  <a href="trade.html">💎 Trade</a>
+  <a href="launchpad.html" class="active">🚀 Launchpad</a>
+  <a href="https://dexscreener.com/solana" target="_blank" rel="noopener">📈 Chart</a>
+</div>
+
+<main class="main">
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>🚀 Launchpad</h1>
+    <p>Launch your token on Pump.fun — anti-rug by design</p>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-val" id="statTotal">0</div>
+        <div class="stat-lbl">Launched via Byeboss</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="statFees">0 SOL</div>
+        <div class="stat-lbl">Fees collected</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="statCreators">0</div>
+        <div class="stat-lbl">Active creators</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN GRID -->
+  <section class="grid">
+
+    <!-- LEFT: CREATION FORM -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Create Token</h2>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">Powered by Pump.fun</span>
+      </div>
+      <div class="panel-body">
+        <form id="launchForm" onsubmit="return false;">
+          <div class="form-grid">
+
+            <div class="field">
+              <label>Token Name <span class="count" id="cntName">0/32</span></label>
+              <input type="text" id="fName" maxlength="32" placeholder="My Token" autocomplete="off" />
+            </div>
+
+            <div class="field">
+              <label>Ticker / Symbol <span class="count" id="cntSym">0/10</span></label>
+              <input type="text" id="fSymbol" maxlength="10" placeholder="TKN" class="mono" autocomplete="off" />
+            </div>
+
+            <div class="field full">
+              <label>Description <span class="count" id="cntDesc">0/500</span></label>
+              <textarea id="fDesc" maxlength="500" placeholder="What's the mission? Salary Is A Scam."></textarea>
+            </div>
+
+            <div class="field full">
+              <label>Image <span class="count">Max 2MB — PNG/JPG/GIF</span></label>
+              <label class="img-drop" id="imgDrop">
+                <input type="file" id="fImage" accept="image/*" />
+                <div class="placeholder" id="imgPlaceholder">
+                  📁 Click to upload
+                  <small>PNG, JPG, or GIF · up to 2MB</small>
+                </div>
+              </label>
+              <div class="err" id="imgErr" style="display:none"></div>
+            </div>
+
+            <div class="field">
+              <label>Twitter / X <span class="count">optional</span></label>
+              <input type="url" id="fTwitter" placeholder="https://x.com/..." class="mono" />
+            </div>
+
+            <div class="field">
+              <label>Telegram <span class="count">optional</span></label>
+              <input type="url" id="fTelegram" placeholder="https://t.me/..." class="mono" />
+            </div>
+
+            <div class="field">
+              <label>Website <span class="count">optional</span></label>
+              <input type="url" id="fWebsite" placeholder="https://..." class="mono" />
+            </div>
+
+            <div class="field">
+              <label>Initial buy (SOL) <span class="count">optional</span></label>
+              <input type="number" id="fBuy" min="0" step="0.01" value="0" class="mono" />
+            </div>
+
+          </div>
+
+          <div class="cost-box">
+            ⚠️ <strong>Service fee: 0.05 SOL</strong> goes to Byeboss.<br/>
+            Pump.fun creation fee: ~0.02 SOL.<br/>
+            <strong>Total cost: ~0.07 SOL + optional initial buy.</strong>
+          </div>
+
+          <button type="button" id="launchBtn" class="launch-btn" disabled>🚀 Launch Token</button>
+
+          <div class="flow" id="flowBox" style="display:none">
+            <div class="flow-step pending" id="s1"><span class="dot"></span><span>1. Pay 0.05 SOL fee to Byeboss</span></div>
+            <div class="flow-step pending" id="s2"><span class="dot"></span><span>2. Upload metadata + image to IPFS</span></div>
+            <div class="flow-step pending" id="s3"><span class="dot"></span><span>3. Build token creation transaction</span></div>
+            <div class="flow-step pending" id="s4"><span class="dot"></span><span>4. Sign &amp; broadcast to Solana</span></div>
+            <div class="flow-step pending" id="s5"><span class="dot"></span><span>5. Confirm on-chain</span></div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- RIGHT: AGGREGATOR FEED -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Live Feed · Pump.fun</h2>
+        <button class="btn-ghost" id="refreshFeed">↻ Refresh</button>
+      </div>
+      <div class="feed-filters">
+        <span class="chip" data-filter="hideRugs">Hide rugs</span>
+        <span class="chip" data-filter="hideDev5">Hide dev &gt;5%</span>
+        <span class="chip" data-filter="onlyNew">Only &lt;1h old</span>
+      </div>
+      <div class="feed-list" id="feedList">
+        <div class="feed-loader"><div class="spinner"></div>Loading Pump.fun launches…</div>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- TOAST CONTAINER -->
+<div id="toastHost" style="position:fixed;top:80px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:10px;"></div>
+
+<script>
+// ═════════════════════════════════════════════════════════════════
+// CONFIG
+// ═════════════════════════════════════════════════════════════════
+const BYEBOSS_FEE_WALLET = 'REPLACE_WITH_YOUR_WALLET_ADDRESS';
+const CREATION_FEE_SOL   = 0.05;
+const RPC_PROXY          = 'https://dexscreener-telegram-bot-production.up.railway.app/api/rpc';
+const LAUNCHES_KEY       = 'byeboss_launches';
+const FEE_TOTALS_KEY     = 'byeboss_fees_total';
+
+// Solana globals (from @solana/web3.js iife)
+const { Connection, PublicKey, Transaction, SystemProgram, Keypair, VersionedTransaction, LAMPORTS_PER_SOL } = solanaWeb3;
+
+// ═════════════════════════════════════════════════════════════════
+// STATE
+// ═════════════════════════════════════════════════════════════════
+const state = {
+  walletPk: null,        // PublicKey
+  walletStr: null,       // base58 string
+  image: null,           // File
+  imageBytes: 0,
+  launching: false,
+  filters: { hideRugs: false, hideDev5: false, onlyNew: false },
+  feedData: [],          // current aggregated list
+};
+
+const connection = new Connection(RPC_PROXY, 'confirmed');
+
+// ═════════════════════════════════════════════════════════════════
+// HELPERS
+// ═════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+
+function toast(msg, type = '') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  $('toastHost').appendChild(t);
+  setTimeout(() => { t.style.transition = 'opacity 0.3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 4200);
+}
+
+function ageStr(ms) {
+  if (!ms) return '—';
+  const s = Math.floor((Date.now() - ms) / 1000);
+  if (s < 60) return s + 's';
+  if (s < 3600) return Math.floor(s / 60) + 'm';
+  if (s < 86400) return Math.floor(s / 3600) + 'h';
+  return Math.floor(s / 86400) + 'd';
+}
+
+function fmt(n) {
+  if (!n || isNaN(n)) return '0';
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return Math.round(n).toString();
+}
+
+function shortAddr(a, L = 4) { return !a ? '' : a.slice(0, L) + '…' + a.slice(-L); }
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ═════════════════════════════════════════════════════════════════
+// PHANTOM WALLET
+// ═════════════════════════════════════════════════════════════════
+function getProvider() {
+  const p = window.phantom?.solana;
+  if (p && p.isPhantom) return p;
+  return null;
+}
+
+async function connectWallet(onlyIfTrusted = false) {
+  const provider = getProvider();
+  if (!provider) {
+    if (!onlyIfTrusted) {
+      toast('Phantom wallet not found. Install it at phantom.app', 'warn');
+      window.open('https://phantom.app/', '_blank');
+    }
+    return null;
+  }
+  try {
+    const resp = await provider.connect(onlyIfTrusted ? { onlyIfTrusted: true } : undefined);
+    state.walletPk = resp.publicKey;
+    state.walletStr = resp.publicKey.toBase58();
+    renderWalletButton();
+    return provider;
+  } catch (e) {
+    if (!onlyIfTrusted) toast('Wallet connection rejected', 'warn');
+    return null;
+  }
+}
+
+function disconnectWallet() {
+  const p = getProvider();
+  if (p) p.disconnect().catch(() => {});
+  state.walletPk = null;
+  state.walletStr = null;
+  renderWalletButton();
+}
+
+function renderWalletButton() {
+  const btn = $('walletBtn');
+  if (state.walletStr) {
+    btn.className = 'wallet-chip';
+    btn.innerHTML = '<span class="dot"></span>' + shortAddr(state.walletStr);
+    btn.onclick = () => { if (confirm('Disconnect wallet?')) disconnectWallet(); };
+  } else {
+    btn.className = 'btn-primary';
+    btn.textContent = 'Connect Phantom';
+    btn.onclick = () => connectWallet(false);
+  }
+  validateForm();
+}
+
+// Auto-reconnect on load
+(async () => {
+  const p = getProvider();
+  if (p) {
+    p.on?.('connect', (pk) => { state.walletPk = pk; state.walletStr = pk.toBase58(); renderWalletButton(); });
+    p.on?.('disconnect', () => { state.walletPk = null; state.walletStr = null; renderWalletButton(); });
+    p.on?.('accountChanged', (pk) => { if (pk) { state.walletPk = pk; state.walletStr = pk.toBase58(); } else { state.walletPk = null; state.walletStr = null; } renderWalletButton(); });
+  }
+  await connectWallet(true);
+})();
+
+// ═════════════════════════════════════════════════════════════════
+// FORM VALIDATION + IMAGE HANDLING
+// ═════════════════════════════════════════════════════════════════
+$('fName').addEventListener('input', e => { $('cntName').textContent = e.target.value.length + '/32'; validateForm(); });
+$('fSymbol').addEventListener('input', e => {
+  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+  $('cntSym').textContent = e.target.value.length + '/10';
+  validateForm();
+});
+$('fDesc').addEventListener('input', e => { $('cntDesc').textContent = e.target.value.length + '/500'; validateForm(); });
+
+$('fImage').addEventListener('change', e => {
+  const f = e.target.files?.[0];
+  const errEl = $('imgErr');
+  const drop = $('imgDrop');
+  const ph = $('imgPlaceholder');
+  errEl.style.display = 'none';
+  if (!f) { state.image = null; drop.classList.remove('has-image'); ph.style.display = ''; validateForm(); return; }
+  if (f.size > 2 * 1024 * 1024) {
+    errEl.textContent = '❌ File too large (' + (f.size / 1024 / 1024).toFixed(2) + 'MB). Max 2MB.';
+    errEl.style.display = 'block';
+    state.image = null;
+    drop.classList.remove('has-image');
+    ph.style.display = '';
+    e.target.value = '';
+    validateForm();
+    return;
+  }
+  state.image = f;
+  state.imageBytes = f.size;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    drop.classList.add('has-image');
+    drop.querySelectorAll('img, .remove-btn').forEach(n => n.remove());
+    ph.style.display = 'none';
+    const img = document.createElement('img'); img.src = ev.target.result;
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'remove-btn'; btn.textContent = '×';
+    btn.onclick = evt => { evt.preventDefault(); evt.stopPropagation(); state.image = null; drop.classList.remove('has-image'); ph.style.display = ''; $('fImage').value = ''; img.remove(); btn.remove(); validateForm(); };
+    drop.appendChild(img); drop.appendChild(btn);
+    validateForm();
+  };
+  reader.readAsDataURL(f);
+});
+
+function validateForm() {
+  const ok = state.walletStr
+    && $('fName').value.trim().length >= 1
+    && $('fSymbol').value.trim().length >= 1
+    && $('fDesc').value.trim().length >= 1
+    && state.image
+    && !state.launching;
+  $('launchBtn').disabled = !ok;
+  return ok;
+}
+
+// ═════════════════════════════════════════════════════════════════
+// FLOW STEPS UI
+// ═════════════════════════════════════════════════════════════════
+function setStep(n, status) {
+  // status: pending | active | done | error
+  const el = $('s' + n);
+  if (!el) return;
+  el.classList.remove('pending', 'active', 'done', 'error');
+  el.classList.add(status);
+}
+function resetFlow() { for (let i = 1; i <= 5; i++) setStep(i, 'pending'); }
+function showFlow(show) { $('flowBox').style.display = show ? 'block' : 'none'; }
+
+// ═════════════════════════════════════════════════════════════════
+// LAUNCH FLOW
+// ═════════════════════════════════════════════════════════════════
+$('launchBtn').addEventListener('click', doLaunch);
+
+async function doLaunch() {
+  if (!validateForm()) return;
+
+  // Sanity check: fee wallet must be configured
+  if (BYEBOSS_FEE_WALLET === 'REPLACE_WITH_YOUR_WALLET_ADDRESS') {
+    toast('Byeboss fee wallet not configured. Edit BYEBOSS_FEE_WALLET in the HTML.', 'warn');
+    return;
+  }
+  let feeWalletPk;
+  try { feeWalletPk = new PublicKey(BYEBOSS_FEE_WALLET); }
+  catch { toast('Invalid BYEBOSS_FEE_WALLET address', 'warn'); return; }
+
+  const provider = getProvider();
+  if (!provider || !state.walletPk) { toast('Connect Phantom first', 'warn'); return; }
+
+  state.launching = true;
+  $('launchBtn').disabled = true;
+  $('launchBtn').textContent = '⏳ Processing…';
+  resetFlow(); showFlow(true);
+
+  const name = $('fName').value.trim();
+  const symbol = $('fSymbol').value.trim();
+  const description = $('fDesc').value.trim();
+  const twitter = $('fTwitter').value.trim();
+  const telegram = $('fTelegram').value.trim();
+  const website = $('fWebsite').value.trim();
+  const initialBuy = Math.max(0, parseFloat($('fBuy').value) || 0);
+
+  try {
+    // ───────── STEP 1: Fee payment ─────────
+    setStep(1, 'active');
+    const feeSig = await payFee(provider, feeWalletPk);
+    setStep(1, 'done');
+    toast('✅ Fee paid: ' + shortAddr(feeSig, 6), 'success');
+    bumpFeeTotal(CREATION_FEE_SOL);
+
+    // ───────── STEP 2: IPFS metadata ─────────
+    setStep(2, 'active');
+    const metadataUri = await uploadToPumpIPFS({ name, symbol, description, twitter, telegram, website, file: state.image });
+    setStep(2, 'done');
+
+    // ───────── STEP 3: Build pumpportal tx ─────────
+    setStep(3, 'active');
+    const mintKeypair = Keypair.generate();
+    const txBuffer = await getPumpPortalTx({
+      publicKey: state.walletStr,
+      mint: mintKeypair.publicKey.toBase58(),
+      name, symbol, uri: metadataUri,
+      amount: initialBuy,
+    });
+    setStep(3, 'done');
+
+    // ───────── STEP 4: Sign & send ─────────
+    setStep(4, 'active');
+    const tx = VersionedTransaction.deserialize(new Uint8Array(txBuffer));
+    tx.sign([mintKeypair]);                       // mint signs first
+    const signedTx = await provider.signTransaction(tx); // then user signs
+    const rawSig = await connection.sendRawTransaction(signedTx.serialize(), {
+      skipPreflight: false,
+      maxRetries: 3,
+    });
+    setStep(4, 'done');
+
+    // ───────── STEP 5: Confirm ─────────
+    setStep(5, 'active');
+    await pollSignature(rawSig, 60); // ~60s timeout
+    setStep(5, 'done');
+
+    // Save to localStorage
+    const record = {
+      mint: mintKeypair.publicKey.toBase58(),
+      name, symbol,
+      creator: state.walletStr,
+      timestamp: Date.now(),
+      signature: rawSig,
+    };
+    saveLaunch(record);
+    renderStats();
+
+    // Success modal
+    showSuccessModal(record);
+
+  } catch (err) {
+    console.error('[LAUNCH ERROR]', err);
+    const msg = err?.message || String(err);
+    // Mark currently-active step as error
+    for (let i = 1; i <= 5; i++) {
+      if ($('s' + i).classList.contains('active')) { setStep(i, 'error'); break; }
+    }
+    if (/user rejected|rejected the request/i.test(msg)) {
+      toast('❌ Transaction rejected by user', 'warn');
+    } else if (/timeout/i.test(msg)) {
+      toast('⏱ Confirmation timeout — check Solscan', 'warn');
+    } else {
+      toast('❌ ' + msg.slice(0, 160), 'warn');
+    }
+  } finally {
+    state.launching = false;
+    $('launchBtn').textContent = '🚀 Launch Token';
+    validateForm();
+  }
+}
+
+// ── STEP 1 IMPL ──
+async function payFee(provider, feeWalletPk) {
+  const latest = await connection.getLatestBlockhash('confirmed');
+  const tx = new Transaction({
+    feePayer: state.walletPk,
+    recentBlockhash: latest.blockhash,
+  }).add(
+    SystemProgram.transfer({
+      fromPubkey: state.walletPk,
+      toPubkey: feeWalletPk,
+      lamports: Math.round(CREATION_FEE_SOL * LAMPORTS_PER_SOL),
+    })
+  );
+  const { signature } = await provider.signAndSendTransaction(tx);
+  await pollSignature(signature, 45);
+  return signature;
+}
+
+// Poll for confirmation via getSignatureStatuses
+async function pollSignature(sig, timeoutSec) {
+  const start = Date.now();
+  while ((Date.now() - start) / 1000 < timeoutSec) {
+    const { value } = await connection.getSignatureStatuses([sig]);
+    const st = value?.[0];
+    if (st) {
+      if (st.err) throw new Error('Transaction failed on-chain: ' + JSON.stringify(st.err));
+      if (st.confirmationStatus === 'confirmed' || st.confirmationStatus === 'finalized') return st;
+    }
+    await new Promise(r => setTimeout(r, 1500));
+  }
+  throw new Error('timeout waiting for confirmation');
+}
+
+// ── STEP 2 IMPL: Pump.fun IPFS upload ──
+async function uploadToPumpIPFS({ name, symbol, description, twitter, telegram, website, file }) {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('name', name);
+  fd.append('symbol', symbol);
+  fd.append('description', description);
+  if (twitter) fd.append('twitter', twitter);
+  if (telegram) fd.append('telegram', telegram);
+  if (website) fd.append('website', website);
+  fd.append('showName', 'true');
+
+  const res = await fetch('https://pump.fun/api/ipfs', { method: 'POST', body: fd });
+  if (!res.ok) throw new Error('IPFS upload failed (' + res.status + '). Pump.fun may be blocking direct browser uploads — this endpoint can be CORS-restricted.');
+  const json = await res.json();
+  if (!json?.metadataUri) throw new Error('IPFS upload: no metadataUri returned');
+  return json.metadataUri;
+}
+
+// ── STEP 3 IMPL: PumpPortal unsigned tx ──
+async function getPumpPortalTx({ publicKey, mint, name, symbol, uri, amount }) {
+  const body = {
+    publicKey,
+    action: 'create',
+    tokenMetadata: { name, symbol, uri },
+    mint,
+    denominatedInSol: 'true',
+    amount: amount || 0,
+    slippage: 10,
+    priorityFee: 0.0005,
+    pool: 'pump',
+  };
+  const res = await fetch('https://pumpportal.fun/api/trade-local', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error('PumpPortal error (' + res.status + '): ' + txt.slice(0, 160));
+  }
+  return await res.arrayBuffer();
+}
+
+// ═════════════════════════════════════════════════════════════════
+// LOCAL STORAGE: launches + fees
+// ═════════════════════════════════════════════════════════════════
+function getLaunches() {
+  try { return JSON.parse(localStorage.getItem(LAUNCHES_KEY) || '[]'); }
+  catch { return []; }
+}
+function saveLaunch(r) {
+  const all = getLaunches();
+  all.unshift(r);
+  try { localStorage.setItem(LAUNCHES_KEY, JSON.stringify(all.slice(0, 200))); } catch {}
+}
+function getFeeTotal() { return parseFloat(localStorage.getItem(FEE_TOTALS_KEY) || '0') || 0; }
+function bumpFeeTotal(sol) {
+  try { localStorage.setItem(FEE_TOTALS_KEY, String(getFeeTotal() + sol)); } catch {}
+  renderStats();
+}
+
+function renderStats() {
+  const launches = getLaunches();
+  $('statTotal').textContent = launches.length;
+  $('statFees').textContent = getFeeTotal().toFixed(3) + ' SOL';
+  const creators = new Set(launches.map(l => l.creator)).size;
+  $('statCreators').textContent = creators;
+}
+renderStats();
+
+// ═════════════════════════════════════════════════════════════════
+// SUCCESS MODAL
+// ═════════════════════════════════════════════════════════════════
+function showSuccessModal(rec) {
+  const back = document.createElement('div');
+  back.className = 'modal-backdrop';
+  back.innerHTML = `
+    <div class="modal">
+      <div class="big-icon">🎉</div>
+      <h3>Token Launched!</h3>
+      <p>Your token <b>$${escapeHtml(rec.symbol)}</b> is live on Pump.fun.</p>
+      <div class="mint">${escapeHtml(rec.mint)}</div>
+      <div class="modal-actions">
+        <a href="https://pump.fun/coin/${rec.mint}" target="_blank" rel="noopener">🎰 View on Pump.fun</a>
+        <a href="https://solscan.io/tx/${rec.signature}" target="_blank" rel="noopener">🔎 Solscan TX</a>
+        <button class="close-btn" id="closeModal">Close</button>
+      </div>
+    </div>`;
+  back.addEventListener('click', e => { if (e.target === back) back.remove(); });
+  document.body.appendChild(back);
+  $('closeModal').onclick = () => back.remove();
+  // Force immediate feed refresh so new token appears
+  setTimeout(fetchFeed, 3000);
+}
+
+// ═════════════════════════════════════════════════════════════════
+// AGGREGATOR FEED (Pump.fun launches via DexScreener)
+// ═════════════════════════════════════════════════════════════════
+let feedTimer = null;
+
+async function fetchFeed() {
+  try {
+    // Try search + token-profiles for broader coverage
+    const [searchRes, profilesRes] = await Promise.allSettled([
+      fetch('https://api.dexscreener.com/latest/dex/search?q=pump.fun').then(r => r.json()),
+      fetch('https://api.dexscreener.com/token-profiles/latest/v1').then(r => r.json()).catch(() => []),
+    ]);
+
+    let pairs = [];
+    if (searchRes.status === 'fulfilled' && Array.isArray(searchRes.value?.pairs)) {
+      pairs = searchRes.value.pairs.filter(p => p.chainId === 'solana' && (p.dexId === 'pumpfun' || /pump/i.test(p.dexId || '') || /pumpfun/i.test(p.labels?.join(' ') || '')));
+    }
+
+    // Enrich with profiled Solana tokens (their pair data comes from token endpoint)
+    if (profilesRes.status === 'fulfilled' && Array.isArray(profilesRes.value)) {
+      const solProfiles = profilesRes.value.filter(t => t.chainId === 'solana').slice(0, 20);
+      // Fetch pair data for a small batch
+      const batch = solProfiles.slice(0, 8);
+      const pairResults = await Promise.allSettled(batch.map(t =>
+        fetch('https://api.dexscreener.com/latest/dex/tokens/' + t.tokenAddress).then(r => r.json()).catch(() => null)
+      ));
+      pairResults.forEach(r => {
+        if (r.status === 'fulfilled' && Array.isArray(r.value?.pairs)) {
+          const pumpPair = r.value.pairs.find(p => p.chainId === 'solana' && p.dexId === 'pumpfun');
+          if (pumpPair && !pairs.find(x => x.baseToken?.address === pumpPair.baseToken?.address)) {
+            pairs.push(pumpPair);
+          }
+        }
+      });
+    }
+
+    // Sort by creation time desc, keep 20 most recent with timestamp
+    pairs = pairs
+      .filter(p => p.pairCreatedAt)
+      .sort((a, b) => (b.pairCreatedAt || 0) - (a.pairCreatedAt || 0))
+      .slice(0, 20);
+
+    state.feedData = pairs;
+    renderFeed();
+
+    // Kick off rugcheck enrichment in background (may fail due to CORS — gracefully)
+    pairs.forEach(p => enrichRugCheck(p.baseToken?.address).then(() => renderFeed()).catch(() => {}));
+
+  } catch (e) {
+    console.warn('Feed fetch error', e);
+    $('feedList').innerHTML = '<div class="feed-loader">⚠️ Feed temporarily unavailable. Retrying in 30s…</div>';
+  }
+}
+
+const rugCache = new Map();
+async function enrichRugCheck(mint) {
+  if (!mint) return;
+  if (rugCache.has(mint)) return rugCache.get(mint);
+  try {
+    const r = await fetch('https://api.rugcheck.xyz/v1/tokens/' + mint + '/report');
+    if (!r.ok) { rugCache.set(mint, null); return null; }
+    const j = await r.json();
+    rugCache.set(mint, j);
+    return j;
+  } catch {
+    rugCache.set(mint, null);
+    return null;
+  }
+}
+
+function renderFeed() {
+  const list = $('feedList');
+  const byeboss = getLaunches();
+  const pumpPairs = state.feedData;
+
+  // Apply filters to pumpPairs
+  const now = Date.now();
+  const filtered = pumpPairs.filter(p => {
+    if (state.filters.onlyNew && p.pairCreatedAt && (now - p.pairCreatedAt) > 3600 * 1000) return false;
+    const mint = p.baseToken?.address;
+    const rc = rugCache.get(mint);
+    const topPct = rc?.topHolders?.[0]?.pct || 0;
+    const lpBurned = !!rc?.markets?.[0]?.lp?.lpBurned;
+    if (state.filters.hideDev5 && topPct > 5) return false;
+    if (state.filters.hideRugs && rc) {
+      const highRisks = (rc.risks || []).some(r => (r.level || '').toLowerCase() === 'danger');
+      const bad = topPct > 20 || !lpBurned || highRisks;
+      if (bad) return false;
+    }
+    return true;
+  });
+
+  let html = '';
+
+  // Byeboss section
+  if (byeboss.length > 0) {
+    html += '<div class="feed-sep">🔥 Launched via Byeboss</div>';
+    for (const b of byeboss.slice(0, 5)) html += renderByebossCard(b);
+  }
+
+  html += '<div class="feed-sep">Latest Pump.fun launches</div>';
+
+  if (filtered.length === 0) {
+    html += '<div class="feed-loader">No launches match filters</div>';
+  } else {
+    for (const p of filtered) html += renderPumpCard(p);
+  }
+
+  list.innerHTML = html;
+}
+
+function renderByebossCard(b) {
+  const age = ageStr(b.timestamp);
+  return `
+    <a class="token-card byeboss" href="https://pump.fun/coin/${b.mint}" target="_blank" rel="noopener">
+      <div class="token-logo">${escapeHtml(b.symbol[0] || '?')}</div>
+      <div class="token-main">
+        <div class="token-line1">
+          <span class="token-name">${escapeHtml(b.name)}</span>
+          <span class="token-sym">$${escapeHtml(b.symbol)}</span>
+          <span class="token-age">· ${age}</span>
+        </div>
+        <div class="token-line2">
+          <span>By <b>${shortAddr(b.creator)}</b></span>
+          <span>· <a href="https://solscan.io/tx/${b.signature}" target="_blank" rel="noopener">tx</a></span>
+        </div>
+      </div>
+      <div class="token-badges"><span class="badge gold">🏆 BYEBOSS</span></div>
+    </a>`;
+}
+
+function renderPumpCard(p) {
+  const sym = p.baseToken?.symbol || '?';
+  const name = p.baseToken?.name || sym;
+  const mint = p.baseToken?.address;
+  const mc = parseFloat(p.marketCap) || parseFloat(p.fdv) || 0;
+  const vol24 = parseFloat(p.volume?.h24) || 0;
+  const age = ageStr(p.pairCreatedAt);
+  const logo = p.info?.imageUrl;
+
+  const rc = rugCache.get(mint);
+  let badgeHtml = '';
+  if (rc) {
+    const topPct = rc.topHolders?.[0]?.pct || 0;
+    const lpBurned = !!rc.markets?.[0]?.lp?.lpBurned;
+    const highRisks = (rc.risks || []).some(r => (r.level || '').toLowerCase() === 'danger');
+    if (lpBurned) badgeHtml += '<span class="badge locked">🔒 LP Locked</span>';
+    if (topPct > 10) badgeHtml += `<span class="badge warn">⚠️ Dev ${topPct.toFixed(0)}%</span>`;
+    if (!highRisks && topPct < 10 && lpBurned) badgeHtml += '<span class="badge safe">✅ Safe</span>';
+    if (highRisks) badgeHtml += '<span class="badge danger">🚨 Risk</span>';
+  }
+
+  const logoHtml = logo
+    ? `<img class="token-logo" src="${escapeHtml(logo)}" alt="" onerror="this.outerHTML='<div class=token-logo>${escapeHtml(sym[0])}</div>'" />`
+    : `<div class="token-logo">${escapeHtml(sym[0] || '?')}</div>`;
+
+  return `
+    <a class="token-card" href="${escapeHtml(p.url || ('https://pump.fun/coin/' + mint))}" target="_blank" rel="noopener">
+      ${logoHtml}
+      <div class="token-main">
+        <div class="token-line1">
+          <span class="token-name">${escapeHtml(name.slice(0, 22))}</span>
+          <span class="token-sym">$${escapeHtml(sym)}</span>
+          <span class="token-age">· ${age}</span>
+        </div>
+        <div class="token-line2">
+          <span>MC <b>$${fmt(mc)}</b></span>
+          <span>· Vol24h <b>$${fmt(vol24)}</b></span>
+          <span>· <b>${shortAddr(mint)}</b></span>
+        </div>
+      </div>
+      <div class="token-badges">${badgeHtml || '<span class="badge warn">⏳ Checking</span>'}</div>
+    </a>`;
+}
+
+// Filter chips
+document.querySelectorAll('.chip[data-filter]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const key = chip.dataset.filter;
+    state.filters[key] = !state.filters[key];
+    chip.classList.toggle('on', state.filters[key]);
+    renderFeed();
+  });
+});
+
+$('refreshFeed').addEventListener('click', fetchFeed);
+
+// Start feed + refresh every 30s
+fetchFeed();
+feedTimer = setInterval(fetchFeed, 30000);
+
+// ═════════════════════════════════════════════════════════════════
+// MOBILE MENU
+// ═════════════════════════════════════════════════════════════════
+$('mobileToggle').addEventListener('click', () => $('mobileMenu').classList.toggle('open'));
+
+// ═════════════════════════════════════════════════════════════════
+// GLOBAL ERROR HANDLER
+// ═════════════════════════════════════════════════════════════════
+window.addEventListener('unhandledrejection', ev => {
+  console.warn('Unhandled rejection', ev.reason);
+});
+</script>
+
+</body>
+</html>
