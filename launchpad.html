@@ -465,6 +465,12 @@ input:focus, textarea:focus { outline: none; }
             <strong>Total cost: ~0.07 SOL + optional initial buy.</strong>
           </div>
 
+          <div class="cost-box" style="background:rgba(0,255,136,0.07);border-color:rgba(0,255,136,0.25);margin-top:10px">
+            🔒 <strong style="color:var(--green)">Safety:</strong>
+            Phantom will show the full transaction before signing. <strong>Always verify the SOL amounts match the expected cost above.</strong>
+            We run automatic tx checks (fee payer, signers, ix count) but only your wallet can authorize transfers — never approve a tx that drains more than the amount shown.
+          </div>
+
           <button type="button" id="launchBtn" class="launch-btn" disabled>🚀 Launch Token</button>
 
           <div class="flow" id="flowBox" style="display:none">
@@ -511,6 +517,26 @@ const RPC_PROXY          = 'https://dexscreener-telegram-bot-production.up.railw
 const LAUNCHES_API       = 'https://dexscreener-telegram-bot-production.up.railway.app/api/launches';
 const LAUNCHES_KEY       = 'byeboss_launches';
 const FEE_TOTALS_KEY     = 'byeboss_fees_total';
+
+// $ByeBoss genesis — always pinned as the first Byeboss launch
+const BYEBOSS_MINT       = 'BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump';
+const BYEBOSS_LOGO       = 'https://i.ibb.co/XxT1q0Fg/IMG-9805.png';
+const BYEBOSS_GENESIS    = {
+  mint: BYEBOSS_MINT,
+  name: '$ByeBoss',
+  symbol: 'BYEBOSS',
+  creator: 'Byeboss Team',
+  timestamp: 1730000000000,
+  signature: null,
+  genesis: true,
+  image: BYEBOSS_LOGO,
+  socials: {
+    telegram: 'https://t.me/SalaryIsScam',
+    website:  'https://byeboss.live',
+    pumpfun:  'https://pump.fun/coin/' + BYEBOSS_MINT,
+    dex:      'https://dexscreener.com/solana/' + BYEBOSS_MINT,
+  },
+};
 
 // Solana globals (from @solana/web3.js iife)
 const { Connection, PublicKey, Transaction, SystemProgram, Keypair, VersionedTransaction, LAMPORTS_PER_SOL } = solanaWeb3;
@@ -758,6 +784,33 @@ async function doLaunch() {
     // ───────── STEP 4: Sign & send ─────────
     setStep(4, 'active');
     const tx = VersionedTransaction.deserialize(new Uint8Array(txBuffer));
+
+    // ─── Safety checks before asking Phantom to sign ───
+    const sigCount = tx.message.header?.numRequiredSignatures || 0;
+    const acctKeys = (tx.message.staticAccountKeys || []).map(k => k.toBase58 ? k.toBase58() : String(k));
+    const signerKeys = acctKeys.slice(0, sigCount);
+    const ourMint = mintKeypair.publicKey.toBase58();
+
+    // 1. First signer is the fee payer — must be YOUR wallet, not anyone else.
+    if (signerKeys[0] !== state.walletStr) {
+      throw new Error('Safety check failed: fee payer is not your wallet (' + shortAddr(signerKeys[0]) + '). Aborting.');
+    }
+    // 2. Our generated mint keypair must be a required signer → tx creates OUR mint, not a substituted one.
+    if (!signerKeys.includes(ourMint)) {
+      throw new Error('Safety check failed: the mint keypair we generated is not a required signer. Aborting before any signature.');
+    }
+    // 3. Too few / too many signers is suspicious.
+    if (sigCount < 2 || sigCount > 4) {
+      throw new Error('Safety check failed: unexpected signer count (' + sigCount + '). Aborting.');
+    }
+    // 4. Sanity-cap instruction count (pump.fun create+buy ~3-6 ix)
+    const ixCount = tx.message.compiledInstructions?.length || tx.message.instructions?.length || 0;
+    if (ixCount > 12) {
+      throw new Error('Safety check failed: transaction has ' + ixCount + ' instructions (unexpectedly high). Aborting.');
+    }
+    console.info('[launch] tx check OK · signers:', signerKeys.length, '· ix:', ixCount, '· mint:', ourMint);
+    toast('🔒 Safety check passed. Phantom will now show the tx — verify the SOL amount before approving.', 'success');
+
     tx.sign([mintKeypair]);                       // mint signs first
     const signedTx = await provider.signTransaction(tx); // then user signs
     const rawSig = await connection.sendRawTransaction(signedTx.serialize(), {
@@ -783,6 +836,7 @@ async function doLaunch() {
     saveLaunch(record);
     postLaunchToBackend(record);
     renderStats();
+    renderFeed(); // show the freshly launched token in the feed immediately
 
     // Success modal
     showSuccessModal(record);
@@ -900,13 +954,16 @@ function saveLaunch(r) {
 
 // Merge shared API launches (global) with localStorage (current user)
 // Deduplicate by mint; most recent timestamp wins
+// $ByeBoss is always pinned first as the genesis launch.
 function allLaunches() {
   const local = getLaunches();
   const global = Array.isArray(state.byebossLaunches) ? state.byebossLaunches : [];
   const map = new Map();
   for (const l of global) if (l?.mint) map.set(l.mint, l);
   for (const l of local) if (l?.mint && !map.has(l.mint)) map.set(l.mint, l);
-  return Array.from(map.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  map.delete(BYEBOSS_MINT); // ensure our enriched genesis object wins
+  const others = Array.from(map.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  return [BYEBOSS_GENESIS, ...others];
 }
 
 // Push a new launch record to the shared backend feed (fire-and-forget)
@@ -1089,10 +1146,27 @@ function renderFeed() {
 }
 
 function renderByebossCard(b) {
-  const age = ageStr(b.timestamp);
+  const age = b.genesis ? 'Genesis' : ageStr(b.timestamp);
+  const logo = b.image
+    ? `<img class="token-logo" src="${escapeHtml(b.image)}" alt="${escapeHtml(b.symbol)}" style="object-fit:cover" onerror="this.outerHTML='<div class=token-logo>${escapeHtml((b.symbol||'?')[0])}</div>'" />`
+    : `<div class="token-logo">${escapeHtml((b.symbol || '?')[0])}</div>`;
+  const creatorLine = b.genesis
+    ? `<span>By <b>${escapeHtml(b.creator)}</b></span>`
+    : `<span>By <b>${shortAddr(b.creator)}</b></span>` +
+      (b.signature ? ` <span>· <a href="https://solscan.io/tx/${encodeURIComponent(b.signature)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">tx</a></span>` : '');
+  const socials = b.genesis && b.socials ? `
+    <div class="token-line2" style="margin-top:6px;gap:6px">
+      <a href="${escapeHtml(b.socials.telegram)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="padding:2px 6px;background:var(--bg3);border-radius:4px;font-size:10px;color:#2aabee">💬 TG</a>
+      <a href="${escapeHtml(b.socials.website)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="padding:2px 6px;background:var(--bg3);border-radius:4px;font-size:10px;color:var(--green)">🌐 Site</a>
+      <a href="${escapeHtml(b.socials.pumpfun)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="padding:2px 6px;background:var(--bg3);border-radius:4px;font-size:10px;color:var(--yellow)">🎰 Pump</a>
+      <a href="${escapeHtml(b.socials.dex)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="padding:2px 6px;background:var(--bg3);border-radius:4px;font-size:10px;color:var(--text)">📈 Dex</a>
+    </div>` : '';
+  const badge = b.genesis
+    ? '<span class="badge gold">⭐ GENESIS</span>'
+    : '<span class="badge gold">🏆 BYEBOSS</span>';
   return `
-    <a class="token-card byeboss" href="https://pump.fun/coin/${b.mint}" target="_blank" rel="noopener">
-      <div class="token-logo">${escapeHtml(b.symbol[0] || '?')}</div>
+    <a class="token-card byeboss" href="${escapeHtml(b.genesis ? b.socials?.pumpfun || 'https://pump.fun/coin/' + b.mint : 'https://pump.fun/coin/' + b.mint)}" target="_blank" rel="noopener">
+      ${logo}
       <div class="token-main">
         <div class="token-line1">
           <span class="token-name">${escapeHtml(b.name)}</span>
@@ -1100,11 +1174,11 @@ function renderByebossCard(b) {
           <span class="token-age">· ${age}</span>
         </div>
         <div class="token-line2">
-          <span>By <b>${shortAddr(b.creator)}</b></span>
-          <span>· <a href="https://solscan.io/tx/${b.signature}" target="_blank" rel="noopener">tx</a></span>
+          ${creatorLine}
         </div>
+        ${socials}
       </div>
-      <div class="token-badges"><span class="badge gold">🏆 BYEBOSS</span></div>
+      <div class="token-badges">${badge}</div>
     </a>`;
 }
 

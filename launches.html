@@ -339,6 +339,54 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .launch-foot a { color: var(--text3); padding: 3px 8px; background: var(--bg2); border-radius: 4px; transition: all 0.15s; }
 .launch-foot a:hover { color: var(--red); background: var(--bg3); }
 
+/* GENESIS CARD — pinned $ByeBoss, larger, with socials */
+.launch-card.genesis {
+  grid-column: 1 / -1;
+  grid-template-columns: 88px 1fr;
+  padding: 18px; gap: 18px;
+  background:
+    linear-gradient(135deg, rgba(255,59,79,0.08), rgba(255,170,0,0.05)),
+    var(--card);
+  border: 1px solid var(--yellow);
+  box-shadow: 0 0 30px rgba(255,170,0,0.15);
+  position: relative; overflow: hidden;
+}
+.launch-card.genesis::before {
+  content: '⭐ GENESIS'; position: absolute; top: 10px; right: 12px;
+  font-family: var(--mono); font-size: 9px; font-weight: 900;
+  color: var(--yellow); letter-spacing: 2px;
+  padding: 3px 8px; background: rgba(255,170,0,0.12);
+  border: 1px solid var(--yellow); border-radius: 4px;
+}
+.launch-card.genesis .launch-logo {
+  width: 88px; height: 88px; border-radius: 16px; font-size: 28px;
+  background-image: linear-gradient(135deg, rgba(255,59,79,0.2), rgba(255,170,0,0.15));
+  box-shadow: 0 0 22px rgba(255,59,79,0.45);
+  overflow: hidden;
+}
+.launch-card.genesis .launch-logo img {
+  width: 100%; height: 100%; object-fit: cover; border-radius: 14px;
+}
+.launch-card.genesis .launch-name {
+  font-size: 18px; max-width: none;
+}
+.launch-card.genesis .launch-sym {
+  font-size: 14px;
+}
+.launch-card.genesis .launch-meta b { color: var(--yellow); }
+
+.socials { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.socials a {
+  padding: 6px 12px; font-family: var(--mono); font-size: 11px; font-weight: 700;
+  border-radius: 6px; border: 1px solid var(--border); background: var(--bg2);
+  color: var(--text); transition: all 0.15s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.socials a:hover { border-color: var(--red); color: var(--red); transform: translateY(-1px); }
+.socials a.tg:hover { border-color: #2aabee; color: #2aabee; }
+.socials a.web:hover { border-color: var(--green); color: var(--green); }
+.socials a.pf:hover { border-color: var(--yellow); color: var(--yellow); }
+
 .empty, .loader {
   padding: 40px; text-align: center; color: var(--text3);
   font-family: var(--mono); font-size: 12px;
@@ -515,9 +563,28 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 // CONFIG
 // ═══════════════════════════════════════════════════════════════════
 const BYEBOSS_MINT   = 'BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump';
+const BYEBOSS_LOGO   = 'https://i.ibb.co/XxT1q0Fg/IMG-9805.png';
 const LAUNCHES_API   = 'https://dexscreener-telegram-bot-production.up.railway.app/api/launches';
 const LAUNCHES_KEY   = 'byeboss_launches';
 const GOAL_MC        = 1_000_000_000; // $1B
+
+// $ByeBoss is the genesis launch — always shown at the top of the feed
+const BYEBOSS_GENESIS = {
+  mint: BYEBOSS_MINT,
+  name: '$ByeBoss',
+  symbol: 'BYEBOSS',
+  creator: 'Byeboss Team',
+  timestamp: 1730000000000, // fixed genesis timestamp
+  signature: null,
+  genesis: true,
+  image: BYEBOSS_LOGO,
+  socials: {
+    telegram: 'https://t.me/SalaryIsScam',
+    website:  'https://byeboss.live',
+    pumpfun:  'https://pump.fun/coin/' + BYEBOSS_MINT,
+    dex:      'https://dexscreener.com/solana/' + BYEBOSS_MINT,
+  },
+};
 
 // ═══════════════════════════════════════════════════════════════════
 // HELPERS
@@ -711,8 +778,11 @@ async function loadLaunches() {
   const map = new Map();
   for (const l of api) if (l?.mint) map.set(l.mint, l);
   for (const l of local) if (l?.mint && !map.has(l.mint)) map.set(l.mint, l);
-  const all = Array.from(map.values())
+  // $ByeBoss is always the genesis entry — pinned first, never dropped
+  map.delete(BYEBOSS_MINT); // ensure our enriched genesis object wins
+  const others = Array.from(map.values())
     .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  const all = [BYEBOSS_GENESIS, ...others];
 
   renderLaunches(all);
   enrichLaunchesMC(all);
@@ -758,6 +828,7 @@ function renderLaunches(list) {
   }
 
   host.innerHTML = list.map(l => {
+    if (l.genesis) return renderGenesisCard(l);
     const mcInfo = mcCache.get(l.mint);
     const mcText = mcInfo ? 'MC <b>' + fmtMC(mcInfo.mc) + '</b>' : '';
     const priceText = mcInfo && mcInfo.price ? '· ' + fmtPrice(mcInfo.price) : '';
@@ -784,6 +855,35 @@ function renderLaunches(list) {
         </div>
       </a>`;
   }).join('');
+}
+
+function renderGenesisCard(l) {
+  const mcInfo = mcCache.get(l.mint);
+  const mcText = mcInfo ? 'MC <b>' + fmtMC(mcInfo.mc) + '</b>' : '';
+  const priceText = mcInfo && mcInfo.price ? '· ' + fmtPrice(mcInfo.price) : '';
+  const s = l.socials || {};
+  return `
+    <div class="launch-card genesis">
+      <div class="launch-logo"><img src="${escapeHtml(l.image || BYEBOSS_LOGO)}" alt="$ByeBoss" /></div>
+      <div class="launch-main">
+        <div class="launch-head">
+          <span class="launch-name">${escapeHtml(l.name)}</span>
+          <span class="launch-sym">$${escapeHtml(l.symbol)}</span>
+          <span class="launch-age">First launch · Genesis</span>
+        </div>
+        <div class="launch-meta">
+          <span>By <b>${escapeHtml(l.creator)}</b></span>
+          ${mcText ? '<span>' + mcText + ' ' + priceText + '</span>' : ''}
+        </div>
+        <div class="socials">
+          ${s.telegram ? '<a class="tg" href="' + escapeHtml(s.telegram) + '" target="_blank" rel="noopener">💬 Telegram</a>' : ''}
+          ${s.website ? '<a class="web" href="' + escapeHtml(s.website) + '" target="_blank" rel="noopener">🌐 Website</a>' : ''}
+          ${s.pumpfun ? '<a class="pf" href="' + escapeHtml(s.pumpfun) + '" target="_blank" rel="noopener">🎰 Pump.fun</a>' : ''}
+          ${s.dex ? '<a href="' + escapeHtml(s.dex) + '" target="_blank" rel="noopener">📈 DexScreener</a>' : ''}
+          <a href="trade.html">💎 Trade</a>
+        </div>
+      </div>
+    </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════
