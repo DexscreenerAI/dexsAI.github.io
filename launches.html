@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>Byeboss — Launched Tokens</title>
+<meta name="description" content="All tokens launched via the Byeboss Launchpad. $ByeBoss market cap tracker with a road to 1B gauge." />
+<link rel="icon" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: #060a10;
+  --bg2: #0b1018;
+  --bg3: #101822;
+  --card: #111a26;
+  --border: #1a2636;
+  --red: #ff3b4f;
+  --red2: #ff1744;
+  --green: #00ff88;
+  --yellow: #ffaa00;
+  --text: #dfe4ed;
+  --text2: rgba(255,255,255,0.5);
+  --text3: rgba(255,255,255,0.25);
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+body { min-height: 100vh; overflow-x: hidden; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #263447; }
+
+/* NAV */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; background: rgba(6,10,16,0.88); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-left { display: flex; align-items: center; gap: 28px; }
+.logo { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-weight: 800; letter-spacing: 0.5px; font-size: 15px; }
+.logo img { width: 28px; height: 28px; border-radius: 6px; }
+.nav-links { display: flex; align-items: center; gap: 6px; }
+.nav-links a {
+  padding: 7px 12px; border-radius: 8px; font-family: var(--mono); font-size: 12px;
+  font-weight: 500; color: var(--text2); transition: all 0.15s;
+}
+.nav-links a:hover { color: var(--text); background: var(--bg3); }
+.nav-links a.active { color: var(--red); background: rgba(255,59,79,0.1); }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.btn-ghost {
+  padding: 8px 14px; background: var(--bg3); border: 1px solid var(--border);
+  font-family: var(--mono); font-weight: 600; font-size: 12px; color: var(--text);
+  border-radius: 8px; transition: all 0.15s;
+}
+.btn-ghost:hover { border-color: var(--red); color: var(--red); }
+.mobile-toggle { display: none; }
+
+/* MAIN */
+.main { padding: 90px 24px 60px; max-width: 1280px; margin: 0 auto; }
+
+/* HERO */
+.hero { padding: 24px 0 12px; text-align: center; }
+.hero h1 {
+  font-family: var(--mono); font-weight: 800; font-size: clamp(28px, 4.5vw, 44px);
+  letter-spacing: -1px; margin-bottom: 10px;
+  background: linear-gradient(135deg, #fff 0%, var(--red) 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero p { color: var(--text2); font-size: 15px; max-width: 560px; margin: 0 auto; }
+
+/* BYEBOSS HERO CARD */
+.byeboss-hero {
+  margin-top: 32px; padding: 28px; background: var(--card);
+  border: 1px solid var(--border); border-radius: 14px;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(255,59,79,0.15), transparent 55%),
+    radial-gradient(circle at 85% 80%, rgba(255,170,0,0.10), transparent 55%);
+  position: relative; overflow: hidden;
+}
+.bb-top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 24px; flex-wrap: wrap; margin-bottom: 22px;
+}
+.bb-id { display: flex; align-items: center; gap: 16px; }
+.bb-logo {
+  width: 64px; height: 64px; border-radius: 14px;
+  box-shadow: 0 0 28px rgba(255,59,79,0.45);
+}
+.bb-meta h2 {
+  font-family: var(--mono); font-size: 22px; font-weight: 800;
+  color: var(--text); letter-spacing: -0.5px;
+}
+.bb-meta .sym {
+  font-family: var(--mono); font-size: 13px; color: var(--red); font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.bb-meta .ca {
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  margin-top: 6px; display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 8px; background: var(--bg2); border-radius: 6px; cursor: pointer;
+  transition: all 0.15s;
+}
+.bb-meta .ca:hover { color: var(--red); background: var(--bg3); }
+
+.bb-stats { display: flex; gap: 24px; flex-wrap: wrap; }
+.bb-stat .lbl {
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.bb-stat .val {
+  font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--text);
+  margin-top: 3px;
+}
+.bb-stat .val.red { color: var(--red); }
+.bb-stat .val.green { color: var(--green); }
+.bb-stat .chg { font-size: 11px; font-weight: 700; margin-left: 6px; }
+.bb-stat .chg.up { color: var(--green); }
+.bb-stat .chg.down { color: var(--red); }
+
+/* GAUGE */
+.gauge-wrap {
+  margin-top: 18px; padding: 18px; background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border); border-radius: 10px;
+}
+.gauge-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; flex-wrap: wrap; gap: 10px;
+}
+.gauge-head .title {
+  font-family: var(--mono); font-size: 11px; color: var(--text2);
+  letter-spacing: 1px; text-transform: uppercase; font-weight: 700;
+}
+.gauge-head .pct {
+  font-family: var(--mono); font-size: 13px; font-weight: 800; color: var(--yellow);
+}
+.gauge-track {
+  position: relative; height: 18px; border-radius: 10px;
+  background: var(--bg2); border: 1px solid var(--border); overflow: hidden;
+}
+.gauge-fill {
+  height: 100%; border-radius: 10px;
+  background: linear-gradient(90deg, var(--red) 0%, var(--yellow) 80%, var(--green) 100%);
+  box-shadow: 0 0 16px rgba(255,59,79,0.4);
+  transition: width 0.8s ease;
+  position: relative;
+}
+.gauge-fill::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  animation: shimmer 2.4s infinite;
+}
+.gauge-ticks {
+  display: flex; justify-content: space-between;
+  margin-top: 8px; font-family: var(--mono); font-size: 9px;
+  color: var(--text3); letter-spacing: 0.5px;
+}
+@keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+.bb-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.bb-actions a {
+  padding: 10px 16px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; font-family: var(--mono); font-size: 12px; font-weight: 700;
+  color: var(--text); transition: all 0.15s;
+}
+.bb-actions a.primary {
+  background: linear-gradient(135deg, var(--red), var(--red2)); color: #000; border: none;
+}
+.bb-actions a:hover { transform: translateY(-1px); }
+
+/* LAUNCH STATS STRIP */
+.strip {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  margin-top: 28px;
+}
+.strip .cell {
+  padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  text-align: center;
+}
+.strip .cell .val {
+  font-family: var(--mono); font-size: 22px; font-weight: 800; color: var(--red);
+}
+.strip .cell .lbl {
+  font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 0.8px;
+  text-transform: uppercase; margin-top: 4px;
+}
+
+/* LIST */
+.list-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin: 36px 0 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  flex-wrap: wrap; gap: 10px;
+}
+.list-head h3 {
+  font-family: var(--mono); font-size: 15px; font-weight: 700; letter-spacing: 0.3px;
+}
+.list-head .count {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+}
+
+.launches {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+.launch-card {
+  padding: 14px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; transition: all 0.15s; cursor: pointer;
+  display: grid; grid-template-columns: 44px 1fr; gap: 12px;
+  animation: fadeIn 0.3s ease;
+}
+.launch-card:hover { border-color: var(--red); transform: translateY(-2px); }
+.launch-logo {
+  width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
+  background: var(--bg3); display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-weight: 700; color: var(--text2); font-size: 16px;
+}
+.launch-main { min-width: 0; }
+.launch-head {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.launch-name {
+  font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--text);
+  max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.launch-sym { font-family: var(--mono); font-size: 12px; color: var(--red); font-weight: 700; }
+.launch-age { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-left: auto; }
+.launch-meta {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 10px; color: var(--text2);
+}
+.launch-meta b { color: var(--text); font-weight: 700; }
+.launch-foot {
+  margin-top: 8px; display: flex; gap: 8px; font-family: var(--mono); font-size: 10px;
+}
+.launch-foot a { color: var(--text3); padding: 3px 8px; background: var(--bg2); border-radius: 4px; transition: all 0.15s; }
+.launch-foot a:hover { color: var(--red); background: var(--bg3); }
+
+.empty, .loader {
+  padding: 40px; text-align: center; color: var(--text3);
+  font-family: var(--mono); font-size: 12px;
+  grid-column: 1 / -1;
+}
+.spinner {
+  width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--red);
+  border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* MOBILE MENU */
+.mobile-menu {
+  position: fixed; top: 60px; left: 0; right: 0; background: var(--bg2);
+  border-bottom: 1px solid var(--border); padding: 10px; z-index: 99;
+  display: none; flex-direction: column; gap: 4px;
+}
+.mobile-menu.open { display: flex; }
+.mobile-menu a {
+  padding: 10px 14px; font-family: var(--mono); font-size: 13px;
+  color: var(--text2); border-radius: 6px;
+}
+.mobile-menu a:hover, .mobile-menu a.active { color: var(--red); background: var(--bg3); }
+
+@media (max-width: 900px) {
+  .nav-links { display: none; }
+  .mobile-toggle { display: flex; }
+  .main { padding: 80px 14px 40px; }
+  .nav { padding: 12px 14px; }
+  .strip { grid-template-columns: repeat(2, 1fr); }
+  .bb-top { flex-direction: column; align-items: flex-start; }
+  .bb-stats { width: 100%; gap: 16px; }
+  .bb-logo { width: 52px; height: 52px; }
+  .bb-meta h2 { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-left">
+    <a href="index.html" class="logo">
+      <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="Byeboss" />
+      <span>BYEBOSS</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">App</a>
+      <a href="gems.html">Gems</a>
+      <a href="sniper_terminal.html">Sniper</a>
+      <a href="og-detector.html">OG Detector</a>
+      <a href="shazam_crypto.html">Shazam</a>
+      <a href="promote.html">Promote</a>
+      <a href="burn.html">🔥 Burn</a>
+      <a href="trade.html">💎 Trade</a>
+      <a href="launchpad.html">🚀 Launchpad</a>
+      <a href="launches.html" class="active">📊 Launches</a>
+      <a href="https://dexscreener.com/solana" target="_blank" rel="noopener">📈 Chart</a>
+    </div>
+  </div>
+  <div class="nav-right">
+    <button class="btn-ghost mobile-toggle" id="mobileToggle" aria-label="Menu">☰</button>
+    <a class="btn-ghost" href="launchpad.html">🚀 Launch a token</a>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">App</a>
+  <a href="gems.html">Gems</a>
+  <a href="sniper_terminal.html">Sniper</a>
+  <a href="og-detector.html">OG Detector</a>
+  <a href="shazam_crypto.html">Shazam</a>
+  <a href="promote.html">Promote</a>
+  <a href="burn.html">🔥 Burn</a>
+  <a href="trade.html">💎 Trade</a>
+  <a href="launchpad.html">🚀 Launchpad</a>
+  <a href="launches.html" class="active">📊 Launches</a>
+</div>
+
+<main class="main">
+
+  <section class="hero">
+    <h1>📊 Byeboss Launches</h1>
+    <p>Every token created through the Byeboss Launchpad, in one place.</p>
+  </section>
+
+  <!-- $ByeBoss featured hero card -->
+  <section class="byeboss-hero">
+    <div class="bb-top">
+      <div class="bb-id">
+        <img class="bb-logo" src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="$ByeBoss" />
+        <div class="bb-meta">
+          <h2>$ByeBoss</h2>
+          <div class="sym">BYEBOSS · Salary Is A Scam</div>
+          <div class="ca" id="bbCa" title="Copy contract">
+            <span id="bbCaText">BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump</span>
+            <span>📋</span>
+          </div>
+        </div>
+      </div>
+      <div class="bb-stats">
+        <div class="bb-stat">
+          <div class="lbl">Market Cap</div>
+          <div class="val red" id="bbMc">—</div>
+        </div>
+        <div class="bb-stat">
+          <div class="lbl">Price</div>
+          <div class="val" id="bbPrice">—</div>
+        </div>
+        <div class="bb-stat">
+          <div class="lbl">24h Change</div>
+          <div class="val" id="bbChange">—</div>
+        </div>
+        <div class="bb-stat">
+          <div class="lbl">24h Volume</div>
+          <div class="val" id="bbVol">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Road to 1B gauge -->
+    <div class="gauge-wrap">
+      <div class="gauge-head">
+        <div class="title">🎯 Road to $1B Market Cap</div>
+        <div class="pct" id="bbPct">0.00%</div>
+      </div>
+      <div class="gauge-track"><div class="gauge-fill" id="bbGauge" style="width:0%"></div></div>
+      <div class="gauge-ticks">
+        <span>$0</span>
+        <span>$100M</span>
+        <span>$250M</span>
+        <span>$500M</span>
+        <span>$750M</span>
+        <span>$1B 🚀</span>
+      </div>
+    </div>
+
+    <div class="bb-actions">
+      <a class="primary" href="trade.html">💎 Trade $ByeBoss</a>
+      <a href="https://pump.fun/coin/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">🎰 Pump.fun</a>
+      <a id="bbDexLink" href="https://dexscreener.com/solana/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">📈 DexScreener</a>
+      <a href="https://solscan.io/token/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">🔎 Solscan</a>
+    </div>
+  </section>
+
+  <!-- Aggregate strip -->
+  <div class="strip">
+    <div class="cell"><div class="val" id="sLaunches">0</div><div class="lbl">Total launches</div></div>
+    <div class="cell"><div class="val" id="sCreators">0</div><div class="lbl">Unique creators</div></div>
+    <div class="cell"><div class="val" id="sMc">$0</div><div class="lbl">Aggregate MC</div></div>
+    <div class="cell"><div class="val" id="sLast">—</div><div class="lbl">Latest launch</div></div>
+  </div>
+
+  <div class="list-head">
+    <h3>All Byeboss Launches</h3>
+    <span class="count" id="listCount">0 tokens</span>
+  </div>
+
+  <div class="launches" id="launches">
+    <div class="loader"><div class="spinner"></div>Loading Byeboss launches…</div>
+  </div>
+
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════════
+const BYEBOSS_MINT   = 'BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump';
+const LAUNCHES_API   = 'https://dexscreener-telegram-bot-production.up.railway.app/api/launches';
+const LAUNCHES_KEY   = 'byeboss_launches';
+const GOAL_MC        = 1_000_000_000; // $1B
+
+// ═══════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+
+function fmtMC(n) {
+  if (!n || isNaN(n)) return '$0';
+  if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+  return '$' + Math.round(n);
+}
+function fmtPrice(n) {
+  if (!n || isNaN(n)) return '—';
+  if (n >= 1) return '$' + n.toFixed(4);
+  if (n >= 0.0001) return '$' + n.toFixed(6);
+  return '$' + n.toExponential(2);
+}
+function ageStr(ms) {
+  if (!ms) return '—';
+  const s = Math.floor((Date.now() - ms) / 1000);
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+function short(a, L = 4) { return !a ? '' : a.slice(0, L) + '…' + a.slice(-L); }
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// $BYEBOSS HERO (market cap + gauge)
+// ═══════════════════════════════════════════════════════════════════
+async function loadByebossToken() {
+  try {
+    const r = await fetch('https://api.dexscreener.com/latest/dex/tokens/' + BYEBOSS_MINT);
+    if (!r.ok) return;
+    const j = await r.json();
+    const pairs = Array.isArray(j.pairs) ? j.pairs : [];
+    if (pairs.length === 0) return;
+    // Prefer Solana pump/raydium pair with most liquidity
+    const p = pairs
+      .filter(x => x.chainId === 'solana')
+      .sort((a, b) => (parseFloat(b.liquidity?.usd) || 0) - (parseFloat(a.liquidity?.usd) || 0))[0] || pairs[0];
+
+    const mc = parseFloat(p.marketCap) || parseFloat(p.fdv) || 0;
+    const price = parseFloat(p.priceUsd) || 0;
+    const chg = parseFloat(p.priceChange?.h24);
+    const vol = parseFloat(p.volume?.h24) || 0;
+
+    $('bbMc').textContent = fmtMC(mc);
+    $('bbPrice').textContent = fmtPrice(price);
+    $('bbVol').textContent = fmtMC(vol);
+
+    const chgEl = $('bbChange');
+    if (isFinite(chg)) {
+      const cls = chg >= 0 ? 'green' : 'red';
+      const sign = chg >= 0 ? '+' : '';
+      chgEl.className = 'val ' + cls;
+      chgEl.textContent = sign + chg.toFixed(2) + '%';
+    } else {
+      chgEl.textContent = '—';
+    }
+
+    // Update dex link to the actual pair URL
+    if (p.url) $('bbDexLink').href = p.url;
+
+    // Gauge
+    const pct = Math.min(100, (mc / GOAL_MC) * 100);
+    $('bbGauge').style.width = pct.toFixed(3) + '%';
+    $('bbPct').textContent = pct.toFixed(pct < 1 ? 3 : 2) + '%';
+  } catch (e) {
+    console.warn('ByeBoss token fetch failed', e);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LAUNCHES (shared feed)
+// ═══════════════════════════════════════════════════════════════════
+function getLocalLaunches() {
+  try { return JSON.parse(localStorage.getItem(LAUNCHES_KEY) || '[]'); }
+  catch { return []; }
+}
+
+async function loadLaunches() {
+  let api = [];
+  try {
+    const r = await fetch(LAUNCHES_API + '?limit=500');
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j?.launches)) api = j.launches;
+    }
+  } catch (e) { console.warn('Launches API failed', e); }
+
+  const local = getLocalLaunches();
+  const map = new Map();
+  for (const l of api) if (l?.mint) map.set(l.mint, l);
+  for (const l of local) if (l?.mint && !map.has(l.mint)) map.set(l.mint, l);
+  const all = Array.from(map.values())
+    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+  renderLaunches(all);
+  enrichLaunchesMC(all);
+}
+
+const mcCache = new Map();
+async function enrichLaunchesMC(list) {
+  // Fetch MC for first 20 tokens (DexScreener rate limit friendly)
+  const batch = list.slice(0, 20);
+  const results = await Promise.allSettled(batch.map(l =>
+    fetch('https://api.dexscreener.com/latest/dex/tokens/' + l.mint)
+      .then(r => r.ok ? r.json() : null)
+      .catch(() => null)
+  ));
+  let aggregate = 0;
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled' && r.value) {
+      const pairs = Array.isArray(r.value.pairs) ? r.value.pairs : [];
+      const p = pairs.filter(x => x.chainId === 'solana')[0] || pairs[0];
+      if (p) {
+        const mc = parseFloat(p.marketCap) || parseFloat(p.fdv) || 0;
+        mcCache.set(batch[i].mint, { mc, price: parseFloat(p.priceUsd) || 0, url: p.url });
+        aggregate += mc;
+      }
+    }
+  });
+  renderLaunches(list);
+  $('sMc').textContent = fmtMC(aggregate);
+}
+
+function renderLaunches(list) {
+  const host = $('launches');
+  $('sLaunches').textContent = list.length;
+  $('listCount').textContent = list.length + ' token' + (list.length === 1 ? '' : 's');
+
+  const creators = new Set(list.map(l => l.creator).filter(Boolean));
+  $('sCreators').textContent = creators.size;
+  $('sLast').textContent = list[0]?.timestamp ? ageStr(list[0].timestamp) : '—';
+
+  if (list.length === 0) {
+    host.innerHTML = '<div class="empty">No tokens launched via Byeboss yet. <br><br><a href="launchpad.html" style="color:var(--red);font-weight:700">🚀 Be the first →</a></div>';
+    return;
+  }
+
+  host.innerHTML = list.map(l => {
+    const mcInfo = mcCache.get(l.mint);
+    const mcText = mcInfo ? 'MC <b>' + fmtMC(mcInfo.mc) + '</b>' : '';
+    const priceText = mcInfo && mcInfo.price ? '· ' + fmtPrice(mcInfo.price) : '';
+    const initial = (l.symbol || l.name || '?')[0];
+    const chartUrl = mcInfo?.url || ('https://dexscreener.com/solana/' + l.mint);
+    return `
+      <a class="launch-card" href="https://pump.fun/coin/${encodeURIComponent(l.mint)}" target="_blank" rel="noopener">
+        <div class="launch-logo">${escapeHtml(initial)}</div>
+        <div class="launch-main">
+          <div class="launch-head">
+            <span class="launch-name">${escapeHtml(l.name || '?')}</span>
+            <span class="launch-sym">$${escapeHtml(l.symbol || '?')}</span>
+            <span class="launch-age">${ageStr(l.timestamp)}</span>
+          </div>
+          <div class="launch-meta">
+            <span>By <b>${short(l.creator)}</b></span>
+            ${mcText ? '<span>' + mcText + ' ' + priceText + '</span>' : '<span class="launch-sym" style="color:var(--text3)">MC loading…</span>'}
+          </div>
+          <div class="launch-foot">
+            <a href="${escapeHtml(chartUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📈 Chart</a>
+            <a href="https://solscan.io/token/${encodeURIComponent(l.mint)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔎 Solscan</a>
+            ${l.signature ? '<a href="https://solscan.io/tx/' + encodeURIComponent(l.signature) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">🧾 TX</a>' : ''}
+          </div>
+        </div>
+      </a>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// COPY CA
+// ═══════════════════════════════════════════════════════════════════
+$('bbCa').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(BYEBOSS_MINT);
+    const t = $('bbCaText');
+    const orig = t.textContent;
+    t.textContent = '✅ Copied!';
+    setTimeout(() => { t.textContent = orig; }, 1200);
+  } catch {}
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// MOBILE MENU
+// ═══════════════════════════════════════════════════════════════════
+$('mobileToggle').addEventListener('click', () => $('mobileMenu').classList.toggle('open'));
+
+// ═══════════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════════
+loadByebossToken();
+loadLaunches();
+setInterval(loadByebossToken, 30000);
+setInterval(loadLaunches, 45000);
+</script>
+
+</body>
+</html>
