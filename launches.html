@@ -124,44 +124,141 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .bb-stat .chg.up { color: var(--green); }
 .bb-stat .chg.down { color: var(--red); }
 
-/* GAUGE */
+/* GAUGE + MILESTONES */
 .gauge-wrap {
-  margin-top: 18px; padding: 18px; background: rgba(0,0,0,0.25);
-  border: 1px solid var(--border); border-radius: 10px;
+  margin-top: 18px; padding: 20px; background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border); border-radius: 12px;
+  background-image: radial-gradient(circle at 50% 0%, rgba(255,170,0,0.08), transparent 60%);
 }
 .gauge-head {
   display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 12px; flex-wrap: wrap; gap: 10px;
+  margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
 }
 .gauge-head .title {
-  font-family: var(--mono); font-size: 11px; color: var(--text2);
-  letter-spacing: 1px; text-transform: uppercase; font-weight: 700;
+  font-family: var(--mono); font-size: 12px; color: var(--text);
+  letter-spacing: 1.2px; text-transform: uppercase; font-weight: 800;
 }
+.gauge-head .title span { color: var(--yellow); }
 .gauge-head .pct {
-  font-family: var(--mono); font-size: 13px; font-weight: 800; color: var(--yellow);
+  font-family: var(--mono); font-size: 15px; font-weight: 800; color: var(--yellow);
+  padding: 4px 10px; background: rgba(255,170,0,0.12); border: 1px solid rgba(255,170,0,0.3);
+  border-radius: 6px;
 }
+
 .gauge-track {
-  position: relative; height: 18px; border-radius: 10px;
+  position: relative; height: 10px; border-radius: 10px;
   background: var(--bg2); border: 1px solid var(--border); overflow: hidden;
+  margin-bottom: 24px;
 }
 .gauge-fill {
   height: 100%; border-radius: 10px;
-  background: linear-gradient(90deg, var(--red) 0%, var(--yellow) 80%, var(--green) 100%);
-  box-shadow: 0 0 16px rgba(255,59,79,0.4);
-  transition: width 0.8s ease;
+  background: linear-gradient(90deg, var(--red) 0%, #ff8c00 35%, var(--yellow) 65%, var(--green) 100%);
+  box-shadow: 0 0 18px rgba(255,140,0,0.5);
+  transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
 }
 .gauge-fill::after {
   content: ''; position: absolute; inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
   animation: shimmer 2.4s infinite;
 }
-.gauge-ticks {
-  display: flex; justify-content: space-between;
-  margin-top: 8px; font-family: var(--mono); font-size: 9px;
-  color: var(--text3); letter-spacing: 0.5px;
+
+/* MILESTONE JOURNEY */
+.milestones {
+  position: relative; padding: 0 4px 8px;
 }
+.milestones-rail {
+  position: absolute; left: 4px; right: 4px; top: 11px; height: 3px;
+  background: var(--bg3); border-radius: 3px; overflow: hidden;
+}
+.milestones-rail-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--red), #ff8c00 35%, var(--yellow) 65%, var(--green));
+  box-shadow: 0 0 10px rgba(255,170,0,0.45);
+  transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.milestones-row {
+  position: relative; display: flex; justify-content: space-between;
+  gap: 4px; overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+.milestones-row::-webkit-scrollbar { height: 4px; }
+.milestones-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.ms {
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  flex: 1 0 auto; min-width: 40px; padding-top: 0;
+}
+.ms .dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--bg3); border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 10px; font-weight: 800;
+  color: var(--text3); transition: all 0.3s;
+  position: relative; z-index: 2;
+}
+.ms .lbl {
+  margin-top: 6px; font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: var(--text3); letter-spacing: 0.3px; white-space: nowrap;
+  transition: color 0.3s;
+}
+
+.ms.passed .dot {
+  background: var(--green); border-color: var(--green); color: #000;
+  box-shadow: 0 0 12px rgba(0,255,136,0.55);
+}
+.ms.passed .lbl { color: var(--green); }
+.ms.passed .dot::after { content: '✓'; font-size: 11px; }
+
+.ms.current .dot {
+  background: var(--yellow); border-color: var(--yellow); color: #000;
+  box-shadow: 0 0 22px rgba(255,170,0,0.7);
+  animation: pulseDot 1.6s ease-in-out infinite;
+  transform: scale(1.25);
+}
+.ms.current .lbl {
+  color: var(--yellow); font-size: 11px; font-weight: 800;
+}
+.ms.current .dot::after { content: '⚡'; font-size: 11px; }
+.ms.current::before {
+  content: 'YOU ARE HERE'; position: absolute; top: -18px; left: 50%;
+  transform: translateX(-50%); font-family: var(--mono); font-size: 8px;
+  font-weight: 900; color: var(--yellow); letter-spacing: 1px;
+  padding: 2px 6px; background: rgba(255,170,0,0.15);
+  border: 1px solid var(--yellow); border-radius: 4px;
+  white-space: nowrap; animation: float 2s ease-in-out infinite;
+}
+
+.ms.future .dot { background: var(--bg2); }
+
+.ms-progress {
+  margin-top: 22px; padding: 14px 16px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 10px;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; flex-wrap: wrap;
+}
+.ms-progress .status {
+  font-family: var(--mono); font-size: 12px; color: var(--text2);
+}
+.ms-progress .status b { color: var(--yellow); font-weight: 800; }
+.ms-progress .next {
+  font-family: var(--mono); font-size: 12px; color: var(--text);
+  display: flex; align-items: center; gap: 10px;
+}
+.ms-progress .next .need {
+  padding: 4px 10px; background: rgba(0,255,136,0.1);
+  border: 1px solid rgba(0,255,136,0.3); border-radius: 6px;
+  color: var(--green); font-weight: 700;
+}
+
 @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@keyframes pulseDot {
+  0%, 100% { box-shadow: 0 0 22px rgba(255,170,0,0.7); transform: scale(1.25); }
+  50% { box-shadow: 0 0 32px rgba(255,170,0,1); transform: scale(1.35); }
+}
+@keyframes float {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-2px); }
+}
 
 .bb-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
 .bb-actions a {
@@ -362,20 +459,27 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
       </div>
     </div>
 
-    <!-- Road to 1B gauge -->
+    <!-- Milestone journey -->
     <div class="gauge-wrap">
       <div class="gauge-head">
-        <div class="title">🎯 Road to $1B Market Cap</div>
+        <div class="title">🎯 Milestone Journey <span>— Road to $1B</span></div>
         <div class="pct" id="bbPct">0.00%</div>
       </div>
       <div class="gauge-track"><div class="gauge-fill" id="bbGauge" style="width:0%"></div></div>
-      <div class="gauge-ticks">
-        <span>$0</span>
-        <span>$100M</span>
-        <span>$250M</span>
-        <span>$500M</span>
-        <span>$750M</span>
-        <span>$1B 🚀</span>
+
+      <div class="milestones">
+        <div class="milestones-rail"><div class="milestones-rail-fill" id="msRailFill" style="width:0%"></div></div>
+        <div class="milestones-row" id="msRow"></div>
+      </div>
+
+      <div class="ms-progress">
+        <div class="status">
+          <span>Current MC:</span> <b id="msCurrent">—</b>
+        </div>
+        <div class="next">
+          <span id="msNextLabel">Next milestone loading…</span>
+          <span class="need" id="msNeed" style="display:none"></span>
+        </div>
       </div>
     </div>
 
@@ -483,14 +587,107 @@ async function loadByebossToken() {
     // Update dex link to the actual pair URL
     if (p.url) $('bbDexLink').href = p.url;
 
-    // Gauge
-    const pct = Math.min(100, (mc / GOAL_MC) * 100);
-    $('bbGauge').style.width = pct.toFixed(3) + '%';
-    $('bbPct').textContent = pct.toFixed(pct < 1 ? 3 : 2) + '%';
+    // Gauge + milestones
+    renderMilestones(mc);
   } catch (e) {
     console.warn('ByeBoss token fetch failed', e);
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// MILESTONE JOURNEY (logarithmic, anchored on user-defined targets)
+// ═══════════════════════════════════════════════════════════════════
+const MILESTONES = [
+  10_000, 20_000, 30_000, 50_000,
+  100_000, 250_000, 500_000,
+  1_000_000, 2_000_000, 5_000_000,
+  10_000_000, 20_000_000,
+  50_000_000, 100_000_000, 250_000_000, 500_000_000, 1_000_000_000,
+];
+
+function fmtMilestone(n) {
+  if (n >= 1e9) return (n / 1e9).toFixed(0) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(0) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
+  return '' + n;
+}
+
+// Build the milestone row once on boot
+function buildMilestonesRow() {
+  const row = $('msRow');
+  row.innerHTML = MILESTONES.map((m, i) =>
+    '<div class="ms future" data-val="' + m + '" data-idx="' + i + '">' +
+      '<div class="dot"></div>' +
+      '<div class="lbl">$' + fmtMilestone(m) + '</div>' +
+    '</div>'
+  ).join('');
+}
+
+function renderMilestones(mc) {
+  // Update overall $1B progress bar (top, dramatic)
+  const pctB = Math.min(100, (mc / GOAL_MC) * 100);
+  $('bbGauge').style.width = pctB.toFixed(3) + '%';
+  $('bbPct').textContent = pctB.toFixed(pctB < 1 ? 3 : 2) + '% of $1B';
+
+  // Find which milestones are passed / current / next
+  let lastPassedIdx = -1;
+  for (let i = 0; i < MILESTONES.length; i++) {
+    if (mc >= MILESTONES[i]) lastPassedIdx = i;
+  }
+  const currentIdx = lastPassedIdx; // the milestone just hit
+  const nextIdx = Math.min(MILESTONES.length - 1, lastPassedIdx + 1);
+
+  // Update milestone chips
+  document.querySelectorAll('.ms').forEach(el => {
+    el.classList.remove('passed', 'current', 'future');
+    const idx = parseInt(el.dataset.idx, 10);
+    if (idx < currentIdx) el.classList.add('passed');
+    else if (idx === currentIdx && currentIdx >= 0) el.classList.add('passed');
+    else el.classList.add('future');
+  });
+
+  // Mark the "current" = the one just passed (or first if none passed)
+  const currentEl = document.querySelector('.ms[data-idx="' + Math.max(0, currentIdx) + '"]');
+  if (currentEl) {
+    if (currentIdx >= 0) currentEl.classList.remove('future');
+    currentEl.classList.remove('passed');
+    currentEl.classList.add('current');
+  }
+
+  // Rail fill: % across the whole journey from milestone[0] to last
+  // Use log interpolation so chips stay evenly spaced visually
+  const logMin = Math.log10(MILESTONES[0]);
+  const logMax = Math.log10(MILESTONES[MILESTONES.length - 1]);
+  const logMc = mc > 0 ? Math.log10(mc) : logMin;
+  let railPct = ((logMc - logMin) / (logMax - logMin)) * 100;
+  railPct = Math.max(0, Math.min(100, railPct));
+  $('msRailFill').style.width = railPct.toFixed(2) + '%';
+
+  // Status line
+  $('msCurrent').textContent = fmtMC(mc);
+  if (currentIdx < 0) {
+    $('msNextLabel').textContent = 'First target: $' + fmtMilestone(MILESTONES[0]);
+    const need = MILESTONES[0] - mc;
+    $('msNeed').style.display = 'inline-block';
+    $('msNeed').textContent = '+' + fmtMC(need) + ' to hit $' + fmtMilestone(MILESTONES[0]);
+  } else if (currentIdx >= MILESTONES.length - 1) {
+    $('msNextLabel').textContent = '🏆 $1B reached — LEGENDARY';
+    $('msNeed').style.display = 'none';
+  } else {
+    const nextVal = MILESTONES[nextIdx];
+    const need = nextVal - mc;
+    $('msNextLabel').textContent = 'Next: $' + fmtMilestone(nextVal);
+    $('msNeed').style.display = 'inline-block';
+    $('msNeed').textContent = '+' + fmtMC(need) + ' to go';
+  }
+
+  // Auto-scroll the milestone row to keep "current" in view
+  if (currentEl) {
+    try { currentEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch {}
+  }
+}
+
+buildMilestonesRow();
 
 // ═══════════════════════════════════════════════════════════════════
 // LAUNCHES (shared feed)
