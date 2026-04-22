@@ -260,6 +260,35 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   50% { transform: translateX(-50%) translateY(-2px); }
 }
 
+/* BURN GAUGE — red themed, sits inside byeboss-hero */
+.burn-wrap {
+  background-image: radial-gradient(circle at 50% 0%, rgba(255,59,79,0.14), transparent 60%);
+  border-color: rgba(255,59,79,0.3);
+}
+.burn-fill {
+  background: linear-gradient(90deg, #ff4400, #ff3b4f 50%, #ffaa00 100%) !important;
+  box-shadow: 0 0 18px rgba(255,59,79,0.55) !important;
+}
+.burn-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px;
+}
+.burn-cell {
+  padding: 12px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; text-align: center;
+}
+.burn-cell .lbl {
+  font-family: var(--mono); font-size: 9px; color: var(--text3);
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.burn-cell .val {
+  font-family: var(--mono); font-size: 18px; font-weight: 800; color: var(--text);
+  margin-top: 4px;
+}
+.burn-cell .val.red { color: var(--red); }
+@media (max-width: 600px) {
+  .burn-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
 .bb-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
 .bb-actions a {
   padding: 10px 16px; background: var(--bg2); border: 1px solid var(--border);
@@ -531,6 +560,37 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
       </div>
     </div>
 
+    <!-- Burn progress — target 50% -->
+    <div class="gauge-wrap burn-wrap">
+      <div class="gauge-head">
+        <div class="title">🔥 Burn Progress <span>— Target 50% burnt</span></div>
+        <div class="pct" id="burnPct" style="color:var(--red);background:rgba(255,59,79,0.14);border-color:rgba(255,59,79,0.35)">0%</div>
+      </div>
+      <div class="gauge-track"><div class="gauge-fill burn-fill" id="burnBar" style="width:0%"></div></div>
+      <div class="burn-stats">
+        <div class="burn-cell">
+          <div class="lbl">Burnt</div>
+          <div class="val red" id="burnAmt">—</div>
+        </div>
+        <div class="burn-cell">
+          <div class="lbl">Circulating</div>
+          <div class="val" id="burnSupply">—</div>
+        </div>
+        <div class="burn-cell">
+          <div class="lbl">Target (50%)</div>
+          <div class="val" style="color:var(--yellow)">500M</div>
+        </div>
+        <div class="burn-cell">
+          <div class="lbl">To target</div>
+          <div class="val" id="burnToGoal">—</div>
+        </div>
+      </div>
+      <div class="ms-progress" style="margin-top:14px">
+        <div class="status"><b style="color:var(--red)" id="burnPctAbs">0.0%</b> of supply already burnt forever 🔥</div>
+        <div class="next"><a href="burn.html" class="need" style="color:var(--red);background:rgba(255,59,79,0.1);border-color:rgba(255,59,79,0.3);font-weight:800;text-decoration:none">🔥 Burn your tokens →</a></div>
+      </div>
+    </div>
+
     <div class="bb-actions">
       <a class="primary" href="trade.html">💎 Trade $ByeBoss</a>
       <a href="https://pump.fun/coin/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">🎰 Pump.fun</a>
@@ -563,6 +623,9 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 // CONFIG
 // ═══════════════════════════════════════════════════════════════════
 const BYEBOSS_MINT   = 'BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump';
+const RPC_PROXY      = 'https://dexscreener-telegram-bot-production.up.railway.app/api/rpc';
+const INITIAL_SUPPLY = 1_000_000_000; // pump.fun tokens always start at 1B
+const BURN_TARGET_PCT = 50; // goal: burn 50% of supply
 const BYEBOSS_LOGO   = 'https://i.ibb.co/XxT1q0Fg/IMG-9805.png';
 const LAUNCHES_API   = 'https://dexscreener-telegram-bot-production.up.railway.app/api/launches';
 const LAUNCHES_KEY   = 'byeboss_launches';
@@ -905,12 +968,49 @@ $('bbCa').addEventListener('click', async () => {
 $('mobileToggle').addEventListener('click', () => $('mobileMenu').classList.toggle('open'));
 
 // ═══════════════════════════════════════════════════════════════════
+// 🔥 BURN PROGRESS (target 50% of supply burnt)
+// ═══════════════════════════════════════════════════════════════════
+async function loadBurnStats() {
+  try {
+    const r = await fetch(RPC_PROXY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getTokenSupply', params: [BYEBOSS_MINT] }),
+    });
+    if (!r.ok) return;
+    const j = await r.json();
+    const currentSupply = parseFloat(j?.result?.value?.uiAmountString);
+    if (!isFinite(currentSupply) || currentSupply <= 0) return;
+
+    const burnt = Math.max(0, INITIAL_SUPPLY - currentSupply);
+    const burntPct = (burnt / INITIAL_SUPPLY) * 100;
+    const targetSupply = INITIAL_SUPPLY * (1 - BURN_TARGET_PCT / 100); // 500M
+    const targetBurn = INITIAL_SUPPLY - targetSupply; // 500M
+    const progressPct = Math.min(100, (burnt / targetBurn) * 100);
+    const toTarget = Math.max(0, targetBurn - burnt);
+
+    const fmtTok = n => n >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'K' : Math.round(n).toString();
+
+    $('burnBar').style.width = progressPct.toFixed(2) + '%';
+    $('burnPct').textContent = progressPct.toFixed(progressPct < 1 ? 2 : 1) + '% of target';
+    $('burnPctAbs').textContent = burntPct.toFixed(burntPct < 1 ? 3 : 2) + '%';
+    $('burnAmt').textContent = fmtTok(burnt);
+    $('burnSupply').textContent = fmtTok(currentSupply);
+    $('burnToGoal').textContent = toTarget > 0 ? fmtTok(toTarget) : '🏆 HIT';
+  } catch (e) {
+    console.warn('Burn stats fetch failed', e);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════════════════════
 loadByebossToken();
 loadLaunches();
+loadBurnStats();
 setInterval(loadByebossToken, 3600000);
 setInterval(loadLaunches, 3600000);
+setInterval(loadBurnStats, 3600000);
 </script>
 
 </body>
