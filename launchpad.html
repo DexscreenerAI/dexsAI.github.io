@@ -506,6 +506,7 @@ input:focus, textarea:focus { outline: none; }
 const BYEBOSS_FEE_WALLET = '9vtc4dD2bu7oHgZxvouiV4ey5q3HDoC8tnfTCnFrX95A';
 const CREATION_FEE_SOL   = 0.05;
 const RPC_PROXY          = 'https://dexscreener-telegram-bot-production.up.railway.app/api/rpc';
+const LAUNCHES_API       = 'https://dexscreener-telegram-bot-production.up.railway.app/api/launches';
 const LAUNCHES_KEY       = 'byeboss_launches';
 const FEE_TOTALS_KEY     = 'byeboss_fees_total';
 
@@ -522,7 +523,8 @@ const state = {
   imageBytes: 0,
   launching: false,
   filters: { hideRugs: false, hideDev5: false, onlyNew: false },
-  feedData: [],          // current aggregated list
+  feedData: [],          // current aggregated list (pump.fun)
+  byebossLaunches: [],   // shared launches from backend API
 };
 
 const connection = new Connection(RPC_PROXY, 'confirmed');
@@ -767,15 +769,17 @@ async function doLaunch() {
     await pollSignature(rawSig, 60); // ~60s timeout
     setStep(5, 'done');
 
-    // Save to localStorage
+    // Save to localStorage + broadcast to shared feed
     const record = {
       mint: mintKeypair.publicKey.toBase58(),
       name, symbol,
       creator: state.walletStr,
       timestamp: Date.now(),
       signature: rawSig,
+      metadataUri,
     };
     saveLaunch(record);
+    postLaunchToBackend(record);
     renderStats();
 
     // Success modal
@@ -891,6 +895,44 @@ function saveLaunch(r) {
   all.unshift(r);
   try { localStorage.setItem(LAUNCHES_KEY, JSON.stringify(all.slice(0, 200))); } catch {}
 }
+
+// Merge shared API launches (global) with localStorage (current user)
+// Deduplicate by mint; most recent timestamp wins
+function allLaunches() {
+  const local = getLaunches();
+  const global = Array.isArray(state.byebossLaunches) ? state.byebossLaunches : [];
+  const map = new Map();
+  for (const l of global) if (l?.mint) map.set(l.mint, l);
+  for (const l of local) if (l?.mint && !map.has(l.mint)) map.set(l.mint, l);
+  return Array.from(map.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+}
+
+// Push a new launch record to the shared backend feed (fire-and-forget)
+function postLaunchToBackend(r) {
+  try {
+    fetch(LAUNCHES_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(r),
+    }).then(() => fetchGlobalLaunches()).catch(() => {});
+  } catch {}
+}
+
+// Pull the shared launches list and refresh UI
+async function fetchGlobalLaunches() {
+  try {
+    const r = await fetch(LAUNCHES_API + '?limit=100');
+    if (!r.ok) return;
+    const j = await r.json();
+    if (Array.isArray(j?.launches)) {
+      state.byebossLaunches = j.launches;
+      renderStats();
+      renderFeed();
+    }
+  } catch (e) {
+    console.warn('Global launches fetch failed', e);
+  }
+}
 function getFeeTotal() { return parseFloat(localStorage.getItem(FEE_TOTALS_KEY) || '0') || 0; }
 function bumpFeeTotal(sol) {
   try { localStorage.setItem(FEE_TOTALS_KEY, String(getFeeTotal() + sol)); } catch {}
@@ -898,13 +940,15 @@ function bumpFeeTotal(sol) {
 }
 
 function renderStats() {
-  const launches = getLaunches();
+  const launches = allLaunches();
   $('statTotal').textContent = launches.length;
   $('statFees').textContent = getFeeTotal().toFixed(3) + ' SOL';
   const creators = new Set(launches.map(l => l.creator)).size;
   $('statCreators').textContent = creators;
 }
 renderStats();
+fetchGlobalLaunches();
+setInterval(fetchGlobalLaunches, 30000);
 
 // ═════════════════════════════════════════════════════════════════
 // SUCCESS MODAL
@@ -1003,7 +1047,7 @@ async function enrichRugCheck(mint) {
 
 function renderFeed() {
   const list = $('feedList');
-  const byeboss = getLaunches();
+  const byeboss = allLaunches();
   const pumpPairs = state.feedData;
 
   // Apply filters to pumpPairs
@@ -1025,10 +1069,10 @@ function renderFeed() {
 
   let html = '';
 
-  // Byeboss section
+  // Byeboss section — shared feed of tokens launched via Byeboss
   if (byeboss.length > 0) {
-    html += '<div class="feed-sep">🔥 Launched via Byeboss</div>';
-    for (const b of byeboss.slice(0, 5)) html += renderByebossCard(b);
+    html += '<div class="feed-sep">🚀 Launched via Byeboss (' + byeboss.length + ')</div>';
+    for (const b of byeboss.slice(0, 10)) html += renderByebossCard(b);
   }
 
   html += '<div class="feed-sep">Latest Pump.fun launches</div>';
