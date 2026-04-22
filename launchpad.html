@@ -222,75 +222,63 @@ input:focus, textarea:focus { outline: none; }
 .token-card:hover { border-color: #2a3a50; background: var(--bg3); transform: translateX(2px); }
 .token-card.byeboss { border: 1px solid var(--yellow); background: linear-gradient(90deg, rgba(255,170,0,0.06), transparent); }
 
-/* GENESIS CARD — pinned $ByeBoss entry, larger + hero-style */
+/* GENESIS CARD — pinned $ByeBoss: photo + CA + socials only */
 .token-card.genesis {
-  grid-template-columns: 68px 1fr auto;
-  padding: 16px 18px; gap: 16px;
+  grid-template-columns: 52px 1fr;
+  padding: 12px; gap: 12px;
   border: 1px solid var(--yellow);
-  background:
-    radial-gradient(circle at 0% 0%, rgba(255,59,79,0.10), transparent 55%),
-    radial-gradient(circle at 100% 100%, rgba(255,170,0,0.08), transparent 55%),
-    var(--card);
-  box-shadow: 0 0 22px rgba(255,170,0,0.12);
-  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, rgba(255,170,0,0.08), rgba(255,59,79,0.04)), var(--card);
+  box-shadow: 0 0 14px rgba(255,170,0,0.12);
 }
 .token-card.genesis:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 28px rgba(255,170,0,0.22);
+  box-shadow: 0 4px 20px rgba(255,170,0,0.22);
   border-color: #ffcc44;
 }
 .token-card.genesis .token-logo {
-  width: 68px; height: 68px; border-radius: 12px;
+  width: 52px; height: 52px; border-radius: 10px;
   padding: 0; overflow: hidden;
-  background: linear-gradient(135deg, rgba(255,59,79,0.2), rgba(255,170,0,0.15));
-  box-shadow: 0 0 18px rgba(255,59,79,0.35);
+  box-shadow: 0 0 12px rgba(255,59,79,0.3);
 }
 .token-card.genesis .token-logo img {
-  width: 100%; height: 100%; object-fit: cover; border-radius: 12px;
+  width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: block;
 }
-.token-card.genesis .genesis-name {
-  font-family: var(--mono); font-weight: 800; font-size: 20px;
-  letter-spacing: -0.3px;
-  background: linear-gradient(135deg, #fff, var(--yellow));
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+.genesis-head {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 6px;
 }
-.token-card.genesis .genesis-tag {
-  font-family: var(--mono); font-size: 10px; font-weight: 800; color: var(--yellow);
-  letter-spacing: 1.5px; text-transform: uppercase;
-  padding: 3px 7px; background: rgba(255,170,0,0.12);
-  border: 1px solid rgba(255,170,0,0.35); border-radius: 4px;
-  display: inline-flex; align-items: center; gap: 4px;
+.genesis-head .name {
+  font-family: var(--mono); font-weight: 800; font-size: 15px; color: var(--yellow);
 }
-.token-card.genesis .genesis-sub {
-  font-family: var(--mono); font-size: 11px; color: var(--text2);
-  margin-top: 4px;
+.genesis-head .badge-1 {
+  font-family: var(--mono); font-size: 9px; font-weight: 800; color: var(--yellow);
+  padding: 2px 6px; background: rgba(255,170,0,0.14);
+  border: 1px solid var(--yellow); border-radius: 4px; letter-spacing: 1px;
 }
-.token-card.genesis .genesis-sub b { color: var(--text); font-weight: 700; }
-.token-card.genesis .genesis-socials {
-  display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;
+.genesis-ca {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  padding: 3px 8px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 5px; cursor: pointer; transition: all 0.15s;
+  margin-bottom: 8px; max-width: 100%;
 }
-.token-card.genesis .genesis-socials a {
-  padding: 5px 10px; font-family: var(--mono); font-size: 10px; font-weight: 700;
-  border-radius: 6px; background: var(--bg2); border: 1px solid var(--border);
+.genesis-ca:hover { color: var(--yellow); border-color: var(--yellow); }
+.genesis-ca code {
+  font-family: inherit; color: var(--text2); overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.genesis-socials { display: flex; gap: 6px; flex-wrap: wrap; }
+.genesis-socials a {
+  padding: 4px 8px; font-family: var(--mono); font-size: 10px; font-weight: 700;
+  border-radius: 5px; background: var(--bg2); border: 1px solid var(--border);
   color: var(--text2); transition: all 0.15s;
-  display: inline-flex; align-items: center; gap: 4px;
-  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 3px; text-decoration: none;
 }
-.token-card.genesis .genesis-socials a:hover {
-  background: var(--bg3); transform: translateY(-1px);
-}
-.token-card.genesis .genesis-socials a.tg:hover    { color: #2aabee; border-color: #2aabee; }
-.token-card.genesis .genesis-socials a.web:hover   { color: var(--green); border-color: var(--green); }
-.token-card.genesis .genesis-socials a.pf:hover    { color: var(--yellow); border-color: var(--yellow); }
-.token-card.genesis .genesis-socials a.dex:hover   { color: var(--red); border-color: var(--red); }
-.token-card.genesis .genesis-badge {
-  font-family: var(--mono); font-size: 9px; font-weight: 900;
-  color: var(--yellow); letter-spacing: 1.5px;
-  padding: 4px 8px; background: rgba(255,170,0,0.15);
-  border: 1px solid var(--yellow); border-radius: 4px;
-  display: inline-flex; align-items: center; gap: 3px;
-  box-shadow: 0 0 10px rgba(255,170,0,0.25);
-}
+.genesis-socials a:hover { background: var(--bg3); transform: translateY(-1px); }
+.genesis-socials a.tg:hover  { color: #2aabee; border-color: #2aabee; }
+.genesis-socials a.web:hover { color: var(--green); border-color: var(--green); }
+.genesis-socials a.pf:hover  { color: var(--yellow); border-color: var(--yellow); }
+.genesis-socials a.dex:hover { color: var(--red); border-color: var(--red); }
 .token-logo {
   width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
   background: var(--bg3); display: flex; align-items: center; justify-content: center;
@@ -1241,28 +1229,45 @@ function renderByebossCard(b) {
 
 function renderGenesisByebossCard(b) {
   const s = b.socials || {};
+  const ca = b.mint;
+  const caShort = ca.slice(0, 5) + '…' + ca.slice(-5);
   return `
-    <a class="token-card byeboss genesis" href="${escapeHtml(s.pumpfun || 'https://pump.fun/coin/' + b.mint)}" target="_blank" rel="noopener">
-      <div class="token-logo"><img src="${escapeHtml(b.image)}" alt="$ByeBoss" onerror="this.outerHTML='<div class=token-logo style=font-size:22px;color:var(--yellow)>B</div>'" /></div>
+    <div class="token-card byeboss genesis">
+      <div class="token-logo"><img src="${escapeHtml(b.image)}" onerror="this.parentNode.textContent='B';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--yellow)'" /></div>
       <div class="token-main">
-        <div class="token-line1" style="gap:10px">
-          <span class="genesis-name">${escapeHtml(b.name)}</span>
-          <span class="genesis-tag">⭐ Genesis · First launch</span>
+        <div class="genesis-head">
+          <span class="name">${escapeHtml(b.name)}</span>
+          <span class="badge-1">🏆 #1 GENESIS</span>
         </div>
-        <div class="genesis-sub">
-          Byeboss official token · By <b>${escapeHtml(b.creator)}</b>
+        <div class="genesis-ca" title="Copy contract" data-ca="${escapeHtml(ca)}">
+          <code>${escapeHtml(caShort)}</code>
+          <span>📋</span>
         </div>
         <div class="genesis-socials">
-          ${s.telegram ? `<a class="tg" href="${escapeHtml(s.telegram)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">💬 Telegram</a>` : ''}
-          ${s.website  ? `<a class="web" href="${escapeHtml(s.website)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🌐 Website</a>` : ''}
-          ${s.pumpfun  ? `<a class="pf" href="${escapeHtml(s.pumpfun)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🎰 Pump.fun</a>` : ''}
-          ${s.dex      ? `<a class="dex" href="${escapeHtml(s.dex)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📈 DexScreener</a>` : ''}
-          <a href="trade.html" onclick="event.stopPropagation()">💎 Trade</a>
+          ${s.telegram ? `<a class="tg" href="${escapeHtml(s.telegram)}" target="_blank" rel="noopener">💬</a>` : ''}
+          ${s.website  ? `<a class="web" href="${escapeHtml(s.website)}" target="_blank" rel="noopener">🌐</a>` : ''}
+          ${s.pumpfun  ? `<a class="pf" href="${escapeHtml(s.pumpfun)}" target="_blank" rel="noopener">🎰 Pump</a>` : ''}
+          ${s.dex      ? `<a class="dex" href="${escapeHtml(s.dex)}" target="_blank" rel="noopener">📈 Dex</a>` : ''}
+          <a href="trade.html">💎 Trade</a>
         </div>
       </div>
-      <div class="token-badges"><span class="genesis-badge">🏆 #1</span></div>
-    </a>`;
+    </div>`;
 }
+
+// Click-to-copy for the genesis CA pill
+document.addEventListener('click', async (e) => {
+  const el = e.target.closest('.genesis-ca');
+  if (!el) return;
+  const ca = el.dataset.ca;
+  if (!ca) return;
+  try {
+    await navigator.clipboard.writeText(ca);
+    const code = el.querySelector('code');
+    const orig = code.textContent;
+    code.textContent = '✅ Copied';
+    setTimeout(() => { code.textContent = orig; }, 1000);
+  } catch {}
+});
 
 function renderPumpCard(p) {
   const sym = p.baseToken?.symbol || '?';
