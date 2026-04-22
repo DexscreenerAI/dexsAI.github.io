@@ -950,7 +950,7 @@ function renderStats() {
 }
 renderStats();
 fetchGlobalLaunches();
-setInterval(fetchGlobalLaunches, 30000);
+setInterval(fetchGlobalLaunches, 3600000);
 
 // ═════════════════════════════════════════════════════════════════
 // SUCCESS MODAL
@@ -1162,11 +1162,11 @@ document.querySelectorAll('.chip[data-filter]').forEach(chip => {
   });
 });
 
-$('refreshFeed').addEventListener('click', fetchFeed);
+$('refreshFeed').addEventListener('click', () => { fetchFeed(); fetchGlobalLaunches(); });
 
-// Start feed + refresh every 30s
+// Start feed + refresh once per hour (manual ↻ Refresh button is the fast path)
 fetchFeed();
-feedTimer = setInterval(fetchFeed, 30000);
+feedTimer = setInterval(fetchFeed, 3600000);
 
 // ═════════════════════════════════════════════════════════════════
 // MOBILE MENU
