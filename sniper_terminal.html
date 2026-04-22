@@ -2744,8 +2744,8 @@ function startBot() {
   addLog('🚀', '<span class="green">Bot started</span> - Scanning...');
   
   scan();
-  scanInterval = setInterval(scan, 120000); // Scan every 2 min (reduce Helius load)
-  updateInterval = setInterval(updatePositions, 30000); // Position PnL refresh every 30s
+  scanInterval = setInterval(scan, 30000); // Scan every 30s — needed to catch pump.fun launches in time
+  updateInterval = setInterval(updatePositions, 5000); // Position PnL + rug detection every 5s (DexScreener, not Helius)
   
   const settings = getSettings();
   if (settings.momentumExitEnabled) {
