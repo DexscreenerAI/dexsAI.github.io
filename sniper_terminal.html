@@ -2744,8 +2744,8 @@ function startBot() {
   addLog('🚀', '<span class="green">Bot started</span> - Scanning...');
   
   scan();
-  scanInterval = setInterval(scan, 30000); // Scan every 30s instead of 40s
-  updateInterval = setInterval(updatePositions, 5000);
+  scanInterval = setInterval(scan, 120000); // Scan every 2 min (reduce Helius load)
+  updateInterval = setInterval(updatePositions, 30000); // Position PnL refresh every 30s
   
   const settings = getSettings();
   if (settings.momentumExitEnabled) {
@@ -4183,7 +4183,7 @@ try {
 
 // Auto-connect to server
 pollServerStatus();
-serverPollInterval = setInterval(pollServerStatus, 5000);
+serverPollInterval = setInterval(pollServerStatus, 60000);
 
 // Boot sequence
 const bootSequence = [

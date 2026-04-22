@@ -558,7 +558,7 @@ function startPolling() {
   document.getElementById('statusText').textContent = 'Connected to sniper';
   pollSignals();
   if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(pollSignals, 5000);
+  pollTimer = setInterval(pollSignals, 60000);
 }
 
 async function pollSignals() {
@@ -864,8 +864,8 @@ if (provider && localStorage.getItem('byeboss_disconnected') !== 'true') {
 // Start polling even without wallet (to show signals)
 setTimeout(() => { if (!pollTimer) startPolling(); }, 2000);
 
-// Refresh balance + tokens every 30s
-setInterval(() => { if (walletAddress) { updateBalance(); loadTokenHoldings(); } }, 30000);
+// Refresh balance + tokens every 5 minutes (saves Helius RPC calls)
+setInterval(() => { if (walletAddress) { updateBalance(); loadTokenHoldings(); } }, 300000);
 </script>
 </body>
 </html>
