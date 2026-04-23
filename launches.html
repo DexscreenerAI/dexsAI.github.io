@@ -286,6 +286,30 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   letter-spacing: 0.5px;
 }
 .burn-scale .tgt { color: var(--yellow); font-weight: 800; letter-spacing: 1px; }
+.burn-scale .tgt-lock { color: #00d1ff; font-weight: 800; letter-spacing: 1px; }
+
+/* LOCK GAUGE — cyan themed, sits below the burn gauge */
+.lock-wrap {
+  background-image: radial-gradient(circle at 50% 0%, rgba(0,209,255,0.14), transparent 60%);
+  border-color: rgba(0,209,255,0.3);
+  margin-top: 18px;
+}
+.lock-track { position: relative; margin-bottom: 6px; }
+.lock-fill {
+  background: linear-gradient(90deg, #00d1ff, #3b7fff 55%, #9b5cff 100%) !important;
+  box-shadow: 0 0 18px rgba(0,209,255,0.55) !important;
+}
+.lock-target-marker {
+  position: absolute; top: -4px; bottom: -4px; left: 20%;
+  width: 2px; background: #00d1ff;
+  box-shadow: 0 0 8px rgba(0,209,255,0.7);
+  pointer-events: none; z-index: 3;
+}
+.lock-target-marker::before {
+  content: '🎯'; position: absolute; top: -22px; left: 50%;
+  transform: translateX(-50%); font-size: 12px;
+}
+.burn-cell .val.cyan { color: #00d1ff; }
 .burn-stats {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px;
 }
@@ -614,6 +638,44 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
       <div class="ms-progress" style="margin-top:14px">
         <div class="status"><b style="color:var(--red)" id="burnPctAbs">0.0%</b> of supply already burnt forever 🔥</div>
         <div class="next"><a href="burn.html" class="need" style="color:var(--red);background:rgba(255,59,79,0.1);border-color:rgba(255,59,79,0.3);font-weight:800;text-decoration:none">🔥 Burn your tokens →</a></div>
+      </div>
+    </div>
+
+    <!-- Lock progress — target 20% -->
+    <div class="gauge-wrap lock-wrap">
+      <div class="gauge-head">
+        <div class="title">🔒 Lock Progress <span>— Target 20% locked</span></div>
+        <div class="pct" id="lockPct" style="color:#00d1ff;background:rgba(0,209,255,0.14);border-color:rgba(0,209,255,0.35)">0%</div>
+      </div>
+      <div class="gauge-track lock-track"><div class="gauge-fill lock-fill" id="lockBar" style="width:0%"></div><div class="lock-target-marker" title="20% target"></div></div>
+      <div class="burn-scale">
+        <span>0%</span>
+        <span>10%</span>
+        <span class="tgt-lock">🎯 20% TARGET</span>
+        <span>50%</span>
+        <span>100%</span>
+      </div>
+      <div class="burn-stats">
+        <div class="burn-cell">
+          <div class="lbl">Locked</div>
+          <div class="val cyan" id="lockAmt">—</div>
+        </div>
+        <div class="burn-cell">
+          <div class="lbl">Active locks</div>
+          <div class="val" id="lockCount">—</div>
+        </div>
+        <div class="burn-cell">
+          <div class="lbl">Unique lockers</div>
+          <div class="val" id="lockLockers">—</div>
+        </div>
+        <div class="burn-cell">
+          <div class="lbl">Avg duration</div>
+          <div class="val" id="lockAvgDur" style="color:var(--yellow)">—</div>
+        </div>
+      </div>
+      <div class="ms-progress" style="margin-top:14px">
+        <div class="status"><b style="color:#00d1ff" id="lockPctAbs">0.0%</b> of supply locked until cliff 🔒</div>
+        <div class="next"><a href="lock.html" class="need" style="color:#00d1ff;background:rgba(0,209,255,0.1);border-color:rgba(0,209,255,0.3);font-weight:800;text-decoration:none">🔒 Lock your tokens →</a></div>
       </div>
     </div>
 
@@ -1040,14 +1102,48 @@ async function loadBurnStats() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// 🔒 LOCK PROGRESS (target 20% of supply locked)
+// ═══════════════════════════════════════════════════════════════════
+const LOCK_STATS_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/locks/stats';
+const LOCK_TARGET_PCT = 20;
+
+async function loadLockStats() {
+  try {
+    const r = await fetch(LOCK_STATS_API);
+    if (!r.ok) return;
+    const j = await r.json();
+    if (!j || typeof j.totalLocked !== 'number') return;
+
+    const lockedPct = j.pctOfSupply || 0;           // e.g. 3.2
+    const progressPct = Math.min(100, (lockedPct / LOCK_TARGET_PCT) * 100);
+
+    const fmtTok = n => n >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'K' : Math.round(n).toString();
+    const fmtPct = n => n.toFixed(n < 1 ? 3 : 2) + '%';
+
+    // Bar uses absolute % of supply (0–100% track), 20% marker shows target
+    $('lockBar').style.width = Math.min(100, lockedPct).toFixed(2) + '%';
+    $('lockPct').textContent = fmtPct(lockedPct) + ' locked';
+    $('lockPctAbs').textContent = fmtPct(lockedPct);
+    $('lockAmt').textContent = fmtTok(j.totalLocked);
+    $('lockCount').textContent = j.activeLocks || 0;
+    $('lockLockers').textContent = j.lockers || 0;
+    $('lockAvgDur').textContent = j.avgDurationDays ? Math.round(j.avgDurationDays) + 'd' : '—';
+  } catch (e) {
+    console.warn('Lock stats fetch failed', e);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════════════════════
 loadByebossToken();
 loadLaunches();
 loadBurnStats();
+loadLockStats();
 setInterval(loadByebossToken, 3600000);
 setInterval(loadLaunches, 3600000);
 setInterval(loadBurnStats, 3600000);
+setInterval(loadLockStats, 3600000);
 </script>
 
 </body>
