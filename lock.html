@@ -792,8 +792,49 @@ async function rpc(method, params) {
   return j.result;
 }
 
+const ATA_PROGRAM_ID_STR = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL';
+const TOKEN_PROGRAM_ID_STR = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+
+// Derive the Associated Token Account for (owner, mint) — this is the EXACT
+// account Streamflow will transfer FROM. Summing all SPL token accounts would
+// overestimate the spendable balance if tokens are split across non-ATA
+// accounts (old wallets, program-owned, stream escrows, etc.), which is what
+// caused the recurring "InsufficientFunds" error: pre-flight saw the total,
+// but the ATA alone didn't have enough.
+async function deriveAta(walletStr, mintStr) {
+  await sdkReady;
+  if (!web3) return null;
+  try {
+    const owner = new web3.PublicKey(walletStr);
+    const mint = new web3.PublicKey(mintStr);
+    const tokenProg = new web3.PublicKey(TOKEN_PROGRAM_ID_STR);
+    const ataProg = new web3.PublicKey(ATA_PROGRAM_ID_STR);
+    const [ata] = web3.PublicKey.findProgramAddressSync(
+      [owner.toBuffer(), tokenProg.toBuffer(), mint.toBuffer()],
+      ataProg
+    );
+    return ata.toBase58();
+  } catch (e) {
+    console.warn('deriveAta error', e);
+    return null;
+  }
+}
+
 async function getBalance(walletStr) {
   try {
+    const ataStr = await deriveAta(walletStr, BYEBOSS_MINT);
+    if (ataStr) {
+      try {
+        const res = await rpc('getTokenAccountBalance', [ataStr]);
+        const amt = res?.value?.amount;
+        if (typeof amt === 'string') return BigInt(amt);
+      } catch (e) {
+        // ATA doesn't exist yet or RPC hiccup — fall through to summed lookup
+      }
+    }
+    // Fallback: sum across all BYEBOSS accounts (only if ATA lookup failed).
+    // This is informational for the stats card; the pre-flight check already
+    // uses the ATA-specific balance so Streamflow can't overdraw.
     const res = await rpc('getTokenAccountsByOwner', [
       walletStr,
       { mint: BYEBOSS_MINT },
