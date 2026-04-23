@@ -1298,9 +1298,18 @@ async function doLock(amount, days) {
     const cliffAmountBN = amountBN.sub(new BN(1));
     const amountPerPeriodBN = new BN(1);
 
+    // The SDK reads tokenProgramId from streamParams (FIRST arg), not from
+    // solanaParams (second arg). We kept passing it in the wrong slot, so
+    // every create() fell back to getMintAndProgram which resolved to
+    // legacy SPL-Token for this mint and derived a different (empty)
+    // sender ATA (E8ddcn…) than our actual Token-2022 ATA (68rKm…).
+    const tokenProgramId = await getMintTokenProgram(BYEBOSS_MINT);
+    console.log('[doLock] forcing tokenProgramId on streamParams =', tokenProgramId);
+
     const streamParams = {
       recipient: state.walletStr,
       tokenId: BYEBOSS_MINT,
+      tokenProgramId, // <-- belongs HERE, not in solanaParams
       start: startSec,
       amount: amountBN,
       period: durationSec,
@@ -1318,21 +1327,26 @@ async function doLock(amount, days) {
       partner: null,
     };
 
-    // Tell Streamflow which token program the mint uses. $ByeBoss is a
-    // Token-2022 mint; without this explicit override the SDK falls back
-    // to legacy SPL-Token and derives a DIFFERENT (empty) sender ATA,
-    // which is why we kept seeing InsufficientFunds in E8ddcn… while our
-    // real balance sat in the Token-2022 ATA (68rKm…).
-    const streamTokenProgramId = await getMintTokenProgram(BYEBOSS_MINT);
-    console.log('[doLock] forcing streamTokenProgramId =', streamTokenProgramId);
     const solanaParams = {
       sender: provider,
       isNative: false,
-      streamTokenProgramId,
     };
 
     setStep(1, 'done');
     setStep(2, 'active');
+
+    // Pre-compute + log the ATA the SDK will derive, so if it still fails
+    // we can diff against the on-chain error's reported account.
+    try {
+      const expectedAta = await deriveAta(state.walletStr, BYEBOSS_MINT);
+      console.log('[doLock] about to call solanaClient.create() with:');
+      console.log('  sender:', state.walletStr);
+      console.log('  mint:', BYEBOSS_MINT);
+      console.log('  tokenProgramId (in streamParams):', tokenProgramId);
+      console.log('  expected sender ATA (ours):', expectedAta);
+      console.log('  amount:', amountBN.toString(), '· cliffAmount:', cliffAmountBN.toString(), '· amountPerPeriod:', amountPerPeriodBN.toString());
+      console.log('  start:', startSec, '· cliff:', cliffTs, '· period:', durationSec);
+    } catch (e) { /* best-effort logging */ }
 
     const result = await solanaClient.create(streamParams, solanaParams);
     setStep(2, 'done');

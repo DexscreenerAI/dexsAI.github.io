@@ -4385,8 +4385,8 @@ function buildSoulSignalList() {
       ageMs: now - (p.entryTime || now),
       score: p.score || 0,
       status: 'LIVE',
-      dexUrl: p.pairAddress ? `https://dexscreener.com/${p.chain || 'solana'}/${p.pairAddress}` : '',
-      logoUrl: p.logoUrl || '',
+      dexUrl: p.dexUrl || (p.pairAddress ? `https://dexscreener.com/${p.chain || 'solana'}/${p.pairAddress}` : ''),
+      logoUrl: p.logo || p.logoUrl || p.imageUrl || '',
       openedAt: p.entryTime || now,
     });
   }
@@ -4407,7 +4407,7 @@ function buildSoulSignalList() {
       score: h.score || 0,
       status: 'CLOSED',
       dexUrl: h.dexUrl || (h.pairAddress ? `https://dexscreener.com/${h.chain || 'solana'}/${h.pairAddress}` : ''),
-      logoUrl: h.logoUrl || '',
+      logoUrl: h.logo || h.logoUrl || h.imageUrl || '',
       openedAt: h.openedAt || h.entryTime || (h.closeTime ? h.closeTime - 10 * 60 * 1000 : now),
     });
   }
