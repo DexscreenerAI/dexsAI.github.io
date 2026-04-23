@@ -1318,9 +1318,17 @@ async function doLock(amount, days) {
       partner: null,
     };
 
+    // Tell Streamflow which token program the mint uses. $ByeBoss is a
+    // Token-2022 mint; without this explicit override the SDK falls back
+    // to legacy SPL-Token and derives a DIFFERENT (empty) sender ATA,
+    // which is why we kept seeing InsufficientFunds in E8ddcn… while our
+    // real balance sat in the Token-2022 ATA (68rKm…).
+    const streamTokenProgramId = await getMintTokenProgram(BYEBOSS_MINT);
+    console.log('[doLock] forcing streamTokenProgramId =', streamTokenProgramId);
     const solanaParams = {
       sender: provider,
       isNative: false,
+      streamTokenProgramId,
     };
 
     setStep(1, 'done');
@@ -1388,7 +1396,8 @@ async function claim(streamId, amountRawStr) {
     toast('⏳ Claiming…', '');
     const amtBN = new BN(amountRawStr);
     const withdrawParams = { id: streamId, amount: amtBN };
-    const solanaInteractParams = { invoker: provider, isNative: false };
+    const streamTokenProgramId = await getMintTokenProgram(BYEBOSS_MINT);
+    const solanaInteractParams = { invoker: provider, isNative: false, streamTokenProgramId };
 
     const result = await solanaClient.withdraw(withdrawParams, solanaInteractParams);
     const sig = result?.txId || result?.signature;
