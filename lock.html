@@ -400,11 +400,11 @@ input:focus { outline: none; }
       <a href="og-detector.html">OG Detector</a>
       <a href="shazam_crypto.html">Shazam</a>
       <a href="promote.html">Promote</a>
-      <a href="burn.html">🔥 Burn</a>
-      <a href="lock.html" class="active">🔒 Lock</a>
-      <a href="trade.html">💎 Trade</a>
       <a href="launchpad.html">🚀 Launchpad</a>
       <a href="launches.html">📊 Launches</a>
+      <a href="lock.html" class="active">🔒 Lock</a>
+      <a href="burn.html">🔥 Burn</a>
+      <a href="trade.html">💎 Trade</a>
       <a href="https://dexscreener.com/solana/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">📈 Chart</a>
     </div>
   </div>
@@ -422,11 +422,11 @@ input:focus { outline: none; }
   <a href="og-detector.html">OG Detector</a>
   <a href="shazam_crypto.html">Shazam</a>
   <a href="promote.html">Promote</a>
-  <a href="burn.html">🔥 Burn</a>
-  <a href="lock.html" class="active">🔒 Lock</a>
-  <a href="trade.html">💎 Trade</a>
   <a href="launchpad.html">🚀 Launchpad</a>
   <a href="launches.html">📊 Launches</a>
+  <a href="lock.html" class="active">🔒 Lock</a>
+  <a href="burn.html">🔥 Burn</a>
+  <a href="trade.html">💎 Trade</a>
   <a href="https://dexscreener.com/solana/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">📈 Chart</a>
 </div>
 
@@ -799,9 +799,12 @@ async function pollSignature(sig, timeoutSec = 60) {
 // PHANTOM WALLET
 // ═════════════════════════════════════════════════════════════════
 function getProvider() {
-  const p = window.phantom?.solana;
-  return (p && p.isPhantom) ? p : null;
+  if (window.phantom?.solana?.isPhantom) return window.phantom.solana;
+  if (window.solana?.isPhantom) return window.solana;
+  return null;
 }
+
+const WALLET_DISCONNECTED_KEY = 'byeboss_wallet_disconnected';
 
 async function connectWallet(onlyIfTrusted = false) {
   const provider = getProvider();
@@ -814,6 +817,7 @@ async function connectWallet(onlyIfTrusted = false) {
     state.walletStr = resp.publicKey.toBase58();
     await sdkReady;
     state.walletPk = web3 ? new web3.PublicKey(state.walletStr) : null;
+    if (!onlyIfTrusted) localStorage.removeItem(WALLET_DISCONNECTED_KEY);
     renderWalletButton();
     refreshUser();
     return provider;
@@ -831,6 +835,7 @@ function disconnectWallet() {
   state.balance = 0;
   state.balanceRaw = 0n;
   state.locks = [];
+  localStorage.setItem(WALLET_DISCONNECTED_KEY, 'true');
   renderWalletButton();
   renderStats();
   renderLocks();
@@ -863,7 +868,9 @@ function renderWalletButton() {
       } else disconnectWallet();
     });
   }
-  await connectWallet(true);
+  if (localStorage.getItem(WALLET_DISCONNECTED_KEY) !== 'true') {
+    await connectWallet(true);
+  }
 })();
 
 // ═════════════════════════════════════════════════════════════════

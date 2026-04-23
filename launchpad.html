@@ -428,11 +428,11 @@ input:focus, textarea:focus { outline: none; }
       <a href="og-detector.html">OG Detector</a>
       <a href="shazam_crypto.html">Shazam</a>
       <a href="promote.html">Promote</a>
-      <a href="burn.html">🔥 Burn</a>
-      <a href="trade.html">💎 Trade</a>
       <a href="launchpad.html" class="active">🚀 Launchpad</a>
       <a href="launches.html">📊 Launches</a>
       <a href="lock.html">🔒 Lock</a>
+      <a href="burn.html">🔥 Burn</a>
+      <a href="trade.html">💎 Trade</a>
       <a href="https://dexscreener.com/solana" target="_blank" rel="noopener">📈 Chart</a>
     </div>
   </div>
@@ -451,11 +451,11 @@ input:focus, textarea:focus { outline: none; }
   <a href="og-detector.html">OG Detector</a>
   <a href="shazam_crypto.html">Shazam</a>
   <a href="promote.html">Promote</a>
-  <a href="burn.html">🔥 Burn</a>
-  <a href="trade.html">💎 Trade</a>
   <a href="launchpad.html" class="active">🚀 Launchpad</a>
   <a href="launches.html">📊 Launches</a>
   <a href="lock.html">🔒 Lock</a>
+  <a href="burn.html">🔥 Burn</a>
+  <a href="trade.html">💎 Trade</a>
   <a href="https://dexscreener.com/solana" target="_blank" rel="noopener">📈 Chart</a>
 </div>
 
@@ -682,10 +682,12 @@ function escapeHtml(s) {
 // PHANTOM WALLET
 // ═════════════════════════════════════════════════════════════════
 function getProvider() {
-  const p = window.phantom?.solana;
-  if (p && p.isPhantom) return p;
+  if (window.phantom?.solana?.isPhantom) return window.phantom.solana;
+  if (window.solana?.isPhantom) return window.solana;
   return null;
 }
+
+const WALLET_DISCONNECTED_KEY = 'byeboss_wallet_disconnected';
 
 async function connectWallet(onlyIfTrusted = false) {
   const provider = getProvider();
@@ -700,6 +702,7 @@ async function connectWallet(onlyIfTrusted = false) {
     const resp = await provider.connect(onlyIfTrusted ? { onlyIfTrusted: true } : undefined);
     state.walletPk = resp.publicKey;
     state.walletStr = resp.publicKey.toBase58();
+    if (!onlyIfTrusted) localStorage.removeItem(WALLET_DISCONNECTED_KEY);
     renderWalletButton();
     return provider;
   } catch (e) {
@@ -713,6 +716,7 @@ function disconnectWallet() {
   if (p) p.disconnect().catch(() => {});
   state.walletPk = null;
   state.walletStr = null;
+  localStorage.setItem(WALLET_DISCONNECTED_KEY, 'true');
   renderWalletButton();
 }
 
@@ -738,7 +742,9 @@ function renderWalletButton() {
     p.on?.('disconnect', () => { state.walletPk = null; state.walletStr = null; renderWalletButton(); });
     p.on?.('accountChanged', (pk) => { if (pk) { state.walletPk = pk; state.walletStr = pk.toBase58(); } else { state.walletPk = null; state.walletStr = null; } renderWalletButton(); });
   }
-  await connectWallet(true);
+  if (localStorage.getItem(WALLET_DISCONNECTED_KEY) !== 'true') {
+    await connectWallet(true);
+  }
 })();
 
 // ═════════════════════════════════════════════════════════════════

@@ -163,8 +163,10 @@ function getProvider() {
   return null;
 }
 
+const WALLET_DISCONNECTED_KEY = 'byeboss_wallet_disconnected';
+
 async function connectWallet() {
-  localStorage.removeItem('burner_disconnected');
+  localStorage.removeItem(WALLET_DISCONNECTED_KEY);
   provider = getProvider();
   if (!provider) { window.open('https://phantom.app/', '_blank'); return; }
   try {
@@ -181,7 +183,7 @@ async function disconnectWallet() {
   try { if (provider) await provider.disconnect(); } catch(e){}
   walletAddress = null;
   provider = null;
-  localStorage.setItem('burner_disconnected', 'true');
+  localStorage.setItem(WALLET_DISCONNECTED_KEY, 'true');
   document.getElementById('walletBtn').className = 'wallet-btn connect';
   document.getElementById('walletBtn').innerHTML = '🔌 Connect Phantom';
   document.getElementById('discBtn').style.display = 'none';
@@ -481,7 +483,7 @@ updateGlobalBurnCounter();
 
 // Auto-reconnect
 provider = getProvider();
-if (provider && localStorage.getItem('burner_disconnected') !== 'true') {
+if (provider && localStorage.getItem(WALLET_DISCONNECTED_KEY) !== 'true') {
   provider.connect({ onlyIfTrusted: true }).then(async (resp) => {
     walletAddress = resp.publicKey.toString();
     document.getElementById('walletBtn').className = 'wallet-btn connected';
