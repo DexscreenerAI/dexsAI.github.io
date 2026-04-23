@@ -224,6 +224,203 @@ body::after {
 .font-display { font-family: var(--display); letter-spacing: 2px; }
 .slash-decor { color: var(--green); font-family: var(--display); font-weight: 800; margin-right: 8px; }
 
+/* ═══════════════════════════════════════════════════════
+   SOUL-STYLE SIGNALS PAGE — KPI + tabs + signals table
+   ═══════════════════════════════════════════════════════ */
+.soul-main { max-width: 1400px; margin: 0 auto; padding: 12px 16px 60px; position: relative; z-index: 2; }
+.soul-container {
+  background: rgba(6,10,16,0.5);
+  border: 1px solid rgba(0,255,65,0.18);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: inset 0 0 60px rgba(0,255,65,0.03);
+}
+.soul-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 8px;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(0,255,65,0.1);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.soul-tab {
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.soul-tab:hover { color: var(--green); }
+.soul-tab.active {
+  background: rgba(0,0,0,0.7);
+  border-color: rgba(0,255,65,0.35);
+  box-shadow: inset 0 0 20px rgba(0,255,65,0.12), 0 0 14px rgba(0,255,65,0.08);
+  color: var(--green);
+}
+.soul-tab-icon { width: 16px; height: 16px; }
+
+/* KPI strip */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.kpi-card {
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(0,255,65,0.12);
+  border-radius: 10px;
+  padding: 14px 16px;
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: border-color .15s;
+}
+.kpi-card:hover { border-color: rgba(0,255,65,0.35); }
+.kpi-value {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.kpi-value .ticker {
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 400;
+  margin-left: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kpi-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  margin-top: 10px;
+}
+@media (max-width: 1200px) {
+  .kpi-strip { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 720px) {
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .soul-tabs { grid-template-columns: 1fr; }
+  .soul-tab { font-size: 12px; padding: 8px 10px; }
+  .kpi-card { min-height: 72px; padding: 10px 12px; }
+  .kpi-value { font-size: 16px; }
+}
+
+/* Signals table */
+.signal-table-wrap {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(0,255,65,0.1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.signal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  table-layout: fixed;
+}
+.signal-table th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(0,255,65,0.08);
+  background: rgba(0,0,0,0.3);
+}
+.signal-table th.num { text-align: right; }
+.signal-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+  vertical-align: middle;
+  font-size: 11px;
+}
+.signal-table tr:last-child td { border-bottom: none; }
+.signal-table tr:hover { background: rgba(0,255,65,0.02); }
+
+.st-token { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.st-avatar { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(0,255,65,0.2); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-card); font-size: 14px; }
+.st-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.st-meta { min-width: 0; }
+.st-ticker { font-family: var(--display); font-weight: 500; color: var(--text); font-size: 13px; letter-spacing: 0.5px; }
+.st-ticker-row { display: flex; align-items: baseline; gap: 8px; }
+.st-name { color: var(--text-dim); font-size: 11px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; }
+.st-sub { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 10px; color: var(--text-dim); }
+.st-sub-chip { padding: 2px 6px; border: 1px solid rgba(0,255,65,0.15); border-radius: 4px; color: var(--text-dim); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all .15s; }
+.st-sub-chip:hover { border-color: var(--green); color: var(--green); }
+
+.st-mcap-big { font-family: var(--mono); font-size: 13px; color: var(--text); }
+.st-mcap-pct { font-family: var(--mono); font-size: 11px; margin-left: 6px; }
+.st-mcap-pct.up { color: var(--green); }
+.st-mcap-pct.down { color: var(--red); }
+.st-mcap-sub { font-family: var(--mono); font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+.st-x { font-family: var(--mono); font-size: 13px; color: var(--text); font-weight: 600; }
+.st-x-new { display: inline-flex; align-items: center; padding: 2px 6px; border: 1px solid var(--green); color: var(--green); border-radius: 4px; margin-left: 6px; font-size: 9px; letter-spacing: 1px; }
+.st-num { font-family: var(--mono); color: var(--text); font-size: 12px; text-align: right; }
+.st-pct { font-family: var(--mono); color: var(--text); font-size: 12px; text-align: right; }
+.st-pct.dim { color: var(--text-dim); }
+
+/* Mobile: swap table for stacked cards */
+.signal-mobile { display: none; }
+@media (max-width: 900px) {
+  .signal-table-wrap .signal-table thead { display: none; }
+  .signal-table, .signal-table tbody, .signal-table tr, .signal-table td { display: block; }
+  .signal-table tr {
+    border: 1px solid rgba(0,255,65,0.12); border-radius: 10px; padding: 10px;
+    margin: 8px; background: rgba(0,0,0,0.4);
+  }
+  .signal-table td { padding: 6px 0; border: none; display: flex; justify-content: space-between; align-items: center; }
+  .signal-table td::before {
+    content: attr(data-label); color: var(--text-dim); font-size: 10px;
+    font-family: var(--mono); letter-spacing: 0.5px;
+  }
+  .signal-table td.st-token-cell { justify-content: flex-start; }
+  .signal-table td.st-token-cell::before { display: none; }
+}
+
+.signals-empty { text-align: center; padding: 40px 20px; font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+.signals-empty::before { content: '//'; color: var(--green); margin-right: 8px; font-family: var(--display); font-weight: 800; }
+
+/* Tiny "show advanced" toggle at the bottom */
+.adv-toggle {
+  display: flex; justify-content: center; margin: 16px 0 8px;
+  gap: 10px;
+}
+.adv-toggle button {
+  background: transparent; border: 1px solid rgba(0,255,65,0.15);
+  color: var(--text-dim); font-family: var(--mono); font-size: 10px;
+  letter-spacing: 1px; padding: 8px 14px; border-radius: 6px;
+  cursor: pointer; transition: all .15s;
+}
+.adv-toggle button:hover { color: var(--green); border-color: var(--green); }
+.adv-hidden .main-grid { display: none !important; }
+.adv-hidden .top-bar { display: none !important; }
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
@@ -1994,7 +2191,7 @@ body::before {
 </style>
 
 </head>
-<body>
+<body class="adv-hidden">
 
 <!-- MATRIX RAIN BACKGROUND -->
 <canvas id="matrix-bg"></canvas>
@@ -2077,10 +2274,56 @@ body::before {
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
-     MAIN GRID
+     SOUL-STYLE SIGNAL TRACKER (default view)
+     ═══════════════════════════════════════════════════════ -->
+<main class="soul-main">
+  <div class="soul-container">
+
+    <div class="soul-tabs" role="tablist">
+      <button class="soul-tab active" data-soul-tab="all" role="tab">All Signals</button>
+      <button class="soul-tab" data-soul-tab="live" role="tab">🟢 Live</button>
+      <button class="soul-tab" data-soul-tab="closed" role="tab">✓ Closed</button>
+    </div>
+
+    <div class="kpi-strip">
+      <div class="kpi-card"><div class="kpi-value" id="kpi24hSignals">—</div><div class="kpi-label">24h Signals</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi24hWinRate">—</div><div class="kpi-label">24h Win Rate</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi24hAvgX">—</div><div class="kpi-label">24h Avg Xs</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi24hTotalX">—</div><div class="kpi-label">24h Total Xs</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpiBestCall">—</div><div class="kpi-label">Best Call</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi7dSignals">—</div><div class="kpi-label">7d Signals</div></div>
+    </div>
+
+    <div class="signal-table-wrap">
+      <table class="signal-table" id="soulTable">
+        <thead>
+          <tr>
+            <th style="width: 28%">Token</th>
+            <th class="num" style="width: 16%">Market Cap</th>
+            <th class="num" style="width: 12%">Signal Xs</th>
+            <th class="num" style="width: 12%">Peak Xs</th>
+            <th class="num" style="width: 12%">Score</th>
+            <th class="num" style="width: 10%">Age</th>
+            <th class="num" style="width: 10%">Status</th>
+          </tr>
+        </thead>
+        <tbody id="soulSignalsBody">
+          <tr><td colspan="7"><div class="signals-empty">No signals yet — engine idle</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="adv-toggle">
+      <button id="advToggleBtn" onclick="toggleAdvancedView()">Show advanced trader view ▾</button>
+    </div>
+  </div>
+</main>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN GRID (advanced / legacy trader view — hidden by default)
      ═══════════════════════════════════════════════════════ -->
 <div class="main-grid">
-  
+
   <!-- CONTROLS ROW -->
   <div class="controls-row">
     <button class="ctrl-btn primary" id="startBtn">▶ START</button>
@@ -2506,6 +2749,7 @@ async function pollServerStatus() {
     renderPositions();
     renderHistory();
     renderWatchlist();
+    if (typeof refreshSoulUi === 'function') refreshSoulUi();
 
     // Show server logs (last 10 only)
     if (state.logs && state.logs.length > 0) {
@@ -4076,6 +4320,202 @@ function renderHistory() {
     </div>`;
   }).join('');
 }
+
+// ═══════════════════════════════════════════════════════
+// SOUL-STYLE SIGNAL TRACKER — pure view layer on top of the
+// existing engine state (positions + history arrays).
+// No trading logic is touched.
+// ═══════════════════════════════════════════════════════
+let soulActiveTab = 'all';
+
+function toggleAdvancedView() {
+  const adv = !document.body.classList.contains('adv-hidden');
+  document.body.classList.toggle('adv-hidden');
+  const btn = document.getElementById('advToggleBtn');
+  if (btn) btn.textContent = adv ? 'Show advanced trader view ▾' : 'Hide advanced trader view ▴';
+}
+
+function soulFmtNum(n) {
+  if (!isFinite(n) || n <= 0) return '0';
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return n.toFixed(n < 10 ? 2 : 0);
+}
+function soulFmtX(x) {
+  if (!isFinite(x) || x <= 0) return '0X';
+  if (x >= 100) return Math.round(x) + 'X';
+  if (x >= 10) return x.toFixed(1) + 'X';
+  return x.toFixed(2) + 'X';
+}
+function soulFmtAge(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  if (s < 60) return s + 's';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + 'm';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h';
+  return Math.floor(h / 24) + 'd';
+}
+function soulShort(addr) {
+  if (!addr || addr.length < 8) return addr || '';
+  return addr.slice(0, 4) + '…' + addr.slice(-4);
+}
+
+// Unified signal view: normalise open positions + closed history into
+// one {symbol, name, ca, chain, entryMcUsd, currentMcUsd, x, peakX,
+// ageMs, score, status, dexUrl, logoUrl, openedAt} list.
+function buildSoulSignalList() {
+  const sigs = [];
+  const now = Date.now();
+
+  for (const p of (positions || [])) {
+    const x = 1 + ((p.pnlPct || 0) / 100);
+    const peakX = 1 + ((p.highestPnlPct || 0) / 100);
+    const entryMc = p.entryMarketCap || 0;
+    sigs.push({
+      symbol: p.symbol || '',
+      name: p.name || '',
+      ca: p.address || '',
+      chain: p.chain || 'solana',
+      pairAddress: p.pairAddress || '',
+      entryMcUsd: entryMc,
+      currentMcUsd: entryMc * x,
+      x, peakX,
+      ageMs: now - (p.entryTime || now),
+      score: p.score || 0,
+      status: 'LIVE',
+      dexUrl: p.pairAddress ? `https://dexscreener.com/${p.chain || 'solana'}/${p.pairAddress}` : '',
+      logoUrl: p.logoUrl || '',
+      openedAt: p.entryTime || now,
+    });
+  }
+  for (const h of (history || [])) {
+    const x = 1 + ((h.pnlPct || 0) / 100);
+    const peakX = 1 + ((h.highestPnlPct || h.pnlPct || 0) / 100);
+    const entryMc = h.entryMarketCap || 0;
+    sigs.push({
+      symbol: h.symbol || '',
+      name: h.name || '',
+      ca: h.address || '',
+      chain: h.chain || 'solana',
+      pairAddress: h.pairAddress || '',
+      entryMcUsd: entryMc,
+      currentMcUsd: entryMc * x,
+      x, peakX,
+      ageMs: now - (h.openedAt || h.entryTime || h.closeTime || now),
+      score: h.score || 0,
+      status: 'CLOSED',
+      dexUrl: h.dexUrl || (h.pairAddress ? `https://dexscreener.com/${h.chain || 'solana'}/${h.pairAddress}` : ''),
+      logoUrl: h.logoUrl || '',
+      openedAt: h.openedAt || h.entryTime || (h.closeTime ? h.closeTime - 10 * 60 * 1000 : now),
+    });
+  }
+  return sigs;
+}
+
+function renderSoulKPIs() {
+  try {
+    const sigs = buildSoulSignalList();
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    const week = 7 * day;
+
+    const last24h = sigs.filter(s => (now - s.openedAt) <= day);
+    const last7d  = sigs.filter(s => (now - s.openedAt) <= week);
+
+    const count24 = last24h.length;
+    const wins24 = last24h.filter(s => s.peakX >= 1.5).length;
+    const winRate24 = count24 ? (100 * wins24 / count24) : 0;
+    const avgX24 = count24 ? (last24h.reduce((a, s) => a + s.peakX, 0) / count24) : 0;
+    const totalX24 = last24h.reduce((a, s) => a + s.peakX, 0);
+    const best = sigs.reduce((b, s) => (s.peakX > (b?.peakX || 0) ? s : b), null);
+
+    const setKpi = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+    setKpi('kpi24hSignals', count24.toString());
+    setKpi('kpi24hWinRate', count24 ? winRate24.toFixed(1) + '%' : '—');
+    setKpi('kpi24hAvgX', count24 ? soulFmtX(avgX24) : '—');
+    setKpi('kpi24hTotalX', count24 ? soulFmtX(totalX24) : '—');
+    setKpi('kpiBestCall', best ? `${soulFmtX(best.peakX)}<span class="ticker">$${esc(best.symbol)}</span>` : '—');
+    setKpi('kpi7dSignals', last7d.length.toString());
+  } catch (e) { console.error('[soul] kpis error', e); }
+}
+
+function renderSoulSignals() {
+  try {
+    const body = document.getElementById('soulSignalsBody');
+    if (!body) return;
+    let sigs = buildSoulSignalList();
+
+    if (soulActiveTab === 'live')   sigs = sigs.filter(s => s.status === 'LIVE');
+    if (soulActiveTab === 'closed') sigs = sigs.filter(s => s.status === 'CLOSED');
+
+    // newest first
+    sigs.sort((a, b) => b.openedAt - a.openedAt);
+    sigs = sigs.slice(0, 50);
+
+    if (!sigs.length) {
+      body.innerHTML = `<tr><td colspan="7"><div class="signals-empty">No signals in this view yet</div></td></tr>`;
+      return;
+    }
+
+    body.innerHTML = sigs.map(s => {
+      const xChange = s.x - 1;
+      const xPctStr = (xChange >= 0 ? '+' : '') + (xChange * 100).toFixed(1) + '%';
+      const xPctCls = xChange >= 0 ? 'up' : 'down';
+      const isNew = s.status === 'LIVE' && s.x === 1;
+      const logo = s.logoUrl ? `<img src="${esc(s.logoUrl)}" alt="" onerror="this.style.display='none';this.parentNode.innerHTML='🔸'">` : '🔸';
+      const caChip = s.ca ? `<span class="st-sub-chip" onclick="navigator.clipboard.writeText('${esc(s.ca)}');this.textContent='COPIED'" title="Copy contract">${soulShort(s.ca)}</span>` : '';
+      const chartChip = s.dexUrl ? `<a class="st-sub-chip" href="${esc(s.dexUrl)}" target="_blank" rel="noopener">chart ↗</a>` : '';
+      const statusLbl = s.status === 'LIVE' ? '<span style="color:var(--green)">● LIVE</span>' : '<span style="color:var(--text-dim)">CLOSED</span>';
+
+      return `
+        <tr>
+          <td class="st-token-cell" data-label="Token">
+            <div class="st-token">
+              <div class="st-avatar">${logo}</div>
+              <div class="st-meta">
+                <div class="st-ticker-row">
+                  <span class="st-ticker">$${esc(s.symbol)}</span>
+                  <span class="st-name">${esc(s.name || '')}</span>
+                </div>
+                <div class="st-sub">
+                  <span>⏱ ${soulFmtAge(s.ageMs)}</span>
+                  ${caChip}
+                  ${chartChip}
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="st-num" data-label="Market Cap">
+            <div class="st-mcap-big">$${soulFmtNum(s.currentMcUsd)}<span class="st-mcap-pct ${xPctCls}">${xPctStr}</span></div>
+            <div class="st-mcap-sub">$${soulFmtNum(s.entryMcUsd)} entry</div>
+          </td>
+          <td class="st-num" data-label="Signal Xs"><span class="st-x">${soulFmtX(s.x)}${isNew ? '<span class="st-x-new">NEW</span>' : ''}</span></td>
+          <td class="st-num" data-label="Peak Xs"><span class="st-x" style="color:var(--green)">${soulFmtX(s.peakX)}</span></td>
+          <td class="st-num" data-label="Score">${s.score}/100</td>
+          <td class="st-num" data-label="Age">${soulFmtAge(s.ageMs)}</td>
+          <td class="st-num" data-label="Status">${statusLbl}</td>
+        </tr>
+      `;
+    }).join('');
+  } catch (e) { console.error('[soul] render error', e); }
+}
+
+// Wire tabs
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.soul-tab');
+  if (!btn) return;
+  document.querySelectorAll('.soul-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  soulActiveTab = btn.dataset.soulTab;
+  renderSoulSignals();
+});
+
+// Refresh loop (cheap — all client-side from existing state)
+function refreshSoulUi() { renderSoulKPIs(); renderSoulSignals(); }
+setInterval(refreshSoulUi, 2000);
+refreshSoulUi();
 
 function renderPnlChart() {
   const container = $('pnlChart');
