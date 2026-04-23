@@ -92,8 +92,8 @@ input:focus, textarea:focus { outline: none; }
 }
 .hero p { color: var(--text2); font-size: 16px; max-width: 560px; margin: 0 auto; }
 .hero-stats {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
-  max-width: 720px; margin: 32px auto 0;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  max-width: 560px; margin: 32px auto 0;
 }
 .stat {
   padding: 18px; background: var(--card); border: 1px solid var(--border); border-radius: 10px;
@@ -156,27 +156,6 @@ input:focus, textarea:focus { outline: none; }
   background: rgba(0,0,0,0.7); color: #fff; display: flex; align-items: center; justify-content: center;
   font-size: 14px; z-index: 2;
 }
-
-/* MODE TOGGLE — Self vs Byeboss Hosted */
-.mode-toggle {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-  margin-top: 16px;
-}
-.mode-btn {
-  padding: 12px; background: var(--bg2); border: 1.5px solid var(--border);
-  border-radius: 10px; text-align: left; cursor: pointer;
-  transition: all 0.15s; display: flex; flex-direction: column; gap: 2px;
-  font-family: var(--mono);
-}
-.mode-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.mode-btn:not(:disabled):hover { border-color: #3a4a60; background: var(--bg3); }
-.mode-btn.active { border-color: var(--red); background: rgba(255,59,79,0.08); }
-.mode-btn.active[data-mode="hosted"] { border-color: var(--yellow); background: rgba(255,170,0,0.1); }
-.mode-btn .mode-ico { font-size: 18px; }
-.mode-btn .mode-name { font-size: 13px; font-weight: 800; color: var(--text); }
-.mode-btn .mode-price { font-size: 11px; font-weight: 700; color: var(--red); }
-.mode-btn[data-mode="hosted"] .mode-price { color: var(--yellow); }
-.mode-btn .mode-sub { font-size: 10px; color: var(--text3); line-height: 1.3; margin-top: 2px; }
 
 /* T&Cs MODAL */
 .tcs-modal {
@@ -493,12 +472,8 @@ input:focus, textarea:focus { outline: none; }
         <div class="stat-lbl">Launched via Byeboss</div>
       </div>
       <div class="stat">
-        <div class="stat-val" id="statFees">0 SOL</div>
-        <div class="stat-lbl">Fees collected</div>
-      </div>
-      <div class="stat">
         <div class="stat-val" id="statCreators">0</div>
-        <div class="stat-lbl">Active creators</div>
+        <div class="stat-lbl">Unique backers</div>
       </div>
     </div>
   </section>
@@ -565,42 +540,24 @@ input:focus, textarea:focus { outline: none; }
 
           </div>
 
-          <!-- MODE TOGGLE — Self vs Byeboss Hosted -->
-          <div class="mode-toggle">
-            <button type="button" class="mode-btn active" data-mode="self" id="modeBtnSelf">
-              <span class="mode-ico">🚀</span>
-              <span class="mode-name">Self-launch</span>
-              <span class="mode-price">0.05 SOL</span>
-              <span class="mode-sub">You are the creator. You keep creator rewards.</span>
-            </button>
-            <button type="button" class="mode-btn" data-mode="hosted" id="modeBtnHosted" disabled title="Loading…">
-              <span class="mode-ico">🏆</span>
-              <span class="mode-name">Byeboss Hosted</span>
-              <span class="mode-price" id="modeHostedPrice">0.03 SOL</span>
-              <span class="mode-sub">Byeboss is creator. Rewards fund the community treasury.</span>
-            </button>
-          </div>
-
-          <div class="cost-box" id="costBoxSelf">
-            ⚠️ <strong>Service fee: 0.05 SOL</strong> goes to Byeboss.<br/>
-            Pump.fun creation fee: ~0.02 SOL.<br/>
-            <strong>Total cost: ~0.07 SOL + optional initial buy.</strong>
-          </div>
-
-          <div class="cost-box" id="costBoxHosted" style="display:none;background:rgba(255,170,0,0.09);border-color:rgba(255,170,0,0.3)">
-            🏆 <strong style="color:var(--yellow)">Byeboss Hosted mode.</strong><br/>
-            You pay only <strong id="costBoxHostedAmount">~0.03 SOL</strong> (pump.fun creation) — no Byeboss service fee.<br/>
-            <strong>Byeboss becomes the creator on-chain.</strong> All future pump.fun creator rewards flow to the public Byeboss treasury (sweep history on transparency page).<br/>
-            <small style="color:var(--text3);font-size:10px;margin-top:4px;display:inline-block">Your token will be flagged <span style="color:var(--yellow)">🏆 BYEBOSS BACKED</span> on the feed.</small>
+          <div class="cost-box" style="background:rgba(255,170,0,0.09);border-color:rgba(255,170,0,0.3)">
+            🏆 <strong style="color:var(--yellow)">How Byeboss launches work</strong><br/>
+            You pay only <strong id="costBoxHostedAmount">~0.03 SOL</strong> (pump.fun creation fees). <strong>No Byeboss service fee.</strong><br/><br/>
+            <strong>Byeboss is the on-chain creator of every token launched here.</strong> 100% of the pump.fun creator rewards (trading-fee share) flow to the public Byeboss treasury. You can audit every sweep in <code>data/sweeps.json</code> on the site repo.<br/><br/>
+            Your token is flagged <span style="color:var(--yellow);font-weight:800">🏆 BYEBOSS BACKED</span> on the feed — proof it's part of the Byeboss ecosystem.
           </div>
 
           <div class="cost-box" style="background:rgba(0,255,136,0.07);border-color:rgba(0,255,136,0.25);margin-top:10px">
             🔒 <strong style="color:var(--green)">Safety:</strong>
-            Phantom will show the full transaction before signing. <strong>Always verify the SOL amount matches the expected cost above.</strong>
-            We run automatic tx checks (fee payer, signers, ix count) but only your wallet can authorize transfers.
+            Phantom will show exactly one transfer of <span id="safetyAmount">~0.03</span> SOL to the Byeboss Hot wallet. Verify the amount before signing — you only ever sign one tx.
           </div>
 
-          <button type="button" id="launchBtn" class="launch-btn" disabled>🚀 Launch Token</button>
+          <div id="hostedUnavailable" class="cost-box" style="display:none;background:rgba(255,59,79,0.08);border-color:rgba(255,59,79,0.3);color:var(--text)">
+            ⚙️ <strong style="color:var(--red)">Launchpad under setup</strong><br/>
+            Byeboss is finalising the treasury configuration. The launchpad will open once the Hot wallet is wired up on Railway. Come back soon.
+          </div>
+
+          <button type="button" id="launchBtn" class="launch-btn" disabled>🏆 Launch via Byeboss</button>
 
           <div class="flow" id="flowBox" style="display:none">
             <div class="flow-step pending" id="s1"><span class="dot"></span><span id="s1text">1. Pay 0.05 SOL fee to Byeboss</span></div>
@@ -640,12 +597,9 @@ input:focus, textarea:focus { outline: none; }
 // ═════════════════════════════════════════════════════════════════
 // CONFIG
 // ═════════════════════════════════════════════════════════════════
-const BYEBOSS_FEE_WALLET = '9vtc4dD2bu7oHgZxvouiV4ey5q3HDoC8tnfTCnFrX95A';
-const CREATION_FEE_SOL   = 0.05;
 const RPC_PROXY          = 'https://dexscreener-telegram-bot-production.up.railway.app/api/rpc';
 const LAUNCHES_API       = 'https://dexscreener-telegram-bot-production.up.railway.app/api/launches';
 const LAUNCHES_KEY       = 'byeboss_launches';
-const FEE_TOTALS_KEY     = 'byeboss_fees_total';
 
 // $ByeBoss genesis — always pinned as the first Byeboss launch
 const BYEBOSS_MINT       = 'BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump';
@@ -679,7 +633,6 @@ const state = {
   image: null,           // File
   imageBytes: 0,
   launching: false,
-  mode: 'self',          // 'self' | 'hosted'
   hostedReady: false,
   hostedFee: 0.03,
   hostedHotAddress: null,
@@ -860,13 +813,11 @@ function showFlow(show) { $('flowBox').style.display = show ? 'block' : 'none'; 
 // ═════════════════════════════════════════════════════════════════
 // LAUNCH FLOW
 // ═════════════════════════════════════════════════════════════════
-$('launchBtn').addEventListener('click', () => {
-  if (state.mode === 'hosted') openHostedTCs();
-  else doLaunch();
-});
+$('launchBtn').addEventListener('click', openHostedTCs);
 
 // ═════════════════════════════════════════════════════════════════
-// MODE TOGGLE — Self vs Byeboss Hosted
+// HOSTED STATUS — checks backend readiness on boot, shows a
+// "setup in progress" message if the Byeboss treasury is not yet wired.
 // ═════════════════════════════════════════════════════════════════
 const HOSTED_API       = 'https://dexscreener-telegram-bot-production.up.railway.app/api/launch-hosted';
 const HOSTED_STATUS_API = HOSTED_API + '/status';
@@ -879,33 +830,20 @@ async function loadHostedStatus() {
     state.hostedReady = !!j.ready;
     state.hostedFee = parseFloat(j.fee) || 0.03;
     state.hostedHotAddress = j.hotAddress || null;
-    const btn = $('modeBtnHosted');
+    const unavailable = $('hostedUnavailable');
     if (state.hostedReady) {
-      btn.disabled = false;
-      btn.removeAttribute('title');
-      $('modeHostedPrice').textContent = state.hostedFee + ' SOL';
+      unavailable.style.display = 'none';
       $('costBoxHostedAmount').textContent = '~' + state.hostedFee + ' SOL';
+      $('safetyAmount').textContent = '~' + state.hostedFee;
+      validateForm();
     } else {
-      btn.disabled = true;
-      btn.title = 'Byeboss Hosted is not configured yet — coming soon';
+      unavailable.style.display = 'block';
+      $('launchBtn').disabled = true;
+      $('launchBtn').title = 'Launchpad under setup — come back later';
     }
   } catch (e) { console.warn('hosted status fetch failed', e); }
 }
 loadHostedStatus();
-
-function setMode(mode) {
-  state.mode = mode;
-  $('modeBtnSelf').classList.toggle('active', mode === 'self');
-  $('modeBtnHosted').classList.toggle('active', mode === 'hosted');
-  $('costBoxSelf').style.display = mode === 'self' ? 'block' : 'none';
-  $('costBoxHosted').style.display = mode === 'hosted' ? 'block' : 'none';
-  $('launchBtn').textContent = mode === 'hosted' ? '🏆 Launch (Byeboss Hosted)' : '🚀 Launch Token';
-}
-$('modeBtnSelf').addEventListener('click', () => setMode('self'));
-$('modeBtnHosted').addEventListener('click', () => {
-  if (!state.hostedReady) return;
-  setMode('hosted');
-});
 
 // ═════════════════════════════════════════════════════════════════
 // T&Cs MODAL + HOSTED LAUNCH FLOW
@@ -1031,157 +969,6 @@ async function doHostedLaunch() {
   }
 }
 
-async function doLaunch() {
-  if (!validateForm()) return;
-
-  // Sanity check: fee wallet must be configured
-  if (BYEBOSS_FEE_WALLET === 'REPLACE_WITH_YOUR_WALLET_ADDRESS') {
-    toast('Byeboss fee wallet not configured. Edit BYEBOSS_FEE_WALLET in the HTML.', 'warn');
-    return;
-  }
-  let feeWalletPk;
-  try { feeWalletPk = new PublicKey(BYEBOSS_FEE_WALLET); }
-  catch { toast('Invalid BYEBOSS_FEE_WALLET address', 'warn'); return; }
-
-  const provider = getProvider();
-  if (!provider || !state.walletPk) { toast('Connect Phantom first', 'warn'); return; }
-
-  state.launching = true;
-  $('launchBtn').disabled = true;
-  $('launchBtn').textContent = '⏳ Processing…';
-  resetFlow(); showFlow(true);
-
-  const name = $('fName').value.trim();
-  const symbol = $('fSymbol').value.trim();
-  const description = $('fDesc').value.trim();
-  const twitter = $('fTwitter').value.trim();
-  const telegram = $('fTelegram').value.trim();
-  const website = $('fWebsite').value.trim();
-  const initialBuy = Math.max(0, parseFloat($('fBuy').value) || 0);
-
-  try {
-    // ───────── STEP 1: Fee payment ─────────
-    setStep(1, 'active');
-    const feeSig = await payFee(provider, feeWalletPk);
-    setStep(1, 'done');
-    toast('✅ Fee paid: ' + shortAddr(feeSig, 6), 'success');
-    bumpFeeTotal(CREATION_FEE_SOL);
-
-    // ───────── STEP 2: IPFS metadata ─────────
-    setStep(2, 'active');
-    const metadataUri = await uploadToPumpIPFS({ name, symbol, description, twitter, telegram, website, file: state.image });
-    setStep(2, 'done');
-
-    // ───────── STEP 3: Build pumpportal tx ─────────
-    setStep(3, 'active');
-    const mintKeypair = Keypair.generate();
-    const txBuffer = await getPumpPortalTx({
-      publicKey: state.walletStr,
-      mint: mintKeypair.publicKey.toBase58(),
-      name, symbol, uri: metadataUri,
-      amount: initialBuy,
-    });
-    setStep(3, 'done');
-
-    // ───────── STEP 4: Sign & send ─────────
-    setStep(4, 'active');
-    const tx = VersionedTransaction.deserialize(new Uint8Array(txBuffer));
-
-    // ─── Safety checks before asking Phantom to sign ───
-    const sigCount = tx.message.header?.numRequiredSignatures || 0;
-    const acctKeys = (tx.message.staticAccountKeys || []).map(k => k.toBase58 ? k.toBase58() : String(k));
-    const signerKeys = acctKeys.slice(0, sigCount);
-    const ourMint = mintKeypair.publicKey.toBase58();
-
-    // 1. First signer is the fee payer — must be YOUR wallet, not anyone else.
-    if (signerKeys[0] !== state.walletStr) {
-      throw new Error('Safety check failed: fee payer is not your wallet (' + shortAddr(signerKeys[0]) + '). Aborting.');
-    }
-    // 2. Our generated mint keypair must be a required signer → tx creates OUR mint, not a substituted one.
-    if (!signerKeys.includes(ourMint)) {
-      throw new Error('Safety check failed: the mint keypair we generated is not a required signer. Aborting before any signature.');
-    }
-    // 3. Too few / too many signers is suspicious.
-    if (sigCount < 2 || sigCount > 4) {
-      throw new Error('Safety check failed: unexpected signer count (' + sigCount + '). Aborting.');
-    }
-    // 4. Sanity-cap instruction count (pump.fun create+buy ~3-6 ix)
-    const ixCount = tx.message.compiledInstructions?.length || tx.message.instructions?.length || 0;
-    if (ixCount > 12) {
-      throw new Error('Safety check failed: transaction has ' + ixCount + ' instructions (unexpectedly high). Aborting.');
-    }
-    console.info('[launch] tx check OK · signers:', signerKeys.length, '· ix:', ixCount, '· mint:', ourMint);
-    toast('🔒 Safety check passed. Phantom will now show the tx — verify the SOL amount before approving.', 'success');
-
-    tx.sign([mintKeypair]);                       // mint signs first
-    const signedTx = await provider.signTransaction(tx); // then user signs
-    const rawSig = await connection.sendRawTransaction(signedTx.serialize(), {
-      skipPreflight: false,
-      maxRetries: 3,
-    });
-    setStep(4, 'done');
-
-    // ───────── STEP 5: Confirm ─────────
-    setStep(5, 'active');
-    await pollSignature(rawSig, 60); // ~60s timeout
-    setStep(5, 'done');
-
-    // Save to localStorage + broadcast to shared feed
-    const record = {
-      mint: mintKeypair.publicKey.toBase58(),
-      name, symbol,
-      creator: state.walletStr,
-      timestamp: Date.now(),
-      signature: rawSig,
-      metadataUri,
-    };
-    saveLaunch(record);
-    postLaunchToBackend(record);
-    renderStats();
-    renderFeed(); // show the freshly launched token in the feed immediately
-
-    // Success modal
-    showSuccessModal(record);
-
-  } catch (err) {
-    console.error('[LAUNCH ERROR]', err);
-    const msg = err?.message || String(err);
-    // Mark currently-active step as error
-    for (let i = 1; i <= 5; i++) {
-      if ($('s' + i).classList.contains('active')) { setStep(i, 'error'); break; }
-    }
-    if (/user rejected|rejected the request/i.test(msg)) {
-      toast('❌ Transaction rejected by user', 'warn');
-    } else if (/timeout/i.test(msg)) {
-      toast('⏱ Confirmation timeout — check Solscan', 'warn');
-    } else {
-      toast('❌ ' + msg.slice(0, 160), 'warn');
-    }
-  } finally {
-    state.launching = false;
-    $('launchBtn').textContent = '🚀 Launch Token';
-    validateForm();
-  }
-}
-
-// ── STEP 1 IMPL ──
-async function payFee(provider, feeWalletPk) {
-  const latest = await connection.getLatestBlockhash('confirmed');
-  const tx = new Transaction({
-    feePayer: state.walletPk,
-    recentBlockhash: latest.blockhash,
-  }).add(
-    SystemProgram.transfer({
-      fromPubkey: state.walletPk,
-      toPubkey: feeWalletPk,
-      lamports: Math.round(CREATION_FEE_SOL * LAMPORTS_PER_SOL),
-    })
-  );
-  const { signature } = await provider.signAndSendTransaction(tx);
-  await pollSignature(signature, 45);
-  return signature;
-}
-
 // Poll for confirmation via getSignatureStatuses
 async function pollSignature(sig, timeoutSec) {
   const start = Date.now();
@@ -1195,50 +982,6 @@ async function pollSignature(sig, timeoutSec) {
     await new Promise(r => setTimeout(r, 1500));
   }
   throw new Error('timeout waiting for confirmation');
-}
-
-// ── STEP 2 IMPL: Pump.fun IPFS upload ──
-async function uploadToPumpIPFS({ name, symbol, description, twitter, telegram, website, file }) {
-  const fd = new FormData();
-  fd.append('file', file);
-  fd.append('name', name);
-  fd.append('symbol', symbol);
-  fd.append('description', description);
-  if (twitter) fd.append('twitter', twitter);
-  if (telegram) fd.append('telegram', telegram);
-  if (website) fd.append('website', website);
-  fd.append('showName', 'true');
-
-  const res = await fetch('https://pump.fun/api/ipfs', { method: 'POST', body: fd });
-  if (!res.ok) throw new Error('IPFS upload failed (' + res.status + '). Pump.fun may be blocking direct browser uploads — this endpoint can be CORS-restricted.');
-  const json = await res.json();
-  if (!json?.metadataUri) throw new Error('IPFS upload: no metadataUri returned');
-  return json.metadataUri;
-}
-
-// ── STEP 3 IMPL: PumpPortal unsigned tx ──
-async function getPumpPortalTx({ publicKey, mint, name, symbol, uri, amount }) {
-  const body = {
-    publicKey,
-    action: 'create',
-    tokenMetadata: { name, symbol, uri },
-    mint,
-    denominatedInSol: 'true',
-    amount: amount || 0,
-    slippage: 10,
-    priorityFee: 0.0005,
-    pool: 'pump',
-  };
-  const res = await fetch('https://pumpportal.fun/api/trade-local', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const txt = await res.text().catch(() => '');
-    throw new Error('PumpPortal error (' + res.status + '): ' + txt.slice(0, 160));
-  }
-  return await res.arrayBuffer();
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -1308,18 +1051,13 @@ async function fetchGlobalLaunches() {
     console.warn('Global launches: both API and static fallback failed');
   }
 }
-function getFeeTotal() { return parseFloat(localStorage.getItem(FEE_TOTALS_KEY) || '0') || 0; }
-function bumpFeeTotal(sol) {
-  try { localStorage.setItem(FEE_TOTALS_KEY, String(getFeeTotal() + sol)); } catch {}
-  renderStats();
-}
-
 function renderStats() {
   const launches = allLaunches();
   $('statTotal').textContent = launches.length;
-  $('statFees').textContent = getFeeTotal().toFixed(3) + ' SOL';
-  const creators = new Set(launches.map(l => l.creator)).size;
-  $('statCreators').textContent = creators;
+  // Unique backers = unique beneficiaries (who launched) — falls back to
+  // creator for genesis/legacy entries so we still count $ByeBoss itself.
+  const backers = new Set(launches.map(l => l.beneficiary || l.creator)).size;
+  $('statCreators').textContent = backers;
 }
 renderStats();
 fetchGlobalLaunches();
