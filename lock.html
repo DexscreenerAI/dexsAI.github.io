@@ -1147,20 +1147,29 @@ async function doLock(amount, days) {
 
     const rawAmount = uiToRaw(amount);
     const amountBN = new BN(rawAmount.toString());
-    const nowSec = Math.floor(Date.now() / 1000);
+    // Streamflow requires start_time >= chain clock. Add a buffer so the tx
+    // doesn't land "in the past" after Phantom signs + tx propagates.
+    const START_BUFFER_SEC = 60;
+    const startSec = Math.floor(Date.now() / 1000) + START_BUFFER_SEC;
     const durationSec = days * 86400;
-    const cliffTs = nowSec + durationSec;
+    const cliffTs = startSec + durationSec;
+    // Token-lock shape that passes Streamflow's on-chain timestamp check:
+    // leave a tiny streamable remainder after the cliff so end_time =
+    // start + ceil((amount - cliff_amount) / amount_per_period) * period
+    // falls AT cliff (not before it). With cliffAmount = amount - 1 and
+    // amountPerPeriod = 1, end = start + 1*period = start + durationSec = cliff.
+    const cliffAmountBN = amountBN.sub(new BN(1));
+    const amountPerPeriodBN = new BN(1);
 
-    // Token lock criteria: cliffAmount === depositedAmount, non-topup, non-transferable, non-cancelable
     const streamParams = {
       recipient: state.walletStr,
       tokenId: BYEBOSS_MINT,
-      start: nowSec,
+      start: startSec,
       amount: amountBN,
       period: durationSec,
       cliff: cliffTs,
-      cliffAmount: amountBN,
-      amountPerPeriod: amountBN,
+      cliffAmount: cliffAmountBN,
+      amountPerPeriod: amountPerPeriodBN,
       name: `Byeboss Lock ${days}d`,
       canTopup: false,
       cancelableBySender: false,
@@ -1208,6 +1217,8 @@ async function doLock(amount, days) {
     const msg = err?.message || String(err);
     if (/user rejected|rejected the request/i.test(msg)) toast('❌ Transaction rejected', 'warn');
     else if (/timeout/i.test(msg)) toast('⏱ Timeout — check Solscan', 'warn');
+    else if (/Custom["':\s]*112|InvalidTimestamps/i.test(msg)) toast('⏱ Timestamp drift — retry in a few seconds', 'warn');
+    else if (/insufficient.*funds|InsufficientFunds/i.test(msg)) toast('💸 Not enough SOL/tokens to cover the lock + fees', 'warn');
     else toast('❌ ' + msg.slice(0, 180), 'err');
   } finally {
     state.locking = false;
