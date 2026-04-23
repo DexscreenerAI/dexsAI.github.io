@@ -959,17 +959,33 @@ function renderStats() {
 }
 
 // ═════════════════════════════════════════════════════════════════
-// FETCH USER STREAMS — via Streamflow HTTP API (no SDK needed)
+// FETCH USER STREAMS — via Streamflow SDK (on-chain)
+// The public REST API is CORS-blocked from browsers, so we read
+// directly via the SDK which uses our RPC_PROXY.
 // ═════════════════════════════════════════════════════════════════
 async function fetchUserStreams(walletStr) {
+  await sdkReady;
+  if (!solanaClient) return [];
   try {
-    const res = await fetch(STREAMFLOW_API + '?recipient=' + walletStr + '&mint=' + BYEBOSS_MINT);
-    if (!res.ok) return [];
-    const json = await res.json();
-    // API returns { items: [...] } or array directly depending on version
-    const items = Array.isArray(json) ? json : (json.items || json.streams || []);
-    return items
-      .filter(s => (s.mint === BYEBOSS_MINT) && s.sender === s.recipient && s.recipient === walletStr)
+    // Returns [[id, Contract], ...] for streams where wallet is sender or recipient.
+    const rawStreams = await solanaClient.get({ address: walletStr, type: 'all' });
+    if (!Array.isArray(rawStreams)) return [];
+    // Normalize SDK Contract shape → plain object parseStream understands.
+    const normalized = rawStreams.map(([id, c]) => {
+      const bn = v => (v && typeof v.toString === 'function') ? v.toString() : String(v ?? '0');
+      return {
+        id,
+        mint: c.mint,
+        sender: c.sender,
+        recipient: c.recipient,
+        start: Number(c.start),
+        cliff: Number(c.cliff || c.end || c.start),
+        depositedAmount: bn(c.depositedAmount),
+        withdrawnAmount: bn(c.withdrawnAmount),
+      };
+    });
+    return normalized
+      .filter(s => s.mint === BYEBOSS_MINT && s.sender === s.recipient && s.recipient === walletStr)
       .map(parseStream)
       .filter(Boolean)
       .filter(s => s.remainingRaw > 0n);
@@ -1220,53 +1236,15 @@ async function claim(streamId, amountRawStr) {
 }
 
 // ═════════════════════════════════════════════════════════════════
-// LEADERBOARD
+// LEADERBOARD — needs a backend (on-chain scan by mint is too heavy
+// from the browser). Placeholder for now; will be wired to
+// /api/locks/leaderboard once the backend endpoint ships.
 // ═════════════════════════════════════════════════════════════════
-async function loadLeaderboard() {
+function loadLeaderboard() {
   const el = $('boardList');
-  try {
-    const res = await fetch(STREAMFLOW_API + '?mint=' + BYEBOSS_MINT + '&limit=200');
-    if (!res.ok) throw new Error('API ' + res.status);
-    const json = await res.json();
-    const items = Array.isArray(json) ? json : (json.items || json.streams || []);
-
-    const now = Date.now() / 1000;
-    const byWallet = new Map();
-    for (const raw of items) {
-      if (raw.mint !== BYEBOSS_MINT) continue;
-      if (raw.sender !== raw.recipient) continue; // only self-locks
-      const p = parseStream(raw);
-      if (!p || p.remainingRaw <= 0n) continue;
-      const daysLeft = Math.max(0, (p.cliff - now) / 86400);
-      const score = p.remainingUi * (daysLeft + 1);
-      const wallet = raw.recipient;
-      const cur = byWallet.get(wallet) || { wallet, locked: 0, score: 0, count: 0 };
-      cur.locked += p.remainingUi;
-      cur.score += score;
-      cur.count += 1;
-      byWallet.set(wallet, cur);
-    }
-    const ranked = [...byWallet.values()].sort((a, b) => b.score - a.score).slice(0, 10);
-    if (ranked.length === 0) {
-      el.innerHTML = '<div class="empty">No locks yet — be the first legend 👑</div>';
-      return;
-    }
-    el.innerHTML = ranked.map((r, i) => {
-      const topCls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
-      const isYou = state.walletStr === r.wallet;
-      return `<div class="board-row ${topCls} ${isYou ? 'you' : ''}">
-        <div class="board-rank">${i < 3 ? ['🥇','🥈','🥉'][i] : '#' + (i + 1)}</div>
-        <div class="board-addr">${short(r.wallet)} ${isYou ? '<span class="you-tag">YOU</span>' : ''}</div>
-        <div class="board-amount">${fmt(r.locked)} <small>× ${r.count}</small></div>
-      </div>`;
-    }).join('');
-  } catch (e) {
-    console.warn('leaderboard error', e);
-    el.innerHTML = '<div class="empty">Leaderboard unavailable (Streamflow API)</div>';
-  }
+  el.innerHTML = '<div class="empty">Top lockers leaderboard coming soon 🏆<br><small style="color:var(--text3);font-size:10px;margin-top:6px;display:block">Aggregating on-chain locks · backend endpoint in progress</small></div>';
 }
 loadLeaderboard();
-setInterval(loadLeaderboard, 120000);
 
 // ═════════════════════════════════════════════════════════════════
 // MOBILE MENU
