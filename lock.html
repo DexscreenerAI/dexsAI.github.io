@@ -905,12 +905,23 @@ $('fAmount').addEventListener('input', () => {
   validateForm();
 });
 
-$('maxBtn').addEventListener('click', () => {
+$('maxBtn').addEventListener('click', async () => {
   if (!state.walletStr) { toast('Connect wallet first', 'warn'); return; }
+  // Re-fetch live balance so MAX reflects what's really on-chain now.
+  try {
+    const live = await getBalance(state.walletStr);
+    if (typeof live === 'bigint') {
+      state.balanceRaw = live;
+      state.balance = rawToUi(live);
+      renderStats();
+    }
+  } catch (e) { /* keep cached */ }
   // Streamflow transfers (amount * (1 + fee%)) — leave headroom so MAX
   // doesn't overshoot the wallet balance once the service fee is added.
+  // Subtract 1 raw unit on top as an absolute-safety dust buffer.
   const feeFactor = 1 + (state.streamflowFeePct / 100);
-  const usableRaw = state.balanceRaw * 10000n / BigInt(Math.round(feeFactor * 10000));
+  let usableRaw = state.balanceRaw * 10000n / BigInt(Math.round(feeFactor * 10000));
+  if (usableRaw > 0n) usableRaw -= 1n;
   $('fAmount').value = rawToUi(usableRaw).toString();
   updateUnlockPreview();
   validateForm();
@@ -1162,6 +1173,20 @@ async function doLock(amount, days) {
     const rawAmount = uiToRaw(amount);
     const amountBN = new BN(rawAmount.toString());
 
+    // Re-fetch the on-chain balance just before submitting — state.balanceRaw
+    // may be stale (tab left open, tokens sent elsewhere, prior partial lock).
+    // The Streamflow program transfers from the sender's ATA, so what matters
+    // is what's ACTUALLY there right now, not what we cached at page load.
+    let freshBalanceRaw = state.balanceRaw;
+    try {
+      const live = await getBalance(state.walletStr);
+      if (typeof live === 'bigint') {
+        freshBalanceRaw = live;
+        state.balanceRaw = live;
+        state.balance = rawToUi(live);
+      }
+    } catch (e) { /* fall back to cached */ }
+
     // Streamflow deducts its fee FROM the sender on top of the deposit:
     // the on-chain transfer is amount * (1 + fee%). If that exceeds the
     // wallet balance, the SPL Token program returns InsufficientFunds.
@@ -1169,10 +1194,11 @@ async function doLock(amount, days) {
     // generic RPC error. Use BigInt to avoid float drift.
     const feeScaled = BigInt(Math.round(state.streamflowFeePct * 100)); // e.g. 150 for 1.5%
     const requiredRaw = rawAmount + (rawAmount * feeScaled) / 10000n;
-    if (requiredRaw > state.balanceRaw) {
+    if (requiredRaw > freshBalanceRaw) {
       const needUi = rawToUi(requiredRaw);
-      const haveUi = rawToUi(state.balanceRaw);
-      toast(`Need ${fmt(needUi)} $ByeBoss (incl. ${state.streamflowFeePct}% Streamflow fee) — you have ${fmt(haveUi)}. Tap MAX to auto-adjust.`, 'warn');
+      const haveUi = rawToUi(freshBalanceRaw);
+      renderStats();
+      toast(`Not enough $ByeBoss. You're trying to lock ${fmt(needUi)} but wallet has ${fmt(haveUi)}. Tap MAX.`, 'warn');
       state.locking = false;
       $('lockBtn').disabled = false;
       $('lockBtn').textContent = '🔒 Lock $ByeBoss';
