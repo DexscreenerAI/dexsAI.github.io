@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>$ByeBoss — Docs · Vision & Utilities</title>
+<meta name="description" content="$ByeBoss — Salary is a Scam. Read the vision, discover every live utility in the ecosystem: Launchpad, Lock, Burn, Trade, Sniper, OG Detector, Shazam, Gems, Promote." />
+<link rel="icon" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: #060a10;
+  --bg2: #0b1018;
+  --bg3: #101822;
+  --card: #111a26;
+  --border: #1a2636;
+  --red: #ff3b4f;
+  --red2: #ff1744;
+  --cyan: #00d1ff;
+  --green: #22c55e;
+  --purple: #a78bfa;
+  --yellow: #fbbf24;
+  --text: #ffffff;
+  --text2: rgba(255,255,255,0.70);
+  --text3: rgba(255,255,255,0.45);
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  padding-top: 64px;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ─── NAV (matches launchpad/lock) ─── */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 24px;
+  background: rgba(6,10,16,0.95);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+.nav-left { display: flex; align-items: center; gap: 32px; }
+.logo { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-weight: 800; letter-spacing: 1px; }
+.logo img { width: 28px; height: 28px; border-radius: 6px; }
+.nav-links { display: flex; gap: 20px; align-items: center; }
+.nav-links a { font-family: var(--mono); font-size: 11px; color: var(--text2); transition: color .15s; }
+.nav-links a:hover { color: var(--text); }
+.nav-links a.active { color: var(--red); font-weight: 700; }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.btn-ghost {
+  padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px;
+  background: transparent; color: var(--text2);
+  font-family: var(--mono); font-size: 11px; cursor: pointer;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--red); }
+.mobile-toggle { display: none; }
+.mobile-menu { display: none; }
+
+@media (max-width: 900px) {
+  .nav-links { display: none; }
+  .mobile-toggle { display: inline-flex; }
+  .mobile-menu {
+    position: fixed; top: 64px; left: 0; right: 0;
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    flex-direction: column; padding: 10px;
+    display: none; z-index: 99;
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a {
+    font-family: var(--mono); font-size: 12px; padding: 10px 12px;
+    color: var(--text2); border-radius: 8px;
+  }
+  .mobile-menu a:hover, .mobile-menu a.active { color: var(--red); background: var(--bg3); }
+}
+
+/* ─── PAGE LAYOUT ─── */
+.main { max-width: 920px; margin: 0 auto; padding: 40px 20px 80px; }
+
+.hero { text-align: center; margin-bottom: 48px; }
+.hero-badge {
+  display: inline-block; padding: 6px 12px; margin-bottom: 16px;
+  border: 1px solid rgba(255,59,79,0.35);
+  background: rgba(255,59,79,0.08);
+  border-radius: 999px;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--red); letter-spacing: 2px;
+}
+.hero h1 {
+  font-family: var(--mono); font-size: 42px; font-weight: 800;
+  letter-spacing: -1px; margin-bottom: 14px;
+}
+.hero h1 .amp { color: var(--red); }
+.hero-tag {
+  font-family: var(--mono); font-size: 13px; color: var(--text2);
+  letter-spacing: 3px; text-transform: uppercase;
+}
+
+.section { margin-bottom: 44px; }
+.section-title {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 3px;
+  color: var(--text3); margin-bottom: 16px; text-transform: uppercase;
+}
+.section-title span.num {
+  color: var(--red); margin-right: 8px;
+}
+.section-body {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 24px;
+}
+.section-body p { color: var(--text2); line-height: 1.7; margin-bottom: 12px; font-size: 15px; }
+.section-body p:last-child { margin-bottom: 0; }
+.section-body strong { color: var(--text); font-weight: 700; }
+.section-body em { color: var(--red); font-style: normal; font-weight: 700; }
+
+/* ─── VISION PILLARS ─── */
+.pillars {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin-top: 20px;
+}
+.pillar {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px; text-align: center;
+}
+.pillar-icon { font-size: 28px; margin-bottom: 8px; }
+.pillar-title {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  color: var(--text); letter-spacing: 1px; margin-bottom: 6px;
+}
+.pillar-text { font-size: 12px; color: var(--text3); line-height: 1.5; }
+
+/* ─── UTILITIES GRID ─── */
+.util-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
+}
+.util {
+  position: relative;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px;
+  transition: transform .15s, border-color .15s;
+  display: flex; flex-direction: column;
+}
+.util:hover { transform: translateY(-2px); border-color: var(--red); }
+.util-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.util-emoji { font-size: 26px; }
+.util-name {
+  font-family: var(--mono); font-size: 14px; font-weight: 800;
+  color: var(--text); letter-spacing: 0.5px;
+}
+.util-tag {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
+  padding: 3px 7px; border-radius: 4px;
+  margin-left: auto;
+}
+.util-tag.live { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+.util-tag.beta { background: rgba(251,191,36,0.12); color: var(--yellow); border: 1px solid rgba(251,191,36,0.3); }
+.util-desc { color: var(--text2); font-size: 13px; line-height: 1.6; margin-bottom: 14px; flex: 1; }
+.util-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  color: var(--red); letter-spacing: 1px;
+  padding-top: 10px; border-top: 1px solid var(--border);
+}
+.util-link:hover { color: var(--text); }
+
+/* ─── TOKEN PANEL ─── */
+.token-panel {
+  background: linear-gradient(135deg, rgba(255,59,79,0.08), rgba(255,23,68,0.03));
+  border: 1px solid rgba(255,59,79,0.3);
+  border-radius: 14px; padding: 24px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+}
+.token-row { display: flex; flex-direction: column; gap: 4px; }
+.token-label {
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  letter-spacing: 2px; text-transform: uppercase;
+}
+.token-val {
+  font-family: var(--mono); font-size: 14px; color: var(--text);
+  font-weight: 700; word-break: break-all;
+}
+.token-val a { color: var(--red); }
+
+/* ─── FOOTER CTA ─── */
+.cta {
+  text-align: center; margin-top: 40px; padding: 32px 20px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.cta-title {
+  font-family: var(--mono); font-size: 18px; font-weight: 800;
+  margin-bottom: 8px;
+}
+.cta-sub { color: var(--text2); font-size: 13px; margin-bottom: 20px; }
+.cta-btns { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.cta-btn {
+  padding: 11px 18px; border-radius: 10px;
+  font-family: var(--mono); font-size: 12px; font-weight: 800;
+  letter-spacing: 1px; cursor: pointer;
+}
+.cta-btn.primary {
+  background: linear-gradient(135deg, var(--red), var(--red2));
+  color: #000; border: none;
+}
+.cta-btn.ghost {
+  background: transparent; color: var(--text);
+  border: 1px solid var(--border);
+}
+.cta-btn:hover { transform: translateY(-1px); }
+
+@media (max-width: 720px) {
+  .hero h1 { font-size: 30px; }
+  .hero-tag { font-size: 11px; letter-spacing: 2px; }
+  .util-grid { grid-template-columns: 1fr; }
+  .pillars { grid-template-columns: 1fr; }
+  .token-panel { grid-template-columns: 1fr; }
+  .section-body { padding: 18px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-left">
+    <a href="index.html" class="logo">
+      <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="Byeboss" />
+      <span>BYEBOSS</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">App</a>
+      <a href="gems.html">Gems</a>
+      <a href="sniper_terminal.html">Sniper</a>
+      <a href="og-detector.html">OG Detector</a>
+      <a href="shazam_crypto.html">Shazam</a>
+      <a href="promote.html">Promote</a>
+      <a href="launchpad.html">🚀 Launchpad</a>
+      <a href="launches.html">📊 Launches</a>
+      <a href="lock.html">🔒 Lock</a>
+      <a href="burn.html">🔥 Burn</a>
+      <a href="trade.html">💎 Trade</a>
+      <a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank" rel="noopener">📈 Chart</a>
+    </div>
+  </div>
+  <div class="nav-right">
+    <button class="btn-ghost mobile-toggle" id="mobileToggle" aria-label="Menu">☰</button>
+    <a class="btn-ghost" href="https://t.me/SalaryIsScam" target="_blank" rel="noopener">Telegram</a>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">App</a>
+  <a href="gems.html">Gems</a>
+  <a href="sniper_terminal.html">Sniper</a>
+  <a href="og-detector.html">OG Detector</a>
+  <a href="shazam_crypto.html">Shazam</a>
+  <a href="promote.html">Promote</a>
+  <a href="launchpad.html">🚀 Launchpad</a>
+  <a href="launches.html">📊 Launches</a>
+  <a href="lock.html">🔒 Lock</a>
+  <a href="burn.html">🔥 Burn</a>
+  <a href="trade.html">💎 Trade</a>
+  <a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank" rel="noopener">📈 Chart</a>
+</div>
+
+<main class="main">
+
+  <section class="hero">
+    <div class="hero-badge">$BYEBOSS · DOCS</div>
+    <h1>Bye<span class="amp">Boss</span>.</h1>
+    <div class="hero-tag">Salary is a Scam</div>
+  </section>
+
+  <!-- VISION -->
+  <section class="section">
+    <div class="section-title"><span class="num">01</span>Vision</div>
+    <div class="section-body">
+      <p>
+        <em>$ByeBoss</em> est un écosystème d'outils crypto pensés pour une seule idée&nbsp;:
+        sortir du salariat en reprenant la main sur son portefeuille. Pas de promesses de rendement,
+        pas de staking fantôme — juste des outils concrets, on-chain, ouverts à tous.
+      </p>
+      <p>
+        Chaque utilité du site est <strong>live sur Solana</strong>, pensée pour être utilisée
+        au quotidien par des traders, des lanceurs de tokens et des chasseurs de gems.
+        Le token <em>$ByeBoss</em> agrège la communauté, aligne les incentives et finance
+        le développement des prochaines briques.
+      </p>
+
+      <div class="pillars">
+        <div class="pillar">
+          <div class="pillar-icon">🧠</div>
+          <div class="pillar-title">CLARTÉ</div>
+          <div class="pillar-text">Des infos on-chain lisibles, sans fluff — charts, OG wallets, launches, burns en temps réel.</div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">⚔️</div>
+          <div class="pillar-title">ARSENAL</div>
+          <div class="pillar-text">Launchpad, Sniper, Trade, Burn, Lock — l'outillage complet pour créer, défendre et investir.</div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">🫂</div>
+          <div class="pillar-title">COMMUNAUTÉ</div>
+          <div class="pillar-text">Un Telegram actif, des holders alignés, un bot qui notifie les burns et les launches en live.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- UTILITIES -->
+  <section class="section">
+    <div class="section-title"><span class="num">02</span>Utilités disponibles</div>
+
+    <div class="util-grid">
+
+      <a class="util" href="index.html">
+        <div class="util-head">
+          <div class="util-emoji">🤖</div>
+          <div class="util-name">App · DEX AI</div>
+          <span class="util-tag live">LIVE</span>
+        </div>
+        <div class="util-desc">
+          Assistant IA qui analyse n'importe quel token (Solana + EVM) :
+          price action, holders, red flags, zones d'entrée / stop loss.
+          Pose une question en langage naturel, obtiens une réponse exploitable.
+        </div>
+        <span class="util-link">Ouvrir l'App →</span>
+      </a>
+
+      <a class="util" href="gems.html">
+        <div class="util-head">
+          <div class="util-emoji">💎</div>
+          <div class="util-name">Gems</div>
+          <span class="util-tag live">LIVE</span>
+        </div>
+        <div class="util-desc">
+          Détecteur de gems temps réel. Filtrage par market cap, liquidité,
+          volume 24h, ratio acheteurs/vendeurs, variations 1h &amp; 24h —
+          pour repérer les tokens en accumulation avant le feed.
+        </div>
+        <span class="util-link">Scanner les Gems →</span>
+      </a>
+
+      <a class="util" href="sniper_terminal.html">
+        <div class="util-head">
+          <div class="util-emoji">🎯</div>
+          <div class="util-name">Sniper Terminal</div>
+          <span class="util-tag live">LIVE</span>
+        </div>
+        <div class="util-desc">
+          Terminal complet avec moteur de sniping, signaux IA, positions ouvertes,
+          historique de trades, backup / restore. Pour les traders qui veulent
+          agir vite sur les nouveaux launches.
+        </div>
+        <span class="util-link">Lancer le Sniper →</span>
+      </a>
+
+      <a class="util" href="og-detector.html">
+        <div class="util-head">
+          <div class="util-emoji">👑</div>
+          <div class="util-name">OG Detector</div>
+          <span class="util-tag live">LIVE</span>
+        </div>
+        <div class="util-desc">
+          Identifie les wallets OG (early buyers, top holders, adresses liées à
+          d'autres moonshots) sur n'importe quel token Solana. Essentiel pour
+          vérifier la qualité des premiers acheteurs avant d'entrer.
+        </div>
+        <span class="util-link">Détecter les OG →</span>
+      </a>
+
+      <a class="util" href="shazam_crypto.html">
+        <div class="util-head">
+          <div class="util-emoji">📸</div>
+          <div class="util-name">Shazam Crypto</div>
+          <span class="util-tag live">LIVE</span>
+        </div>
+        <div class="util-desc">
+          Scanner IA de chart : prends une capture, Shazam identifie le token,
+          lit les niveaux clés (support / résistance / TP / SL) et te rend un verdict
+          BUY / WAIT / AVOID en quelques secondes.
+        </div>
+        <span class="util-link">Scanner un Chart →</span>
+      </a>
+
+      <a class="util" href="promote.html">
+        <div class="util-head">
+          <div class="util-emoji">🚀</div>
+          <div class="util-name">Promote</div>
+          <span class="util-tag live">LIVE</span>
+        </div>
+        <div class="util-desc">
+          Mets ton token en avant sur ByeBoss&nbsp;: buy-bot dédié (image, whale alerts,
+          stats live), card sur la home, exposition au Telegram. Paiement on-chain,
+          visibilité ciblée aux holders actifs.
+        </div>
+        <span class="util-link">Promouvoir un Token →</span>
+      </a>
+
+      <a class="util" href="launchpad.html">
+        <div class="util-head">
+          <div class="util-emoji">🚀</div>
+          <div class="util-name">Launchpad</div>
+          <span class="util-tag live">LIVE</span>
+        </div>
+        <div class="util-desc">
+          Lance ton token Solana depuis ByeBoss en mode <strong>Hosted</strong> :
+          Pump.fun backed, tx safety checks, badge <em>Byeboss Backed</em>,
+          pinning du genesis. Zéro code, wallet Phantom suffit.
+        </div>
+        <span class="util-link">Launch a Token →</span>
+      </a>
+
+      <a class="util" href="launches.html">
+        <div class="util-head">
+          <div class="util-emoji">📊</div>
+          <div class="util-name">Launches</div>
+          <span class="util-tag live">LIVE</span>
+        </div>
+        <div class="util-desc">
+          Feed public de tous les tokens lancés via le Launchpad.
+          Gauge de progression <em>road to 1B</em>, jauge burn (target 50%)
+          et jauge lock (target 20%) pour suivre la traction $ByeBoss en live.
+        </div>
+        <span class="util-link">Voir les Launches →</span>
+      </a>
+
+      <a class="util" href="lock.html">
+        <div class="util-head">
+          <div class="util-emoji">🔒</div>
+          <div class="util-name">Lock</div>
+          <span class="util-tag live">LIVE</span>
+        </div>
+        <div class="util-desc">
+          Lock tes $ByeBoss via <strong>Streamflow</strong> et signale ta conviction.
+          Leaderboard des holders lockés, badges exclusifs, score basé sur le montant
+          et la durée. Plus tu lock longtemps, plus tu comptes.
+        </div>
+        <span class="util-link">Lock mes Tokens →</span>
+      </a>
+
+      <a class="util" href="burn.html">
+        <div class="util-head">
+          <div class="util-emoji">🔥</div>
+          <div class="util-name">Burn</div>
+          <span class="util-tag live">LIVE</span>
+        </div>
+        <div class="util-desc">
+          Scanne ton wallet Phantom et brûle les tokens dont tu veux te débarrasser
+          en un click — récupère le rent SOL associé à chaque compte token.
+          Le burn counter global $ByeBoss est tracké on-chain.
+        </div>
+        <span class="util-link">Brûler des Tokens →</span>
+      </a>
+
+      <a class="util" href="trade.html">
+        <div class="util-head">
+          <div class="util-emoji">💎</div>
+          <div class="util-name">Live Trade</div>
+          <span class="util-tag live">LIVE</span>
+        </div>
+        <div class="util-desc">
+          Connecte Phantom, suis le solde SOL + tes holdings en live, reçois les
+          signaux du moteur sniper directement dans le terminal et exécute tes trades
+          sans quitter l'app.
+        </div>
+        <span class="util-link">Ouvrir Live Trade →</span>
+      </a>
+
+      <a class="util" href="https://t.me/SalaryIsScam" target="_blank" rel="noopener">
+        <div class="util-head">
+          <div class="util-emoji">💬</div>
+          <div class="util-name">Telegram Bot</div>
+          <span class="util-tag live">LIVE</span>
+        </div>
+        <div class="util-desc">
+          Le bot officiel $ByeBoss : <code>/burn</code> pour les stats de burn live,
+          <code>/add &lt;contract&gt;</code> pour activer les buy-bot alerts,
+          <code>/ask</code> pour parler au DEX AI. Notifs automatiques sur chaque burn
+          et chaque nouveau launch.
+        </div>
+        <span class="util-link">Rejoindre Telegram →</span>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- TOKEN -->
+  <section class="section">
+    <div class="section-title"><span class="num">03</span>Token $ByeBoss</div>
+    <div class="token-panel">
+      <div class="token-row">
+        <span class="token-label">Ticker</span>
+        <span class="token-val">$ByeBoss</span>
+      </div>
+      <div class="token-row">
+        <span class="token-label">Chain</span>
+        <span class="token-val">Solana</span>
+      </div>
+      <div class="token-row">
+        <span class="token-label">Chart</span>
+        <span class="token-val"><a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank" rel="noopener">DexScreener ↗</a></span>
+      </div>
+      <div class="token-row">
+        <span class="token-label">Community</span>
+        <span class="token-val"><a href="https://t.me/SalaryIsScam" target="_blank" rel="noopener">t.me/SalaryIsScam ↗</a></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta">
+    <div class="cta-title">Ready to fire your boss?</div>
+    <div class="cta-sub">Commence par l'App, passe au Launchpad, locke avec Streamflow.</div>
+    <div class="cta-btns">
+      <a class="cta-btn primary" href="index.html">Ouvrir l'App</a>
+      <a class="cta-btn ghost" href="launchpad.html">🚀 Launch a Token</a>
+      <a class="cta-btn ghost" href="lock.html">🔒 Lock $ByeBoss</a>
+    </div>
+  </div>
+
+</main>
+
+<script>
+document.getElementById('mobileToggle').addEventListener('click', () => {
+  document.getElementById('mobileMenu').classList.toggle('open');
+});
+</script>
+
+</body>
+</html>
