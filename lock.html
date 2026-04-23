@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>Byeboss — Lock $ByeBoss</title>
+<meta name="description" content="Lock your $ByeBoss tokens via Streamflow. Signal your conviction, earn exclusive holder badges." />
+<link rel="icon" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: #060a10;
+  --bg2: #0b1018;
+  --bg3: #101822;
+  --card: #111a26;
+  --border: #1a2636;
+  --red: #ff3b4f;
+  --red2: #ff1744;
+  --green: #00ff88;
+  --yellow: #ffaa00;
+  --cyan: #00d1ff;
+  --cyan2: #0099c7;
+  --text: #dfe4ed;
+  --text2: rgba(255,255,255,0.5);
+  --text3: rgba(255,255,255,0.25);
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+body { min-height: 100vh; overflow-x: hidden; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input { font-family: inherit; color: var(--text); }
+input:focus { outline: none; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #263447; }
+
+/* NAV */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; background: rgba(6,10,16,0.88); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-left { display: flex; align-items: center; gap: 28px; }
+.logo { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-weight: 800; letter-spacing: 0.5px; font-size: 15px; }
+.logo img { width: 28px; height: 28px; border-radius: 6px; }
+.nav-links { display: flex; align-items: center; gap: 6px; }
+.nav-links a {
+  padding: 7px 12px; border-radius: 8px; font-family: var(--mono); font-size: 12px;
+  font-weight: 500; color: var(--text2); transition: all 0.15s;
+}
+.nav-links a:hover { color: var(--text); background: var(--bg3); }
+.nav-links a.active { color: var(--cyan); background: rgba(0,209,255,0.1); }
+.nav-links a.active-red { color: var(--red); background: rgba(255,59,79,0.1); }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.btn-primary {
+  padding: 9px 18px; background: linear-gradient(135deg, var(--red), var(--red2));
+  color: #000; font-family: var(--mono); font-weight: 700; font-size: 12px;
+  border-radius: 8px; letter-spacing: 0.3px; transition: all 0.15s;
+  text-transform: uppercase;
+}
+.btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,59,79,0.35); }
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-ghost {
+  padding: 8px 14px; background: var(--bg3); border: 1px solid var(--border);
+  font-family: var(--mono); font-weight: 600; font-size: 12px; color: var(--text);
+  border-radius: 8px; transition: all 0.15s;
+}
+.btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); }
+.wallet-chip {
+  padding: 8px 14px; background: var(--bg3); border: 1px solid var(--border);
+  font-family: var(--mono); font-size: 12px; color: var(--green); border-radius: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.wallet-chip .dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); }
+.mobile-toggle { display: none; }
+
+/* LAYOUT */
+.main { padding: 90px 24px 60px; max-width: 1180px; margin: 0 auto; }
+
+/* TOKEN HERO */
+.token-hero {
+  display: flex; align-items: center; gap: 20px; padding: 24px;
+  background: linear-gradient(135deg, var(--card), var(--bg3));
+  border: 1px solid var(--border); border-radius: 14px; margin-top: 24px;
+}
+.token-hero img { width: 72px; height: 72px; border-radius: 14px; border: 1px solid var(--border); }
+.token-hero-main { flex: 1; min-width: 0; }
+.token-hero-name { font-family: var(--mono); font-size: 20px; font-weight: 800; letter-spacing: -0.3px; }
+.token-hero-ca {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; margin-top: 6px;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
+  font-family: var(--mono); font-size: 11px; color: var(--text2); cursor: pointer; transition: all 0.15s;
+}
+.token-hero-ca:hover { border-color: var(--cyan); color: var(--cyan); }
+.token-hero-socials { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.token-hero-socials a {
+  padding: 5px 10px; background: var(--bg2); border: 1px solid var(--border);
+  font-family: var(--mono); font-size: 11px; color: var(--text2); border-radius: 6px;
+  transition: all 0.15s;
+}
+.token-hero-socials a:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* HERO TITLE */
+.hero { text-align: center; padding: 40px 0 8px; }
+.hero h1 {
+  font-family: var(--mono); font-weight: 800; font-size: clamp(30px, 5vw, 46px);
+  letter-spacing: -1px; margin-bottom: 10px;
+  background: linear-gradient(135deg, #fff 0%, var(--cyan) 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero p { color: var(--text2); font-size: 15px; max-width: 560px; margin: 0 auto; }
+
+/* BENEFITS */
+.benefits {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px;
+}
+.benefit {
+  padding: 18px; background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+}
+.benefit .ic { font-size: 22px; margin-bottom: 8px; }
+.benefit h4 { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--cyan); margin-bottom: 6px; letter-spacing: 0.3px; }
+.benefit p { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+/* STATS */
+.stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px;
+}
+.stat {
+  padding: 18px; background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+}
+.stat-lbl { font-family: var(--mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-val { font-family: var(--mono); font-weight: 700; font-size: 22px; margin-top: 6px; }
+.stat-sub { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-top: 2px; }
+.stat-val.cyan { color: var(--cyan); }
+.stat-val.green { color: var(--green); }
+
+/* GRID */
+.grid {
+  display: grid; grid-template-columns: 1fr 1.1fr; gap: 24px; margin-top: 28px;
+}
+
+/* PANEL */
+.panel {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  overflow: hidden;
+}
+.panel-head {
+  padding: 18px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.panel-head h2 { font-family: var(--mono); font-size: 15px; font-weight: 700; letter-spacing: 0.3px; }
+.panel-body { padding: 20px; }
+
+/* FORM */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label {
+  font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.field label .hint { color: var(--text3); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 11px; }
+.input-row {
+  display: flex; gap: 0; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden; transition: border-color 0.15s;
+}
+.input-row:focus-within { border-color: var(--cyan); }
+.input-row input {
+  flex: 1; background: transparent; border: none; padding: 14px;
+  font-size: 15px; font-family: var(--mono); font-weight: 600; color: var(--text);
+}
+.max-btn {
+  padding: 0 16px; background: rgba(0,209,255,0.1); color: var(--cyan);
+  font-family: var(--mono); font-weight: 700; font-size: 12px; letter-spacing: 0.5px;
+  border-left: 1px solid var(--border); transition: all 0.15s;
+}
+.max-btn:hover { background: rgba(0,209,255,0.2); }
+
+/* DURATION RADIOS */
+.durations {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px;
+}
+.duration {
+  padding: 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+  cursor: pointer; transition: all 0.15s; position: relative;
+}
+.duration:hover { border-color: #2a3a50; }
+.duration.selected { border-color: var(--cyan); background: rgba(0,209,255,0.06); }
+.duration input[type=radio] { position: absolute; opacity: 0; pointer-events: none; }
+.duration-head { display: flex; align-items: center; justify-content: space-between; }
+.duration-days { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--text); }
+.duration-badge { font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 700; }
+.badge-believer { background: rgba(100,150,255,0.1); color: #6496ff; border: 1px solid rgba(100,150,255,0.3); }
+.badge-diamond { background: rgba(0,209,255,0.1); color: var(--cyan); border: 1px solid rgba(0,209,255,0.3); }
+.badge-og { background: rgba(255,59,79,0.1); color: var(--red); border: 1px solid rgba(255,59,79,0.3); }
+.badge-legend { background: rgba(255,170,0,0.1); color: var(--yellow); border: 1px solid rgba(255,170,0,0.3); }
+.duration-sub { font-family: var(--mono); font-size: 11px; color: var(--text2); margin-top: 6px; }
+
+/* COST BOX */
+.unlock-box {
+  margin-top: 14px; padding: 12px 14px; background: rgba(0,209,255,0.06);
+  border: 1px solid rgba(0,209,255,0.2); border-radius: 8px;
+  font-family: var(--mono); font-size: 12px; line-height: 1.55; color: var(--text2);
+}
+.unlock-box strong { color: var(--cyan); }
+
+/* LOCK BUTTON */
+.lock-btn {
+  width: 100%; padding: 16px; margin-top: 14px;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan2)); color: #001218;
+  font-family: var(--mono); font-weight: 800; font-size: 15px; letter-spacing: 0.5px;
+  border-radius: 10px; text-transform: uppercase; transition: all 0.15s;
+}
+.lock-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(0,209,255,0.4); }
+.lock-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* FLOW */
+.flow { margin-top: 14px; padding: 14px; background: var(--bg2); border-radius: 8px; border: 1px solid var(--border); }
+.flow-step { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-family: var(--mono); font-size: 12px; }
+.flow-step .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+.flow-step.pending .dot { background: var(--border); }
+.flow-step.active .dot { background: var(--cyan); animation: pulse 1.4s infinite; }
+.flow-step.done .dot { background: var(--green); }
+.flow-step.error .dot { background: var(--red); }
+.flow-step.pending { color: var(--text3); }
+.flow-step.active { color: var(--cyan); }
+.flow-step.done { color: var(--green); }
+.flow-step.error { color: var(--red); }
+
+/* LOCKS LIST */
+.locks-list, .board-list { display: flex; flex-direction: column; gap: 10px; padding: 0 20px 20px; max-height: 600px; overflow-y: auto; }
+.empty {
+  padding: 40px 20px; text-align: center; color: var(--text3);
+  font-family: var(--mono); font-size: 12px;
+}
+.lock-card {
+  padding: 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+  animation: fadeIn 0.35s ease;
+}
+.lock-card.claimable { border-color: var(--green); background: rgba(0,255,136,0.04); }
+.lock-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.lock-amount { font-family: var(--mono); font-size: 18px; font-weight: 700; }
+.lock-amount small { color: var(--text3); font-size: 11px; font-weight: 500; margin-left: 4px; }
+.lock-status {
+  font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 4px;
+  font-weight: 700; text-transform: uppercase; white-space: nowrap;
+}
+.status-locked { background: rgba(0,209,255,0.1); color: var(--cyan); border: 1px solid rgba(0,209,255,0.3); }
+.status-ready { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
+.lock-meta { font-family: var(--mono); font-size: 11px; color: var(--text2); margin-top: 8px; display: flex; flex-wrap: wrap; gap: 12px; }
+.lock-meta b { color: var(--text); }
+.countdown {
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  margin-top: 10px; padding: 8px 10px; background: var(--bg3); border-radius: 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.countdown.ready { color: var(--green); }
+.countdown.locked { color: var(--cyan); }
+.claim-btn {
+  width: 100%; padding: 10px; margin-top: 10px;
+  background: linear-gradient(135deg, var(--green), #00cc66); color: #001100;
+  font-family: var(--mono); font-weight: 700; font-size: 12px; letter-spacing: 0.5px;
+  border-radius: 8px; text-transform: uppercase; transition: all 0.15s;
+}
+.claim-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,255,136,0.4); }
+.claim-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* LEADERBOARD */
+.board-row {
+  display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; align-items: center;
+  padding: 10px 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  font-family: var(--mono); font-size: 12px;
+}
+.board-row.you { border-color: var(--cyan); background: rgba(0,209,255,0.05); }
+.board-rank { font-size: 14px; font-weight: 700; color: var(--text3); text-align: center; }
+.board-row.top1 .board-rank { color: var(--yellow); }
+.board-row.top2 .board-rank { color: #c0c0c0; }
+.board-row.top3 .board-rank { color: #cd7f32; }
+.board-addr { color: var(--text); font-weight: 600; }
+.board-addr .you-tag { color: var(--cyan); font-size: 10px; margin-left: 6px; }
+.board-amount { color: var(--text); font-weight: 700; text-align: right; }
+.board-amount small { color: var(--text3); font-weight: 500; }
+
+/* MODAL */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
+  z-index: 1000; display: flex; align-items: center; justify-content: center;
+  padding: 20px; animation: fadeIn 0.2s;
+}
+.modal {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 28px; max-width: 460px; width: 100%;
+  animation: fadeIn 0.3s ease;
+}
+.modal h3 { font-family: var(--mono); font-size: 18px; font-weight: 800; margin-bottom: 12px; text-align: center; }
+.modal .big-icon { font-size: 48px; text-align: center; margin-bottom: 12px; }
+.modal p { color: var(--text2); font-size: 13px; margin-bottom: 14px; line-height: 1.6; }
+.modal-summary {
+  padding: 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  margin-bottom: 14px; font-family: var(--mono); font-size: 12px;
+}
+.modal-summary .row { display: flex; justify-content: space-between; padding: 4px 0; }
+.modal-summary .row b { color: var(--cyan); }
+.modal-warning {
+  padding: 12px; background: rgba(255,170,0,0.08); border: 1px solid rgba(255,170,0,0.25);
+  border-radius: 8px; font-family: var(--mono); font-size: 11px; color: var(--yellow);
+  margin-bottom: 14px; line-height: 1.5;
+}
+.modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.modal-actions button, .modal-actions a {
+  flex: 1; min-width: 140px; padding: 12px 14px;
+  font-family: var(--mono); font-size: 12px; font-weight: 700;
+  border-radius: 8px; text-transform: uppercase; text-align: center;
+  transition: all 0.15s;
+}
+.btn-cancel { background: var(--bg2); border: 1px solid var(--border); color: var(--text2); }
+.btn-cancel:hover { color: var(--text); border-color: var(--text3); }
+.btn-confirm { background: linear-gradient(135deg, var(--cyan), var(--cyan2)); color: #001218; }
+.btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,209,255,0.4); }
+.mint-display {
+  font-family: var(--mono); font-size: 11px; color: var(--text3); word-break: break-all;
+  padding: 8px 10px; background: var(--bg2); border-radius: 6px; margin-bottom: 14px;
+  text-align: center;
+}
+
+/* TOAST */
+.toast {
+  padding: 14px 18px; background: var(--card); border: 1px solid var(--border);
+  border-left: 3px solid var(--cyan); border-radius: 8px;
+  font-family: var(--mono); font-size: 13px; max-width: 360px;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.toast.success { border-left-color: var(--green); }
+.toast.warn { border-left-color: var(--yellow); }
+.toast.err { border-left-color: var(--red); }
+
+/* SDK LOADING */
+.sdk-banner {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  padding: 10px 16px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; font-family: var(--mono); font-size: 11px; color: var(--text2);
+  display: flex; align-items: center; gap: 8px; z-index: 50;
+}
+.sdk-banner .spin { width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.8s linear infinite; }
+.sdk-banner.ok { border-color: rgba(0,255,136,0.3); color: var(--green); }
+.sdk-banner.err { border-color: rgba(255,59,79,0.3); color: var(--red); }
+
+/* ANIM */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .nav-links { display: none; }
+  .mobile-toggle { display: flex; }
+  .grid { grid-template-columns: 1fr; }
+  .benefits, .stats { grid-template-columns: 1fr; }
+  .durations { grid-template-columns: 1fr; }
+  .main { padding: 80px 14px 40px; }
+  .nav { padding: 12px 14px; }
+  .token-hero { flex-direction: column; text-align: center; }
+}
+
+.mobile-menu {
+  position: fixed; top: 60px; left: 0; right: 0; background: var(--bg2);
+  border-bottom: 1px solid var(--border); padding: 10px; z-index: 99;
+  display: none; flex-direction: column; gap: 4px;
+}
+.mobile-menu.open { display: flex; }
+.mobile-menu a {
+  padding: 10px 14px; font-family: var(--mono); font-size: 13px;
+  color: var(--text2); border-radius: 6px;
+}
+.mobile-menu a.active { color: var(--cyan); background: var(--bg3); }
+.mobile-menu a:hover { color: var(--text); background: var(--bg3); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-left">
+    <a href="index.html" class="logo">
+      <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="Byeboss" />
+      <span>BYEBOSS</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">App</a>
+      <a href="gems.html">Gems</a>
+      <a href="sniper_terminal.html">Sniper</a>
+      <a href="og-detector.html">OG Detector</a>
+      <a href="shazam_crypto.html">Shazam</a>
+      <a href="promote.html">Promote</a>
+      <a href="burn.html">🔥 Burn</a>
+      <a href="lock.html" class="active">🔒 Lock</a>
+      <a href="trade.html">💎 Trade</a>
+      <a href="launchpad.html">🚀 Launchpad</a>
+      <a href="launches.html">📊 Launches</a>
+      <a href="https://dexscreener.com/solana/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">📈 Chart</a>
+    </div>
+  </div>
+  <div class="nav-right">
+    <button class="btn-ghost mobile-toggle" id="mobileToggle" aria-label="Menu">☰</button>
+    <a class="btn-ghost" href="https://t.me/SalaryIsScam" target="_blank" rel="noopener">Telegram</a>
+    <button id="walletBtn" class="btn-primary">Connect Phantom</button>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">App</a>
+  <a href="gems.html">Gems</a>
+  <a href="sniper_terminal.html">Sniper</a>
+  <a href="og-detector.html">OG Detector</a>
+  <a href="shazam_crypto.html">Shazam</a>
+  <a href="promote.html">Promote</a>
+  <a href="burn.html">🔥 Burn</a>
+  <a href="lock.html" class="active">🔒 Lock</a>
+  <a href="trade.html">💎 Trade</a>
+  <a href="launchpad.html">🚀 Launchpad</a>
+  <a href="launches.html">📊 Launches</a>
+  <a href="https://dexscreener.com/solana/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">📈 Chart</a>
+</div>
+
+<main class="main">
+
+  <!-- HERO TITLE -->
+  <section class="hero">
+    <h1>🔒 Lock $ByeBoss</h1>
+    <p>Signal your conviction. Earn exclusive holder badges. Share in future fees.</p>
+  </section>
+
+  <!-- TOKEN HERO -->
+  <div class="token-hero">
+    <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="$ByeBoss" />
+    <div class="token-hero-main">
+      <div class="token-hero-name">$ByeBoss — Salary Is A Scam</div>
+      <div class="token-hero-ca" id="caCopy" title="Copy contract address">
+        <span id="caText">BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump</span>
+        <span>📋</span>
+      </div>
+      <div class="token-hero-socials">
+        <a href="https://t.me/SalaryIsScam" target="_blank" rel="noopener">💬 Telegram</a>
+        <a href="https://x.com/byebossonsol" target="_blank" rel="noopener">𝕏 Twitter</a>
+        <a href="https://pump.fun/coin/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">🎰 Pump.fun</a>
+        <a href="https://dexscreener.com/solana/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">📈 DexScreener</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- BENEFITS -->
+  <div class="benefits">
+    <div class="benefit">
+      <div class="ic">💎</div>
+      <h4>Signal Conviction</h4>
+      <p>Locked supply = skin in the game. Show the market you're not a paper-hand tourist.</p>
+    </div>
+    <div class="benefit">
+      <div class="ic">💰</div>
+      <h4>Future Fee Sharing</h4>
+      <p>A % of creator fees collected by Byeboss will be redistributed to active lockers. <em>(coming soon)</em></p>
+    </div>
+    <div class="benefit">
+      <div class="ic">🏆</div>
+      <h4>Exclusive Badges</h4>
+      <p>Believer · Diamond Hands · OG · Legend. Display-ready proof of time committed. <em>(integration soon)</em></p>
+    </div>
+  </div>
+
+  <!-- USER STATS -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-lbl">Available</div>
+      <div class="stat-val green" id="statBalance">—</div>
+      <div class="stat-sub" id="statBalanceSub">Connect wallet</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Total Locked</div>
+      <div class="stat-val cyan" id="statLocked">—</div>
+      <div class="stat-sub" id="statLockedSub">0 active locks</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Next Unlock</div>
+      <div class="stat-val" id="statNext">—</div>
+      <div class="stat-sub" id="statNextSub">No active lock</div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <section class="grid">
+
+    <!-- LOCK FORM -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Lock Tokens</h2>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">Powered by Streamflow</span>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label>Amount <span class="hint" id="balHint">Balance: —</span></label>
+          <div class="input-row">
+            <input type="number" id="fAmount" min="0" step="1" placeholder="0" />
+            <button type="button" class="max-btn" id="maxBtn">MAX</button>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:16px">
+          <label>Duration</label>
+        </div>
+        <div class="durations" id="durations">
+          <label class="duration" data-days="30">
+            <input type="radio" name="dur" value="30" />
+            <div class="duration-head">
+              <span class="duration-days">30 days</span>
+              <span class="duration-badge badge-believer">💙 Believer</span>
+            </div>
+            <div class="duration-sub">1 month commitment</div>
+          </label>
+          <label class="duration" data-days="90">
+            <input type="radio" name="dur" value="90" />
+            <div class="duration-head">
+              <span class="duration-days">90 days</span>
+              <span class="duration-badge badge-diamond">💎 Diamond</span>
+            </div>
+            <div class="duration-sub">Quarterly conviction</div>
+          </label>
+          <label class="duration" data-days="180">
+            <input type="radio" name="dur" value="180" />
+            <div class="duration-head">
+              <span class="duration-days">180 days</span>
+              <span class="duration-badge badge-og">🔥 OG Holder</span>
+            </div>
+            <div class="duration-sub">Half-year long-term</div>
+          </label>
+          <label class="duration" data-days="365">
+            <input type="radio" name="dur" value="365" />
+            <div class="duration-head">
+              <span class="duration-days">365 days</span>
+              <span class="duration-badge badge-legend">👑 Legend</span>
+            </div>
+            <div class="duration-sub">Full-year diamond</div>
+          </label>
+        </div>
+
+        <div class="unlock-box" id="unlockBox">
+          <strong>Select amount and duration</strong> to see unlock date.
+        </div>
+
+        <button type="button" id="lockBtn" class="lock-btn" disabled>🔒 Lock $ByeBoss</button>
+
+        <div class="flow" id="flowBox" style="display:none">
+          <div class="flow-step pending" id="s1"><span class="dot"></span><span>1. Prepare Streamflow vesting stream</span></div>
+          <div class="flow-step pending" id="s2"><span class="dot"></span><span>2. Sign &amp; broadcast transaction</span></div>
+          <div class="flow-step pending" id="s3"><span class="dot"></span><span>3. Confirm on-chain</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY LOCKS -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2>My Active Locks</h2>
+        <button class="btn-ghost" id="refreshLocks">↻</button>
+      </div>
+      <div class="locks-list" id="locksList">
+        <div class="empty">Connect your wallet to see locks</div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- LEADERBOARD -->
+  <section style="margin-top:28px">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>🏆 Top Lockers</h2>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">Ranked by amount × days remaining</span>
+      </div>
+      <div class="board-list" id="boardList">
+        <div class="empty">Loading leaderboard…</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- TOAST HOST -->
+<div id="toastHost" style="position:fixed;top:80px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:10px;"></div>
+
+<!-- SDK BANNER -->
+<div class="sdk-banner" id="sdkBanner"><span class="spin"></span><span>Loading Streamflow SDK…</span></div>
+
+<script type="module">
+// ═════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═════════════════════════════════════════════════════════════════
+const BYEBOSS_MINT  = 'BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump';
+const BYEBOSS_DECIMALS = 6;
+const RPC_PROXY     = 'https://dexscreener-telegram-bot-production.up.railway.app/api/rpc';
+const STREAMFLOW_PROGRAM_ID = 'strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m';
+const STREAMFLOW_API = 'https://api.streamflow.finance/v2/api/streams';
+const TOKEN_PROGRAM = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+
+// ═════════════════════════════════════════════════════════════════
+// DYNAMIC IMPORTS — @solana/web3.js + @streamflow/stream via esm.sh
+// ═════════════════════════════════════════════════════════════════
+let web3, sf, BN, solanaClient;
+const sdkBanner = document.getElementById('sdkBanner');
+
+async function loadSDK() {
+  const web3Urls = [
+    'https://esm.sh/@solana/web3.js@1.95.8',
+    'https://cdn.skypack.dev/@solana/web3.js@1.95.8',
+  ];
+  const sfUrls = [
+    'https://esm.sh/@streamflow/stream@8',
+    'https://esm.sh/@streamflow/stream',
+    'https://cdn.skypack.dev/@streamflow/stream',
+  ];
+
+  for (const url of web3Urls) {
+    try { web3 = await import(url); break; } catch (e) { console.warn('web3 fail', url, e.message); }
+  }
+  if (!web3) throw new Error('Could not load @solana/web3.js');
+
+  for (const url of sfUrls) {
+    try { sf = await import(url); break; } catch (e) { console.warn('streamflow fail', url, e.message); }
+  }
+  if (!sf) throw new Error('Could not load @streamflow/stream');
+
+  // Discover BN — try several possible export paths
+  BN = sf.BN || sf.default?.BN;
+  if (!BN) {
+    try {
+      const bnMod = await import('https://esm.sh/bn.js@5.2.1');
+      BN = bnMod.default || bnMod.BN || bnMod;
+    } catch (e) { throw new Error('Could not load BN.js'); }
+  }
+
+  // Find SolanaStreamClient — sf.StreamflowSolana.SolanaStreamClient (v8)
+  const ClientClass =
+    sf.StreamflowSolana?.SolanaStreamClient ||
+    sf.SolanaStreamClient ||
+    sf.default?.StreamflowSolana?.SolanaStreamClient ||
+    sf.default?.SolanaStreamClient;
+
+  if (!ClientClass) throw new Error('SolanaStreamClient not found in SDK exports');
+
+  const ICluster =
+    sf.ICluster ||
+    sf.Types?.ICluster ||
+    sf.default?.ICluster ||
+    { Mainnet: 'mainnet' };
+
+  solanaClient = new ClientClass(RPC_PROXY, ICluster.Mainnet || 'mainnet');
+
+  sdkBanner.classList.add('ok');
+  sdkBanner.innerHTML = '<span>✓ Streamflow SDK ready</span>';
+  setTimeout(() => sdkBanner.style.display = 'none', 2500);
+  return true;
+}
+
+const sdkReady = loadSDK().catch(err => {
+  console.error('SDK load error', err);
+  sdkBanner.classList.add('err');
+  sdkBanner.innerHTML = '<span>⚠️ SDK load failed — locking disabled</span>';
+  return false;
+});
+
+// ═════════════════════════════════════════════════════════════════
+// STATE
+// ═════════════════════════════════════════════════════════════════
+const state = {
+  walletStr: null,
+  walletPk: null,       // web3.PublicKey
+  balance: 0,           // UI tokens (float)
+  balanceRaw: 0n,       // raw BigInt
+  locks: [],            // user's streams for BYEBOSS_MINT
+  selectedDays: null,
+  locking: false,
+};
+
+// ═════════════════════════════════════════════════════════════════
+// HELPERS
+// ═════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+
+function toast(msg, type = '') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  $('toastHost').appendChild(t);
+  setTimeout(() => { t.style.transition = 'opacity 0.3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 4500);
+}
+
+function fmt(n, dec = 2) {
+  if (!isFinite(n)) return '0';
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return n.toFixed(dec);
+}
+
+function short(a, L = 4) { return !a ? '' : a.slice(0, L) + '…' + a.slice(-L); }
+
+function rawToUi(raw) {
+  return Number(raw) / Math.pow(10, BYEBOSS_DECIMALS);
+}
+
+function uiToRaw(ui) {
+  // Avoid float drift: multiply as BigInt
+  const [whole, frac = ''] = String(ui).split('.');
+  const padded = (frac + '0'.repeat(BYEBOSS_DECIMALS)).slice(0, BYEBOSS_DECIMALS);
+  return BigInt(whole || '0') * BigInt(10 ** BYEBOSS_DECIMALS) + BigInt(padded || '0');
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function fmtDate(ts) {
+  const d = new Date(ts * 1000);
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function countdown(toTs) {
+  const now = Date.now() / 1000;
+  const diff = toTs - now;
+  if (diff <= 0) return { ready: true, text: 'Unlocked — ready to claim' };
+  const d = Math.floor(diff / 86400);
+  const h = Math.floor((diff % 86400) / 3600);
+  const m = Math.floor((diff % 3600) / 60);
+  const s = Math.floor(diff % 60);
+  let text;
+  if (d > 0) text = `${d}d ${h}h ${m}m`;
+  else if (h > 0) text = `${h}h ${m}m ${s}s`;
+  else text = `${m}m ${s}s`;
+  return { ready: false, text };
+}
+
+// ═════════════════════════════════════════════════════════════════
+// RPC — raw JSON-RPC via proxy
+// ═════════════════════════════════════════════════════════════════
+async function rpc(method, params) {
+  const res = await fetch(RPC_PROXY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+  });
+  if (!res.ok) throw new Error('RPC ' + method + ' HTTP ' + res.status);
+  const j = await res.json();
+  if (j.error) throw new Error('RPC ' + method + ' error: ' + (j.error.message || JSON.stringify(j.error)));
+  return j.result;
+}
+
+async function getBalance(walletStr) {
+  try {
+    const res = await rpc('getTokenAccountsByOwner', [
+      walletStr,
+      { mint: BYEBOSS_MINT },
+      { encoding: 'jsonParsed' },
+    ]);
+    const accounts = res?.value || [];
+    let total = 0n;
+    for (const acc of accounts) {
+      const ui = acc.account?.data?.parsed?.info?.tokenAmount;
+      if (ui?.amount) total += BigInt(ui.amount);
+    }
+    return total;
+  } catch (e) {
+    console.warn('getBalance error', e);
+    return 0n;
+  }
+}
+
+async function pollSignature(sig, timeoutSec = 60) {
+  const start = Date.now();
+  while ((Date.now() - start) / 1000 < timeoutSec) {
+    const { value } = await rpc('getSignatureStatuses', [[sig]]);
+    const st = value?.[0];
+    if (st) {
+      if (st.err) throw new Error('Transaction failed on-chain: ' + JSON.stringify(st.err));
+      if (st.confirmationStatus === 'confirmed' || st.confirmationStatus === 'finalized') return st;
+    }
+    await new Promise(r => setTimeout(r, 1500));
+  }
+  throw new Error('Confirmation timeout');
+}
+
+// ═════════════════════════════════════════════════════════════════
+// PHANTOM WALLET
+// ═════════════════════════════════════════════════════════════════
+function getProvider() {
+  const p = window.phantom?.solana;
+  return (p && p.isPhantom) ? p : null;
+}
+
+async function connectWallet(onlyIfTrusted = false) {
+  const provider = getProvider();
+  if (!provider) {
+    if (!onlyIfTrusted) { toast('Phantom not found — install it at phantom.app', 'warn'); window.open('https://phantom.app/', '_blank'); }
+    return null;
+  }
+  try {
+    const resp = await provider.connect(onlyIfTrusted ? { onlyIfTrusted: true } : undefined);
+    state.walletStr = resp.publicKey.toBase58();
+    await sdkReady;
+    state.walletPk = web3 ? new web3.PublicKey(state.walletStr) : null;
+    renderWalletButton();
+    refreshUser();
+    return provider;
+  } catch (e) {
+    if (!onlyIfTrusted) toast('Wallet connection rejected', 'warn');
+    return null;
+  }
+}
+
+function disconnectWallet() {
+  const p = getProvider();
+  if (p) p.disconnect().catch(() => {});
+  state.walletStr = null;
+  state.walletPk = null;
+  state.balance = 0;
+  state.balanceRaw = 0n;
+  state.locks = [];
+  renderWalletButton();
+  renderStats();
+  renderLocks();
+}
+
+function renderWalletButton() {
+  const btn = $('walletBtn');
+  if (state.walletStr) {
+    btn.className = 'wallet-chip';
+    btn.innerHTML = '<span class="dot"></span>' + short(state.walletStr);
+    btn.onclick = () => { if (confirm('Disconnect wallet?')) disconnectWallet(); };
+  } else {
+    btn.className = 'btn-primary';
+    btn.textContent = 'Connect Phantom';
+    btn.onclick = () => connectWallet(false);
+  }
+  validateForm();
+}
+
+(async () => {
+  const p = getProvider();
+  if (p) {
+    p.on?.('disconnect', disconnectWallet);
+    p.on?.('accountChanged', async (pk) => {
+      if (pk) {
+        state.walletStr = pk.toBase58();
+        await sdkReady;
+        state.walletPk = web3 ? new web3.PublicKey(state.walletStr) : null;
+        renderWalletButton(); refreshUser();
+      } else disconnectWallet();
+    });
+  }
+  await connectWallet(true);
+})();
+
+// ═════════════════════════════════════════════════════════════════
+// FORM HANDLING
+// ═════════════════════════════════════════════════════════════════
+document.querySelectorAll('.duration').forEach(el => {
+  el.addEventListener('click', () => {
+    const days = parseInt(el.dataset.days, 10);
+    state.selectedDays = days;
+    document.querySelectorAll('.duration').forEach(x => x.classList.toggle('selected', x === el));
+    const r = el.querySelector('input[type=radio]');
+    if (r) r.checked = true;
+    updateUnlockPreview();
+    validateForm();
+  });
+});
+
+$('fAmount').addEventListener('input', () => {
+  updateUnlockPreview();
+  validateForm();
+});
+
+$('maxBtn').addEventListener('click', () => {
+  if (!state.walletStr) { toast('Connect wallet first', 'warn'); return; }
+  $('fAmount').value = rawToUi(state.balanceRaw).toString();
+  updateUnlockPreview();
+  validateForm();
+});
+
+function updateUnlockPreview() {
+  const amt = parseFloat($('fAmount').value) || 0;
+  const days = state.selectedDays;
+  const box = $('unlockBox');
+  if (!amt || !days) {
+    box.innerHTML = '<strong>Select amount and duration</strong> to see unlock date.';
+    return;
+  }
+  const unlockTs = Date.now() + days * 86400 * 1000;
+  const d = new Date(unlockTs);
+  box.innerHTML =
+    '⏱ Tokens unlock on <strong>' + d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) +
+    '</strong> (' + days + ' days from now). Fully non-cancelable, non-transferable.';
+}
+
+function validateForm() {
+  const amt = parseFloat($('fAmount').value) || 0;
+  const ok = state.walletStr && amt > 0 && amt <= state.balance && state.selectedDays && !state.locking;
+  $('lockBtn').disabled = !ok;
+  return ok;
+}
+
+// ═════════════════════════════════════════════════════════════════
+// USER DATA REFRESH
+// ═════════════════════════════════════════════════════════════════
+async function refreshUser() {
+  if (!state.walletStr) return;
+  const [balRaw, locks] = await Promise.all([
+    getBalance(state.walletStr),
+    fetchUserStreams(state.walletStr),
+  ]);
+  state.balanceRaw = balRaw;
+  state.balance = rawToUi(balRaw);
+  state.locks = locks;
+  renderStats();
+  renderLocks();
+  validateForm();
+}
+
+function renderStats() {
+  $('statBalance').textContent = state.walletStr ? fmt(state.balance) : '—';
+  $('statBalanceSub').textContent = state.walletStr ? '$BYEBOSS' : 'Connect wallet';
+  $('balHint').textContent = state.walletStr ? 'Balance: ' + fmt(state.balance) : 'Balance: —';
+
+  const totalLocked = state.locks.reduce((s, l) => s + l.remainingUi, 0);
+  $('statLocked').textContent = state.walletStr ? fmt(totalLocked) : '—';
+  $('statLockedSub').textContent = state.locks.length ? state.locks.length + ' active lock' + (state.locks.length > 1 ? 's' : '') : '0 active locks';
+
+  const next = state.locks.filter(l => !l.claimable).sort((a, b) => a.cliff - b.cliff)[0];
+  if (next) {
+    const c = countdown(next.cliff);
+    $('statNext').textContent = c.text;
+    $('statNext').className = 'stat-val cyan';
+    $('statNextSub').textContent = fmtDate(next.cliff);
+  } else if (state.locks.some(l => l.claimable)) {
+    $('statNext').textContent = 'Ready';
+    $('statNext').className = 'stat-val green';
+    $('statNextSub').textContent = 'Claim below';
+  } else {
+    $('statNext').textContent = '—';
+    $('statNext').className = 'stat-val';
+    $('statNextSub').textContent = 'No active lock';
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════
+// FETCH USER STREAMS — via Streamflow HTTP API (no SDK needed)
+// ═════════════════════════════════════════════════════════════════
+async function fetchUserStreams(walletStr) {
+  try {
+    const res = await fetch(STREAMFLOW_API + '?recipient=' + walletStr + '&mint=' + BYEBOSS_MINT);
+    if (!res.ok) return [];
+    const json = await res.json();
+    // API returns { items: [...] } or array directly depending on version
+    const items = Array.isArray(json) ? json : (json.items || json.streams || []);
+    return items
+      .filter(s => (s.mint === BYEBOSS_MINT) && s.sender === s.recipient && s.recipient === walletStr)
+      .map(parseStream)
+      .filter(Boolean)
+      .filter(s => s.remainingRaw > 0n);
+  } catch (e) {
+    console.warn('fetchUserStreams error', e);
+    return [];
+  }
+}
+
+function parseStream(s) {
+  try {
+    const cliff = Number(s.cliff || s.end || s.start);
+    const deposited = BigInt(s.depositedAmount || s.deposited_amount || s.amount || '0');
+    const withdrawn = BigInt(s.withdrawnAmount || s.withdrawn_amount || '0');
+    const remaining = deposited - withdrawn;
+    const now = Date.now() / 1000;
+    return {
+      id: s.id || s.publicKey || s.address,
+      cliff,
+      start: Number(s.start || s.startTime || 0),
+      depositedRaw: deposited,
+      withdrawnRaw: withdrawn,
+      remainingRaw: remaining,
+      depositedUi: rawToUi(deposited),
+      remainingUi: rawToUi(remaining),
+      claimable: now >= cliff && remaining > 0n,
+      durationDays: cliff && s.start ? Math.round((cliff - Number(s.start)) / 86400) : null,
+    };
+  } catch (e) { return null; }
+}
+
+// ═════════════════════════════════════════════════════════════════
+// RENDER LOCKS
+// ═════════════════════════════════════════════════════════════════
+function renderLocks() {
+  const el = $('locksList');
+  if (!state.walletStr) {
+    el.innerHTML = '<div class="empty">Connect your wallet to see locks</div>';
+    return;
+  }
+  if (state.locks.length === 0) {
+    el.innerHTML = '<div class="empty">No active locks yet. Create your first above ☝️</div>';
+    return;
+  }
+  el.innerHTML = state.locks.map(l => {
+    const c = countdown(l.cliff);
+    const badge = l.claimable
+      ? '<span class="lock-status status-ready">✓ UNLOCKED</span>'
+      : '<span class="lock-status status-locked">🔒 LOCKED</span>';
+    const cdCls = l.claimable ? 'ready' : 'locked';
+    const cdIcon = l.claimable ? '✓' : '⏱';
+    const durLbl = l.durationDays ? l.durationDays + 'd commitment' : '';
+    const claimBtn = l.claimable
+      ? `<button class="claim-btn" data-stream="${escapeHtml(l.id)}" data-amount="${l.remainingRaw.toString()}">💰 Claim ${fmt(l.remainingUi)}</button>`
+      : '';
+    return `<div class="lock-card ${l.claimable ? 'claimable' : ''}">
+      <div class="lock-top">
+        <div class="lock-amount">${fmt(l.depositedUi)} <small>$BYEBOSS</small></div>
+        ${badge}
+      </div>
+      <div class="lock-meta">
+        <span>Unlock: <b>${fmtDate(l.cliff)}</b></span>
+        ${durLbl ? `<span>· <b>${durLbl}</b></span>` : ''}
+      </div>
+      <div class="countdown ${cdCls}"><span>${cdIcon}</span><span>${c.text}</span></div>
+      ${claimBtn}
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('.claim-btn').forEach(btn => {
+    btn.addEventListener('click', () => claim(btn.dataset.stream, btn.dataset.amount));
+  });
+}
+
+// Update countdowns every second
+setInterval(() => {
+  if (state.locks.length > 0) renderLocks();
+}, 1000);
+
+$('refreshLocks').addEventListener('click', refreshUser);
+
+// ═════════════════════════════════════════════════════════════════
+// COPY CA
+// ═════════════════════════════════════════════════════════════════
+$('caCopy').addEventListener('click', () => {
+  navigator.clipboard?.writeText(BYEBOSS_MINT).then(() => toast('✓ Contract address copied', 'success'));
+});
+
+// ═════════════════════════════════════════════════════════════════
+// LOCK FLOW
+// ═════════════════════════════════════════════════════════════════
+$('lockBtn').addEventListener('click', () => {
+  if (!validateForm()) return;
+  const amt = parseFloat($('fAmount').value);
+  const days = state.selectedDays;
+  showConfirmModal(amt, days);
+});
+
+function showConfirmModal(amount, days) {
+  const unlockTs = Date.now() + days * 86400 * 1000;
+  const badgeMap = { 30: '💙 Believer', 90: '💎 Diamond Hands', 180: '🔥 OG Holder', 365: '👑 Legend' };
+
+  const back = document.createElement('div');
+  back.className = 'modal-backdrop';
+  back.innerHTML = `
+    <div class="modal">
+      <div class="big-icon">🔒</div>
+      <h3>Confirm Lock</h3>
+      <div class="modal-summary">
+        <div class="row"><span>Amount</span><b>${fmt(amount)} $BYEBOSS</b></div>
+        <div class="row"><span>Duration</span><b>${days} days</b></div>
+        <div class="row"><span>Badge tier</span><b>${badgeMap[days] || '—'}</b></div>
+        <div class="row"><span>Unlocks on</span><b>${new Date(unlockTs).toLocaleDateString()}</b></div>
+      </div>
+      <div class="modal-warning">
+        ⚠️ Phantom will show you the transaction. Once signed, tokens are locked until <b>${new Date(unlockTs).toLocaleDateString()}</b> — <b>nobody</b> (not you, not Byeboss, not Streamflow) can access them before.
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="mCancel">Cancel</button>
+        <button class="btn-confirm" id="mConfirm">Lock Now</button>
+      </div>
+    </div>`;
+  back.addEventListener('click', e => { if (e.target === back) back.remove(); });
+  document.body.appendChild(back);
+  $('mCancel').onclick = () => back.remove();
+  $('mConfirm').onclick = () => { back.remove(); doLock(amount, days); };
+}
+
+function setStep(n, status) {
+  const el = $('s' + n);
+  if (!el) return;
+  el.classList.remove('pending', 'active', 'done', 'error');
+  el.classList.add(status);
+}
+function resetFlow() { for (let i = 1; i <= 3; i++) setStep(i, 'pending'); }
+
+async function doLock(amount, days) {
+  await sdkReady;
+  if (!solanaClient) { toast('Streamflow SDK not loaded — refresh page', 'err'); return; }
+  const provider = getProvider();
+  if (!provider || !state.walletStr) { toast('Connect Phantom first', 'warn'); return; }
+
+  state.locking = true;
+  $('lockBtn').disabled = true;
+  $('lockBtn').textContent = '⏳ Locking…';
+  resetFlow(); $('flowBox').style.display = 'block';
+
+  try {
+    setStep(1, 'active');
+
+    const rawAmount = uiToRaw(amount);
+    const amountBN = new BN(rawAmount.toString());
+    const nowSec = Math.floor(Date.now() / 1000);
+    const durationSec = days * 86400;
+    const cliffTs = nowSec + durationSec;
+
+    // Token lock criteria: cliffAmount === depositedAmount, non-topup, non-transferable, non-cancelable
+    const streamParams = {
+      recipient: state.walletStr,
+      tokenId: BYEBOSS_MINT,
+      start: nowSec,
+      amount: amountBN,
+      period: durationSec,
+      cliff: cliffTs,
+      cliffAmount: amountBN,
+      amountPerPeriod: amountBN,
+      name: `Byeboss Lock ${days}d`,
+      canTopup: false,
+      cancelableBySender: false,
+      cancelableByRecipient: false,
+      transferableBySender: false,
+      transferableByRecipient: false,
+      automaticWithdrawal: false,
+      withdrawalFrequency: 0,
+      partner: null,
+    };
+
+    const solanaParams = {
+      sender: provider,
+      isNative: false,
+    };
+
+    setStep(1, 'done');
+    setStep(2, 'active');
+
+    const result = await solanaClient.create(streamParams, solanaParams);
+    setStep(2, 'done');
+
+    setStep(3, 'active');
+    const sig = result?.txId || result?.signature || result?.ixs?.[0] || null;
+    if (sig) {
+      try { await pollSignature(sig, 60); } catch (e) { console.warn('poll warn', e); }
+    }
+    setStep(3, 'done');
+
+    toast('✓ Lock created successfully!', 'success');
+    $('fAmount').value = '';
+    state.selectedDays = null;
+    document.querySelectorAll('.duration').forEach(x => x.classList.remove('selected'));
+    document.querySelectorAll('input[name=dur]').forEach(r => r.checked = false);
+    updateUnlockPreview();
+
+    setTimeout(refreshUser, 3000);
+    setTimeout(loadLeaderboard, 4000);
+
+  } catch (err) {
+    console.error('[LOCK ERROR]', err);
+    for (let i = 1; i <= 3; i++) {
+      if ($('s' + i).classList.contains('active')) { setStep(i, 'error'); break; }
+    }
+    const msg = err?.message || String(err);
+    if (/user rejected|rejected the request/i.test(msg)) toast('❌ Transaction rejected', 'warn');
+    else if (/timeout/i.test(msg)) toast('⏱ Timeout — check Solscan', 'warn');
+    else toast('❌ ' + msg.slice(0, 180), 'err');
+  } finally {
+    state.locking = false;
+    $('lockBtn').textContent = '🔒 Lock $ByeBoss';
+    validateForm();
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════
+// CLAIM
+// ═════════════════════════════════════════════════════════════════
+async function claim(streamId, amountRawStr) {
+  await sdkReady;
+  if (!solanaClient) { toast('SDK not loaded', 'err'); return; }
+  const provider = getProvider();
+  if (!provider || !state.walletStr) { toast('Connect wallet first', 'warn'); return; }
+
+  try {
+    toast('⏳ Claiming…', '');
+    const amtBN = new BN(amountRawStr);
+    const withdrawParams = { id: streamId, amount: amtBN };
+    const solanaInteractParams = { invoker: provider, isNative: false };
+
+    const result = await solanaClient.withdraw(withdrawParams, solanaInteractParams);
+    const sig = result?.txId || result?.signature;
+    if (sig) { try { await pollSignature(sig, 60); } catch (e) {} }
+
+    toast('✓ Claimed successfully', 'success');
+    setTimeout(refreshUser, 2500);
+  } catch (err) {
+    console.error('[CLAIM ERROR]', err);
+    const msg = err?.message || String(err);
+    toast('❌ ' + msg.slice(0, 180), 'err');
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════
+// LEADERBOARD
+// ═════════════════════════════════════════════════════════════════
+async function loadLeaderboard() {
+  const el = $('boardList');
+  try {
+    const res = await fetch(STREAMFLOW_API + '?mint=' + BYEBOSS_MINT + '&limit=200');
+    if (!res.ok) throw new Error('API ' + res.status);
+    const json = await res.json();
+    const items = Array.isArray(json) ? json : (json.items || json.streams || []);
+
+    const now = Date.now() / 1000;
+    const byWallet = new Map();
+    for (const raw of items) {
+      if (raw.mint !== BYEBOSS_MINT) continue;
+      if (raw.sender !== raw.recipient) continue; // only self-locks
+      const p = parseStream(raw);
+      if (!p || p.remainingRaw <= 0n) continue;
+      const daysLeft = Math.max(0, (p.cliff - now) / 86400);
+      const score = p.remainingUi * (daysLeft + 1);
+      const wallet = raw.recipient;
+      const cur = byWallet.get(wallet) || { wallet, locked: 0, score: 0, count: 0 };
+      cur.locked += p.remainingUi;
+      cur.score += score;
+      cur.count += 1;
+      byWallet.set(wallet, cur);
+    }
+    const ranked = [...byWallet.values()].sort((a, b) => b.score - a.score).slice(0, 10);
+    if (ranked.length === 0) {
+      el.innerHTML = '<div class="empty">No locks yet — be the first legend 👑</div>';
+      return;
+    }
+    el.innerHTML = ranked.map((r, i) => {
+      const topCls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+      const isYou = state.walletStr === r.wallet;
+      return `<div class="board-row ${topCls} ${isYou ? 'you' : ''}">
+        <div class="board-rank">${i < 3 ? ['🥇','🥈','🥉'][i] : '#' + (i + 1)}</div>
+        <div class="board-addr">${short(r.wallet)} ${isYou ? '<span class="you-tag">YOU</span>' : ''}</div>
+        <div class="board-amount">${fmt(r.locked)} <small>× ${r.count}</small></div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    console.warn('leaderboard error', e);
+    el.innerHTML = '<div class="empty">Leaderboard unavailable (Streamflow API)</div>';
+  }
+}
+loadLeaderboard();
+setInterval(loadLeaderboard, 120000);
+
+// ═════════════════════════════════════════════════════════════════
+// MOBILE MENU
+// ═════════════════════════════════════════════════════════════════
+$('mobileToggle').addEventListener('click', () => $('mobileMenu').classList.toggle('open'));
+
+window.addEventListener('unhandledrejection', ev => {
+  console.warn('Unhandled rejection', ev.reason);
+});
+</script>
+
+</body>
+</html>
