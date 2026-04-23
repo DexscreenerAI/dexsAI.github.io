@@ -69,6 +69,20 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
 .spinner{width:14px;height:14px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
 
 .disclaimer{text-align:center;font-family:var(--mono);font-size:9px;color:var(--text3);padding:20px;line-height:1.6}
+
+/* BURN HISTORY */
+.history-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--text3);margin:24px 0 10px;display:flex;align-items:center;gap:8px}
+.history-title::before{content:'//';color:var(--red);font-weight:800}
+.history-list{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.history-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;transition:border-color .15s}
+.history-row:hover{border-color:var(--red)}
+.history-flame{font-size:14px}
+.history-wallet{color:var(--text);font-weight:600;min-width:88px}
+.history-amount{color:var(--red);font-weight:700;margin-left:auto}
+.history-when{color:var(--text3);font-size:10px;min-width:56px;text-align:right}
+.history-link{color:var(--text3);font-size:13px;text-decoration:none;transition:color .15s}
+.history-link:hover{color:var(--red)}
+.history-empty{text-align:center;color:var(--text3);font-family:var(--mono);font-size:10px;padding:16px}
 </style>
 <style>
 /* === Nav overflow fix — horizontally scroll when links overflow === */
@@ -150,6 +164,12 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
 
   <!-- BURN BUTTON -->
   <button class="burn-btn" id="burnBtn" onclick="burnSelected()" disabled>🔥 BURN SELECTED TOKENS</button>
+
+  <!-- RECENT BURNS -->
+  <div class="history-title">RECENT $BYEBOSS BURNS</div>
+  <div class="history-list" id="burnHistory">
+    <div class="history-empty">Loading recent burns…</div>
+  </div>
 
   <div class="disclaimer">
     ⚠️ Burning tokens is IRREVERSIBLE. This closes the token account and sends the rent (~0.002 SOL per account) back to your wallet. Only burn tokens you're sure are worthless.
@@ -500,6 +520,58 @@ async function burnSelected() {
 
 // Init global burn counter
 updateGlobalBurnCounter();
+
+// ═══════════════════════════════════════════════════════════════
+// RECENT BURNS FEED — hits the bot's /api/burns/recent endpoint
+// ═══════════════════════════════════════════════════════════════
+const BURNS_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/burns/recent?limit=15';
+function fmtAmt(n) {
+  if (!isFinite(n) || n <= 0) return '0';
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return Math.round(n).toString();
+}
+function fmtAgo(ts) {
+  const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+  if (s < 60) return s + 's ago';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  const d = Math.floor(h / 24);
+  return d + 'd ago';
+}
+function shortAddr(a) {
+  if (!a || a.length < 8) return a || '—';
+  return a.slice(0, 4) + '…' + a.slice(-4);
+}
+async function loadBurnHistory() {
+  const host = document.getElementById('burnHistory');
+  if (!host) return;
+  try {
+    const r = await fetch(BURNS_API, { signal: AbortSignal.timeout(10000) });
+    const d = await r.json();
+    const burns = Array.isArray(d?.burns) ? d.burns : [];
+    if (!burns.length) {
+      host.innerHTML = '<div class="history-empty">No burns tracked yet — be the first 🔥</div>';
+      return;
+    }
+    host.innerHTML = burns.map(b => `
+      <div class="history-row">
+        <span class="history-flame">🔥</span>
+        <span class="history-wallet">${shortAddr(b.wallet)}</span>
+        <span class="history-amount">${fmtAmt(b.amount)}</span>
+        <span class="history-when">${fmtAgo(b.ts)}</span>
+        <a class="history-link" href="https://solscan.io/tx/${b.sig}" target="_blank" rel="noopener" title="View on Solscan">↗</a>
+      </div>
+    `).join('');
+  } catch (e) {
+    host.innerHTML = '<div class="history-empty">Couldn\'t load burn history — try again later</div>';
+  }
+}
+loadBurnHistory();
+setInterval(loadBurnHistory, 60000);
 
 // Auto-reconnect
 provider = getProvider();
