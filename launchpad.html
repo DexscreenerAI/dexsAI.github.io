@@ -157,6 +157,52 @@ input:focus, textarea:focus { outline: none; }
   font-size: 14px; z-index: 2;
 }
 
+/* MODE TOGGLE — Self vs Byeboss Hosted */
+.mode-toggle {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-top: 16px;
+}
+.mode-btn {
+  padding: 12px; background: var(--bg2); border: 1.5px solid var(--border);
+  border-radius: 10px; text-align: left; cursor: pointer;
+  transition: all 0.15s; display: flex; flex-direction: column; gap: 2px;
+  font-family: var(--mono);
+}
+.mode-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.mode-btn:not(:disabled):hover { border-color: #3a4a60; background: var(--bg3); }
+.mode-btn.active { border-color: var(--red); background: rgba(255,59,79,0.08); }
+.mode-btn.active[data-mode="hosted"] { border-color: var(--yellow); background: rgba(255,170,0,0.1); }
+.mode-btn .mode-ico { font-size: 18px; }
+.mode-btn .mode-name { font-size: 13px; font-weight: 800; color: var(--text); }
+.mode-btn .mode-price { font-size: 11px; font-weight: 700; color: var(--red); }
+.mode-btn[data-mode="hosted"] .mode-price { color: var(--yellow); }
+.mode-btn .mode-sub { font-size: 10px; color: var(--text3); line-height: 1.3; margin-top: 2px; }
+
+/* T&Cs MODAL */
+.tcs-modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+  z-index: 1100; display: flex; align-items: center; justify-content: center;
+  padding: 20px; animation: fadeIn 0.2s;
+}
+.tcs-inner {
+  background: var(--card); border: 1px solid var(--yellow); border-radius: 14px;
+  padding: 28px; max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto;
+}
+.tcs-inner h3 { font-family: var(--mono); font-size: 18px; font-weight: 800; color: var(--yellow); margin-bottom: 14px; }
+.tcs-inner p { font-size: 13px; color: var(--text); line-height: 1.6; margin-bottom: 10px; }
+.tcs-inner ul { margin: 8px 0 12px 20px; font-size: 12px; color: var(--text2); }
+.tcs-inner li { margin-bottom: 4px; }
+.tcs-inner .tcs-confirm {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px; background: var(--bg2); border-radius: 6px; margin: 12px 0;
+  cursor: pointer; font-size: 12px; color: var(--text);
+}
+.tcs-actions { display: flex; gap: 10px; margin-top: 14px; }
+.tcs-actions button { flex: 1; padding: 11px; border-radius: 8px; font-family: var(--mono); font-weight: 700; font-size: 12px; }
+.tcs-actions .cancel { background: var(--bg3); border: 1px solid var(--border); color: var(--text); }
+.tcs-actions .accept { background: linear-gradient(135deg, var(--yellow), #ff8800); color: #000; border: none; text-transform: uppercase; }
+.tcs-actions .accept:disabled { opacity: 0.4; cursor: not-allowed; background: var(--bg3); color: var(--text3); }
+
 /* COST BOX */
 .cost-box {
   margin-top: 14px; padding: 14px; background: rgba(255,170,0,0.08);
@@ -519,26 +565,49 @@ input:focus, textarea:focus { outline: none; }
 
           </div>
 
-          <div class="cost-box">
+          <!-- MODE TOGGLE — Self vs Byeboss Hosted -->
+          <div class="mode-toggle">
+            <button type="button" class="mode-btn active" data-mode="self" id="modeBtnSelf">
+              <span class="mode-ico">🚀</span>
+              <span class="mode-name">Self-launch</span>
+              <span class="mode-price">0.05 SOL</span>
+              <span class="mode-sub">You are the creator. You keep creator rewards.</span>
+            </button>
+            <button type="button" class="mode-btn" data-mode="hosted" id="modeBtnHosted" disabled title="Loading…">
+              <span class="mode-ico">🏆</span>
+              <span class="mode-name">Byeboss Hosted</span>
+              <span class="mode-price" id="modeHostedPrice">0.03 SOL</span>
+              <span class="mode-sub">Byeboss is creator. Rewards fund the community treasury.</span>
+            </button>
+          </div>
+
+          <div class="cost-box" id="costBoxSelf">
             ⚠️ <strong>Service fee: 0.05 SOL</strong> goes to Byeboss.<br/>
             Pump.fun creation fee: ~0.02 SOL.<br/>
             <strong>Total cost: ~0.07 SOL + optional initial buy.</strong>
           </div>
 
+          <div class="cost-box" id="costBoxHosted" style="display:none;background:rgba(255,170,0,0.09);border-color:rgba(255,170,0,0.3)">
+            🏆 <strong style="color:var(--yellow)">Byeboss Hosted mode.</strong><br/>
+            You pay only <strong id="costBoxHostedAmount">~0.03 SOL</strong> (pump.fun creation) — no Byeboss service fee.<br/>
+            <strong>Byeboss becomes the creator on-chain.</strong> All future pump.fun creator rewards flow to the public Byeboss treasury (sweep history on transparency page).<br/>
+            <small style="color:var(--text3);font-size:10px;margin-top:4px;display:inline-block">Your token will be flagged <span style="color:var(--yellow)">🏆 BYEBOSS BACKED</span> on the feed.</small>
+          </div>
+
           <div class="cost-box" style="background:rgba(0,255,136,0.07);border-color:rgba(0,255,136,0.25);margin-top:10px">
             🔒 <strong style="color:var(--green)">Safety:</strong>
-            Phantom will show the full transaction before signing. <strong>Always verify the SOL amounts match the expected cost above.</strong>
-            We run automatic tx checks (fee payer, signers, ix count) but only your wallet can authorize transfers — never approve a tx that drains more than the amount shown.
+            Phantom will show the full transaction before signing. <strong>Always verify the SOL amount matches the expected cost above.</strong>
+            We run automatic tx checks (fee payer, signers, ix count) but only your wallet can authorize transfers.
           </div>
 
           <button type="button" id="launchBtn" class="launch-btn" disabled>🚀 Launch Token</button>
 
           <div class="flow" id="flowBox" style="display:none">
-            <div class="flow-step pending" id="s1"><span class="dot"></span><span>1. Pay 0.05 SOL fee to Byeboss</span></div>
-            <div class="flow-step pending" id="s2"><span class="dot"></span><span>2. Upload metadata + image to IPFS</span></div>
-            <div class="flow-step pending" id="s3"><span class="dot"></span><span>3. Build token creation transaction</span></div>
-            <div class="flow-step pending" id="s4"><span class="dot"></span><span>4. Sign &amp; broadcast to Solana</span></div>
-            <div class="flow-step pending" id="s5"><span class="dot"></span><span>5. Confirm on-chain</span></div>
+            <div class="flow-step pending" id="s1"><span class="dot"></span><span id="s1text">1. Pay 0.05 SOL fee to Byeboss</span></div>
+            <div class="flow-step pending" id="s2"><span class="dot"></span><span id="s2text">2. Upload metadata + image to IPFS</span></div>
+            <div class="flow-step pending" id="s3"><span class="dot"></span><span id="s3text">3. Build token creation transaction</span></div>
+            <div class="flow-step pending" id="s4"><span class="dot"></span><span id="s4text">4. Sign &amp; broadcast to Solana</span></div>
+            <div class="flow-step pending" id="s5"><span class="dot"></span><span id="s5text">5. Confirm on-chain</span></div>
           </div>
         </form>
       </div>
@@ -610,6 +679,10 @@ const state = {
   image: null,           // File
   imageBytes: 0,
   launching: false,
+  mode: 'self',          // 'self' | 'hosted'
+  hostedReady: false,
+  hostedFee: 0.03,
+  hostedHotAddress: null,
   filters: { hideRugs: false, hideDev5: false, onlyNew: false },
   feedData: [],          // current aggregated list (pump.fun)
   byebossLaunches: [],   // shared launches from backend API
@@ -787,7 +860,176 @@ function showFlow(show) { $('flowBox').style.display = show ? 'block' : 'none'; 
 // ═════════════════════════════════════════════════════════════════
 // LAUNCH FLOW
 // ═════════════════════════════════════════════════════════════════
-$('launchBtn').addEventListener('click', doLaunch);
+$('launchBtn').addEventListener('click', () => {
+  if (state.mode === 'hosted') openHostedTCs();
+  else doLaunch();
+});
+
+// ═════════════════════════════════════════════════════════════════
+// MODE TOGGLE — Self vs Byeboss Hosted
+// ═════════════════════════════════════════════════════════════════
+const HOSTED_API       = 'https://dexscreener-telegram-bot-production.up.railway.app/api/launch-hosted';
+const HOSTED_STATUS_API = HOSTED_API + '/status';
+
+async function loadHostedStatus() {
+  try {
+    const r = await fetch(HOSTED_STATUS_API);
+    if (!r.ok) return;
+    const j = await r.json();
+    state.hostedReady = !!j.ready;
+    state.hostedFee = parseFloat(j.fee) || 0.03;
+    state.hostedHotAddress = j.hotAddress || null;
+    const btn = $('modeBtnHosted');
+    if (state.hostedReady) {
+      btn.disabled = false;
+      btn.removeAttribute('title');
+      $('modeHostedPrice').textContent = state.hostedFee + ' SOL';
+      $('costBoxHostedAmount').textContent = '~' + state.hostedFee + ' SOL';
+    } else {
+      btn.disabled = true;
+      btn.title = 'Byeboss Hosted is not configured yet — coming soon';
+    }
+  } catch (e) { console.warn('hosted status fetch failed', e); }
+}
+loadHostedStatus();
+
+function setMode(mode) {
+  state.mode = mode;
+  $('modeBtnSelf').classList.toggle('active', mode === 'self');
+  $('modeBtnHosted').classList.toggle('active', mode === 'hosted');
+  $('costBoxSelf').style.display = mode === 'self' ? 'block' : 'none';
+  $('costBoxHosted').style.display = mode === 'hosted' ? 'block' : 'none';
+  $('launchBtn').textContent = mode === 'hosted' ? '🏆 Launch (Byeboss Hosted)' : '🚀 Launch Token';
+}
+$('modeBtnSelf').addEventListener('click', () => setMode('self'));
+$('modeBtnHosted').addEventListener('click', () => {
+  if (!state.hostedReady) return;
+  setMode('hosted');
+});
+
+// ═════════════════════════════════════════════════════════════════
+// T&Cs MODAL + HOSTED LAUNCH FLOW
+// ═════════════════════════════════════════════════════════════════
+function openHostedTCs() {
+  if (!validateForm()) return;
+  if (!state.hostedReady) { toast('Hosted mode not configured', 'warn'); return; }
+
+  const back = document.createElement('div');
+  back.className = 'tcs-modal';
+  back.innerHTML = `
+    <div class="tcs-inner">
+      <h3>🏆 Byeboss Hosted launch — terms</h3>
+      <p>By proceeding, you confirm:</p>
+      <ul>
+        <li><b>Byeboss will be the on-chain creator</b> of this token. Your wallet will NOT appear as the creator on pump.fun or Solscan.</li>
+        <li><b>100% of pump.fun creator rewards</b> (trading fee share over the token's life) will flow to the public Byeboss treasury. A signed audit trail is published under <code>/data/sweeps.json</code>.</li>
+        <li>You pay only <b>~${state.hostedFee} SOL</b> (pump.fun creation) + any optional initial buy. No Byeboss service fee.</li>
+        <li>Your initial buy tokens — if you chose any — stay on the Byeboss Hot wallet in this first version (auto-forward to you is TODO). If that's a deal-breaker, use Self-launch instead.</li>
+        <li>Byeboss reserves the right to refuse a launch containing hateful words, obvious scams, clones of existing projects, or any content inconsistent with its public charter.</li>
+        <li>Your token will carry a <span style="color:var(--yellow);font-weight:800">🏆 BYEBOSS BACKED</span> badge on the feed.</li>
+      </ul>
+      <label class="tcs-confirm">
+        <input type="checkbox" id="tcsCheck" />
+        <span>I've read and I accept these terms.</span>
+      </label>
+      <div class="tcs-actions">
+        <button class="cancel" id="tcsCancel">Cancel</button>
+        <button class="accept" id="tcsAccept" disabled>Continue & pay</button>
+      </div>
+    </div>`;
+  document.body.appendChild(back);
+  $('tcsCheck').addEventListener('change', e => { $('tcsAccept').disabled = !e.target.checked; });
+  $('tcsCancel').addEventListener('click', () => back.remove());
+  $('tcsAccept').addEventListener('click', () => {
+    back.remove();
+    doHostedLaunch();
+  });
+}
+
+async function doHostedLaunch() {
+  if (!validateForm()) return;
+  if (!state.hostedReady || !state.hostedHotAddress) { toast('Hosted unavailable', 'warn'); return; }
+  const provider = getProvider();
+  if (!provider || !state.walletPk) { toast('Connect Phantom first', 'warn'); return; }
+
+  state.launching = true;
+  $('launchBtn').disabled = true;
+  $('launchBtn').textContent = '⏳ Processing…';
+
+  // Rebuild flow box with Hosted-specific labels (4 steps instead of 5)
+  $('s1text').textContent = '1. Pay ' + state.hostedFee + ' SOL fee to Byeboss Hot wallet';
+  $('s2text').textContent = '2. Upload metadata + image (via Byeboss backend)';
+  $('s3text').textContent = '3. Byeboss signs + broadcasts the create tx';
+  $('s4text').textContent = '4. Confirm on-chain';
+  $('s5text').textContent = '5. Record on Byeboss feed';
+  resetFlow(); showFlow(true);
+
+  const name = $('fName').value.trim();
+  const symbol = $('fSymbol').value.trim();
+  const description = $('fDesc').value.trim();
+  const twitter = $('fTwitter').value.trim();
+  const telegram = $('fTelegram').value.trim();
+  const website = $('fWebsite').value.trim();
+  const initialBuy = Math.max(0, parseFloat($('fBuy').value) || 0);
+
+  try {
+    // ───────── STEP 1: User pays fee to Hot ─────────
+    setStep(1, 'active');
+    const hotPk = new PublicKey(state.hostedHotAddress);
+    const totalLamports = Math.round((state.hostedFee + initialBuy) * LAMPORTS_PER_SOL);
+    const latest = await connection.getLatestBlockhash('confirmed');
+    const feeTx = new Transaction({ feePayer: state.walletPk, recentBlockhash: latest.blockhash }).add(
+      SystemProgram.transfer({ fromPubkey: state.walletPk, toPubkey: hotPk, lamports: totalLamports })
+    );
+    const { signature: feeSig } = await provider.signAndSendTransaction(feeTx);
+    await pollSignature(feeSig, 45);
+    setStep(1, 'done');
+    toast('✅ Fee paid: ' + shortAddr(feeSig, 6), 'success');
+
+    // ───────── STEP 2-4: Backend handles IPFS + create tx + broadcast ─────────
+    setStep(2, 'active');
+    const imageDataUrl = await new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = ev => resolve(ev.target.result);
+      fr.onerror = reject;
+      fr.readAsDataURL(state.image);
+    });
+    const body = { feeSig, userWallet: state.walletStr, initialBuy, name, symbol, description, twitter, telegram, website, imageDataUrl };
+    setStep(2, 'done');
+    setStep(3, 'active');
+    const res = await fetch(HOSTED_API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.success) throw new Error(j.error || 'Backend error (' + res.status + ')');
+    setStep(3, 'done');
+    setStep(4, 'done');
+    setStep(5, 'active');
+
+    const record = j.record;
+    // Save to local stash so the feed shows immediately
+    saveLaunch({ ...record });
+    fetchGlobalLaunches();
+    renderFeed();
+    renderStats();
+    setStep(5, 'done');
+    showSuccessModal({ mint: record.mint, name: record.name, symbol: record.symbol, signature: record.signature });
+
+  } catch (err) {
+    console.error('[HOSTED LAUNCH ERROR]', err);
+    for (let i = 1; i <= 5; i++) {
+      if ($('s' + i).classList.contains('active')) { setStep(i, 'error'); break; }
+    }
+    const msg = err?.message || String(err);
+    if (/user rejected/i.test(msg)) toast('❌ Transaction rejected', 'warn');
+    else toast('❌ ' + msg.slice(0, 200), 'warn');
+  } finally {
+    state.launching = false;
+    $('launchBtn').textContent = '🏆 Launch (Byeboss Hosted)';
+    validateForm();
+  }
+}
 
 async function doLaunch() {
   if (!validateForm()) return;
@@ -1239,7 +1481,7 @@ function renderByebossCard(b) {
           ${b.signature ? `<span>· <a href="https://solscan.io/tx/${encodeURIComponent(b.signature)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">tx</a></span>` : ''}
         </div>
       </div>
-      <div class="token-badges"><span class="badge gold">🏆 BYEBOSS</span></div>
+      <div class="token-badges">${b.mode === 'hosted' ? '<span class="badge gold">🏆 BYEBOSS BACKED</span>' : '<span class="badge gold">🏆 BYEBOSS</span>'}</div>
     </a>`;
 }
 
