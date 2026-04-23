@@ -1348,6 +1348,27 @@ async function doLock(amount, days) {
       console.log('  start:', startSec, '· cliff:', cliffTs, '· period:', durationSec);
     } catch (e) { /* best-effort logging */ }
 
+    // Pre-flight SOL check — Streamflow needs lamports for metadata rent,
+    // escrow rent, tx fee and possibly ATA creations. Under-funded wallets
+    // return InstructionError::InsufficientFunds from the SystemProgram,
+    // which was the recurring "Insufficient funds in <wallet-pubkey>"
+    // error we kept seeing. ~0.03 SOL is the safe minimum.
+    const MIN_SOL_LAMPORTS = 30_000_000; // 0.03 SOL
+    try {
+      const solRes = await rpc('getBalance', [state.walletStr, { commitment: 'confirmed' }]);
+      const lamports = typeof solRes?.value === 'number' ? solRes.value : 0;
+      const sol = lamports / 1e9;
+      console.log(`[doLock] wallet SOL balance: ${sol.toFixed(4)} SOL (${lamports} lamports)`);
+      if (lamports < MIN_SOL_LAMPORTS) {
+        toast(`💸 Not enough SOL — need at least 0.03 SOL for Streamflow rent + fees. You have ${sol.toFixed(4)} SOL.`, 'err');
+        state.locking = false;
+        $('lockBtn').disabled = false;
+        $('lockBtn').textContent = '🔒 Lock $ByeBoss';
+        setStep(1, 'error');
+        return;
+      }
+    } catch (e) { console.warn('[doLock] SOL balance check failed', e?.message); /* proceed — best effort */ }
+
     const result = await solanaClient.create(streamParams, solanaParams);
     setStep(2, 'done');
 
@@ -1376,18 +1397,31 @@ async function doLock(amount, days) {
     const msg = err?.message || String(err);
     const logs = (err?.logs || []).join(' ');
     const blob = msg + ' ' + logs;
+
+    // The on-chain "Error: Insufficient funds in <pubkey>" log tells us
+    // exactly which account ran out. If the pubkey matches the user's
+    // wallet pubkey, it's a LAMPORTS issue (SOL for rent/fees).
+    // If it matches the user's ATA, it's a tokens issue.
+    const matchInsuf = blob.match(/Insufficient funds in ([A-Za-z0-9]{32,44})/);
+    const offender = matchInsuf ? matchInsuf[1] : null;
+    const isWalletOffender = offender && offender === state.walletStr;
+
     if (/user rejected|rejected the request/i.test(msg)) toast('❌ Transaction rejected', 'warn');
     else if (/timeout/i.test(msg)) toast('⏱ Timeout — check Solscan', 'warn');
     else if (/Custom["':\s]*112|InvalidTimestamps/i.test(blob)) toast('⏱ Timestamp drift — retry in a few seconds', 'warn');
-    // System Program InsufficientFunds (SOL for rent/fees) — 11111111111111111111111111111111
-    else if (/11111111111111111111111111111111[^\n]*(custom program error: 0x1|InsufficientFunds|insufficient lamports)/i.test(blob)
+    // The account that ran out IS the user's wallet pubkey → SOL/lamports issue
+    else if (isWalletOffender || /11111111111111111111111111111111[^\n]*(custom program error: 0x1|InsufficientFunds|insufficient lamports)/i.test(blob)
              || /insufficient lamports|insufficient SOL/i.test(msg)) {
-      toast('💸 Not enough SOL for rent + network fees (need ~0.03 SOL free)', 'warn');
+      toast('💸 Not enough SOL — Streamflow needs ~0.03 SOL for rent + fees. Top up and retry.', 'err');
     }
-    // SPL Token InsufficientFunds — TokenkegQ...
+    // Explicitly flagged as SPL-Token InsufficientFunds
     else if (/TokenkegQ[A-Za-z0-9]+[^\n]*(custom program error: 0x1|InsufficientFunds)/i.test(blob)
-             || /insufficient.*funds|InsufficientFunds/i.test(msg)) {
+             || /Tokenz[A-Za-z0-9]+[^\n]*(custom program error: 0x1|InsufficientFunds)/i.test(blob)) {
       toast(`💸 Not enough $ByeBoss (Streamflow adds ~${state.streamflowFeePct}% fee on top). Tap MAX to auto-fit.`, 'warn');
+    }
+    // Generic InsufficientFunds — most likely SOL given our on-chain pattern
+    else if (/insufficient.*funds|InsufficientFunds/i.test(blob)) {
+      toast('💸 Insufficient funds — usually means not enough SOL for rent + fees (~0.03 SOL minimum).', 'warn');
     }
     else toast('❌ ' + msg.slice(0, 180), 'err');
   } finally {
