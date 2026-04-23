@@ -1035,19 +1035,33 @@ function postLaunchToBackend(r) {
   } catch {}
 }
 
-// Pull the shared launches list and refresh UI
+// Pull the shared launches list and refresh UI.
+// Primary source: Railway /api/launches. Fallback: static /data/launches.json
+// served by GitHub Pages (backend mirrors the JSON on every write).
 async function fetchGlobalLaunches() {
+  let arr = null;
   try {
-    const r = await fetch(LAUNCHES_API + '?limit=100');
-    if (!r.ok) return;
-    const j = await r.json();
-    if (Array.isArray(j?.launches)) {
-      state.byebossLaunches = j.launches;
-      renderStats();
-      renderFeed();
+    const r = await fetch(LAUNCHES_API + '?limit=500');
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j?.launches)) arr = j.launches;
     }
-  } catch (e) {
-    console.warn('Global launches fetch failed', e);
+  } catch (e) {}
+  if (!arr) {
+    try {
+      const r = await fetch('data/launches.json?t=' + Date.now());
+      if (r.ok) {
+        const fallback = await r.json();
+        if (Array.isArray(fallback)) arr = fallback;
+      }
+    } catch (e) {}
+  }
+  if (arr) {
+    state.byebossLaunches = arr;
+    renderStats();
+    renderFeed();
+  } else {
+    console.warn('Global launches: both API and static fallback failed');
   }
 }
 function getFeeTotal() { return parseFloat(localStorage.getItem(FEE_TOTALS_KEY) || '0') || 0; }

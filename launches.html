@@ -861,6 +861,18 @@ async function loadLaunches() {
     }
   } catch (e) { console.warn('Launches API failed', e); }
 
+  // Fallback: if the Railway API is down, pull the mirrored JSON that the
+  // backend commits to dexsAI.github.io/data/launches.json
+  if (api.length === 0) {
+    try {
+      const r = await fetch('data/launches.json?t=' + Date.now());
+      if (r.ok) {
+        const fallback = await r.json();
+        if (Array.isArray(fallback)) api = fallback;
+      }
+    } catch (e) {}
+  }
+
   const local = getLocalLaunches();
   const map = new Map();
   for (const l of api) if (l?.mint) map.set(l.mint, l);
