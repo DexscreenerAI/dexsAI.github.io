@@ -664,6 +664,15 @@ async function loadSDK() {
 
   solanaClient = new ClientClass(RPC_PROXY, ICluster.Mainnet || 'mainnet');
 
+  // Fetch the real Streamflow fee % (partner + treasury) so MAX leaves the
+  // right headroom and we can pre-validate the user's token balance.
+  try {
+    const totalFee = await solanaClient.getTotalFee({ address: STREAMFLOW_PROGRAM_ID }).catch(() => null);
+    if (typeof totalFee === 'number' && totalFee > 0 && totalFee < 20) {
+      state.streamflowFeePct = totalFee;
+    }
+  } catch (e) { /* keep default */ }
+
   sdkBanner.classList.add('ok');
   sdkBanner.innerHTML = '<span>✓ Streamflow SDK ready</span>';
   setTimeout(() => sdkBanner.style.display = 'none', 2500);
@@ -688,6 +697,7 @@ const state = {
   locks: [],            // user's streams for BYEBOSS_MINT
   selectedDays: null,
   locking: false,
+  streamflowFeePct: 1.5, // % — real value fetched from SDK after connect; start with a safe default
 };
 
 // ═════════════════════════════════════════════════════════════════
@@ -897,7 +907,11 @@ $('fAmount').addEventListener('input', () => {
 
 $('maxBtn').addEventListener('click', () => {
   if (!state.walletStr) { toast('Connect wallet first', 'warn'); return; }
-  $('fAmount').value = rawToUi(state.balanceRaw).toString();
+  // Streamflow transfers (amount * (1 + fee%)) — leave headroom so MAX
+  // doesn't overshoot the wallet balance once the service fee is added.
+  const feeFactor = 1 + (state.streamflowFeePct / 100);
+  const usableRaw = state.balanceRaw * 10000n / BigInt(Math.round(feeFactor * 10000));
+  $('fAmount').value = rawToUi(usableRaw).toString();
   updateUnlockPreview();
   validateForm();
 });
@@ -1147,6 +1161,24 @@ async function doLock(amount, days) {
 
     const rawAmount = uiToRaw(amount);
     const amountBN = new BN(rawAmount.toString());
+
+    // Streamflow deducts its fee FROM the sender on top of the deposit:
+    // the on-chain transfer is amount * (1 + fee%). If that exceeds the
+    // wallet balance, the SPL Token program returns InsufficientFunds.
+    // Catch this up front so the user sees a clear reason instead of a
+    // generic RPC error. Use BigInt to avoid float drift.
+    const feeScaled = BigInt(Math.round(state.streamflowFeePct * 100)); // e.g. 150 for 1.5%
+    const requiredRaw = rawAmount + (rawAmount * feeScaled) / 10000n;
+    if (requiredRaw > state.balanceRaw) {
+      const needUi = rawToUi(requiredRaw);
+      const haveUi = rawToUi(state.balanceRaw);
+      toast(`Need ${fmt(needUi)} $ByeBoss (incl. ${state.streamflowFeePct}% Streamflow fee) — you have ${fmt(haveUi)}. Tap MAX to auto-adjust.`, 'warn');
+      state.locking = false;
+      $('lockBtn').disabled = false;
+      $('lockBtn').textContent = '🔒 Lock $ByeBoss';
+      return;
+    }
+
     // Streamflow requires start_time >= chain clock. Add a buffer so the tx
     // doesn't land "in the past" after Phantom signs + tx propagates.
     const START_BUFFER_SEC = 60;
@@ -1215,10 +1247,21 @@ async function doLock(amount, days) {
       if ($('s' + i).classList.contains('active')) { setStep(i, 'error'); break; }
     }
     const msg = err?.message || String(err);
+    const logs = (err?.logs || []).join(' ');
+    const blob = msg + ' ' + logs;
     if (/user rejected|rejected the request/i.test(msg)) toast('❌ Transaction rejected', 'warn');
     else if (/timeout/i.test(msg)) toast('⏱ Timeout — check Solscan', 'warn');
-    else if (/Custom["':\s]*112|InvalidTimestamps/i.test(msg)) toast('⏱ Timestamp drift — retry in a few seconds', 'warn');
-    else if (/insufficient.*funds|InsufficientFunds/i.test(msg)) toast('💸 Not enough SOL/tokens to cover the lock + fees', 'warn');
+    else if (/Custom["':\s]*112|InvalidTimestamps/i.test(blob)) toast('⏱ Timestamp drift — retry in a few seconds', 'warn');
+    // System Program InsufficientFunds (SOL for rent/fees) — 11111111111111111111111111111111
+    else if (/11111111111111111111111111111111[^\n]*(custom program error: 0x1|InsufficientFunds|insufficient lamports)/i.test(blob)
+             || /insufficient lamports|insufficient SOL/i.test(msg)) {
+      toast('💸 Not enough SOL for rent + network fees (need ~0.03 SOL free)', 'warn');
+    }
+    // SPL Token InsufficientFunds — TokenkegQ...
+    else if (/TokenkegQ[A-Za-z0-9]+[^\n]*(custom program error: 0x1|InsufficientFunds)/i.test(blob)
+             || /insufficient.*funds|InsufficientFunds/i.test(msg)) {
+      toast(`💸 Not enough $ByeBoss (Streamflow adds ~${state.streamflowFeePct}% fee on top). Tap MAX to auto-fit.`, 'warn');
+    }
     else toast('❌ ' + msg.slice(0, 180), 'err');
   } finally {
     state.locking = false;
