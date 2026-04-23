@@ -25,8 +25,14 @@
   min-height: 56px;
 }
 .navbar > .pill { flex-shrink: 0; }
-.navbar > .pill.nav-pill-links { flex: 1 1 auto; min-width: 0; overflow: hidden; }
-.navbar > .pill.nav-pill-links .pill-inner { width: 100%; overflow: hidden; }
+.navbar > .pill.nav-pill-links { flex: 1 1 auto; min-width: 0; }
+.navbar > .pill.nav-pill-links .pill-inner { width: 100%; padding: 0 16px; }
+.navbar > .pill.nav-pill-links .nav-links {
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch; max-width: 100%;
+}
+.navbar > .pill.nav-pill-links .nav-links::-webkit-scrollbar { display: none; height: 0; }
+.navbar > .pill.nav-pill-links .nav-links > a { flex-shrink: 0; }
 .navbar > .pill + .pill { margin-left: -8px; }
 .nav-link.accent-red { color: var(--red); font-weight: 700; }
 .nav-link.accent-red:hover { color: #ff4070; }
@@ -1968,6 +1974,25 @@ body::before {
   .scanner-stats { flex-wrap: wrap; gap: 6px; font-size: 10px; }
 }
 </style>
+<style>
+/* === Nav overflow fix — horizontally scroll when links overflow === */
+.nav-links, .top-nav-links, .burn-nav, .trade-nav, .sh-nav-links {
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-wrap: nowrap !important;
+  max-width: 100%;
+  min-width: 0;
+}
+.nav-links::-webkit-scrollbar, .top-nav-links::-webkit-scrollbar,
+.burn-nav::-webkit-scrollbar, .trade-nav::-webkit-scrollbar,
+.sh-nav-links::-webkit-scrollbar { display: none; height: 0; width: 0; }
+.nav-links > a, .top-nav-links > a, .burn-nav > a, .trade-nav > a, .sh-nav-links > a {
+  flex-shrink: 0;
+}
+</style>
+
 </head>
 <body>
 

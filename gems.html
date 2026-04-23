@@ -45,6 +45,25 @@ border-bottom:1px solid #1a2636;backdrop-filter:blur(10px);
 @media(max-width:900px){.nav-links{display:none;}.nav-ham{display:block;}}
 </style>
 
+<style>
+/* === Nav overflow fix — horizontally scroll when links overflow === */
+.nav-links, .top-nav-links, .burn-nav, .trade-nav, .sh-nav-links {
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-wrap: nowrap !important;
+  max-width: 100%;
+  min-width: 0;
+}
+.nav-links::-webkit-scrollbar, .top-nav-links::-webkit-scrollbar,
+.burn-nav::-webkit-scrollbar, .trade-nav::-webkit-scrollbar,
+.sh-nav-links::-webkit-scrollbar { display: none; height: 0; width: 0; }
+.nav-links > a, .top-nav-links > a, .burn-nav > a, .trade-nav > a, .sh-nav-links > a {
+  flex-shrink: 0;
+}
+</style>
+
 </head>
 <body>
 
