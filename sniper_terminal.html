@@ -2298,17 +2298,16 @@ body::before {
       <table class="signal-table" id="soulTable">
         <thead>
           <tr>
-            <th style="width: 28%">Token</th>
-            <th class="num" style="width: 16%">Market Cap</th>
-            <th class="num" style="width: 12%">Signal Xs</th>
-            <th class="num" style="width: 12%">Peak Xs</th>
-            <th class="num" style="width: 12%">Score</th>
-            <th class="num" style="width: 10%">Age</th>
-            <th class="num" style="width: 10%">Status</th>
+            <th style="width: 30%">Token</th>
+            <th class="num" style="width: 20%">Market Cap</th>
+            <th class="num" style="width: 14%">Signal Xs</th>
+            <th class="num" style="width: 14%">Peak Xs</th>
+            <th class="num" style="width: 11%">Age</th>
+            <th class="num" style="width: 11%">Status</th>
           </tr>
         </thead>
         <tbody id="soulSignalsBody">
-          <tr><td colspan="7"><div class="signals-empty">Scanning 24/7 — waiting for the next high-conviction signal…</div></td></tr>
+          <tr><td colspan="6"><div class="signals-empty">Scanning 24/7 — waiting for the next high-conviction signal…</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -4456,7 +4455,7 @@ function renderSoulSignals() {
     sigs = sigs.slice(0, 50);
 
     if (!sigs.length) {
-      body.innerHTML = `<tr><td colspan="7"><div class="signals-empty">No signals in this view yet</div></td></tr>`;
+      body.innerHTML = `<tr><td colspan="6"><div class="signals-empty">No signals in this view yet</div></td></tr>`;
       return;
     }
 
@@ -4494,7 +4493,6 @@ function renderSoulSignals() {
           </td>
           <td class="st-num" data-label="Signal Xs"><span class="st-x">${soulFmtX(s.x)}${isNew ? '<span class="st-x-new">NEW</span>' : ''}</span></td>
           <td class="st-num" data-label="Peak Xs"><span class="st-x" style="color:var(--green)">${soulFmtX(s.peakX)}</span></td>
-          <td class="st-num" data-label="Score">${s.score}/100</td>
           <td class="st-num" data-label="Age">${soulFmtAge(s.ageMs)}</td>
           <td class="st-num" data-label="Status">${statusLbl}</td>
         </tr>
