@@ -387,6 +387,109 @@ body::after {
 
 /* Mobile: swap table for stacked cards */
 .signal-mobile { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SoulTerminal-style vertical signal card — same skeleton as the
+   launchpad feed so the two pages feel continuous.
+   ═══════════════════════════════════════════════════════════════════ */
+.signal-list-wrap {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(0,255,65,0.08);
+  border-radius: 12px;
+  padding: 10px;
+}
+.sn-list { display: flex; flex-direction: column; gap: 10px; }
+.sn-card {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 14px; background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(0,255,65,0.14); border-radius: 14px;
+  color: var(--text); transition: border-color .15s, background .15s;
+  cursor: pointer;
+}
+.sn-card:hover { background: rgba(0,255,65,0.04); border-color: rgba(0,255,65,0.35); }
+.sn-card.archived { opacity: 0.75; }
+
+.sn-top { display: flex; gap: 14px; align-items: flex-start; }
+.sn-avatar {
+  position: relative; width: 68px; height: 68px; border-radius: 14px;
+  border: 1px solid rgba(0,255,65,0.25); overflow: hidden; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-card); font-family: var(--mono); font-weight: 700;
+  color: var(--text-dim); font-size: 22px;
+}
+.sn-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sn-badge-ovl {
+  position: absolute; top: -6px; left: -6px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--bg-panel); border: 1px solid rgba(0,255,65,0.4);
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+}
+
+.sn-head { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.sn-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.sn-ticker {
+  font-family: var(--mono); font-weight: 700; font-size: 18px;
+  color: var(--text); letter-spacing: 0.3px; flex-shrink: 0;
+}
+.sn-name {
+  font-family: var(--mono); font-weight: 400; font-size: 13px; color: var(--text-dim);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-width: 0; flex: 0 1 auto;
+}
+
+.sn-info-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.sn-chip-lg {
+  padding: 5px 10px; border-radius: 8px; font-family: var(--mono);
+  font-size: 11px; color: var(--text-dim);
+  border: 1px solid rgba(0,255,65,0.2); background: transparent;
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.sn-chip-lg.live  { color: var(--green); border-color: rgba(0,255,65,0.4); }
+.sn-chip-lg.archived { color: var(--text-dim); border-color: rgba(255,255,255,0.15); }
+.sn-chip-lg.new {
+  color: var(--green); border-color: var(--green); background: rgba(0,255,65,0.08);
+  font-weight: 700;
+}
+
+.sn-icon-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.sn-icon-btn {
+  width: 34px; height: 34px; border-radius: 8px;
+  border: 1px solid rgba(0,255,65,0.2); background: transparent;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--text-dim); cursor: pointer;
+  text-decoration: none; transition: all .15s; font-family: inherit;
+}
+.sn-icon-btn:hover { border-color: var(--green); color: var(--green); background: rgba(0,255,65,0.05); }
+.sn-icon-btn.pf:hover  { border-color: var(--yellow); color: var(--yellow); }
+.sn-icon-btn.dex:hover { border-color: var(--red); color: var(--red); }
+
+.sn-sep { height: 1px; background: rgba(255,255,255,0.07); border: 0; margin: 0; }
+
+.sn-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sn-stat {
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid rgba(0,255,65,0.15); background: rgba(0,0,0,0.25);
+  min-width: 0;
+}
+.sn-stat-val {
+  font-family: var(--mono); font-weight: 700; font-size: 16px;
+  color: var(--text); display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+}
+.sn-stat-val .delta { font-family: var(--mono); font-weight: 500; font-size: 12px; }
+.sn-stat-val .delta.up { color: var(--green); }
+.sn-stat-val .delta.down { color: var(--red); }
+.sn-stat-val .entry { font-size: 10px; color: var(--text-dim); font-weight: 400; }
+.sn-stat-val .peak  { color: var(--green); }
+.sn-stat-lbl {
+  font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+  margin-top: 4px; letter-spacing: 0.3px;
+}
+
+@media (max-width: 900px) {
+  .sn-stats { grid-template-columns: 1fr; }
+  .sn-avatar { width: 56px; height: 56px; }
+}
+
 @media (max-width: 900px) {
   .signal-table-wrap .signal-table thead { display: none; }
   .signal-table, .signal-table tbody, .signal-table tr, .signal-table td { display: block; }
@@ -2272,22 +2375,10 @@ body::before {
       <div class="kpi-card"><div class="kpi-value" id="kpi7dSignals">—</div><div class="kpi-label">7d Signals</div></div>
     </div>
 
-    <div class="signal-table-wrap">
-      <table class="signal-table" id="soulTable">
-        <thead>
-          <tr>
-            <th style="width: 30%">Token</th>
-            <th class="num" style="width: 20%">Market Cap</th>
-            <th class="num" style="width: 14%">Signal Xs</th>
-            <th class="num" style="width: 14%">Peak Xs</th>
-            <th class="num" style="width: 11%">Age</th>
-            <th class="num" style="width: 11%">Status</th>
-          </tr>
-        </thead>
-        <tbody id="soulSignalsBody">
-          <tr><td colspan="6"><div class="signals-empty">Scanning 24/7 — waiting for the next high-conviction signal…</div></td></tr>
-        </tbody>
-      </table>
+    <div class="signal-list-wrap">
+      <div class="sn-list" id="soulSignalsBody">
+        <div class="signals-empty">Scanning 24/7 — waiting for the next high-conviction signal…</div>
+      </div>
     </div>
 
   </div>
@@ -4362,7 +4453,7 @@ function renderSoulSignals() {
     sigs = sigs.slice(0, 50);
 
     if (!sigs.length) {
-      body.innerHTML = `<tr><td colspan="6"><div class="signals-empty">No signals in this view yet</div></td></tr>`;
+      body.innerHTML = `<div class="signals-empty">No signals in this view yet</div>`;
       return;
     }
 
@@ -4371,42 +4462,75 @@ function renderSoulSignals() {
       const xPctStr = (xChange >= 0 ? '+' : '') + (xChange * 100).toFixed(1) + '%';
       const xPctCls = xChange >= 0 ? 'up' : 'down';
       const isNew = s.status === 'LIVE' && s.x === 1;
-      const logo = s.logoUrl ? `<img src="${esc(s.logoUrl)}" alt="" onerror="this.style.display='none';this.parentNode.innerHTML='🔸'">` : '🔸';
-      const caChip = s.ca ? `<span class="st-sub-chip" onclick="navigator.clipboard.writeText('${esc(s.ca)}');this.textContent='COPIED'" title="Copy contract">${soulShort(s.ca)}</span>` : '';
-      const chartChip = s.dexUrl ? `<a class="st-sub-chip" href="${esc(s.dexUrl)}" target="_blank" rel="noopener">chart ↗</a>` : '';
-      const statusLbl = s.status === 'LIVE' ? '<span style="color:var(--green)">● LIVE</span>' : '<span style="color:var(--text-dim)">ARCHIVED</span>';
+      const initial = ((s.symbol || '?')[0] || '?').toUpperCase();
+      const avatar = s.logoUrl
+        ? `<img src="${esc(s.logoUrl)}" alt="${esc(s.symbol || '')}" onerror="this.parentNode.textContent='${esc(initial)}';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--text-dim)'">`
+        : esc(initial);
+      const pumpUrl = s.ca ? `https://pump.fun/coin/${s.ca}` : '';
+      const dexUrl = s.dexUrl || (s.ca ? `https://dexscreener.com/solana/${s.ca}` : '');
+      const targetUrl = dexUrl || pumpUrl;
+      const statusChipCls = s.status === 'LIVE' ? (isNew ? 'new' : 'live') : 'archived';
+      const statusChipLbl = s.status === 'LIVE' ? (isNew ? '⚡ NEW SIGNAL' : '● LIVE') : '🏁 ARCHIVED';
 
       return `
-        <tr>
-          <td class="st-token-cell" data-label="Token">
-            <div class="st-token">
-              <div class="st-avatar">${logo}</div>
-              <div class="st-meta">
-                <div class="st-ticker-row">
-                  <span class="st-ticker">$${esc(s.symbol)}</span>
-                  <span class="st-name">${esc(s.name || '')}</span>
-                </div>
-                <div class="st-sub">
-                  <span>⏱ ${soulFmtAge(s.ageMs)}</span>
-                  ${caChip}
-                  ${chartChip}
-                </div>
+        <div class="sn-card ${s.status === 'LIVE' ? '' : 'archived'}" onclick="snOpen(event,'${esc(targetUrl)}')">
+          <div class="sn-top">
+            <div class="sn-avatar">${avatar}<span class="sn-badge-ovl">🎯</span></div>
+            <div class="sn-head">
+              <div class="sn-title">
+                <span class="sn-ticker">$${esc(s.symbol)}</span>
+                <span class="sn-name" title="${esc(s.name || '')}">${esc(s.name || '')}</span>
+              </div>
+              <div class="sn-info-row">
+                <span class="sn-chip-lg ${statusChipCls}">${statusChipLbl}</span>
+                <span class="sn-chip-lg">🕐 ${soulFmtAge(s.ageMs)}</span>
+                <span class="sn-chip-lg">📈 peak ${soulFmtX(s.peakX)}</span>
+              </div>
+              <div class="sn-icon-row">
+                ${s.ca ? `<button class="sn-icon-btn sn-copy-ca" data-ca="${esc(s.ca)}" title="Copy contract" onclick="event.preventDefault()">📋</button>` : ''}
+                ${pumpUrl ? `<a class="sn-icon-btn pf"  href="${esc(pumpUrl)}" target="_blank" rel="noopener" title="Pump.fun">🎰</a>` : ''}
+                ${dexUrl  ? `<a class="sn-icon-btn dex" href="${esc(dexUrl)}"  target="_blank" rel="noopener" title="DexScreener">📈</a>` : ''}
+                <a class="sn-icon-btn" href="trade.html" title="Trade">💎</a>
               </div>
             </div>
-          </td>
-          <td class="st-num" data-label="Market Cap">
-            <div class="st-mcap-big">$${soulFmtNum(s.currentMcUsd)}<span class="st-mcap-pct ${xPctCls}">${xPctStr}</span></div>
-            <div class="st-mcap-sub">$${soulFmtNum(s.entryMcUsd)} entry</div>
-          </td>
-          <td class="st-num" data-label="Signal Xs"><span class="st-x">${soulFmtX(s.x)}${isNew ? '<span class="st-x-new">NEW</span>' : ''}</span></td>
-          <td class="st-num" data-label="Peak Xs"><span class="st-x" style="color:var(--green)">${soulFmtX(s.peakX)}</span></td>
-          <td class="st-num" data-label="Age">${soulFmtAge(s.ageMs)}</td>
-          <td class="st-num" data-label="Status">${statusLbl}</td>
-        </tr>
+          </div>
+          <hr class="sn-sep">
+          <div class="sn-stats">
+            <div class="sn-stat">
+              <div class="sn-stat-val">$${soulFmtNum(s.currentMcUsd)} <span class="delta ${xPctCls}">${xPctStr}</span></div>
+              <div class="sn-stat-lbl">Market Cap <span class="entry">· $${soulFmtNum(s.entryMcUsd)} entry</span></div>
+            </div>
+            <div class="sn-stat">
+              <div class="sn-stat-val"><span class="peak">${soulFmtX(s.peakX)}</span></div>
+              <div class="sn-stat-lbl">Peak X · now ${soulFmtX(s.x)}</div>
+            </div>
+          </div>
+        </div>
       `;
     }).join('');
   } catch (e) { console.error('[soul] render error', e); }
 }
+
+// Click the card body (but not icons / inner <a>/<button>) to open the chart.
+function snOpen(ev, url) {
+  if (!url) return;
+  if (ev.target.closest('.sn-icon-row, a, button')) return;
+  window.open(url, '_blank', 'noopener');
+}
+
+// Copy-CA on .sn-copy-ca buttons
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.sn-copy-ca');
+  if (!btn) return;
+  const ca = btn.dataset.ca;
+  if (!ca) return;
+  try {
+    await navigator.clipboard.writeText(ca);
+    const orig = btn.textContent;
+    btn.textContent = '✓';
+    setTimeout(() => { btn.textContent = orig; }, 1000);
+  } catch {}
+});
 
 // Wire tabs
 document.addEventListener('click', (e) => {
