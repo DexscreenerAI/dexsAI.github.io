@@ -406,21 +406,6 @@ body::after {
 .signals-empty { text-align: center; padding: 40px 20px; font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
 .signals-empty::before { content: '//'; color: var(--green); margin-right: 8px; font-family: var(--display); font-weight: 800; }
 
-/* Tiny "show advanced" toggle at the bottom */
-.adv-toggle {
-  display: flex; justify-content: center; margin: 16px 0 8px;
-  gap: 10px;
-}
-.adv-toggle button {
-  background: transparent; border: 1px solid rgba(0,255,65,0.15);
-  color: var(--text-dim); font-family: var(--mono); font-size: 10px;
-  letter-spacing: 1px; padding: 8px 14px; border-radius: 6px;
-  cursor: pointer; transition: all .15s;
-}
-.adv-toggle button:hover { color: var(--green); border-color: var(--green); }
-.adv-hidden .main-grid { display: none !important; }
-.adv-hidden .top-bar { display: none !important; }
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
@@ -696,17 +681,10 @@ body::before {
    ═══════════════════════════════════════════════════════ */
 .main-grid {
   display: grid;
-  grid-template-columns: 280px 1fr 320px;
-  grid-template-rows: auto auto 1fr;
+  grid-template-columns: 320px 1fr;
   gap: 1px;
   background: var(--border);
-  min-height: calc(100vh - 50px);
-}
-
-@media (max-width: 1400px) {
-  .main-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+  padding: 0 16px 40px;
 }
 
 @media (max-width: 900px) {
@@ -2191,7 +2169,7 @@ body::before {
 </style>
 
 </head>
-<body class="adv-hidden">
+<body>
 
 <!-- MATRIX RAIN BACKGROUND -->
 <canvas id="matrix-bg"></canvas>
@@ -2312,100 +2290,32 @@ body::before {
       </table>
     </div>
 
-    <div class="adv-toggle">
-      <button id="advToggleBtn" onclick="toggleAdvancedView()">Show advanced trader view ▾</button>
-    </div>
   </div>
 </main>
 
 <!-- ═══════════════════════════════════════════════════════
-     MAIN GRID (advanced / legacy trader view — hidden by default)
+     WATCHLIST + ACTIVITY LOG — always visible under the signals table
      ═══════════════════════════════════════════════════════ -->
 <div class="main-grid">
-
-  <!-- CONTROLS ROW -->
-  <div class="controls-row">
-    <button class="ctrl-btn primary" id="startBtn" style="display:none">▶ START</button>
-    <span class="ctrl-btn" style="cursor:default;border-color:var(--green);color:var(--green);background:rgba(0,255,128,0.08)">🟢 LIVE · 24/7</span>
-    <button class="ctrl-btn" id="statsBtn">📊 STATS</button>
-    <button class="ctrl-btn" id="cacheBtn">↻ CACHE</button>
-    <button class="ctrl-btn" id="exportBtn">↑ EXPORT</button>
-    <button class="ctrl-btn warning" id="closeAllBtn">⚠ CLOSE ALL</button>
-    <span id="scanCounter" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#ff3b4f;letter-spacing:1px;padding:8px 14px;border:1px solid rgba(255,59,79,0.2);border-radius:8px;background:rgba(255,59,79,0.06)">SCAN: 0</span>
-    <span id="pnlBig" style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:800;color:#ff1744;letter-spacing:1px;padding:8px 16px;border:1px solid rgba(255,23,68,0.25);border-radius:8px;background:rgba(255,23,68,0.06)">P&L: $0</span>
-    <span id="uptimeBig" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#b388ff;letter-spacing:1px;padding:8px 14px;border:1px solid rgba(179,136,255,0.25);border-radius:8px;background:rgba(179,136,255,0.06)">UPTIME: --</span>
-  </div>
-  
-  <!-- SCANNER STATUS -->
-  <div class="scanner-status-bar">
-    <div class="scanner-info">
-      <div class="scanner-dot" id="scannerDot"></div>
-      <span class="scanner-text" id="scannerText">Engine live · scanning 24/7</span>
-    </div>
-    <div class="scanner-stats">
-      <span class="scanner-stat">Scanned: <span id="scannedCount">0</span></span>
-      <span class="scanner-stat">Opps: <span id="oppsCount">0</span></span>
-      <span class="scanner-stat">Cache: <span id="cacheCount">0</span></span>
-      <span class="scanner-stat">Last: <span id="lastScan">--:--</span></span>
-    </div>
-  </div>
-  
-  <!-- LEFT COLUMN: WATCHLIST -->
+  <!-- LEFT: WATCHLIST -->
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title">👁 WATCHLIST</span>
       <span class="panel-badge cyan" id="watchlistBadge">0</span>
     </div>
-    <div class="panel-content" id="watchlistContainer" style="max-height:350px;overflow-y:auto;">
+    <div class="panel-content" id="watchlistContainer" style="max-height:420px;overflow-y:auto;">
       <div class="empty"><div class="empty-icon">👁</div><div class="empty-text">NO TOKENS WATCHED</div></div>
     </div>
   </div>
 
-  <!-- CENTER: POSITIONS - 2 columns -->
-  <div class="panel" style="grid-row: span 2;">
-    <div class="panel-header">
-      <span class="panel-title">ACTIVE POSITIONS</span>
-      <span class="panel-badge green" id="positionsBadge">0 OPEN</span>
-    </div>
-    <div class="panel-content" id="positionsContainer" style="display:flex;gap:12px;">
-      <div style="flex:1;min-width:0;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#ff1744;letter-spacing:1px;padding:6px 0;border-bottom:1px solid rgba(255,23,68,0.2);margin-bottom:8px;">▲ WINNING <span id="winCount" style="opacity:0.6">0</span></div>
-        <div id="winningGrid">
-          <div class="empty"><div class="empty-icon">📈</div><div class="empty-text">No winners</div></div>
-        </div>
-      </div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#ff3b4f;letter-spacing:1px;padding:6px 0;border-bottom:1px solid rgba(255,59,79,0.2);margin-bottom:8px;">▼ LOSING <span id="loseCount" style="opacity:0.6">0</span></div>
-        <div id="losingGrid">
-          <div class="empty"><div class="empty-icon">📉</div><div class="empty-text">No losers</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- RIGHT: TRADE HISTORY -->
-  <div class="panel">
-    <div class="panel-header">
-      <span class="panel-title">TRADE HISTORY</span>
-      <span class="panel-badge yellow" id="historyBadge">0</span>
-    </div>
-    <div class="panel-content" id="historyContainer">
-      <div class="empty">
-        <div class="empty-icon">📜</div>
-        <div class="empty-text">NO TRADES YET</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- BOTTOM: ACTIVITY LOG -->
+  <!-- RIGHT: ACTIVITY LOG -->
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title">ACTIVITY LOG</span>
       <span class="panel-badge cyan">LIVE</span>
     </div>
-    <div class="panel-content" id="logContainer"></div>
+    <div class="panel-content" id="logContainer" style="max-height:420px;overflow-y:auto;"></div>
   </div>
-
 </div>
 
 <!-- SETTINGS MODAL -->
@@ -2732,18 +2642,18 @@ async function pollServerStatus() {
     }
     if ($('uptimeBig')) $('uptimeBig').textContent = 'UPTIME: ' + (state.uptime || '--');
 
-    // Update status badges
-    if (state.isRunning) {
-      $('modeBadge').textContent = 'LIVE';
-      $('modeBadge').className = 'status-badge live';
-      $('scannerDot').classList.add('active');
-      $('startBtn').textContent = '⏹ STOP';
-    } else {
-      $('modeBadge').textContent = 'STOPPED';
-      $('modeBadge').className = 'status-badge stopped';
-      $('scannerDot').classList.remove('active');
-      $('startBtn').textContent = '▶ START';
+    // Update status badges (guard against removed legacy elements)
+    if ($('modeBadge')) {
+      if (state.isRunning) {
+        $('modeBadge').textContent = 'LIVE';
+        $('modeBadge').className = 'status-badge live';
+      } else {
+        $('modeBadge').textContent = 'STOPPED';
+        $('modeBadge').className = 'status-badge stopped';
+      }
     }
+    if ($('scannerDot')) $('scannerDot').classList.toggle('active', !!state.isRunning);
+    if ($('startBtn')) $('startBtn').textContent = state.isRunning ? '⏹ STOP' : '▶ START';
 
     updateUI();
     renderPositions();
@@ -4293,8 +4203,10 @@ function renderWatchlist() {
 
 function renderHistory() {
   const container = $('historyContainer');
-  $('historyBadge').textContent = history.length;
-  
+  const badge = $('historyBadge');
+  if (badge) badge.textContent = history.length;
+  if (!container) return; // legacy trader view removed
+
   if (history.length === 0) {
     container.innerHTML = '<div class="empty"><div class="empty-icon">📜</div><div class="empty-text">NO TRADES YET</div></div>';
     return;
@@ -4327,13 +4239,6 @@ function renderHistory() {
 // No trading logic is touched.
 // ═══════════════════════════════════════════════════════
 let soulActiveTab = 'all';
-
-function toggleAdvancedView() {
-  const adv = !document.body.classList.contains('adv-hidden');
-  document.body.classList.toggle('adv-hidden');
-  const btn = document.getElementById('advToggleBtn');
-  if (btn) btn.textContent = adv ? 'Show advanced trader view ▾' : 'Hide advanced trader view ▴';
-}
 
 function soulFmtNum(n) {
   if (!isFinite(n) || n <= 0) return '0';
@@ -4747,14 +4652,7 @@ renderPositions();
 renderHistory();
 renderPnlChart();
 
-// Bind buttons (avoid inline onclick which fails if script has errors above)
-try {
-  $('startBtn').onclick = function() { serverStartStop(); };
-  $('statsBtn').onclick = function() { openStats(); };
-  $('cacheBtn').onclick = function() { clearCache(); };
-  $('exportBtn').onclick = function() { exportData(); };
-  $('closeAllBtn').onclick = function() { closeAllPositions(); };
-} catch(e) { console.error('Button bind error:', e); }
+// Legacy trader-view buttons are gone; nothing to bind here.
 
 // Auto-connect to server
 pollServerStatus();
