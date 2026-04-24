@@ -644,12 +644,29 @@ async function buyToken(tokenMint, solAmount) {
     const swap = await swapRes.json();
     if (swap.error) throw new Error(swap.error);
 
-    // 3. Deserialize, sign via Phantom, send
+    // 3. Deserialize, sign via Phantom, send, AND wait for on-chain
+    //    confirmation. skipPreflight:true was masking "insufficient SOL
+    //    for fees" errors — the signature existed but the tx reverted
+    //    on-chain and the position was still recorded. We now flip
+    //    skipPreflight to false AND confirmTransaction so a revert
+    //    throws and the caller's result is null.
     const txBuf = Uint8Array.from(atob(swap.swapTransaction), c => c.charCodeAt(0));
     const tx = _web3.VersionedTransaction.deserialize(txBuf);
     const signed = await provider.signTransaction(tx);
     const conn = new _web3.Connection(RPC_URL);
-    const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: true });
+    const latest = await conn.getLatestBlockhash('confirmed');
+    const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: false });
+
+    addLog(`⏳ BUY $${tokenMint.slice(0,6)}... submitted — confirming ${sig.slice(0,12)}...`);
+    const conf = await conn.confirmTransaction({
+      signature: sig,
+      blockhash: latest.blockhash,
+      lastValidBlockHeight: latest.lastValidBlockHeight,
+    }, 'confirmed');
+    if (conf?.value?.err) {
+      const errStr = typeof conf.value.err === 'string' ? conf.value.err : JSON.stringify(conf.value.err);
+      throw new Error(`On-chain revert: ${errStr.slice(0, 120)}`);
+    }
 
     addLog(`✅ BUY $${tokenMint.slice(0,6)}... — tx: ${sig.slice(0,12)}...`);
     await updateBalance();
@@ -657,7 +674,11 @@ async function buyToken(tokenMint, solAmount) {
 
   } catch (e) {
     console.error('Buy failed:', e);
-    addLog(`❌ BUY FAILED: ${e.message}`);
+    // Surface clearer message for the common "not enough SOL for fees" shape
+    const msg = /insufficient|0x1\b|InsufficientFunds/i.test(e.message || '')
+      ? 'Not enough SOL for fees (~0.01 SOL needed on top of your buy size)'
+      : (e.message || 'unknown');
+    addLog(`❌ BUY FAILED: ${msg}`);
     return null;
   }
 }
@@ -683,18 +704,36 @@ async function sellToken(tokenMint, tokenAmount) {
     const swap = await swapRes.json();
     if (swap.error) throw new Error(swap.error);
 
+    // Same confirm-on-chain pattern as buyToken — otherwise a reverted
+    // swap (insufficient fees / slippage / etc.) silently flips to a
+    // "success" path and corrupts tradeHistory.
     const txBuf = Uint8Array.from(atob(swap.swapTransaction), c => c.charCodeAt(0));
     const tx = _web3.VersionedTransaction.deserialize(txBuf);
     const signed = await provider.signTransaction(tx);
     const conn = new _web3.Connection(RPC_URL);
-    const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: true });
+    const latest = await conn.getLatestBlockhash('confirmed');
+    const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: false });
+
+    addLog(`⏳ SELL submitted — confirming ${sig.slice(0,12)}...`);
+    const conf = await conn.confirmTransaction({
+      signature: sig,
+      blockhash: latest.blockhash,
+      lastValidBlockHeight: latest.lastValidBlockHeight,
+    }, 'confirmed');
+    if (conf?.value?.err) {
+      const errStr = typeof conf.value.err === 'string' ? conf.value.err : JSON.stringify(conf.value.err);
+      throw new Error(`On-chain revert: ${errStr.slice(0, 120)}`);
+    }
 
     addLog(`✅ SELL — tx: ${sig.slice(0,12)}...`);
     await updateBalance();
     return { signature: sig, outAmount: quote.outAmount };
   } catch (e) {
     console.error('Sell failed:', e);
-    addLog(`❌ SELL FAILED: ${e.message}`);
+    const msg = /insufficient|0x1\b|InsufficientFunds/i.test(e.message || '')
+      ? 'Not enough SOL for fees'
+      : (e.message || 'unknown');
+    addLog(`❌ SELL FAILED: ${msg}`);
     return null;
   }
 }
