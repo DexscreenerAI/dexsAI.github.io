@@ -414,6 +414,25 @@ input:focus, textarea:focus { outline: none; }
 .genesis-socials a.web:hover { color: var(--green); border-color: var(--green); }
 .genesis-socials a.pf:hover  { color: var(--yellow); border-color: var(--yellow); }
 .genesis-socials a.dex:hover { color: var(--red); border-color: var(--red); }
+
+/* Same visual style for every pump.fun card in the Live Feed so the
+   layout is consistent with the Byeboss genesis / launched cards. */
+.token-socials { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.token-socials a {
+  padding: 3px 7px; font-family: var(--mono); font-size: 10px; font-weight: 700;
+  border-radius: 5px; background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text2); transition: all 0.15s;
+  display: inline-flex; align-items: center; gap: 3px; text-decoration: none;
+}
+.token-socials a:hover { background: var(--bg3); transform: translateY(-1px); }
+.token-socials a.tg:hover  { color: #2aabee; border-color: #2aabee; }
+.token-socials a.tw:hover  { color: #fff; border-color: #fff; }
+.token-socials a.dc:hover  { color: #5865f2; border-color: #5865f2; }
+.token-socials a.web:hover { color: var(--green); border-color: var(--green); }
+.token-socials a.pf:hover  { color: var(--yellow); border-color: var(--yellow); }
+.token-socials a.dex:hover { color: var(--red); border-color: var(--red); }
+.token-card .genesis-ca { margin-top: 6px; display: inline-flex; }
+
 .token-logo {
   width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
   background: var(--bg3); display: flex; align-items: center; justify-content: center;
@@ -1409,6 +1428,34 @@ function renderPumpCard(p) {
     ? `<img class="token-logo" src="${escapeHtml(logo)}" alt="" onerror="this.outerHTML='<div class=token-logo>${escapeHtml(sym[0])}</div>'" />`
     : `<div class="token-logo">${escapeHtml(sym[0] || '?')}</div>`;
 
+  // Socials & websites from DexScreener info payload — render same as
+  // the Byeboss genesis card so every token in the feed looks uniform.
+  const socials = Array.isArray(p.info?.socials) ? p.info.socials : [];
+  const websites = Array.isArray(p.info?.websites) ? p.info.websites : [];
+  const twitter = socials.find(s => (s.type || '').toLowerCase() === 'twitter')?.url;
+  const telegram = socials.find(s => (s.type || '').toLowerCase() === 'telegram')?.url;
+  const discord = socials.find(s => (s.type || '').toLowerCase() === 'discord')?.url;
+  const website = websites[0]?.url || websites[0];
+  const pumpUrl = mint ? `https://pump.fun/coin/${mint}` : '';
+  const dexUrl = p.url || (mint ? `https://dexscreener.com/solana/${mint}` : '');
+
+  const socialsHtml = `
+    <div class="token-socials" onclick="event.stopPropagation()">
+      ${telegram ? `<a class="tg" href="${escapeHtml(telegram)}" target="_blank" rel="noopener" title="Telegram">💬</a>` : ''}
+      ${twitter  ? `<a class="tw" href="${escapeHtml(twitter)}"  target="_blank" rel="noopener" title="Twitter">𝕏</a>` : ''}
+      ${discord  ? `<a class="dc" href="${escapeHtml(discord)}"  target="_blank" rel="noopener" title="Discord">🎮</a>` : ''}
+      ${website  ? `<a class="web" href="${escapeHtml(website)}" target="_blank" rel="noopener" title="Website">🌐</a>` : ''}
+      ${pumpUrl  ? `<a class="pf"  href="${escapeHtml(pumpUrl)}"  target="_blank" rel="noopener" title="Pump.fun">🎰</a>` : ''}
+      ${dexUrl   ? `<a class="dex" href="${escapeHtml(dexUrl)}"   target="_blank" rel="noopener" title="DexScreener">📈</a>` : ''}
+    </div>`;
+
+  const caShort = mint ? (mint.slice(0, 5) + '…' + mint.slice(-5)) : '';
+  const caPillHtml = mint
+    ? `<div class="genesis-ca" title="Copy contract" data-ca="${escapeHtml(mint)}" onclick="event.stopPropagation()">
+         <code>${escapeHtml(caShort)}</code><span>📋</span>
+       </div>`
+    : '';
+
   return `
     <a class="token-card" href="${escapeHtml(p.url || ('https://pump.fun/coin/' + mint))}" target="_blank" rel="noopener">
       ${logoHtml}
@@ -1421,8 +1468,9 @@ function renderPumpCard(p) {
         <div class="token-line2">
           <span>MC <b>$${fmt(mc)}</b></span>
           <span>· Vol24h <b>$${fmt(vol24)}</b></span>
-          <span>· <b>${shortAddr(mint)}</b></span>
         </div>
+        ${caPillHtml}
+        ${socialsHtml}
       </div>
       <div class="token-badges">${badgeHtml || '<span class="badge warn">⏳ Checking</span>'}</div>
     </a>`;
