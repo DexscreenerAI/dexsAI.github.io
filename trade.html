@@ -7,18 +7,133 @@
 <link rel="icon" type="image/png" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ═══════════════════════════════════════════════════════
+   NAVBAR — canonical block. Self-contained, uses its own
+   --nav-* vars so it renders identically on pages that
+   don't define the site-wide palette.
+   ═══════════════════════════════════════════════════════ */
+.navbar {
+  --nav-bg: rgba(5, 6, 8, 0.88);
+  --nav-border: rgba(0, 255, 65, 0.12);
+  --nav-panel: #0d1117;
+  --nav-text: #e6edf3;
+  --nav-muted: rgba(255, 255, 255, 0.55);
+  --nav-cyan: #00d1ff;
+  --nav-green: #00ff80;
+  --nav-red: #ff3b4f;
+  --nav-purple: #b388ff;
+  --nav-font: 'JetBrains Mono', 'Courier New', monospace;
+  --nav-display: 'Orbitron', 'JetBrains Mono', monospace;
+
+  position: fixed; top: 0; left: 0; right: 0;
+  background: var(--nav-bg);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--nav-border);
+  display: flex; align-items: center; justify-content: flex-start;
+  gap: 0; padding: 8px 16px; z-index: 1000; min-height: 56px;
+}
+.navbar > .pill { flex-shrink: 0; }
+.navbar > .pill.nav-pill-links { flex: 1 1 auto; min-width: 0; }
+.navbar > .pill.nav-pill-links .pill-inner { width: 100%; padding: 0 16px; }
+.navbar > .pill.nav-pill-links .nav-links {
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch; max-width: 100%;
+}
+.navbar > .pill.nav-pill-links .nav-links::-webkit-scrollbar { display: none; height: 0; }
+.navbar > .pill.nav-pill-links .nav-links > a { flex-shrink: 0; }
+.navbar > .pill + .pill { margin-left: -8px; }
+
+.navbar .nav-logo {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; color: #fff;
+  font-family: var(--nav-font); font-size: 13px; font-weight: 700; letter-spacing: 1px;
+}
+.navbar .nav-logo img { width: 28px; height: 28px; border-radius: 6px; }
+
+.navbar .nav-links { display: flex; align-items: center; gap: 24px; }
+
+.navbar .nav-link {
+  color: var(--nav-muted); text-decoration: none;
+  font-family: var(--nav-font); font-size: 11px; font-weight: 500; letter-spacing: 0.5px;
+  transition: color .15s; white-space: nowrap;
+}
+.navbar .nav-link:hover { color: var(--nav-cyan); }
+.navbar .nav-link.active { color: var(--nav-cyan); }
+
+.navbar .nav-link.accent-red    { color: var(--nav-red);    font-weight: 700; }
+.navbar .nav-link.accent-red:hover { color: #ff4070; }
+.navbar .nav-link.accent-cyan   { color: var(--nav-cyan);   font-weight: 700; }
+.navbar .nav-link.accent-cyan:hover { color: #40f8ff; }
+.navbar .nav-link.accent-purple { color: var(--nav-purple); font-weight: 700; }
+.navbar .nav-link.accent-purple:hover { color: #d040ff; }
+
+.navbar .nav-socials { display: flex; gap: 12px; align-items: center; }
+.navbar .nav-social {
+  color: var(--nav-muted); text-decoration: none; font-size: 16px; transition: color .15s;
+}
+.navbar .nav-social:hover { color: var(--nav-cyan); }
+
+/* Angled pill wrapper */
+.navbar .pill {
+  position: relative; display: inline-flex; align-items: center;
+  height: 44px; padding: 0;
+  background: linear-gradient(180deg, rgba(0,255,65,0.04), rgba(0,255,65,0));
+  clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 100%, 0 100%);
+  border: 0;
+}
+.navbar .pill::before {
+  content: ''; position: absolute; inset: 0;
+  clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 100%, 0 100%);
+  background:
+    linear-gradient(var(--nav-panel), var(--nav-panel)) padding-box,
+    linear-gradient(180deg, rgba(0,240,255,0.35), rgba(0,255,65,0.15)) border-box;
+  border: 1px solid transparent; z-index: 0;
+}
+.navbar .pill-inner {
+  position: relative; z-index: 1; display: inline-flex; align-items: center;
+  gap: 18px; padding: 0 22px; height: 44px; white-space: nowrap;
+}
+.navbar .pill-reverse { clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 16px 100%); }
+.navbar .pill-reverse::before { clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 16px 100%); }
+
+.navbar .font-display { font-family: var(--nav-display); letter-spacing: 2px; }
+
+/* Mobile menu */
+.mobile-menu-btn {
+  display: none; background: none; border: 1px solid var(--nav-border);
+  color: var(--nav-text); font-size: 14px; cursor: pointer;
+  padding: 6px 10px; border-radius: 4px; margin-left: 8px;
+}
+.mobile-menu {
+  display: none; position: fixed; top: 72px; left: 0; right: 0;
+  background: var(--nav-panel); border-bottom: 1px solid var(--nav-border);
+  padding: 8px; z-index: 999; flex-direction: column; gap: 2px;
+  max-height: 70vh; overflow-y: auto;
+}
+.mobile-menu.open { display: flex; }
+.mobile-menu a {
+  color: var(--nav-text); text-decoration: none; font-size: 11px;
+  padding: 10px 12px; border-radius: 4px; transition: background 0.1s;
+  font-family: var(--nav-font);
+}
+.mobile-menu a:hover { background: rgba(255,255,255,0.04); }
+.mobile-menu a.active { color: var(--nav-cyan); background: rgba(0,209,255,0.1); }
+
+@media (max-width: 900px) {
+  .navbar .nav-links { display: none; }
+  .mobile-menu-btn { display: block; }
+}
+
+/* Reserve space under the fixed navbar on every page. Pages that already
+   set their own top padding can keep it; the nav is 56-72px tall. */
+body { padding-top: 72px; }
+
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-height:100vh}
 :root{--bg:#060a10;--bg2:#0b1018;--bg3:#101822;--card:#111a26;--border:#1a2636;--red:#ff3b4f;--red2:#ff1744;--green:#00ff88;--yellow:#ffaa00;--text:#dfe4ed;--text2:rgba(255,255,255,0.5);--text3:rgba(255,255,255,0.25);--mono:'JetBrains Mono',monospace}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* NAV */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(6,10,16,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(10px)}
-.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-family:var(--mono);font-weight:700;font-size:13px}
-.nav-logo img{height:28px;border-radius:6px}
-.nav-right{display:flex;align-items:center;gap:12px}
 
 /* WALLET BTN */
 .wallet-btn{padding:8px 16px;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;border:none}
@@ -129,62 +244,76 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
   .signal-data{grid-template-columns:repeat(2,1fr)}
   .config-row{flex-wrap:wrap}
 }
-@media(max-width:900px){.trade-nav{display:none!important}}
-</style>
-<style>
-/* === Nav overflow fix — horizontally scroll when links overflow === */
-.nav-links, .top-nav-links, .burn-nav, .trade-nav, .sh-nav-links {
-  overflow-x: auto !important;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  flex-wrap: nowrap !important;
-  max-width: 100%;
-  min-width: 0;
-}
-.nav-links::-webkit-scrollbar, .top-nav-links::-webkit-scrollbar,
-.burn-nav::-webkit-scrollbar, .trade-nav::-webkit-scrollbar,
-.sh-nav-links::-webkit-scrollbar { display: none; height: 0; width: 0; }
-.nav-links > a, .top-nav-links > a, .burn-nav > a, .trade-nav > a, .sh-nav-links > a {
-  flex-shrink: 0;
-}
 </style>
 
 </head>
 <body>
 
 <!-- NAV -->
-<nav class="nav">
-  <a href="./index.html" class="nav-logo">
-    <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="">
-    $ByeBoss
-  </a>
-  <div class="trade-nav" style="display:flex;gap:24px">
-    <a href="./index.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">App</a>
-    <a href="./gems.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Gems</a>
-    <a href="./sniper_terminal.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Sniper</a>
-    <a href="./og-detector.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">OG Detector</a>
-    <a href="./shazam_crypto.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Shazam</a>
-    <a href="./promote.html" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none">Promote</a>
-    <a href="./launchpad.html" style="font-family:var(--mono);font-size:11px;color:#ff3b4f;text-decoration:none;font-weight:700">🚀 Launchpad</a>
-    <a href="./launches.html" style="font-family:var(--mono);font-size:11px;color:#ff3b4f;text-decoration:none;font-weight:700">📊 Launches</a>
-    <a href="./lock.html" style="font-family:var(--mono);font-size:11px;color:#00d1ff;text-decoration:none;font-weight:700">🔒 Lock</a>
-    <a href="./burn.html" style="font-family:var(--mono);font-size:11px;color:#ff3b4f;text-decoration:none;font-weight:700">🔥 Burn</a>
-    <a href="./trade.html" style="font-family:var(--mono);font-size:11px;color:#ff3b4f;text-decoration:none;font-weight:700">💎 Trade</a>
-    <a href="./byeboss.html" style="font-family:var(--mono);font-size:11px;color:#a78bfa;text-decoration:none;font-weight:700">📖 Docs</a>
-    <a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank" style="font-family:var(--mono);font-size:11px;color:#ff3b4f;text-decoration:none;font-weight:700">📈 Chart</a>
-  </div>
-  <div class="nav-right">
-    <a href="https://t.me/SalaryIsScam" target="_blank" style="color:rgba(255,255,255,0.25);text-decoration:none;font-size:16px">💬</a>
-    
-    <button class="wallet-btn connect" id="walletBtn" onclick="connectWallet()">
-      🔌 Connect Phantom
-    </button>
-    <button class="wallet-btn" id="disconnectBtn" onclick="disconnectWallet()" style="background:none;border:1px solid var(--border);color:var(--red);font-size:11px;padding:6px 12px">
-      Disconnect
-    </button>
-  </div>
+<nav class="navbar">
+  <span class="pill nav-pill-logo">
+    <span class="pill-inner">
+      <a href="./index.html" class="nav-logo">
+        <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="Logo">
+        <span class="font-display">$ByeBoss</span>
+      </a>
+    </span>
+  </span>
+
+  <span class="pill pill-reverse nav-pill-links">
+    <span class="pill-inner">
+      <div class="nav-links">
+        <a href="./index.html" class="nav-link"                 data-nav="app">App</a>
+        <a href="./gems.html" class="nav-link"                  data-nav="gems">Gems</a>
+        <a href="./sniper_terminal.html" class="nav-link"       data-nav="sniper">Sniper</a>
+        <a href="./og-detector.html" class="nav-link"           data-nav="og">OG Detector</a>
+        <a href="./shazam_crypto.html" class="nav-link"         data-nav="shazam">Shazam</a>
+        <a href="./promote.html" class="nav-link"               data-nav="promote">Promote</a>
+        <a href="./launchpad.html" class="nav-link accent-red"  data-nav="launchpad">🚀 Launchpad</a>
+        <a href="./launches.html" class="nav-link accent-red"   data-nav="launches">📊 Launches</a>
+        <a href="./lock.html" class="nav-link accent-cyan"      data-nav="lock">🔒 Lock</a>
+        <a href="./burn.html" class="nav-link accent-red"       data-nav="burn">🔥 Burn</a>
+        <a href="./trade.html" class="nav-link accent-red active" data-nav="trade">💎 Trade</a>
+        <a href="./byeboss.html" class="nav-link accent-purple" data-nav="docs">📖 Docs</a>
+        <a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank" class="nav-link accent-red">📈 Chart</a>
+      </div>
+    </span>
+  </span>
+
+  <span class="pill nav-pill-socials">
+    <span class="pill-inner">
+      <div class="nav-socials">
+        <a href="https://t.me/SalaryIsScam" target="_blank" class="nav-social" title="Telegram">💬</a>
+      </div>
+    </span>
+  </span>
+
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
 </nav>
+<div class="nav-wallet-fixed" style="position:fixed;top:14px;right:16px;z-index:1001;display:flex;gap:8px">
+  <button class="wallet-btn connect" id="walletBtn" onclick="connectWallet()">
+    🔌 Connect Phantom
+  </button>
+  <button class="wallet-btn" id="disconnectBtn" onclick="disconnectWallet()" style="background:none;border:1px solid var(--border);color:var(--red);font-size:11px;padding:6px 12px">
+    Disconnect
+  </button>
+</div>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="./index.html"            data-nav="app">🏠 App</a>
+  <a href="./gems.html"             data-nav="gems">💎 Gems</a>
+  <a href="./sniper_terminal.html"  data-nav="sniper">🎯 Sniper</a>
+  <a href="./og-detector.html"      data-nav="og">🔍 OG Detector</a>
+  <a href="./shazam_crypto.html"    data-nav="shazam">🔬 Shazam</a>
+  <a href="./promote.html"          data-nav="promote">⭐ Promote</a>
+  <a href="./launchpad.html"        data-nav="launchpad">🚀 Launchpad</a>
+  <a href="./launches.html"         data-nav="launches">📊 Launches</a>
+  <a href="./lock.html"             data-nav="lock">🔒 Lock</a>
+  <a href="./burn.html"             data-nav="burn">🔥 Burn</a>
+  <a href="./trade.html" class="active" data-nav="trade">💎 Trade</a>
+  <a href="./byeboss.html"          data-nav="docs">📖 Docs</a>
+</div>
 
 <div class="trade-layout">
   <!-- LEFT: WALLET & PORTFOLIO -->
@@ -889,6 +1018,12 @@ setTimeout(() => { if (!pollTimer) startPolling(); }, 2000);
 
 // Refresh balance + tokens every 5 minutes (saves Helius RPC calls)
 setInterval(() => { if (walletAddress) { updateBalance(); loadTokenHoldings(); } }, 300000);
+</script>
+<script>
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobileMenu');
+  if (menu) menu.classList.toggle('open');
+}
 </script>
 </body>
 </html>
