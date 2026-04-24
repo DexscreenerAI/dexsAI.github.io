@@ -420,43 +420,102 @@ input:focus, textarea:focus { outline: none; }
 .genesis-socials a.pf:hover  { color: var(--yellow); border-color: var(--yellow); }
 .genesis-socials a.dex:hover { color: var(--red); border-color: var(--red); }
 
-/* Neutral overrides — pump.fun cards reuse .genesis-head / .genesis-ca
-   markup so layout is identical to the $ByeBoss genesis card, but
-   they skip the yellow accent. */
-.token-card:not(.byeboss) .genesis-head .name { color: var(--text); }
-.token-card:not(.byeboss) .genesis-head .badge-1 {
-  color: var(--red); border-color: var(--red);
-  background: rgba(255,59,79,0.1);
+/* ═══════════════════════════════════════════════════════════════════
+   FEED CARD v2 — compact 3-row design, same skeleton for every card
+   in the feed (pump.fun + Byeboss-backed). Genesis card keeps its
+   own larger layout above.
+   ═══════════════════════════════════════════════════════════════════ */
+.feed-card {
+  display: grid; grid-template-columns: 48px 1fr; gap: 12px;
+  padding: 10px 12px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 10px;
+  text-decoration: none; color: var(--text);
+  transition: border-color .15s, background .15s, transform .15s;
+  animation: fadeIn .35s ease;
+  cursor: pointer;
 }
-.token-card:not(.byeboss) .genesis-ca {
-  color: var(--text2); border-color: var(--border);
+.feed-card:hover { border-color: #2a3a50; background: var(--bg3); transform: translateX(2px); }
+.feed-card.byeboss {
+  border: 1px solid rgba(255,170,0,0.5);
+  background: linear-gradient(90deg, rgba(255,170,0,0.06), var(--bg2) 45%);
 }
-.token-card:not(.byeboss) .genesis-ca:hover {
-  color: var(--red); border-color: var(--red);
-}
-.pump-meta {
-  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px;
-  font-family: var(--mono); font-size: 11px; color: var(--text2);
-}
-.pump-meta b { color: var(--text); font-weight: 600; }
+.feed-card.byeboss:hover { border-color: var(--yellow); }
 
-/* Same visual style for every pump.fun card in the Live Feed so the
-   layout is consistent with the Byeboss genesis / launched cards. */
-.token-socials { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-.token-socials a {
-  padding: 3px 7px; font-family: var(--mono); font-size: 10px; font-weight: 700;
-  border-radius: 5px; background: var(--bg2); border: 1px solid var(--border);
-  color: var(--text2); transition: all 0.15s;
-  display: inline-flex; align-items: center; gap: 3px; text-decoration: none;
+.feed-card .avatar {
+  width: 48px; height: 48px; border-radius: 10px; overflow: hidden; flex-shrink: 0;
+  background: var(--bg3); display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-weight: 700; color: var(--text2); font-size: 18px;
 }
-.token-socials a:hover { background: var(--bg3); transform: translateY(-1px); }
-.token-socials a.tg:hover  { color: #2aabee; border-color: #2aabee; }
-.token-socials a.tw:hover  { color: #fff; border-color: #fff; }
-.token-socials a.dc:hover  { color: #5865f2; border-color: #5865f2; }
-.token-socials a.web:hover { color: var(--green); border-color: var(--green); }
-.token-socials a.pf:hover  { color: var(--yellow); border-color: var(--yellow); }
-.token-socials a.dex:hover { color: var(--red); border-color: var(--red); }
-.token-card .genesis-ca { margin-top: 6px; display: inline-flex; }
+.feed-card .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.feed-card .body { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+
+.feed-card .r1 { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.feed-card .r1 .name {
+  font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-width: 0; flex: 0 1 auto;
+}
+.feed-card .r1 .tkr {
+  font-family: var(--mono); font-weight: 700; font-size: 10px;
+  color: var(--red); padding: 2px 6px; border: 1px solid rgba(255,59,79,0.4);
+  background: rgba(255,59,79,0.08); border-radius: 4px;
+  flex-shrink: 0; max-width: 110px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.feed-card .r1 .age {
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  flex-shrink: 0; white-space: nowrap;
+}
+.feed-card .r1 .tag-backed {
+  font-family: var(--mono); font-size: 9px; font-weight: 800;
+  color: #000; background: var(--yellow); padding: 2px 7px; border-radius: 4px;
+  margin-left: auto; flex-shrink: 0; letter-spacing: 0.6px;
+}
+.feed-card.byeboss .r1 .name { color: var(--yellow); }
+.feed-card.byeboss .r1 .tkr {
+  color: var(--yellow); border-color: var(--yellow); background: rgba(255,170,0,0.14);
+}
+
+.feed-card .r2 {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 10px; color: var(--text2);
+}
+.feed-card .r2 b { color: var(--text); font-weight: 600; }
+.feed-card .r2 .sep { color: var(--text3); }
+.feed-card .r2 .chip {
+  padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.3px; text-transform: uppercase;
+}
+.feed-card .r2 .chip.safe   { color: var(--green); border: 1px solid rgba(0,255,136,0.3); background: rgba(0,255,136,0.08); }
+.feed-card .r2 .chip.risk   { color: var(--red); border: 1px solid rgba(255,59,79,0.4); background: rgba(255,59,79,0.08); }
+.feed-card .r2 .chip.warn   { color: var(--yellow); border: 1px solid rgba(255,170,0,0.4); background: rgba(255,170,0,0.08); }
+.feed-card .r2 .chip.locked { color: var(--cyan); border: 1px solid rgba(0,209,255,0.3); background: rgba(0,209,255,0.08); }
+
+.feed-card .r3 {
+  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+  overflow-x: auto; scrollbar-width: none;
+}
+.feed-card .r3::-webkit-scrollbar { display: none; }
+.feed-card .r3 .ca {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--mono); font-size: 10px; color: var(--text2);
+  padding: 3px 7px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 5px; transition: all .15s; flex-shrink: 0;
+}
+.feed-card .r3 .ca:hover { color: var(--red); border-color: var(--red); }
+.feed-card .r3 .social {
+  padding: 3px 8px; font-family: var(--mono); font-size: 10px; font-weight: 700;
+  border-radius: 5px; background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text2); text-decoration: none; flex-shrink: 0; transition: all .15s;
+}
+.feed-card .r3 .social:hover { background: var(--bg3); transform: translateY(-1px); }
+.feed-card .r3 .social.tg:hover  { color: #2aabee; border-color: #2aabee; }
+.feed-card .r3 .social.tw:hover  { color: #fff; border-color: #fff; }
+.feed-card .r3 .social.web:hover { color: var(--green); border-color: var(--green); }
+.feed-card .r3 .social.pf:hover  { color: var(--yellow); border-color: var(--yellow); }
+.feed-card .r3 .social.dex:hover { color: var(--red); border-color: var(--red); }
+.feed-card .r3 .social.trade:hover { color: var(--red); border-color: var(--red); }
 
 .token-logo {
   width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
@@ -1379,50 +1438,39 @@ function renderByebossCard(b) {
   const mint = b.mint || '';
   const sym = b.symbol || '?';
   const name = b.name || sym;
-  const initial = sym[0] || '?';
-
-  // Wrap image inside .token-logo div so the grid column stays 44px
-  // (the previous direct <img class="token-logo"> broke flex-shrink and
-  // the card exploded onto multiple rows).
-  const logoHtml = b.image
-    ? `<div class="token-logo"><img src="${escapeHtml(b.image)}" alt="${escapeHtml(sym)}" onerror="this.parentNode.textContent='${escapeHtml(initial)}';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--text2)'" /></div>`
-    : `<div class="token-logo">${escapeHtml(initial)}</div>`;
-
-  // Socials — optional, only render chips that are actually populated
+  const initial = (sym[0] || '?').toUpperCase();
   const s = b.socials || {};
   const pumpUrl = mint ? `https://pump.fun/coin/${mint}` : '';
   const dexUrl = s.dex || (mint ? `https://dexscreener.com/solana/${mint}` : '');
-  const caShort = mint ? (mint.slice(0, 5) + '…' + mint.slice(-5)) : '';
-  const badgeLabel = b.mode === 'hosted' ? '🏆 BYEBOSS BACKED' : '🏆 BYEBOSS';
+  const caShort = mint ? (mint.slice(0, 4) + '…' + mint.slice(-4)) : '';
+  const avatar = b.image
+    ? `<img src="${escapeHtml(b.image)}" alt="${escapeHtml(sym)}" onerror="this.parentNode.textContent='${escapeHtml(initial)}'" />`
+    : escapeHtml(initial);
 
   return `
-    <a class="token-card byeboss" href="${escapeHtml(pumpUrl)}" target="_blank" rel="noopener">
-      ${logoHtml}
-      <div class="token-main">
-        <div class="genesis-head">
+    <a class="feed-card byeboss" href="${escapeHtml(pumpUrl)}" target="_blank" rel="noopener">
+      <div class="avatar">${avatar}</div>
+      <div class="body">
+        <div class="r1">
           <span class="name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
-          <span class="badge-1">$${escapeHtml(sym)}</span>
-          <span class="token-age">· ${age}</span>
+          <span class="tkr">$${escapeHtml(sym)}</span>
+          <span class="age">· ${age}</span>
+          <span class="tag-backed">🏆 ${b.mode === 'hosted' ? 'BACKED' : 'BYEBOSS'}</span>
         </div>
-        ${mint ? `
-        <div class="genesis-ca" title="Copy contract" data-ca="${escapeHtml(mint)}" onclick="event.stopPropagation()">
-          <code>${escapeHtml(caShort)}</code>
-          <span>📋</span>
-        </div>` : ''}
-        <div class="genesis-socials" onclick="event.stopPropagation()">
-          ${s.telegram ? `<a class="tg"  href="${escapeHtml(s.telegram)}" target="_blank" rel="noopener">💬</a>` : ''}
-          ${s.twitter  ? `<a class="tw"  href="${escapeHtml(s.twitter)}"  target="_blank" rel="noopener">𝕏</a>` : ''}
-          ${s.website  ? `<a class="web" href="${escapeHtml(s.website)}"  target="_blank" rel="noopener">🌐</a>` : ''}
-          ${pumpUrl  ? `<a class="pf"  href="${escapeHtml(pumpUrl)}"  target="_blank" rel="noopener">🎰 Pump</a>` : ''}
-          ${dexUrl   ? `<a class="dex" href="${escapeHtml(dexUrl)}"   target="_blank" rel="noopener">📈 Dex</a>` : ''}
-          <a href="trade.html">💎 Trade</a>
-          ${b.signature ? `<a href="https://solscan.io/tx/${encodeURIComponent(b.signature)}" target="_blank" rel="noopener">🧾 tx</a>` : ''}
-        </div>
-        <div class="pump-meta">
+        <div class="r2">
           <span>By <b>${shortAddr(b.creator)}</b></span>
         </div>
+        <div class="r3" onclick="event.stopPropagation()">
+          ${mint ? `<span class="ca genesis-ca" data-ca="${escapeHtml(mint)}" title="Copy contract"><code>${escapeHtml(caShort)}</code>📋</span>` : ''}
+          ${s.telegram ? `<a class="social tg"  href="${escapeHtml(s.telegram)}" target="_blank" rel="noopener">💬</a>` : ''}
+          ${s.twitter  ? `<a class="social tw"  href="${escapeHtml(s.twitter)}"  target="_blank" rel="noopener">𝕏</a>` : ''}
+          ${s.website  ? `<a class="social web" href="${escapeHtml(s.website)}"  target="_blank" rel="noopener">🌐</a>` : ''}
+          ${pumpUrl ? `<a class="social pf"  href="${escapeHtml(pumpUrl)}"  target="_blank" rel="noopener">🎰</a>` : ''}
+          ${dexUrl  ? `<a class="social dex" href="${escapeHtml(dexUrl)}"   target="_blank" rel="noopener">📈</a>` : ''}
+          <a class="social trade" href="trade.html">💎</a>
+          ${b.signature ? `<a class="social" href="https://solscan.io/tx/${encodeURIComponent(b.signature)}" target="_blank" rel="noopener">🧾</a>` : ''}
+        </div>
       </div>
-      <div class="token-badges"><span class="badge gold">${badgeLabel}</span></div>
     </a>`;
 }
 
@@ -1478,25 +1526,7 @@ function renderPumpCard(p) {
   const logo = p.info?.imageUrl;
 
   const rc = rugCache.get(mint);
-  let badgeHtml = '';
-  if (rc) {
-    const topPct = rc.topHolders?.[0]?.pct || 0;
-    const lpBurned = !!rc.markets?.[0]?.lp?.lpBurned;
-    const highRisks = (rc.risks || []).some(r => (r.level || '').toLowerCase() === 'danger');
-    if (lpBurned) badgeHtml += '<span class="badge locked">🔒 LP Locked</span>';
-    if (topPct > 10) badgeHtml += `<span class="badge warn">⚠️ Dev ${topPct.toFixed(0)}%</span>`;
-    if (!highRisks && topPct < 10 && lpBurned) badgeHtml += '<span class="badge safe">✅ Safe</span>';
-    if (highRisks) badgeHtml += '<span class="badge danger">🚨 Risk</span>';
-  }
-
-  // Same markup skeleton as the Byeboss genesis card so every card in
-  // the feed renders identically (logo / name-head / CA pill / socials).
-  // Neutral color overrides live in CSS under `.token-card:not(.byeboss)`.
-  const initial = sym[0] || '?';
-  const logoHtml = logo
-    ? `<div class="token-logo"><img src="${escapeHtml(logo)}" onerror="this.parentNode.textContent='${escapeHtml(initial)}';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--text2)'" /></div>`
-    : `<div class="token-logo">${escapeHtml(initial)}</div>`;
-
+  const initial = (sym[0] || '?').toUpperCase();
   const socials = Array.isArray(p.info?.socials) ? p.info.socials : [];
   const websites = Array.isArray(p.info?.websites) ? p.info.websites : [];
   const twitter = socials.find(s => (s.type || '').toLowerCase() === 'twitter')?.url;
@@ -1504,36 +1534,49 @@ function renderPumpCard(p) {
   const website = websites[0]?.url || websites[0];
   const pumpUrl = mint ? `https://pump.fun/coin/${mint}` : '';
   const dexUrl = p.url || (mint ? `https://dexscreener.com/solana/${mint}` : '');
+  const caShort = mint ? (mint.slice(0, 4) + '…' + mint.slice(-4)) : '';
+  const avatar = logo
+    ? `<img src="${escapeHtml(logo)}" alt="${escapeHtml(sym)}" onerror="this.parentNode.textContent='${escapeHtml(initial)}'" />`
+    : escapeHtml(initial);
 
-  const caShort = mint ? (mint.slice(0, 5) + '…' + mint.slice(-5)) : '';
+  // Safety chips (derived from rugCache, same data as before)
+  let chips = '';
+  if (rc) {
+    const topPct = rc.topHolders?.[0]?.pct || 0;
+    const lpBurned = !!rc.markets?.[0]?.lp?.lpBurned;
+    const highRisks = (rc.risks || []).some(r => (r.level || '').toLowerCase() === 'danger');
+    if (lpBurned) chips += '<span class="chip locked">🔒 LP</span>';
+    if (topPct > 10) chips += `<span class="chip warn">⚠️ Dev ${topPct.toFixed(0)}%</span>`;
+    if (!highRisks && topPct < 10 && lpBurned) chips += '<span class="chip safe">✅ Safe</span>';
+    if (highRisks) chips += '<span class="chip risk">🚨 Risk</span>';
+  } else {
+    chips = '<span class="chip warn">⏳ Checking</span>';
+  }
 
   return `
-    <a class="token-card" href="${escapeHtml(dexUrl || pumpUrl)}" target="_blank" rel="noopener">
-      ${logoHtml}
-      <div class="token-main">
-        <div class="genesis-head">
+    <a class="feed-card" href="${escapeHtml(dexUrl || pumpUrl)}" target="_blank" rel="noopener">
+      <div class="avatar">${avatar}</div>
+      <div class="body">
+        <div class="r1">
           <span class="name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
-          <span class="badge-1">$${escapeHtml(sym)}</span>
-          <span class="token-age">· ${age}</span>
+          <span class="tkr">$${escapeHtml(sym)}</span>
+          <span class="age">· ${age}</span>
         </div>
-        ${mint ? `
-        <div class="genesis-ca" title="Copy contract" data-ca="${escapeHtml(mint)}" onclick="event.stopPropagation()">
-          <code>${escapeHtml(caShort)}</code>
-          <span>📋</span>
-        </div>` : ''}
-        <div class="genesis-socials" onclick="event.stopPropagation()">
-          ${telegram ? `<a class="tg"  href="${escapeHtml(telegram)}" target="_blank" rel="noopener">💬</a>` : ''}
-          ${twitter  ? `<a class="tw"  href="${escapeHtml(twitter)}"  target="_blank" rel="noopener">𝕏</a>` : ''}
-          ${website  ? `<a class="web" href="${escapeHtml(website)}"  target="_blank" rel="noopener">🌐</a>` : ''}
-          ${pumpUrl  ? `<a class="pf"  href="${escapeHtml(pumpUrl)}"  target="_blank" rel="noopener">🎰 Pump</a>` : ''}
-          ${dexUrl   ? `<a class="dex" href="${escapeHtml(dexUrl)}"   target="_blank" rel="noopener">📈 Dex</a>` : ''}
-          <a href="trade.html">💎 Trade</a>
+        <div class="r2">
+          <span>MC <b>$${fmt(mc)}</b></span>
+          <span class="sep">·</span>
+          <span>Vol24h <b>$${fmt(vol24)}</b></span>
+          ${chips}
         </div>
-        <div class="pump-meta">
-          <span>MC <b>$${fmt(mc)}</b></span><span>· Vol24h <b>$${fmt(vol24)}</b></span>
+        <div class="r3" onclick="event.stopPropagation()">
+          ${mint ? `<span class="ca genesis-ca" data-ca="${escapeHtml(mint)}" title="Copy contract"><code>${escapeHtml(caShort)}</code>📋</span>` : ''}
+          ${telegram ? `<a class="social tg"  href="${escapeHtml(telegram)}" target="_blank" rel="noopener">💬</a>` : ''}
+          ${twitter  ? `<a class="social tw"  href="${escapeHtml(twitter)}"  target="_blank" rel="noopener">𝕏</a>` : ''}
+          ${website  ? `<a class="social web" href="${escapeHtml(website)}"  target="_blank" rel="noopener">🌐</a>` : ''}
+          ${pumpUrl ? `<a class="social pf"  href="${escapeHtml(pumpUrl)}"  target="_blank" rel="noopener">🎰</a>` : ''}
+          ${dexUrl  ? `<a class="social dex" href="${escapeHtml(dexUrl)}"   target="_blank" rel="noopener">📈</a>` : ''}
         </div>
       </div>
-      <div class="token-badges">${badgeHtml || '<span class="badge warn">⏳ Checking</span>'}</div>
     </a>`;
 }
 
