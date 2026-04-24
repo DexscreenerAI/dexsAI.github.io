@@ -1194,6 +1194,13 @@ async function loadLaunches() {
   enrichLaunchesMC(all);
 }
 
+// Manual image overrides for legacy launch entries that were saved
+// before the bot started capturing pump.fun IPFS image URLs. Brand-new
+// launches populate .image automatically — no more entries needed.
+const LAUNCH_IMAGE_OVERRIDES = {
+  'BKY9y7fAKHtSiHEZG8nit7xpYBtZ6mY2bFwDzNXy959k': 'https://i.ibb.co/ycVjYjQv/3-EFF4158-C5-E4-4-E3-D-84-C1-C713-AAB6-B351.png',
+};
+
 const mcCache = new Map();
 async function enrichLaunchesMC(list) {
   // Fetch MC for first 20 tokens (DexScreener rate limit friendly)
@@ -1221,6 +1228,33 @@ async function enrichLaunchesMC(list) {
   });
   renderLaunches(list);
   $('sMc').textContent = fmtMC(aggregate);
+
+  // Secondary pass — for tokens still without an image (DexScreener
+  // didn't index them yet, OR the launch record lacked image), fetch
+  // the pump.fun metadata manifest to pull image directly. Non-blocking.
+  enrichLaunchesFromMetadata(list);
+}
+
+async function enrichLaunchesFromMetadata(fullList) {
+  const toFetch = fullList.slice(0, 20).filter(l => {
+    if (l.image) return false;
+    const cur = mcCache.get(l.mint);
+    if (cur?.image) return false;
+    return !!l.metadataUri;
+  });
+  if (toFetch.length === 0) return;
+  await Promise.allSettled(toFetch.map(async (l) => {
+    try {
+      const r = await fetch(l.metadataUri, { signal: AbortSignal.timeout(5000) });
+      if (!r.ok) return;
+      const meta = await r.json();
+      const image = meta?.image;
+      if (!image) return;
+      const prev = mcCache.get(l.mint) || {};
+      mcCache.set(l.mint, { ...prev, image });
+    } catch {}
+  }));
+  renderLaunches(fullList);
 }
 
 function renderLaunches(list) {
@@ -1245,7 +1279,7 @@ function renderLaunches(list) {
     const sym = l.symbol || '?';
     const name = l.name || sym;
     const initial = (sym[0] || '?').toUpperCase();
-    const img = l.image || mcInfo?.image || '';
+    const img = l.image || LAUNCH_IMAGE_OVERRIDES[l.mint] || mcInfo?.image || '';
     const avatar = img
       ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(sym)}" onerror="this.parentNode.textContent='${escapeHtml(initial)}';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--text2)'" />`
       : escapeHtml(initial);
