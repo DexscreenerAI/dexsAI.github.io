@@ -356,8 +356,9 @@ body{background:#060a10;color:#dfe4ed;font-family:'DM Sans',sans-serif;min-heigh
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;flex:1;min-width:100px">
         <span style="font-size:10px">💰</span>
-        <input class="config-input" type="number" id="tradeAmount" value="0.5" min="0.01" max="100" step="0.1" style="padding:3px 6px;font-size:11px;width:50px">
+        <input class="config-input" type="number" id="tradeAmount" value="0.5" min="0.01" max="100" step="0.1" style="padding:3px 6px;font-size:11px;width:50px" onkeydown="if(event.key==='Enter')applyTradeAmount()">
         <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">SOL</span>
+        <button onclick="applyTradeAmount()" title="Apply to all Buy buttons" style="margin-left:4px;padding:3px 8px;background:rgba(0,255,136,0.12);border:1px solid rgba(0,255,136,0.35);border-radius:5px;color:var(--green);font-family:var(--mono);font-size:9px;font-weight:700;cursor:pointer;letter-spacing:0.5px">✓ OK</button>
       </div>
       <div style="display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;min-width:70px">
         <span style="font-size:10px">⚙️</span>
@@ -809,8 +810,8 @@ function addSignal(sig) {
       <div class="signal-stat"><div class="signal-stat-val" style="color:${pnl>=0?'var(--green)':'var(--red)'}">${pnl>=0?'+':''}${pnl.toFixed(1)}%</div><div class="signal-stat-lbl">P&L</div></div>
     </div>
     <div class="signal-actions">
-      <button class="btn-buy" onclick="handleBuy('${sig.symbol}','${addr}',${amount})" ${!walletAddress?'disabled':''}>
-        ⚡ BUY ${amount} SOL
+      <button class="btn-buy" data-symbol="${sig.symbol}" data-addr="${addr}" onclick="handleBuyFromBtn(this)" ${!walletAddress?'disabled':''}>
+        ⚡ BUY <span class="buy-amt">${amount}</span> SOL
       </button>
       <button class="btn-skip" onclick="this.closest('.signal').remove()">SKIP</button>
     </div>
@@ -904,6 +905,31 @@ function renderHistory() {
 // ═══════════════════════════════════════════════════════════════
 // TRADE HANDLERS
 // ═══════════════════════════════════════════════════════════════
+
+// Called by .btn-buy onclick — reads the live tradeAmount so the
+// button always sends the user's current configured size, even
+// without hitting the validate button.
+function handleBuyFromBtn(btn) {
+  const symbol = btn.dataset.symbol || '';
+  const address = btn.dataset.addr || '';
+  const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
+  if (!amount || amount <= 0) { addLog('⚠️ Set a SOL amount first'); return; }
+  handleBuy(symbol, address, amount);
+}
+
+// Propagate the current tradeAmount value to every rendered Buy
+// button label. Previously each button was baked with the value at
+// signal-render time, so changing the input later didn't update
+// existing signals — only new ones.
+function applyTradeAmount() {
+  const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
+  if (!amount || amount <= 0) { addLog('⚠️ Enter a valid SOL amount'); return; }
+  document.querySelectorAll('.btn-buy .buy-amt').forEach(el => {
+    el.textContent = amount;
+  });
+  addLog(`💰 Buy amount set to ${amount} SOL (applied to ${document.querySelectorAll('.btn-buy').length} signal${document.querySelectorAll('.btn-buy').length !== 1 ? 's' : ''})`);
+}
+
 async function handleBuy(symbol, address, solAmount, sig) {
   const btn = document.querySelector(`#sig-${address} .btn-buy`);
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> BUYING...'; }
