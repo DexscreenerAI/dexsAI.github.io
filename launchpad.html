@@ -1425,6 +1425,12 @@ async function fetchFeed() {
   }
 }
 
+// Manual image overrides for legacy launch entries saved before the
+// bot captured pump.fun IPFS image URLs. New launches auto-populate.
+const LAUNCH_IMAGE_OVERRIDES = {
+  'BKY9y7fAKHtSiHEZG8nit7xpYBtZ6mY2bFwDzNXy959k': 'https://i.ibb.co/ycVjYjQv/3-EFF4158-C5-E4-4-E3-D-84-C1-C713-AAB6-B351.png',
+};
+
 const rugCache = new Map();
 async function enrichRugCheck(mint) {
   if (!mint) return;
@@ -1496,8 +1502,9 @@ function renderByebossCard(b) {
   const s = b.socials || {};
   const pumpUrl = mint ? `https://pump.fun/coin/${mint}` : '';
   const dexUrl = s.dex || (mint ? `https://dexscreener.com/solana/${mint}` : '');
-  const avatar = b.image
-    ? `<img src="${escapeHtml(b.image)}" alt="${escapeHtml(sym)}" onerror="this.parentNode.textContent='${escapeHtml(initial)}'" />`
+  const img = b.image || LAUNCH_IMAGE_OVERRIDES[mint] || '';
+  const avatar = img
+    ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(sym)}" onerror="this.parentNode.textContent='${escapeHtml(initial)}'" />`
     : escapeHtml(initial);
 
   return `
