@@ -252,15 +252,26 @@ input:focus, textarea:focus { outline: none; }
 /* Live Feed full-width — single column of generous rows so each
    .sn-row has ~1100 px of space instead of the old 550 px cram. */
 .feed-section { margin-top: 32px; }
+
+/* Same auto-fill tiling as sniper_terminal — 4-5 cards per row on
+   desktop, collapses to 1 col on phones once a card can't fit 260px. */
 .feed-section .feed-list {
-  display: flex; flex-direction: column; gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
 }
 .feed-section .feed-sep {
-  font-family: var(--mono); font-size: 11px; color: var(--text2);
-  padding: 12px 4px 8px; letter-spacing: 1px;
+  grid-column: 1 / -1;
+  font-family: var(--display); font-size: 12px; color: var(--text);
+  padding: 12px 4px 8px; letter-spacing: 2px; text-transform: uppercase;
   border-top: 1px solid var(--border); margin-top: 6px;
 }
+.feed-section .feed-sep::before { content: '// '; color: var(--green); font-weight: 800; }
 .feed-section .feed-sep:first-child { border-top: none; margin-top: 0; padding-top: 4px; }
+.feed-section .feed-loader,
+.feed-section .signals-empty { grid-column: 1 / -1; }
+/* Pinned $ByeBoss genesis card stays full-width as the showcase row */
+.feed-section .token-card.genesis { grid-column: 1 / -1; }
 
 /* PANEL */
 .panel {
