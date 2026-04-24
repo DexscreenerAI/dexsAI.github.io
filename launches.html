@@ -489,7 +489,9 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
   background: var(--bg3); display: flex; align-items: center; justify-content: center;
   font-family: var(--mono); font-weight: 700; color: var(--text2); font-size: 16px;
+  flex-shrink: 0; overflow: hidden;
 }
+.launch-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; display: block; }
 .launch-main { min-width: 0; }
 .launch-head {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -1109,12 +1111,30 @@ function renderLaunches(list) {
     const mcInfo = mcCache.get(l.mint);
     const mcText = mcInfo ? 'MC <b>' + fmtMC(mcInfo.mc) + '</b>' : '';
     const priceText = mcInfo && mcInfo.price ? '· ' + fmtPrice(mcInfo.price) : '';
-    const initial = (l.symbol || l.name || '?')[0];
     const chartUrl = mcInfo?.url || ('https://dexscreener.com/solana/' + l.mint);
     const hostedBadge = l.mode === 'hosted' ? '<span class="launch-hosted-badge">🏆 BYEBOSS BACKED</span>' : '';
+
+    // Profile photo — fall back to symbol initial if no image is saved
+    const initial = (l.symbol || l.name || '?')[0];
+    const logoHtml = l.image
+      ? `<div class="launch-logo"><img src="${escapeHtml(l.image)}" alt="${escapeHtml(l.symbol || '')}" onerror="this.parentNode.textContent='${escapeHtml(initial)}';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--text2)'" /></div>`
+      : `<div class="launch-logo">${escapeHtml(initial)}</div>`;
+
+    // Socials block — mirror the genesis card layout when data is present
+    const s = l.socials || {};
+    const socialLinks = [
+      s.telegram ? `<a class="tg"  href="${escapeHtml(s.telegram)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">💬 Telegram</a>` : '',
+      s.twitter  ? `<a class="tw"  href="${escapeHtml(s.twitter)}"  target="_blank" rel="noopener" onclick="event.stopPropagation()">𝕏 Twitter</a>`  : '',
+      s.website  ? `<a class="web" href="${escapeHtml(s.website)}"  target="_blank" rel="noopener" onclick="event.stopPropagation()">🌐 Website</a>`  : '',
+      s.pumpfun  ? `<a class="pf"  href="${escapeHtml(s.pumpfun)}"  target="_blank" rel="noopener" onclick="event.stopPropagation()">🎰 Pump.fun</a>` : '',
+    ].filter(Boolean).join('');
+    const socialsBlock = socialLinks
+      ? `<div class="socials">${socialLinks}</div>`
+      : '';
+
     return `
       <a class="launch-card ${l.mode === 'hosted' ? 'hosted' : ''}" href="https://pump.fun/coin/${encodeURIComponent(l.mint)}" target="_blank" rel="noopener">
-        <div class="launch-logo">${escapeHtml(initial)}</div>
+        ${logoHtml}
         <div class="launch-main">
           <div class="launch-head">
             <span class="launch-name">${escapeHtml(l.name || '?')}</span>
@@ -1131,6 +1151,7 @@ function renderLaunches(list) {
             <a href="https://solscan.io/token/${encodeURIComponent(l.mint)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔎 Solscan</a>
             ${l.signature ? '<a href="https://solscan.io/tx/' + encodeURIComponent(l.signature) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">🧾 TX</a>' : ''}
           </div>
+          ${socialsBlock}
         </div>
       </a>`;
   }).join('');
