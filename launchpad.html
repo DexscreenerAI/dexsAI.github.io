@@ -10,6 +10,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <script src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
+<!-- Buffer polyfill — @solana/web3.js' SystemProgram.transfer encodes
+     amounts via a BigInt layout that calls global `Buffer`. That global
+     does NOT exist in browsers, so without this shim every Phantom tx
+     build throws `ReferenceError: Buffer is not defined`. -->
+<script type="module">
+  import { Buffer as _B } from 'https://esm.sh/buffer@6.0.3';
+  window.Buffer = _B;
+</script>
 <style>
 /* ═══════════════════════════════════════════════════════
    NAVBAR — canonical block. Self-contained, uses its own
