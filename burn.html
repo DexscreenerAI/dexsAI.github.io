@@ -122,6 +122,10 @@
 @media (max-width: 900px) {
   .navbar .nav-links { display: none; }
   .mobile-menu-btn { display: block; }
+  /* Wallet Connect floats top-right; on mobile the hamburger sits there
+     too — shift the wallet buttons left so both are reachable. */
+  .nav-wallet-fixed { right: 62px !important; top: 11px !important; }
+  .nav-wallet-fixed .wallet-btn { padding: 6px 10px !important; font-size: 11px !important; }
 }
 
 /* Reserve space under the fixed navbar on every page. Pages that already
