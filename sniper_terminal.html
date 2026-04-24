@@ -398,7 +398,15 @@ body::after {
   border-radius: 12px;
   padding: 10px;
 }
-.sn-list { display: flex; flex-direction: column; gap: 10px; }
+/* Desktop: tile signals in a responsive auto-fill grid (4-5 wide on
+   wide screens). Mobile collapses naturally to 1 column once a card
+   can't fit in 260 px. */
+.sn-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.sn-list .signals-empty { grid-column: 1 / -1; }
 .sn-card {
   display: flex; flex-direction: column; gap: 12px;
   padding: 14px; background: rgba(0,0,0,0.35);
@@ -465,7 +473,11 @@ body::after {
 
 .sn-sep { height: 1px; background: rgba(255,255,255,0.07); border: 0; margin: 0; }
 
-.sn-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sn-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+}
 .sn-stat {
   padding: 10px 12px; border-radius: 10px;
   border: 1px solid rgba(0,255,65,0.15); background: rgba(0,0,0,0.25);
@@ -486,7 +498,6 @@ body::after {
 }
 
 @media (max-width: 900px) {
-  .sn-stats { grid-template-columns: 1fr; }
   .sn-avatar { width: 56px; height: 56px; }
 }
 
