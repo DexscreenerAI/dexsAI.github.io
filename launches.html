@@ -173,9 +173,9 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .hero h1 {
   font-family: var(--mono); font-weight: 800; font-size: clamp(28px, 4.5vw, 44px);
   letter-spacing: -1px; margin-bottom: 10px;
-  background: linear-gradient(135deg, #fff 0%, var(--red) 100%);
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  color: var(--text);
 }
+.hero h1 .accent { color: var(--red); }
 .hero p { color: var(--text2); font-size: 15px; max-width: 560px; margin: 0 auto; }
 
 /* BYEBOSS HERO CARD */
@@ -762,7 +762,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 <main class="main">
 
   <section class="hero">
-    <h1>📊 Byeboss Launches</h1>
+    <h1>📊 Byeboss <span class="accent">Launches</span></h1>
     <p>Every token created through the Byeboss Launchpad, in one place.</p>
   </section>
 
