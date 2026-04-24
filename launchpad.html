@@ -214,8 +214,31 @@ input:focus, textarea:focus { outline: none; }
 
 /* GRID */
 .grid {
-  display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; margin-top: 40px;
+  display: grid; grid-template-columns: minmax(0, 820px);
+  justify-content: center; gap: 24px; margin-top: 40px;
 }
+
+/* Live Feed takes the full main-content width and lays rows in a
+   responsive 2-column grid on wide screens so each row has real
+   breathing room — the side-by-side "1fr 1.2fr" squeeze was the core
+   reason things looked crammed. */
+.feed-section { margin-top: 32px; }
+.feed-section .feed-list {
+  display: grid; grid-template-columns: 1fr; gap: 10px;
+}
+@media (min-width: 1100px) {
+  .feed-section .feed-list { grid-template-columns: 1fr 1fr; }
+}
+.feed-section .feed-sep {
+  grid-column: 1 / -1;
+  font-family: var(--mono); font-size: 11px; color: var(--text2);
+  padding: 12px 4px 8px; letter-spacing: 1px;
+  border-top: 1px solid var(--border); margin-top: 6px;
+}
+.feed-section .feed-sep:first-child { border-top: none; margin-top: 0; padding-top: 4px; }
+.feed-section .feed-loader { grid-column: 1 / -1; }
+/* Pinned $ByeBoss genesis card is the showcase — span full width */
+.feed-section .token-card.genesis { grid-column: 1 / -1; }
 
 /* PANEL */
 .panel {
@@ -790,7 +813,10 @@ input:focus, textarea:focus { outline: none; }
       </div>
     </div>
 
-    <!-- RIGHT: AGGREGATOR FEED -->
+  </section>
+
+  <!-- AGGREGATOR FEED — full-width, more breathing room for rows -->
+  <section class="feed-section">
     <div class="panel">
       <div class="panel-head">
         <h2>Live Feed · Pump.fun</h2>
@@ -805,7 +831,6 @@ input:focus, textarea:focus { outline: none; }
         <div class="feed-loader"><div class="spinner"></div>Loading Pump.fun launches…</div>
       </div>
     </div>
-
   </section>
 
 </main>
