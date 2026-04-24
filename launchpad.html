@@ -353,6 +353,9 @@ input:focus, textarea:focus { outline: none; }
 }
 .chip:hover { color: var(--text); border-color: #2a3a50; }
 .chip.on { background: rgba(255,59,79,0.15); border-color: var(--red); color: var(--red); }
+.chip[data-filter="onlyByeboss"].on {
+  background: rgba(255,170,0,0.15); border-color: var(--yellow); color: var(--yellow);
+}
 
 .feed-list { display: flex; flex-direction: column; gap: 10px; padding: 0 20px 20px; max-height: 780px; overflow-y: auto; }
 .feed-sep {
@@ -435,96 +438,118 @@ input:focus, textarea:focus { outline: none; }
 .genesis-socials a.dex:hover { color: var(--red); border-color: var(--red); }
 
 /* ═══════════════════════════════════════════════════════════════════
-   FEED ROW — same aesthetic as sniper_terminal's signal table
+   FEED CARD — inspired by SoulTerminal's vertical card layout.
+   Big square avatar, header with ticker+name, info chips, socials
+   row, separator, then two side-by-side stat boxes.
    ═══════════════════════════════════════════════════════════════════ */
-.sn-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  padding: 12px 14px; background: rgba(0,0,0,0.35);
-  border: 1px solid rgba(0,255,65,0.1); border-radius: 10px;
+.sn-card {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 14px; background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(0,255,65,0.14); border-radius: 14px;
   text-decoration: none; color: var(--text);
   transition: border-color .15s, background .15s;
   animation: fadeIn .35s ease; cursor: pointer;
-  min-width: 0;
 }
-.sn-token { flex: 1 1 auto; min-width: 0; }
-.sn-right { flex: 0 0 auto; }
-.sn-row + .sn-row { margin-top: 0; }
-.sn-row:hover { background: rgba(0,255,65,0.04); border-color: rgba(0,255,65,0.25); }
-.sn-row.byeboss {
-  border-color: rgba(255,170,0,0.4);
-  background: linear-gradient(90deg, rgba(255,170,0,0.06), rgba(0,0,0,0.4) 55%);
+.sn-card:hover { background: rgba(0,255,65,0.04); border-color: rgba(0,255,65,0.35); }
+.sn-card.byeboss {
+  border-color: rgba(255,170,0,0.45);
+  background: linear-gradient(135deg, rgba(255,170,0,0.08), rgba(0,0,0,0.4) 55%);
 }
-.sn-row.byeboss:hover { border-color: var(--yellow); }
+.sn-card.byeboss:hover { border-color: var(--yellow); }
 
-.sn-token { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sn-top { display: flex; gap: 14px; align-items: flex-start; }
 .sn-avatar {
-  width: 36px; height: 36px; border-radius: 50%;
-  border: 1px solid rgba(0,255,65,0.2); overflow: hidden; flex-shrink: 0;
+  position: relative;
+  width: 68px; height: 68px; border-radius: 14px;
+  border: 1px solid rgba(0,255,65,0.25); overflow: hidden; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   background: var(--bg3); font-family: var(--mono); font-weight: 700;
-  color: var(--text2); font-size: 14px;
+  color: var(--text2); font-size: 24px;
 }
 .sn-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.sn-row.byeboss .sn-avatar { border-color: rgba(255,170,0,0.5); }
-
-.sn-meta { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.sn-head { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-.sn-ticker {
-  font-family: var(--mono); font-weight: 700; font-size: 13px;
-  color: var(--text); letter-spacing: 0.3px;
-  flex-shrink: 0;
+.sn-card.byeboss .sn-avatar { border-color: var(--yellow); box-shadow: 0 0 12px rgba(255,170,0,0.2); }
+.sn-badge-ovl {
+  position: absolute; top: -6px; left: -6px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--bg2); border: 1px solid rgba(0,255,65,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
 }
-.sn-row.byeboss .sn-ticker { color: var(--yellow); }
+.sn-card.byeboss .sn-badge-ovl { border-color: var(--yellow); color: var(--yellow); }
+
+.sn-head {
+  flex: 1 1 auto; min-width: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.sn-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.sn-ticker {
+  font-family: var(--mono); font-weight: 700; font-size: 18px;
+  color: var(--text); letter-spacing: 0.3px; flex-shrink: 0;
+}
+.sn-card.byeboss .sn-ticker { color: var(--yellow); }
 .sn-name {
-  font-family: var(--mono); font-weight: 400; font-size: 11px;
+  font-family: var(--mono); font-weight: 400; font-size: 13px;
   color: var(--text2);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   min-width: 0; flex: 0 1 auto;
 }
 
-.sn-sub {
-  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
-  overflow-x: auto; scrollbar-width: none; min-width: 0;
-}
-.sn-sub::-webkit-scrollbar { display: none; }
-.sn-sub .sn-age {
-  font-family: var(--mono); font-size: 10px; color: var(--text3);
-  flex-shrink: 0; white-space: nowrap;
-}
-.sn-chip {
-  padding: 2px 7px; border-radius: 4px; font-family: var(--mono);
-  font-size: 10px; color: var(--text2);
-  border: 1px solid rgba(0,255,65,0.15);
-  background: transparent;
-  display: inline-flex; align-items: center; gap: 4px;
-  transition: all .15s; flex-shrink: 0; text-decoration: none; cursor: pointer;
-}
-.sn-chip:hover { border-color: var(--green); color: var(--green); }
-.sn-chip code { font-family: inherit; font-size: inherit; color: inherit; }
-.sn-chip.tg:hover  { color: #2aabee; border-color: #2aabee; }
-.sn-chip.tw:hover  { color: #fff; border-color: #fff; }
-.sn-chip.web:hover { color: var(--green); border-color: var(--green); }
-.sn-chip.pf:hover  { color: var(--yellow); border-color: var(--yellow); }
-.sn-chip.dex:hover { color: var(--red); border-color: var(--red); }
-
-.sn-right {
-  display: flex; flex-direction: column; align-items: flex-end;
-  gap: 4px; flex-shrink: 0;
-}
-.sn-mc { font-family: var(--mono); font-size: 13px; color: var(--text); font-weight: 600; }
-.sn-vol { font-family: var(--mono); font-size: 10px; color: var(--text3); }
-.sn-badges { display: flex; gap: 4px; flex-wrap: nowrap; }
-.sn-badges .chip {
-  padding: 2px 6px; border-radius: 3px; font-family: var(--mono);
-  font-size: 9px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase;
+.sn-info-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.sn-chip-lg {
+  padding: 5px 10px; border-radius: 8px; font-family: var(--mono);
+  font-size: 11px; color: var(--text2);
+  border: 1px solid rgba(0,255,65,0.2); background: transparent;
+  display: inline-flex; align-items: center; gap: 5px;
   white-space: nowrap;
 }
-.sn-badges .chip.safe   { color: var(--green); border: 1px solid rgba(0,255,136,0.3); background: rgba(0,255,136,0.08); }
-.sn-badges .chip.risk   { color: var(--red); border: 1px solid rgba(255,59,79,0.4); background: rgba(255,59,79,0.08); }
-.sn-badges .chip.warn   { color: var(--yellow); border: 1px solid rgba(255,170,0,0.4); background: rgba(255,170,0,0.08); }
-.sn-badges .chip.locked { color: var(--cyan); border: 1px solid rgba(0,209,255,0.3); background: rgba(0,209,255,0.08); }
-.sn-badges .chip.backed {
-  color: #000; background: var(--yellow); border: 1px solid var(--yellow);
+
+.sn-icon-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.sn-icon-btn {
+  width: 34px; height: 34px; border-radius: 8px;
+  border: 1px solid rgba(0,255,65,0.2); background: transparent;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--text2); cursor: pointer;
+  text-decoration: none; transition: all .15s;
+}
+.sn-icon-btn:hover { border-color: var(--green); color: var(--green); background: rgba(0,255,65,0.05); }
+.sn-icon-btn.tg:hover  { border-color: #2aabee; color: #2aabee; }
+.sn-icon-btn.tw:hover  { border-color: #fff; color: #fff; }
+.sn-icon-btn.web:hover { border-color: var(--green); color: var(--green); }
+.sn-icon-btn.pf:hover  { border-color: var(--yellow); color: var(--yellow); }
+.sn-icon-btn.dex:hover { border-color: var(--red); color: var(--red); }
+
+.sn-sep {
+  height: 1px; background: rgba(255,255,255,0.07); border: 0; margin: 0;
+}
+
+.sn-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sn-stat {
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid rgba(0,255,65,0.15); background: rgba(0,0,0,0.25);
+  min-width: 0;
+}
+.sn-stat-val {
+  font-family: var(--mono); font-weight: 700; font-size: 16px;
+  color: var(--text); display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap;
+}
+.sn-stat-val .delta {
+  font-family: var(--mono); font-weight: 500; font-size: 12px;
+}
+.sn-stat-val .delta.up { color: var(--green); }
+.sn-stat-val .delta.down { color: var(--red); }
+.sn-stat-val .pill {
+  padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 700;
+  border: 1px solid var(--green); color: var(--green); background: rgba(0,255,65,0.06);
+  letter-spacing: 0.5px;
+}
+.sn-stat-val .pill.backed { border-color: var(--yellow); color: var(--yellow); background: rgba(255,170,0,0.08); }
+.sn-stat-val .pill.risk   { border-color: var(--red); color: var(--red); background: rgba(255,59,79,0.08); }
+.sn-stat-val .pill.warn   { border-color: var(--yellow); color: var(--yellow); background: rgba(255,170,0,0.08); }
+.sn-stat-val .pill.locked { border-color: var(--cyan); color: var(--cyan); background: rgba(0,209,255,0.08); }
+.sn-stat-lbl {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  margin-top: 4px; letter-spacing: 0.3px;
 }
 
 .token-logo {
@@ -817,6 +842,7 @@ input:focus, textarea:focus { outline: none; }
         <button class="btn-ghost" id="refreshFeed">↻ Refresh</button>
       </div>
       <div class="feed-filters">
+        <span class="chip" data-filter="onlyByeboss">🏆 Only Byeboss</span>
         <span class="chip" data-filter="hideRugs">Hide rugs</span>
         <span class="chip" data-filter="hideDev5">Hide dev &gt;5%</span>
         <span class="chip" data-filter="onlyNew">Only &lt;1h old</span>
@@ -875,7 +901,7 @@ const state = {
   hostedReady: false,
   hostedFee: 0.03,
   hostedHotAddress: null,
-  filters: { hideRugs: false, hideDev5: false, onlyNew: false },
+  filters: { hideRugs: false, hideDev5: false, onlyNew: false, onlyByeboss: false },
   feedData: [],          // current aggregated list (pump.fun)
   byebossLaunches: [],   // shared launches from backend API
 };
@@ -916,6 +942,14 @@ function shortAddr(a, L = 4) { return !a ? '' : a.slice(0, L) + '…' + a.slice(
 
 function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Open the card's main link but skip when the click came from an icon
+// row / inner link / copy button (those handle themselves).
+function snOpen(ev, url) {
+  if (!url) return;
+  if (ev.target.closest('.sn-icon-row, a, button')) return;
+  window.open(url, '_blank', 'noopener');
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -1433,12 +1467,16 @@ function renderFeed() {
     for (const b of byeboss.slice(0, 10)) html += renderByebossCard(b);
   }
 
-  html += '<div class="feed-sep">Latest Pump.fun launches</div>';
-
-  if (filtered.length === 0) {
-    html += '<div class="feed-loader">No launches match filters</div>';
-  } else {
-    for (const p of filtered) html += renderPumpCard(p);
+  // "Only Byeboss" filter — skip the pump.fun aggregator section entirely
+  if (!state.filters.onlyByeboss) {
+    html += '<div class="feed-sep">Latest Pump.fun launches</div>';
+    if (filtered.length === 0) {
+      html += '<div class="feed-loader">No launches match filters</div>';
+    } else {
+      for (const p of filtered) html += renderPumpCard(p);
+    }
+  } else if (byeboss.length === 0) {
+    html += '<div class="feed-loader">No Byeboss launches yet — <a href="#launchForm" style="color:var(--red);font-weight:700">be the first 🚀</a></div>';
   }
 
   list.innerHTML = html;
@@ -1454,39 +1492,46 @@ function renderByebossCard(b) {
   const s = b.socials || {};
   const pumpUrl = mint ? `https://pump.fun/coin/${mint}` : '';
   const dexUrl = s.dex || (mint ? `https://dexscreener.com/solana/${mint}` : '');
-  const caShort = mint ? (mint.slice(0, 4) + '…' + mint.slice(-4)) : '';
   const avatar = b.image
     ? `<img src="${escapeHtml(b.image)}" alt="${escapeHtml(sym)}" onerror="this.parentNode.textContent='${escapeHtml(initial)}'" />`
     : escapeHtml(initial);
 
   return `
-    <a class="sn-row byeboss" href="${escapeHtml(pumpUrl)}" target="_blank" rel="noopener">
-      <div class="sn-token">
-        <div class="sn-avatar">${avatar}</div>
-        <div class="sn-meta">
-          <div class="sn-head">
+    <div class="sn-card byeboss" onclick="snOpen(event,'${escapeHtml(pumpUrl)}')">
+      <div class="sn-top">
+        <div class="sn-avatar">${avatar}<span class="sn-badge-ovl">🏆</span></div>
+        <div class="sn-head">
+          <div class="sn-title">
             <span class="sn-ticker">$${escapeHtml(sym)}</span>
             <span class="sn-name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
           </div>
-          <div class="sn-sub" onclick="event.stopPropagation()">
-            <span class="sn-age">⏱ ${age}</span>
-            ${mint ? `<span class="sn-chip genesis-ca" data-ca="${escapeHtml(mint)}" title="Copy contract"><code>${escapeHtml(caShort)}</code> 📋</span>` : ''}
-            ${s.telegram ? `<a class="sn-chip tg"  href="${escapeHtml(s.telegram)}" target="_blank" rel="noopener">💬</a>` : ''}
-            ${s.twitter  ? `<a class="sn-chip tw"  href="${escapeHtml(s.twitter)}"  target="_blank" rel="noopener">𝕏</a>` : ''}
-            ${s.website  ? `<a class="sn-chip web" href="${escapeHtml(s.website)}"  target="_blank" rel="noopener">🌐</a>` : ''}
-            ${pumpUrl ? `<a class="sn-chip pf"  href="${escapeHtml(pumpUrl)}"  target="_blank" rel="noopener">🎰 pump</a>` : ''}
-            ${dexUrl  ? `<a class="sn-chip dex" href="${escapeHtml(dexUrl)}"   target="_blank" rel="noopener">📈 dex</a>` : ''}
-            <a class="sn-chip" href="trade.html">💎 trade</a>
+          <div class="sn-info-row">
+            <span class="sn-chip-lg">🕐 ${age}</span>
+            <span class="sn-chip-lg">👤 ${shortAddr(b.creator)}</span>
+          </div>
+          <div class="sn-icon-row">
+            ${mint ? `<button class="sn-icon-btn genesis-ca" data-ca="${escapeHtml(mint)}" title="Copy contract" onclick="event.preventDefault()">📋</button>` : ''}
+            ${s.website  ? `<a class="sn-icon-btn web" href="${escapeHtml(s.website)}"  target="_blank" rel="noopener" title="Website">🌐</a>` : ''}
+            ${s.telegram ? `<a class="sn-icon-btn tg"  href="${escapeHtml(s.telegram)}" target="_blank" rel="noopener" title="Telegram">💬</a>` : ''}
+            ${s.twitter  ? `<a class="sn-icon-btn tw"  href="${escapeHtml(s.twitter)}"  target="_blank" rel="noopener" title="Twitter">𝕏</a>` : ''}
+            ${pumpUrl    ? `<a class="sn-icon-btn pf"  href="${escapeHtml(pumpUrl)}"    target="_blank" rel="noopener" title="Pump.fun">🎰</a>` : ''}
+            ${dexUrl     ? `<a class="sn-icon-btn dex" href="${escapeHtml(dexUrl)}"     target="_blank" rel="noopener" title="DexScreener">📈</a>` : ''}
+            <a class="sn-icon-btn" href="trade.html" title="Trade">💎</a>
           </div>
         </div>
       </div>
-      <div class="sn-right">
-        <div class="sn-badges">
-          <span class="chip backed">🏆 ${b.mode === 'hosted' ? 'BACKED' : 'BYEBOSS'}</span>
+      <hr class="sn-sep">
+      <div class="sn-stats">
+        <div class="sn-stat">
+          <div class="sn-stat-val"><span class="pill backed">🏆 ${b.mode === 'hosted' ? 'BACKED' : 'BYEBOSS'}</span></div>
+          <div class="sn-stat-lbl">Status</div>
         </div>
-        <div class="sn-vol">By ${shortAddr(b.creator)}</div>
+        <div class="sn-stat">
+          <div class="sn-stat-val">$${escapeHtml(sym)}</div>
+          <div class="sn-stat-lbl">On-chain creator · Byeboss</div>
+        </div>
       </div>
-    </a>`;
+    </div>`;
 }
 
 function renderGenesisByebossCard(b) {
@@ -1549,51 +1594,61 @@ function renderPumpCard(p) {
   const website = websites[0]?.url || websites[0];
   const pumpUrl = mint ? `https://pump.fun/coin/${mint}` : '';
   const dexUrl = p.url || (mint ? `https://dexscreener.com/solana/${mint}` : '');
-  const caShort = mint ? (mint.slice(0, 4) + '…' + mint.slice(-4)) : '';
   const avatar = logo
     ? `<img src="${escapeHtml(logo)}" alt="${escapeHtml(sym)}" onerror="this.parentNode.textContent='${escapeHtml(initial)}'" />`
     : escapeHtml(initial);
 
-  // Safety chips (right-column)
-  let chipsRight = '';
+  const chg24 = parseFloat(p.priceChange?.h24) || 0;
+  const chgCls = chg24 >= 0 ? 'up' : 'down';
+  const chgSign = chg24 >= 0 ? '+' : '';
+
+  // Right-side stat pill — safety signal (LP Locked / Risk / etc.)
+  let statusPill = '<span class="pill warn">⏳ CHECKING</span>';
   if (rc) {
     const topPct = rc.topHolders?.[0]?.pct || 0;
     const lpBurned = !!rc.markets?.[0]?.lp?.lpBurned;
     const highRisks = (rc.risks || []).some(r => (r.level || '').toLowerCase() === 'danger');
-    if (lpBurned) chipsRight += '<span class="chip locked">🔒 LP</span>';
-    if (topPct > 10) chipsRight += `<span class="chip warn">⚠️ ${topPct.toFixed(0)}%</span>`;
-    if (!highRisks && topPct < 10 && lpBurned) chipsRight += '<span class="chip safe">✅</span>';
-    if (highRisks) chipsRight += '<span class="chip risk">🚨</span>';
-  } else {
-    chipsRight = '<span class="chip warn">⏳</span>';
+    if (highRisks)       statusPill = '<span class="pill risk">🚨 RISK</span>';
+    else if (topPct > 10) statusPill = `<span class="pill warn">⚠️ DEV ${topPct.toFixed(0)}%</span>`;
+    else if (lpBurned)   statusPill = '<span class="pill locked">🔒 SAFE</span>';
+    else                 statusPill = '<span class="pill">✓ OK</span>';
   }
 
   return `
-    <a class="sn-row" href="${escapeHtml(dexUrl || pumpUrl)}" target="_blank" rel="noopener">
-      <div class="sn-token">
-        <div class="sn-avatar">${avatar}</div>
-        <div class="sn-meta">
-          <div class="sn-head">
+    <div class="sn-card" onclick="snOpen(event,'${escapeHtml(dexUrl || pumpUrl)}')">
+      <div class="sn-top">
+        <div class="sn-avatar">${avatar}<span class="sn-badge-ovl">💊</span></div>
+        <div class="sn-head">
+          <div class="sn-title">
             <span class="sn-ticker">$${escapeHtml(sym)}</span>
             <span class="sn-name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
           </div>
-          <div class="sn-sub" onclick="event.stopPropagation()">
-            <span class="sn-age">⏱ ${age}</span>
-            ${mint ? `<span class="sn-chip genesis-ca" data-ca="${escapeHtml(mint)}" title="Copy contract"><code>${escapeHtml(caShort)}</code> 📋</span>` : ''}
-            ${telegram ? `<a class="sn-chip tg"  href="${escapeHtml(telegram)}" target="_blank" rel="noopener">💬</a>` : ''}
-            ${twitter  ? `<a class="sn-chip tw"  href="${escapeHtml(twitter)}"  target="_blank" rel="noopener">𝕏</a>` : ''}
-            ${website  ? `<a class="sn-chip web" href="${escapeHtml(website)}"  target="_blank" rel="noopener">🌐</a>` : ''}
-            ${pumpUrl ? `<a class="sn-chip pf"  href="${escapeHtml(pumpUrl)}"  target="_blank" rel="noopener">🎰</a>` : ''}
-            ${dexUrl  ? `<a class="sn-chip dex" href="${escapeHtml(dexUrl)}"   target="_blank" rel="noopener">📈</a>` : ''}
+          <div class="sn-info-row">
+            <span class="sn-chip-lg">🕐 ${age}</span>
+            <span class="sn-chip-lg">📊 Vol $${fmt(vol24)}</span>
+          </div>
+          <div class="sn-icon-row">
+            ${mint ? `<button class="sn-icon-btn genesis-ca" data-ca="${escapeHtml(mint)}" title="Copy contract" onclick="event.preventDefault()">📋</button>` : ''}
+            ${website  ? `<a class="sn-icon-btn web" href="${escapeHtml(website)}"  target="_blank" rel="noopener" title="Website">🌐</a>` : ''}
+            ${telegram ? `<a class="sn-icon-btn tg"  href="${escapeHtml(telegram)}" target="_blank" rel="noopener" title="Telegram">💬</a>` : ''}
+            ${twitter  ? `<a class="sn-icon-btn tw"  href="${escapeHtml(twitter)}"  target="_blank" rel="noopener" title="Twitter">𝕏</a>` : ''}
+            ${pumpUrl  ? `<a class="sn-icon-btn pf"  href="${escapeHtml(pumpUrl)}"  target="_blank" rel="noopener" title="Pump.fun">🎰</a>` : ''}
+            ${dexUrl   ? `<a class="sn-icon-btn dex" href="${escapeHtml(dexUrl)}"   target="_blank" rel="noopener" title="DexScreener">📈</a>` : ''}
           </div>
         </div>
       </div>
-      <div class="sn-right">
-        <div class="sn-mc">$${fmt(mc)}</div>
-        <div class="sn-vol">Vol $${fmt(vol24)}</div>
-        <div class="sn-badges">${chipsRight}</div>
+      <hr class="sn-sep">
+      <div class="sn-stats">
+        <div class="sn-stat">
+          <div class="sn-stat-val">$${fmt(mc)} ${chg24 !== 0 ? `<span class="delta ${chgCls}">${chgSign}${chg24.toFixed(1)}%</span>` : ''}</div>
+          <div class="sn-stat-lbl">Market Cap</div>
+        </div>
+        <div class="sn-stat">
+          <div class="sn-stat-val">${statusPill}</div>
+          <div class="sn-stat-lbl">Safety</div>
+        </div>
       </div>
-    </a>`;
+    </div>`;
 }
 
 // Filter chips
