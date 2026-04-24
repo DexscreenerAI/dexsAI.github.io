@@ -248,6 +248,9 @@ input:focus, textarea:focus { outline: none; }
   display: grid; grid-template-columns: minmax(0, 820px);
   justify-content: center; gap: 24px; margin-top: 40px;
 }
+/* Author `display: grid` overrides the user-agent [hidden] {display:none}
+   rule. Re-assert it so the launch panel stays collapsed by default. */
+.grid[hidden] { display: none; }
 
 /* Live Feed full-width — single column of generous rows so each
    .sn-row has ~1100 px of space instead of the old 550 px cram. */
