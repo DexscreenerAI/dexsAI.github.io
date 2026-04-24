@@ -2268,7 +2268,7 @@ body::before {
   </div>
   
   <div class="status-badges">
-    <span class="status-badge stopped" id="modeBadge">STOPPED</span>
+    <span class="status-badge live" id="modeBadge">LIVE · 24/7</span>
     <a href="./sniper-access.html" style="text-decoration:none;padding:5px 14px;font-size:10px;font-weight:600;letter-spacing:1px;border:1px solid var(--cyan);border-radius:4px;color:var(--cyan);background:rgba(255,59,79,0.08);cursor:pointer;transition:all .15s;font-family:'JetBrains Mono',monospace;" onmouseover="this.style.background='rgba(255,59,79,0.2)'" onmouseout="this.style.background='rgba(255,59,79,0.08)'">🤖 ACCESS THE BOT</a>
   </div>
 </div>
@@ -2308,7 +2308,7 @@ body::before {
           </tr>
         </thead>
         <tbody id="soulSignalsBody">
-          <tr><td colspan="7"><div class="signals-empty">No signals yet — engine idle</div></td></tr>
+          <tr><td colspan="7"><div class="signals-empty">Scanning 24/7 — waiting for the next high-conviction signal…</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -2326,7 +2326,8 @@ body::before {
 
   <!-- CONTROLS ROW -->
   <div class="controls-row">
-    <button class="ctrl-btn primary" id="startBtn">▶ START</button>
+    <button class="ctrl-btn primary" id="startBtn" style="display:none">▶ START</button>
+    <span class="ctrl-btn" style="cursor:default;border-color:var(--green);color:var(--green);background:rgba(0,255,128,0.08)">🟢 LIVE · 24/7</span>
     <button class="ctrl-btn" id="statsBtn">📊 STATS</button>
     <button class="ctrl-btn" id="cacheBtn">↻ CACHE</button>
     <button class="ctrl-btn" id="exportBtn">↑ EXPORT</button>
@@ -2340,7 +2341,7 @@ body::before {
   <div class="scanner-status-bar">
     <div class="scanner-info">
       <div class="scanner-dot" id="scannerDot"></div>
-      <span class="scanner-text" id="scannerText">Click START to begin</span>
+      <span class="scanner-text" id="scannerText">Engine live · scanning 24/7</span>
     </div>
     <div class="scanner-stats">
       <span class="scanner-stat">Scanned: <span id="scannedCount">0</span></span>
