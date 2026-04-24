@@ -251,6 +251,36 @@ input:focus, textarea:focus { outline: none; }
 
 /* Live Feed full-width — single column of generous rows so each
    .sn-row has ~1100 px of space instead of the old 550 px cram. */
+/* Collapsed Launch CTA — keeps the form out of the way so the live
+   feed is the hero of the page. Tap to reveal the full creation form. */
+.launch-cta-row { display: flex; justify-content: center; margin: 24px 0 8px; }
+.launch-cta-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 22px; min-width: 280px; max-width: 720px; width: 100%;
+  border: 1px solid rgba(255,170,0,0.45);
+  background: linear-gradient(135deg, rgba(255,170,0,0.08), rgba(0,0,0,0.4) 60%);
+  border-radius: 14px; color: var(--text);
+  font-family: var(--display); letter-spacing: 1.5px; text-transform: uppercase;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: all .15s;
+}
+.launch-cta-btn:hover {
+  border-color: var(--yellow); transform: translateY(-1px);
+  box-shadow: 0 0 18px rgba(255,170,0,0.25);
+}
+.launch-cta-btn .ico { font-size: 18px; }
+.launch-cta-btn .txt { color: var(--yellow); flex: 0 0 auto; }
+.launch-cta-btn .sub {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  color: var(--text2); letter-spacing: 0.5px; text-transform: none;
+  margin-left: auto; flex: 0 1 auto;
+}
+.launch-cta-btn .chev {
+  font-family: var(--mono); font-size: 14px; color: var(--text2);
+  transition: transform .25s;
+}
+.launch-cta-btn[aria-expanded="true"] .chev { transform: rotate(180deg); color: var(--yellow); }
+
 .feed-section { margin-top: 32px; }
 
 /* Same auto-fill tiling as sniper_terminal — 4-5 cards per row on
@@ -783,8 +813,18 @@ input:focus, textarea:focus { outline: none; }
     </div>
   </section>
 
+  <!-- LAUNCH CTA — collapsed by default so the feed shows first -->
+  <section class="launch-cta-row">
+    <button type="button" id="toggleLaunchForm" class="launch-cta-btn" aria-expanded="false" aria-controls="launchPanelWrap">
+      <span class="ico">🏆</span>
+      <span class="txt">Launch via Byeboss</span>
+      <span class="sub">~0.03 SOL · No service fee</span>
+      <span class="chev">▾</span>
+    </button>
+  </section>
+
   <!-- MAIN GRID -->
-  <section class="grid">
+  <section class="grid" id="launchPanelWrap" hidden>
 
     <!-- LEFT: CREATION FORM -->
     <div class="panel">
@@ -1710,6 +1750,24 @@ document.querySelectorAll('.chip[data-filter]').forEach(chip => {
     renderFeed();
   });
 });
+
+// Collapsible launch form — start hidden, toggled by the CTA button
+const launchToggle = $('toggleLaunchForm');
+const launchPanel = $('launchPanelWrap');
+if (launchToggle && launchPanel) {
+  launchToggle.addEventListener('click', () => {
+    const open = launchToggle.getAttribute('aria-expanded') === 'true';
+    if (open) {
+      launchPanel.hidden = true;
+      launchToggle.setAttribute('aria-expanded', 'false');
+    } else {
+      launchPanel.hidden = false;
+      launchToggle.setAttribute('aria-expanded', 'true');
+      // Scroll the form into view so the user sees the fields
+      launchPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+}
 
 $('refreshFeed').addEventListener('click', () => { fetchFeed(); fetchGlobalLaunches(); });
 
