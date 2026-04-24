@@ -112,9 +112,9 @@ input:focus { outline: none; }
 .hero h1 {
   font-family: var(--mono); font-weight: 800; font-size: clamp(30px, 5vw, 46px);
   letter-spacing: -1px; margin-bottom: 10px;
-  background: linear-gradient(135deg, #fff 0%, var(--cyan) 100%);
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  color: var(--text);
 }
+.hero h1 .accent { color: var(--red); }
 .hero p { color: var(--text2); font-size: 15px; max-width: 560px; margin: 0 auto; }
 
 /* BENEFITS */
@@ -455,7 +455,7 @@ input:focus { outline: none; }
 
   <!-- HERO TITLE -->
   <section class="hero">
-    <h1>🔒 Lock $ByeBoss</h1>
+    <h1>🔒 Lock <span class="accent">$ByeBoss</span></h1>
     <p>Signal your conviction. Earn exclusive holder badges. Share in future fees.</p>
   </section>
 
