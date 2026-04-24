@@ -1366,24 +1366,53 @@ function renderFeed() {
 function renderByebossCard(b) {
   if (b.genesis) return renderGenesisByebossCard(b);
   const age = ageStr(b.timestamp);
-  const logo = b.image
-    ? `<img class="token-logo" src="${escapeHtml(b.image)}" alt="${escapeHtml(b.symbol)}" style="object-fit:cover" onerror="this.outerHTML='<div class=token-logo>${escapeHtml((b.symbol||'?')[0])}</div>'" />`
-    : `<div class="token-logo">${escapeHtml((b.symbol || '?')[0])}</div>`;
+  const mint = b.mint || '';
+  const sym = b.symbol || '?';
+  const name = b.name || sym;
+  const initial = sym[0] || '?';
+
+  // Wrap image inside .token-logo div so the grid column stays 44px
+  // (the previous direct <img class="token-logo"> broke flex-shrink and
+  // the card exploded onto multiple rows).
+  const logoHtml = b.image
+    ? `<div class="token-logo"><img src="${escapeHtml(b.image)}" alt="${escapeHtml(sym)}" onerror="this.parentNode.textContent='${escapeHtml(initial)}';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--text2)'" /></div>`
+    : `<div class="token-logo">${escapeHtml(initial)}</div>`;
+
+  // Socials — optional, only render chips that are actually populated
+  const s = b.socials || {};
+  const pumpUrl = mint ? `https://pump.fun/coin/${mint}` : '';
+  const dexUrl = s.dex || (mint ? `https://dexscreener.com/solana/${mint}` : '');
+  const caShort = mint ? (mint.slice(0, 5) + '…' + mint.slice(-5)) : '';
+  const badgeLabel = b.mode === 'hosted' ? '🏆 BYEBOSS BACKED' : '🏆 BYEBOSS';
+
   return `
-    <a class="token-card byeboss" href="https://pump.fun/coin/${encodeURIComponent(b.mint)}" target="_blank" rel="noopener">
-      ${logo}
+    <a class="token-card byeboss" href="${escapeHtml(pumpUrl)}" target="_blank" rel="noopener">
+      ${logoHtml}
       <div class="token-main">
-        <div class="token-line1">
-          <span class="token-name">${escapeHtml(b.name)}</span>
-          <span class="token-sym">$${escapeHtml(b.symbol)}</span>
+        <div class="genesis-head">
+          <span class="name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+          <span class="badge-1">$${escapeHtml(sym)}</span>
           <span class="token-age">· ${age}</span>
         </div>
-        <div class="token-line2">
+        ${mint ? `
+        <div class="genesis-ca" title="Copy contract" data-ca="${escapeHtml(mint)}" onclick="event.stopPropagation()">
+          <code>${escapeHtml(caShort)}</code>
+          <span>📋</span>
+        </div>` : ''}
+        <div class="genesis-socials" onclick="event.stopPropagation()">
+          ${s.telegram ? `<a class="tg"  href="${escapeHtml(s.telegram)}" target="_blank" rel="noopener">💬</a>` : ''}
+          ${s.twitter  ? `<a class="tw"  href="${escapeHtml(s.twitter)}"  target="_blank" rel="noopener">𝕏</a>` : ''}
+          ${s.website  ? `<a class="web" href="${escapeHtml(s.website)}"  target="_blank" rel="noopener">🌐</a>` : ''}
+          ${pumpUrl  ? `<a class="pf"  href="${escapeHtml(pumpUrl)}"  target="_blank" rel="noopener">🎰 Pump</a>` : ''}
+          ${dexUrl   ? `<a class="dex" href="${escapeHtml(dexUrl)}"   target="_blank" rel="noopener">📈 Dex</a>` : ''}
+          <a href="trade.html">💎 Trade</a>
+          ${b.signature ? `<a href="https://solscan.io/tx/${encodeURIComponent(b.signature)}" target="_blank" rel="noopener">🧾 tx</a>` : ''}
+        </div>
+        <div class="pump-meta">
           <span>By <b>${shortAddr(b.creator)}</b></span>
-          ${b.signature ? `<span>· <a href="https://solscan.io/tx/${encodeURIComponent(b.signature)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">tx</a></span>` : ''}
         </div>
       </div>
-      <div class="token-badges">${b.mode === 'hosted' ? '<span class="badge gold">🏆 BYEBOSS BACKED</span>' : '<span class="badge gold">🏆 BYEBOSS</span>'}</div>
+      <div class="token-badges"><span class="badge gold">${badgeLabel}</span></div>
     </a>`;
 }
 
