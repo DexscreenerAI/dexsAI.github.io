@@ -3972,19 +3972,21 @@ function calculateScore(pair, settings) {
 // ═══════════════════════════════════════════════════════
 function updateUI() {
   const pnlEl = $('totalPnl');
-  pnlEl.textContent = (totalPnL >= 0 ? '+' : '') + '$' + totalPnL.toFixed(2);
-  pnlEl.className = 'top-stat-value ' + (totalPnL >= 0 ? 'green' : 'red');
-  
-  $('balance').textContent = '$' + balance.toFixed(0);
-  $('winRate').textContent = (totalTrades > 0 ? ((wins / totalTrades) * 100).toFixed(0) : '--') + '%';
-  $('totalTrades').textContent = totalTrades;
-  
-  $('quickCount').textContent = positions.filter(p => p.tradeType === 'QUICK').length;
-  $('longCount').textContent = positions.filter(p => p.tradeType === 'LONG').length;
-  $('moonCount').textContent = positions.filter(p => p.tradeType === 'MOON').length;
-  
-  
-  $('positionsBadge').textContent = positions.length + ' OPEN';
+  if (pnlEl) {
+    pnlEl.textContent = (totalPnL >= 0 ? '+' : '') + '$' + totalPnL.toFixed(2);
+    pnlEl.className = 'top-stat-value ' + (totalPnL >= 0 ? 'green' : 'red');
+  }
+
+  if ($('balance')) $('balance').textContent = '$' + balance.toFixed(0);
+  if ($('winRate')) $('winRate').textContent = (totalTrades > 0 ? ((wins / totalTrades) * 100).toFixed(0) : '--') + '%';
+  if ($('totalTrades')) $('totalTrades').textContent = totalTrades;
+
+  if ($('quickCount')) $('quickCount').textContent = positions.filter(p => p.tradeType === 'QUICK').length;
+  if ($('longCount')) $('longCount').textContent = positions.filter(p => p.tradeType === 'LONG').length;
+  if ($('moonCount')) $('moonCount').textContent = positions.filter(p => p.tradeType === 'MOON').length;
+
+  // positionsBadge was part of the removed Active Positions panel — guard it.
+  if ($('positionsBadge')) $('positionsBadge').textContent = positions.length + ' OPEN';
 }
 
 function renderScanner(opportunities) {
