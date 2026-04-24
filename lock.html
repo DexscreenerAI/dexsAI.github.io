@@ -1154,7 +1154,7 @@ function renderLocks() {
     const claimBtn = l.claimable
       ? `<button class="claim-btn" data-stream="${escapeHtml(l.id)}" data-amount="${l.remainingRaw.toString()}">💰 Claim ${fmt(l.remainingUi)}</button>`
       : '';
-    return `<div class="lock-card ${l.claimable ? 'claimable' : ''}">
+    return `<div class="lock-card ${l.claimable ? 'claimable' : ''}" data-stream="${escapeHtml(l.id)}" data-cliff="${l.cliff}">
       <div class="lock-top">
         <div class="lock-amount">${fmt(l.depositedUi)} <small>$BYEBOSS</small></div>
         ${badge}
@@ -1163,7 +1163,7 @@ function renderLocks() {
         <span>Unlock: <b>${fmtDate(l.cliff)}</b></span>
         ${durLbl ? `<span>· <b>${durLbl}</b></span>` : ''}
       </div>
-      <div class="countdown ${cdCls}"><span>${cdIcon}</span><span>${c.text}</span></div>
+      <div class="countdown ${cdCls}"><span>${cdIcon}</span><span class="cd-text">${c.text}</span></div>
       ${claimBtn}
     </div>`;
   }).join('');
@@ -1173,9 +1173,17 @@ function renderLocks() {
   });
 }
 
-// Update countdowns every second
+// Tick countdowns in place — don't rebuild DOM or the fadeIn animation
+// re-fires every second and the whole panel flickers.
 setInterval(() => {
-  if (state.locks.length > 0) renderLocks();
+  if (state.locks.length === 0) return;
+  const el = $('locksList');
+  el.querySelectorAll('.lock-card').forEach(card => {
+    const cliff = parseInt(card.dataset.cliff, 10);
+    if (!cliff) return;
+    const txt = card.querySelector('.cd-text');
+    if (txt) txt.textContent = countdown(cliff).text;
+  });
 }, 1000);
 
 $('refreshLocks').addEventListener('click', refreshUser);
