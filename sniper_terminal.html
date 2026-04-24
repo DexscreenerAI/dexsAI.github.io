@@ -4332,7 +4332,7 @@ function renderSoulKPIs() {
     const last7d  = sigs.filter(s => (now - s.openedAt) <= week);
 
     const count24 = last24h.length;
-    const wins24 = last24h.filter(s => s.peakX >= 2).length;
+    const wins24 = last24h.filter(s => s.peakX >= 1.25).length;
     const winRate24 = count24 ? (100 * wins24 / count24) : 0;
     const avgX24 = count24 ? (last24h.reduce((a, s) => a + s.peakX, 0) / count24) : 0;
     const totalX24 = last24h.reduce((a, s) => a + s.peakX, 0);
