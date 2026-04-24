@@ -415,6 +415,26 @@ input:focus, textarea:focus { outline: none; }
 .genesis-socials a.pf:hover  { color: var(--yellow); border-color: var(--yellow); }
 .genesis-socials a.dex:hover { color: var(--red); border-color: var(--red); }
 
+/* Neutral overrides — pump.fun cards reuse .genesis-head / .genesis-ca
+   markup so layout is identical to the $ByeBoss genesis card, but
+   they skip the yellow accent. */
+.token-card:not(.byeboss) .genesis-head .name { color: var(--text); }
+.token-card:not(.byeboss) .genesis-head .badge-1 {
+  color: var(--red); border-color: var(--red);
+  background: rgba(255,59,79,0.1);
+}
+.token-card:not(.byeboss) .genesis-ca {
+  color: var(--text2); border-color: var(--border);
+}
+.token-card:not(.byeboss) .genesis-ca:hover {
+  color: var(--red); border-color: var(--red);
+}
+.pump-meta {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px;
+  font-family: var(--mono); font-size: 11px; color: var(--text2);
+}
+.pump-meta b { color: var(--text); font-weight: 600; }
+
 /* Same visual style for every pump.fun card in the Live Feed so the
    layout is consistent with the Byeboss genesis / launched cards. */
 .token-socials { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
@@ -1430,53 +1450,49 @@ function renderPumpCard(p) {
     if (highRisks) badgeHtml += '<span class="badge danger">🚨 Risk</span>';
   }
 
+  // Same markup skeleton as the Byeboss genesis card so every card in
+  // the feed renders identically (logo / name-head / CA pill / socials).
+  // Neutral color overrides live in CSS under `.token-card:not(.byeboss)`.
+  const initial = sym[0] || '?';
   const logoHtml = logo
-    ? `<img class="token-logo" src="${escapeHtml(logo)}" alt="" onerror="this.outerHTML='<div class=token-logo>${escapeHtml(sym[0])}</div>'" />`
-    : `<div class="token-logo">${escapeHtml(sym[0] || '?')}</div>`;
+    ? `<div class="token-logo"><img src="${escapeHtml(logo)}" onerror="this.parentNode.textContent='${escapeHtml(initial)}';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--text2)'" /></div>`
+    : `<div class="token-logo">${escapeHtml(initial)}</div>`;
 
-  // Socials & websites from DexScreener info payload — render same as
-  // the Byeboss genesis card so every token in the feed looks uniform.
   const socials = Array.isArray(p.info?.socials) ? p.info.socials : [];
   const websites = Array.isArray(p.info?.websites) ? p.info.websites : [];
   const twitter = socials.find(s => (s.type || '').toLowerCase() === 'twitter')?.url;
   const telegram = socials.find(s => (s.type || '').toLowerCase() === 'telegram')?.url;
-  const discord = socials.find(s => (s.type || '').toLowerCase() === 'discord')?.url;
   const website = websites[0]?.url || websites[0];
   const pumpUrl = mint ? `https://pump.fun/coin/${mint}` : '';
   const dexUrl = p.url || (mint ? `https://dexscreener.com/solana/${mint}` : '');
 
-  const socialsHtml = `
-    <div class="token-socials" onclick="event.stopPropagation()">
-      ${telegram ? `<a class="tg" href="${escapeHtml(telegram)}" target="_blank" rel="noopener" title="Telegram">💬</a>` : ''}
-      ${twitter  ? `<a class="tw" href="${escapeHtml(twitter)}"  target="_blank" rel="noopener" title="Twitter">𝕏</a>` : ''}
-      ${discord  ? `<a class="dc" href="${escapeHtml(discord)}"  target="_blank" rel="noopener" title="Discord">🎮</a>` : ''}
-      ${website  ? `<a class="web" href="${escapeHtml(website)}" target="_blank" rel="noopener" title="Website">🌐</a>` : ''}
-      ${pumpUrl  ? `<a class="pf"  href="${escapeHtml(pumpUrl)}"  target="_blank" rel="noopener" title="Pump.fun">🎰</a>` : ''}
-      ${dexUrl   ? `<a class="dex" href="${escapeHtml(dexUrl)}"   target="_blank" rel="noopener" title="DexScreener">📈</a>` : ''}
-    </div>`;
-
   const caShort = mint ? (mint.slice(0, 5) + '…' + mint.slice(-5)) : '';
-  const caPillHtml = mint
-    ? `<div class="genesis-ca" title="Copy contract" data-ca="${escapeHtml(mint)}" onclick="event.stopPropagation()">
-         <code>${escapeHtml(caShort)}</code><span>📋</span>
-       </div>`
-    : '';
 
   return `
-    <a class="token-card" href="${escapeHtml(p.url || ('https://pump.fun/coin/' + mint))}" target="_blank" rel="noopener">
+    <a class="token-card" href="${escapeHtml(dexUrl || pumpUrl)}" target="_blank" rel="noopener">
       ${logoHtml}
       <div class="token-main">
-        <div class="token-line1">
-          <span class="token-name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
-          <span class="token-sym">$${escapeHtml(sym)}</span>
+        <div class="genesis-head">
+          <span class="name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+          <span class="badge-1">$${escapeHtml(sym)}</span>
           <span class="token-age">· ${age}</span>
         </div>
-        <div class="token-line2">
-          <span>MC <b>$${fmt(mc)}</b></span>
-          <span>· Vol24h <b>$${fmt(vol24)}</b></span>
+        ${mint ? `
+        <div class="genesis-ca" title="Copy contract" data-ca="${escapeHtml(mint)}" onclick="event.stopPropagation()">
+          <code>${escapeHtml(caShort)}</code>
+          <span>📋</span>
+        </div>` : ''}
+        <div class="genesis-socials" onclick="event.stopPropagation()">
+          ${telegram ? `<a class="tg"  href="${escapeHtml(telegram)}" target="_blank" rel="noopener">💬</a>` : ''}
+          ${twitter  ? `<a class="tw"  href="${escapeHtml(twitter)}"  target="_blank" rel="noopener">𝕏</a>` : ''}
+          ${website  ? `<a class="web" href="${escapeHtml(website)}"  target="_blank" rel="noopener">🌐</a>` : ''}
+          ${pumpUrl  ? `<a class="pf"  href="${escapeHtml(pumpUrl)}"  target="_blank" rel="noopener">🎰 Pump</a>` : ''}
+          ${dexUrl   ? `<a class="dex" href="${escapeHtml(dexUrl)}"   target="_blank" rel="noopener">📈 Dex</a>` : ''}
+          <a href="trade.html">💎 Trade</a>
         </div>
-        ${caPillHtml}
-        ${socialsHtml}
+        <div class="pump-meta">
+          <span>MC <b>$${fmt(mc)}</b></span><span>· Vol24h <b>$${fmt(vol24)}</b></span>
+        </div>
       </div>
       <div class="token-badges">${badgeHtml || '<span class="badge warn">⏳ Checking</span>'}</div>
     </a>`;
