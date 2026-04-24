@@ -2282,7 +2282,7 @@ body::before {
     <div class="soul-tabs" role="tablist">
       <button class="soul-tab active" data-soul-tab="all" role="tab">All Signals</button>
       <button class="soul-tab" data-soul-tab="live" role="tab">🟢 Live</button>
-      <button class="soul-tab" data-soul-tab="closed" role="tab">✓ Closed</button>
+      <button class="soul-tab" data-soul-tab="closed" role="tab">🏁 Archive</button>
     </div>
 
     <div class="kpi-strip">
@@ -4425,7 +4425,7 @@ function renderSoulKPIs() {
     const last7d  = sigs.filter(s => (now - s.openedAt) <= week);
 
     const count24 = last24h.length;
-    const wins24 = last24h.filter(s => s.peakX >= 1.5).length;
+    const wins24 = last24h.filter(s => s.peakX >= 2).length;
     const winRate24 = count24 ? (100 * wins24 / count24) : 0;
     const avgX24 = count24 ? (last24h.reduce((a, s) => a + s.peakX, 0) / count24) : 0;
     const totalX24 = last24h.reduce((a, s) => a + s.peakX, 0);
@@ -4467,7 +4467,7 @@ function renderSoulSignals() {
       const logo = s.logoUrl ? `<img src="${esc(s.logoUrl)}" alt="" onerror="this.style.display='none';this.parentNode.innerHTML='🔸'">` : '🔸';
       const caChip = s.ca ? `<span class="st-sub-chip" onclick="navigator.clipboard.writeText('${esc(s.ca)}');this.textContent='COPIED'" title="Copy contract">${soulShort(s.ca)}</span>` : '';
       const chartChip = s.dexUrl ? `<a class="st-sub-chip" href="${esc(s.dexUrl)}" target="_blank" rel="noopener">chart ↗</a>` : '';
-      const statusLbl = s.status === 'LIVE' ? '<span style="color:var(--green)">● LIVE</span>' : '<span style="color:var(--text-dim)">CLOSED</span>';
+      const statusLbl = s.status === 'LIVE' ? '<span style="color:var(--green)">● LIVE</span>' : '<span style="color:var(--text-dim)">ARCHIVED</span>';
 
       return `
         <tr>
