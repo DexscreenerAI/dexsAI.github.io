@@ -518,6 +518,107 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .launch-foot a { color: var(--text3); padding: 3px 8px; background: var(--bg2); border-radius: 4px; transition: all 0.15s; }
 .launch-foot a:hover { color: var(--red); background: var(--bg3); }
 
+/* ═══════════════════════════════════════════════════════════════════
+   SoulTerminal-style vertical card — mirrored from launchpad.html so
+   All Byeboss Launches renders identically to the Live Feed entries.
+   ═══════════════════════════════════════════════════════════════════ */
+.sn-card {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 14px; background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(0,255,65,0.14); border-radius: 14px;
+  text-decoration: none; color: var(--text);
+  transition: border-color .15s, background .15s;
+  animation: fadeIn .35s ease; cursor: pointer;
+}
+.sn-card:hover { background: rgba(0,255,65,0.04); border-color: rgba(0,255,65,0.35); }
+.sn-card.byeboss {
+  border-color: rgba(255,170,0,0.45);
+  background: linear-gradient(135deg, rgba(255,170,0,0.08), rgba(0,0,0,0.4) 55%);
+}
+.sn-card.byeboss:hover { border-color: var(--yellow); }
+
+.sn-top { display: flex; gap: 14px; align-items: flex-start; }
+.sn-avatar {
+  position: relative;
+  width: 68px; height: 68px; border-radius: 14px;
+  border: 1px solid rgba(0,255,65,0.25); overflow: hidden; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg3); font-family: var(--mono); font-weight: 700;
+  color: var(--text2); font-size: 24px;
+}
+.sn-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sn-card.byeboss .sn-avatar { border-color: var(--yellow); box-shadow: 0 0 12px rgba(255,170,0,0.2); }
+.sn-badge-ovl {
+  position: absolute; top: -6px; left: -6px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--bg2); border: 1px solid rgba(0,255,65,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+}
+.sn-card.byeboss .sn-badge-ovl { border-color: var(--yellow); color: var(--yellow); }
+
+.sn-head { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.sn-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.sn-ticker {
+  font-family: var(--mono); font-weight: 700; font-size: 18px;
+  color: var(--text); letter-spacing: 0.3px; flex-shrink: 0;
+}
+.sn-card.byeboss .sn-ticker { color: var(--yellow); }
+.sn-name {
+  font-family: var(--mono); font-weight: 400; font-size: 13px; color: var(--text2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-width: 0; flex: 0 1 auto;
+}
+
+.sn-info-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.sn-chip-lg {
+  padding: 5px 10px; border-radius: 8px; font-family: var(--mono);
+  font-size: 11px; color: var(--text2);
+  border: 1px solid rgba(0,255,65,0.2); background: transparent;
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+
+.sn-icon-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.sn-icon-btn {
+  width: 34px; height: 34px; border-radius: 8px;
+  border: 1px solid rgba(0,255,65,0.2); background: transparent;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--text2); cursor: pointer;
+  text-decoration: none; transition: all .15s;
+}
+.sn-icon-btn:hover { border-color: var(--green); color: var(--green); background: rgba(0,255,65,0.05); }
+.sn-icon-btn.tg:hover  { border-color: #2aabee; color: #2aabee; }
+.sn-icon-btn.tw:hover  { border-color: #fff; color: #fff; }
+.sn-icon-btn.web:hover { border-color: var(--green); color: var(--green); }
+.sn-icon-btn.pf:hover  { border-color: var(--yellow); color: var(--yellow); }
+.sn-icon-btn.dex:hover { border-color: var(--red); color: var(--red); }
+
+.sn-sep { height: 1px; background: rgba(255,255,255,0.07); border: 0; margin: 0; }
+
+.sn-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sn-stat {
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid rgba(0,255,65,0.15); background: rgba(0,0,0,0.25);
+  min-width: 0;
+}
+.sn-stat-val {
+  font-family: var(--mono); font-weight: 700; font-size: 16px;
+  color: var(--text); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.sn-stat-val .delta { font-family: var(--mono); font-weight: 500; font-size: 12px; }
+.sn-stat-val .delta.up { color: var(--green); }
+.sn-stat-val .delta.down { color: var(--red); }
+.sn-stat-val .pill {
+  padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 700;
+  border: 1px solid var(--green); color: var(--green); background: rgba(0,255,65,0.06);
+  letter-spacing: 0.5px;
+}
+.sn-stat-val .pill.backed { border-color: var(--yellow); color: var(--yellow); background: rgba(255,170,0,0.08); }
+.sn-stat-lbl {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  margin-top: 4px; letter-spacing: 0.3px;
+}
+
 /* HOSTED card — Byeboss Backed variant */
 .launch-card.hosted { border-color: rgba(255,170,0,0.45); background: linear-gradient(135deg, rgba(255,170,0,0.06), transparent 60%), var(--card); }
 .launch-card.hosted:hover { border-color: var(--yellow); box-shadow: 0 0 18px rgba(255,170,0,0.2); }
@@ -888,6 +989,28 @@ function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// Card click opens the main link but skips clicks coming from inner
+// links / buttons / the icon row.
+function snOpen(ev, url) {
+  if (!url) return;
+  if (ev.target.closest('.sn-icon-row, a, button')) return;
+  window.open(url, '_blank', 'noopener');
+}
+
+// Copy-to-clipboard on any .copy-ca button
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.copy-ca');
+  if (!btn) return;
+  const ca = btn.dataset.ca;
+  if (!ca) return;
+  try {
+    await navigator.clipboard.writeText(ca);
+    const orig = btn.textContent;
+    btn.textContent = '✓';
+    setTimeout(() => { btn.textContent = orig; }, 1000);
+  } catch {}
+});
+
 // ═══════════════════════════════════════════════════════════════════
 // $BYEBOSS HERO (market cap + gauge)
 // ═══════════════════════════════════════════════════════════════════
@@ -1117,53 +1240,57 @@ function renderLaunches(list) {
   host.innerHTML = list.map(l => {
     if (l.genesis) return renderGenesisCard(l);
     const mcInfo = mcCache.get(l.mint);
-    const mcText = mcInfo ? 'MC <b>' + fmtMC(mcInfo.mc) + '</b>' : '';
-    const priceText = mcInfo && mcInfo.price ? '· ' + fmtPrice(mcInfo.price) : '';
+    const mcVal = mcInfo ? fmtMC(mcInfo.mc) : null;
     const chartUrl = mcInfo?.url || ('https://dexscreener.com/solana/' + l.mint);
-    const hostedBadge = l.mode === 'hosted' ? '<span class="launch-hosted-badge">🏆 BYEBOSS BACKED</span>' : '';
-
-    // Profile photo — prefer the saved launch image, fall back to the
-    // DexScreener-cached pump.fun IPFS thumbnail, then the symbol initial.
-    const initial = (l.symbol || l.name || '?')[0];
+    const sym = l.symbol || '?';
+    const name = l.name || sym;
+    const initial = (sym[0] || '?').toUpperCase();
     const img = l.image || mcInfo?.image || '';
-    const logoHtml = img
-      ? `<div class="launch-logo"><img src="${escapeHtml(img)}" alt="${escapeHtml(l.symbol || '')}" onerror="this.parentNode.textContent='${escapeHtml(initial)}';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--text2)'" /></div>`
-      : `<div class="launch-logo">${escapeHtml(initial)}</div>`;
-
-    // Socials block — mirror the genesis card layout when data is present
+    const avatar = img
+      ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(sym)}" onerror="this.parentNode.textContent='${escapeHtml(initial)}';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--text2)'" />`
+      : escapeHtml(initial);
     const s = l.socials || {};
-    const socialLinks = [
-      s.telegram ? `<a class="tg"  href="${escapeHtml(s.telegram)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">💬 Telegram</a>` : '',
-      s.twitter  ? `<a class="tw"  href="${escapeHtml(s.twitter)}"  target="_blank" rel="noopener" onclick="event.stopPropagation()">𝕏 Twitter</a>`  : '',
-      s.website  ? `<a class="web" href="${escapeHtml(s.website)}"  target="_blank" rel="noopener" onclick="event.stopPropagation()">🌐 Website</a>`  : '',
-      s.pumpfun  ? `<a class="pf"  href="${escapeHtml(s.pumpfun)}"  target="_blank" rel="noopener" onclick="event.stopPropagation()">🎰 Pump.fun</a>` : '',
-    ].filter(Boolean).join('');
-    const socialsBlock = socialLinks
-      ? `<div class="socials">${socialLinks}</div>`
-      : '';
+    const pumpUrl = `https://pump.fun/coin/${l.mint}`;
+    const solscan = `https://solscan.io/token/${l.mint}`;
 
     return `
-      <a class="launch-card ${l.mode === 'hosted' ? 'hosted' : ''}" href="https://pump.fun/coin/${encodeURIComponent(l.mint)}" target="_blank" rel="noopener">
-        ${logoHtml}
-        <div class="launch-main">
-          <div class="launch-head">
-            <span class="launch-name" title="${escapeHtml(l.name || '')}">${escapeHtml(l.name || '?')}</span>
-            <span class="launch-sym" title="${escapeHtml(l.symbol || '')}">$${escapeHtml(l.symbol || '?')}</span>
-            ${hostedBadge}
-            <span class="launch-age">${ageStr(l.timestamp)}</span>
+      <div class="sn-card byeboss" onclick="snOpen(event,'${escapeHtml(pumpUrl)}')">
+        <div class="sn-top">
+          <div class="sn-avatar">${avatar}<span class="sn-badge-ovl">🏆</span></div>
+          <div class="sn-head">
+            <div class="sn-title">
+              <span class="sn-ticker">$${escapeHtml(sym)}</span>
+              <span class="sn-name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+            </div>
+            <div class="sn-info-row">
+              <span class="sn-chip-lg">🕐 ${ageStr(l.timestamp)}</span>
+              <span class="sn-chip-lg">👤 ${short(l.creator)}</span>
+              ${mcVal ? `<span class="sn-chip-lg">💰 ${mcVal}</span>` : `<span class="sn-chip-lg" style="color:var(--text3)">MC loading…</span>`}
+            </div>
+            <div class="sn-icon-row">
+              <button class="sn-icon-btn copy-ca" data-ca="${escapeHtml(l.mint)}" title="Copy contract" onclick="event.preventDefault()">📋</button>
+              ${s.website  ? `<a class="sn-icon-btn web" href="${escapeHtml(s.website)}"  target="_blank" rel="noopener" title="Website">🌐</a>` : ''}
+              ${s.telegram ? `<a class="sn-icon-btn tg"  href="${escapeHtml(s.telegram)}" target="_blank" rel="noopener" title="Telegram">💬</a>` : ''}
+              ${s.twitter  ? `<a class="sn-icon-btn tw"  href="${escapeHtml(s.twitter)}"  target="_blank" rel="noopener" title="Twitter">𝕏</a>` : ''}
+              <a class="sn-icon-btn pf"  href="${escapeHtml(pumpUrl)}" target="_blank" rel="noopener" title="Pump.fun">🎰</a>
+              <a class="sn-icon-btn dex" href="${escapeHtml(chartUrl)}" target="_blank" rel="noopener" title="DexScreener">📈</a>
+              <a class="sn-icon-btn" href="${escapeHtml(solscan)}" target="_blank" rel="noopener" title="Solscan">🔎</a>
+              ${l.signature ? `<a class="sn-icon-btn" href="https://solscan.io/tx/${encodeURIComponent(l.signature)}" target="_blank" rel="noopener" title="Launch tx">🧾</a>` : ''}
+            </div>
           </div>
-          <div class="launch-meta">
-            <span>By <b>${short(l.creator)}</b></span>
-            ${mcText ? '<span>' + mcText + ' ' + priceText + '</span>' : '<span class="launch-sym" style="color:var(--text3)">MC loading…</span>'}
-          </div>
-          <div class="launch-foot">
-            <a href="${escapeHtml(chartUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📈 Chart</a>
-            <a href="https://solscan.io/token/${encodeURIComponent(l.mint)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔎 Solscan</a>
-            ${l.signature ? '<a href="https://solscan.io/tx/' + encodeURIComponent(l.signature) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">🧾 TX</a>' : ''}
-          </div>
-          ${socialsBlock}
         </div>
-      </a>`;
+        <hr class="sn-sep">
+        <div class="sn-stats">
+          <div class="sn-stat">
+            <div class="sn-stat-val">${mcVal ? '$' + mcVal : '<span style="color:var(--text3);font-weight:500">loading…</span>'}</div>
+            <div class="sn-stat-lbl">Market Cap</div>
+          </div>
+          <div class="sn-stat">
+            <div class="sn-stat-val"><span class="pill backed">🏆 ${l.mode === 'hosted' ? 'BACKED' : 'BYEBOSS'}</span></div>
+            <div class="sn-stat-lbl">Status</div>
+          </div>
+        </div>
+      </div>`;
   }).join('');
 }
 
