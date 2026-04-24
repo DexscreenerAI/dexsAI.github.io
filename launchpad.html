@@ -821,7 +821,7 @@ input:focus, textarea:focus { outline: none; }
     <button type="button" id="toggleLaunchForm" class="launch-cta-btn" aria-expanded="false" aria-controls="launchPanelWrap">
       <span class="ico">🏆</span>
       <span class="txt">Launch via Byeboss</span>
-      <span class="sub">~0.03 SOL · No service fee</span>
+      <span class="sub">~0.1 SOL · No service fee</span>
       <span class="chev">▾</span>
     </button>
   </section>
@@ -890,7 +890,7 @@ input:focus, textarea:focus { outline: none; }
 
           <div class="cost-box" style="background:rgba(255,170,0,0.09);border-color:rgba(255,170,0,0.3)">
             🏆 <strong style="color:var(--yellow)">How Byeboss launches work</strong><br/>
-            You pay only <strong id="costBoxHostedAmount">~0.03 SOL</strong> (pump.fun creation fees). <strong>No Byeboss service fee.</strong><br/><br/>
+            You pay only <strong id="costBoxHostedAmount">~0.1 SOL</strong> (pump.fun creation fees). <strong>No Byeboss service fee.</strong><br/><br/>
             <strong>Byeboss is the on-chain creator of every token launched here.</strong> 100% of the pump.fun creator rewards (trading-fee share) flow to the public Byeboss treasury. You can audit every sweep in <code>data/sweeps.json</code> on the site repo.<br/><br/>
             Your token is flagged <span style="color:var(--yellow);font-weight:800">🏆 BYEBOSS BACKED</span> on the feed — proof it's part of the Byeboss ecosystem.
           </div>
@@ -985,7 +985,7 @@ const state = {
   imageBytes: 0,
   launching: false,
   hostedReady: false,
-  hostedFee: 0.03,
+  hostedFee: 0.1,
   hostedHotAddress: null,
   filters: { hideRugs: false, hideDev5: false, onlyNew: false, onlyByeboss: false },
   feedData: [],          // current aggregated list (pump.fun)
@@ -1193,7 +1193,7 @@ async function loadHostedStatus() {
     if (!r.ok) return;
     const j = await r.json();
     state.hostedReady = !!j.ready;
-    state.hostedFee = parseFloat(j.fee) || 0.03;
+    state.hostedFee = parseFloat(j.fee) || 0.1;
     state.hostedHotAddress = j.hotAddress || null;
     const unavailable = $('hostedUnavailable');
     if (state.hostedReady) {
