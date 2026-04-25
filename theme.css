@@ -24,6 +24,60 @@
   --radius-lg: 16px;
 }
 
+/* Global polish — applies to every page that links theme.css */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+::selection {
+  background: var(--color-accent-red);
+  color: #000;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img {
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Prevent iOS Safari zoom on input focus (font-size < 16px triggers zoom) */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* Custom scrollbar — dark theme */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 5px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(26, 38, 54, 0.8);
+}
+
+/* Tabular numerals — apply via class="tabular-nums" on numeric elements */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
 /* Accessibility */
 :focus-visible {
   outline: 2px solid var(--color-accent-cyan);
@@ -41,7 +95,29 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
+}
+
+/* Skeleton loader — opt-in via class="skeleton" on placeholder elements */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    var(--bg-tertiary) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+  color: transparent;
+  pointer-events: none;
+  user-select: none;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 /* Button utilities — adopt page-by-page in a later PR */
