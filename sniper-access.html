@@ -269,18 +269,28 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); line-he
 
 <!-- Mobile Menu -->
 <div class="mobile-menu" id="mobileMenu">
-  <a href="./index.html"            data-nav="app">🏠 App</a>
-  <a href="./sniper_terminal.html" class="active" data-nav="sniper">🎯 Sniper</a>
-  <a href="./og-detector.html"      data-nav="og">🔍 OG Detector</a>
-  <a href="./shazam_crypto.html"    data-nav="shazam">🔬 Shazam</a>
-  <a href="./promote.html"          data-nav="promote">⭐ Promote</a>
-  <a href="./launchpad.html"        data-nav="launchpad">🚀 Launchpad</a>
-  <a href="./launches.html"         data-nav="launches">📊 Launches</a>
-  <a href="./lock.html"             data-nav="lock">🔒 Lock</a>
-  <a href="./burn.html"             data-nav="burn">🔥 Burn</a>
-  <a href="./trade.html"            data-nav="trade">💎 Trade</a>
-  <a href="./byeboss.html"          data-nav="docs">📖 Docs</a>
+  <a href="./index.html">🏠 App</a>
+  <a href="./sniper_terminal.html">🎯 Sniper</a>
+  <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./shazam_crypto.html">🔬 Shazam</a>
+  <a href="./promote.html">⭐ Promote</a>
+  <a href="./launchpad.html">🚀 Launchpad</a>
+  <a href="./launches.html">📊 Launches</a>
+  <a href="./lock.html">🔒 Lock</a>
+  <a href="./burn.html">🔥 Burn</a>
+  <a href="./trade.html">💎 Trade</a>
+  <a href="./byeboss.html">📖 Docs</a>
+  <a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank">📈 Chart</a>
 </div>
+<script>
+  (function(){
+    var p = location.pathname.split('/').pop().toLowerCase();
+    document.querySelectorAll('#mobileMenu a, .nav-links a, .nav-link').forEach(function(a){
+      var h = (a.getAttribute('href')||'').replace('./','').toLowerCase();
+      if (h && h === p) a.classList.add('active');
+    });
+  })();
+</script>
 
 <!-- HERO -->
 <section class="hero">
