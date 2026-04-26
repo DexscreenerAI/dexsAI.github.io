@@ -1,15 +1,20 @@
-// rugsheet.js — Search + localStorage persistence + leaderboard + outcome alerts + auto-scan.
+// rugsheet.js — Search + localStorage + auto-scan + backend sync (Phase 1B).
 
 const DEX_API = 'https://api.dexscreener.com/latest/dex/tokens/';
 const DEX_SEARCH = 'https://api.dexscreener.com/latest/dex/search?q=';
 const DEX_BOOSTS_LATEST = 'https://api.dexscreener.com/token-boosts/latest/v1';
 const DEX_BOOSTS_TOP = 'https://api.dexscreener.com/token-boosts/top/v1';
+const BACKEND_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/rugsheet';
 const MUG_API = 'https://api.dicebear.com/7.x/identicon/svg?seed=';
 const STORE_KEY = 'rugsheet-v1';
-const REFRESH_TTL_MS = 60 * 60 * 1000; // re-check each tracked token at most every hour
-const SCAN_INTERVAL_MS = 10 * 60 * 1000; // re-scan boosted tokens every 10 min while open
+const REFRESH_TTL_MS = 60 * 60 * 1000;
+const SCAN_INTERVAL_MS = 10 * 60 * 1000;
+const BACKEND_REFRESH_MS = 5 * 60 * 1000;
 
 let scanStats = { added: 0, lastScan: 0 };
+let backendStats = null;
+let backendDevs = [];
+let backendOk = false;
 
 // ─── Helpers ───────────────────────────────────────────────────────────
 const $ = sel => document.querySelector(sel);
@@ -131,6 +136,45 @@ function devStats(devKey) {
   return { ...dev, ...stats };
 }
 
+// ─── Backend sync — pulls global DB from the bot API ──────────────────
+async function fetchBackend() {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8000);
+    const [statsRes, devsRes] = await Promise.all([
+      fetch(BACKEND_API + '/stats', { signal: ctrl.signal }).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(BACKEND_API + '/devs?limit=80', { signal: ctrl.signal }).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+    clearTimeout(t);
+
+    if (!statsRes) {
+      backendOk = false;
+      backendStats = null;
+      backendDevs = [];
+      return false;
+    }
+
+    backendStats = statsRes;
+    backendDevs = Array.isArray(devsRes?.devs) ? devsRes.devs : [];
+    backendOk = true;
+    return true;
+  } catch (e) {
+    backendOk = false;
+    return false;
+  }
+}
+
+function renderSyncIndicator() {
+  const el = $('#rs-sync-indicator');
+  if (!el) return;
+  if (backendOk && backendStats) {
+    const lastScanMin = backendStats.lastScan ? Math.floor((Date.now() - backendStats.lastScan) / 60000) : null;
+    el.innerHTML = `<span style="color:var(--rs-green)">🌐 Global DB synced</span> · ${fmtNum(backendStats.devsTracked)} devs · ${fmtNum(backendStats.rugsDetected)} rugs · ${fmtUSD(backendStats.estimatedDamage)} damage${lastScanMin !== null ? ` · server scan ${lastScanMin}m ago` : ''}`;
+  } else {
+    el.innerHTML = `<span style="color:var(--rs-yellow)">💾 Local-only mode</span> · backend unreachable, your watchlist is still saved in this browser`;
+  }
+}
+
 // ─── Refresh stale tokens ─────────────────────────────────────────────
 async function refreshStaleTokens() {
   const now = Date.now();
@@ -175,8 +219,14 @@ async function refreshStaleTokens() {
   return newAlerts;
 }
 
-// ─── Auto-scan: pull boosted tokens (paid promotion = new launches) ────
+// ─── Auto-scan: pull boosted tokens from DexScreener ───────────────────
 async function autoScan() {
+  // Skip client-side scan if backend is alive — server already does this.
+  if (backendOk) {
+    scanStats.lastScan = Date.now();
+    renderScanIndicator();
+    return 0;
+  }
   let added = 0;
   try {
     const [latestRes, topRes] = await Promise.all([
@@ -184,7 +234,6 @@ async function autoScan() {
       fetch(DEX_BOOSTS_TOP, { signal: AbortSignal.timeout(10000) }).then(r => r.json()).catch(() => []),
     ]);
     const all = [...(Array.isArray(latestRes) ? latestRes : []), ...(Array.isArray(topRes) ? topRes : [])];
-
     const seen = new Set();
     const newAddresses = [];
     for (const b of all) {
@@ -192,17 +241,14 @@ async function autoScan() {
       const key = b.tokenAddress.toLowerCase();
       if (seen.has(key)) continue;
       seen.add(key);
-      if (STORE.tokens[key]) continue; // already tracked
+      if (STORE.tokens[key]) continue;
       newAddresses.push(b.tokenAddress);
     }
-
     if (!newAddresses.length) {
       scanStats.lastScan = Date.now();
       renderScanIndicator();
       return 0;
     }
-
-    // Batch-fetch pair details (DexScreener allows up to 30 addresses per call)
     for (let i = 0; i < newAddresses.length && i < 60; i += 30) {
       const batch = newAddresses.slice(i, i + 30);
       try {
@@ -220,20 +266,20 @@ async function autoScan() {
         }
       } catch (e) { console.warn('autoScan batch failed', e); }
     }
-
     scanStats.added += added;
     scanStats.lastScan = Date.now();
     renderScanIndicator();
     return added;
-  } catch (e) {
-    console.warn('Auto-scan failed', e);
-    return 0;
-  }
+  } catch (e) { console.warn('Auto-scan failed', e); return 0; }
 }
 
 function renderScanIndicator() {
   const el = $('#rs-scan-indicator');
   if (!el) return;
+  if (backendOk) {
+    el.textContent = '🛰️ Server-side scanning active — local fallback off';
+    return;
+  }
   if (!scanStats.lastScan) { el.textContent = '🟡 Scanning market…'; return; }
   const minutes = Math.floor((Date.now() - scanStats.lastScan) / 60000);
   const ago = minutes < 1 ? 'just now' : `${minutes}m ago`;
@@ -272,25 +318,33 @@ function renderPoster(d) {
   `;
 }
 
-function renderLocalLeaderboards() {
-  const allDevs = Object.keys(STORE.devs).map(devStats).filter(Boolean);
+function renderLeaderboards() {
   const wanted = $('#rs-wanted-grid');
   const honored = $('#rs-honored-grid');
 
-  if (!allDevs.length) {
-    if (wanted) wanted.innerHTML = '<div class="rs-empty">Local board is empty. Auto-scan will fill it as you stay on the page.</div>';
+  // Prefer backend data when available
+  const source = (backendOk && backendDevs.length) ? backendDevs : Object.keys(STORE.devs).map(devStats).filter(Boolean);
+
+  if (!source.length) {
+    if (wanted) wanted.innerHTML = '<div class="rs-empty">Board is empty. Server scanner is collecting data — refresh in a few minutes.</div>';
     if (honored) honored.innerHTML = '<div class="rs-empty">No honored devs yet.</div>';
     return;
   }
-  const sorted = [...allDevs].sort((a, b) => a.score - b.score);
+  const sorted = [...source].sort((a, b) => a.score - b.score);
   const worst = sorted.filter(d => d.score < 0).slice(0, 12);
   const best = [...sorted].reverse().filter(d => d.score > 0).slice(0, 12);
 
-  if (wanted) wanted.innerHTML = worst.length ? worst.map(d => renderPoster(d)).join('') : '<div class="rs-empty">No flagged devs yet — keep scanning.</div>';
+  if (wanted) wanted.innerHTML = worst.length ? worst.map(d => renderPoster(d)).join('') : '<div class="rs-empty">No flagged devs yet.</div>';
   if (honored) honored.innerHTML = best.length ? best.map(d => renderPoster(d)).join('') : '<div class="rs-empty">No honored devs yet.</div>';
 }
 
 function renderCounters() {
+  if (backendOk && backendStats) {
+    $('#rs-c-devs').textContent = backendStats.devsTracked ? fmtNum(backendStats.devsTracked) : '—';
+    $('#rs-c-rugs').textContent = backendStats.rugsDetected ? fmtNum(backendStats.rugsDetected) : '—';
+    $('#rs-c-damage').textContent = backendStats.estimatedDamage ? fmtUSD(backendStats.estimatedDamage) : '—';
+    return;
+  }
   const tokens = Object.values(STORE.tokens);
   const devs = Object.values(STORE.devs);
   const ruggedCount = tokens.filter(t => t.outcome === 'rugged').length;
@@ -383,13 +437,13 @@ async function investigate() {
             <a class="rs-token-link" target="_blank" rel="noopener" href="${explorerUrl}">🔍 Explorer</a>
           </div>
           <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--rs-border-bright);font-size:10px;color:var(--rs-text-dim);line-height:1.6">
-            ✅ Saved locally. This token is now tracked — its outcome auto-refreshes on every visit (max 1 fetch / hour / token).
+            ✅ Saved locally${backendOk ? ' (server-side DB also tracks all boosted launches in real time)' : ''}.
           </div>
         </div>
       </div>
     `;
 
-    renderLocalLeaderboards();
+    renderLeaderboards();
     renderCounters();
   } catch (e) {
     result.innerHTML = '<div class="rs-error">Investigation failed: ' + (e?.message || 'network error') + '</div>';
@@ -398,27 +452,43 @@ async function investigate() {
 
 // ─── Boot ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  // First paint with whatever we have locally
   renderCounters();
-  renderLocalLeaderboards();
+  renderLeaderboards();
   renderScanIndicator();
   showAlertBanner();
 
-  // Refresh stale tokens (anything tracked > 1h ago)
-  const newAlerts = await refreshStaleTokens();
-  if (newAlerts.length) { renderLocalLeaderboards(); renderCounters(); showAlertBanner(); }
+  // Try the backend in parallel — if it answers, stats/leaderboard switch to global
+  await fetchBackend();
+  renderSyncIndicator();
+  renderCounters();
+  renderLeaderboards();
+  renderScanIndicator();
 
-  // Auto-scan boosted tokens — pulls in new devs without user action
+  // Refresh stale local tokens (anything tracked > 1h ago)
+  const newAlerts = await refreshStaleTokens();
+  if (newAlerts.length) { renderLeaderboards(); renderCounters(); showAlertBanner(); }
+
+  // Auto-scan boosted tokens — only if backend is unreachable
   const added = await autoScan();
-  if (added > 0) { renderLocalLeaderboards(); renderCounters(); }
+  if (added > 0) { renderLeaderboards(); renderCounters(); }
 
   STORE.lastVisit = Date.now();
   saveStore();
 
-  // Periodic re-scan while page is open
+  // Periodic re-scan + backend re-sync while page is open
   setInterval(async () => {
     const a = await autoScan();
-    if (a > 0) { renderLocalLeaderboards(); renderCounters(); }
+    if (a > 0) { renderLeaderboards(); renderCounters(); }
   }, SCAN_INTERVAL_MS);
+
+  setInterval(async () => {
+    await fetchBackend();
+    renderSyncIndicator();
+    renderCounters();
+    renderLeaderboards();
+    renderScanIndicator();
+  }, BACKEND_REFRESH_MS);
 
   $('#rs-go')?.addEventListener('click', investigate);
   $('#rs-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') investigate(); });
