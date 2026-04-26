@@ -75,16 +75,19 @@
 }
 body { padding-top: 72px; }
 
+#rs-sync-indicator,
 #rs-scan-indicator {
   text-align: center;
   font-size: 11px;
   color: rgba(192, 255, 206, 0.55);
-  margin: 16px auto 0;
+  margin: 0 auto;
+  padding: 6px 12px;
   letter-spacing: 1px;
   font-family: 'Orbitron', 'JetBrains Mono', monospace;
   font-weight: 600;
-  text-transform: uppercase;
 }
+#rs-sync-indicator { margin-top: 18px; font-size: 12px; }
+#rs-scan-indicator { font-size: 10px; opacity: 0.7; }
 </style>
 
 <link rel="stylesheet" href="rugsheet.css">
@@ -156,7 +159,7 @@ body { padding-top: 72px; }
   <h1>Rug<span>Sheet</span></h1>
   <p class="rs-tagline">
     Every scam dev. Every rug. Every wallet.<br>
-    Auto-scans the market every 10 min. The DB grows on its own.
+    Server scanner running 24/7 — leaderboards shared across all visitors.
   </p>
 
   <div class="rs-counters">
@@ -170,6 +173,7 @@ body { padding-top: 72px; }
     <button id="rs-go" class="rs-cta">Investigate</button>
   </div>
 
+  <div id="rs-sync-indicator">⏳ Connecting to global DB…</div>
   <div id="rs-scan-indicator">🟡 Scanning market…</div>
 </section>
 
@@ -181,7 +185,7 @@ body { padding-top: 72px; }
   <div class="rs-section-head">
     <span class="rs-marker">//</span>
     <h2>Most Wanted</h2>
-    <span class="rs-sub"><span class="rs-demo-tag">Local</span></span>
+    <span class="rs-sub"><span class="rs-demo-tag">Live</span></span>
   </div>
   <div class="rs-grid" id="rs-wanted-grid"></div>
 </section>
@@ -190,7 +194,7 @@ body { padding-top: 72px; }
   <div class="rs-section-head">
     <span class="rs-marker" style="color:var(--rs-yellow)">//</span>
     <h2 style="color:var(--rs-yellow)">Hall of Fame</h2>
-    <span class="rs-sub"><span class="rs-demo-tag">Local</span></span>
+    <span class="rs-sub"><span class="rs-demo-tag">Live</span></span>
   </div>
   <div class="rs-grid" id="rs-honored-grid"></div>
 </section>
@@ -203,31 +207,31 @@ body { padding-top: 72px; }
   <div class="rs-features">
     <div class="rs-feat">
       <div class="rs-feat-icon">🛰️</div>
-      <h3>Auto-Scan</h3>
-      <p>Every 10 minutes the page pulls fresh boosted tokens from DexScreener. New devs land in your local DB without a single click.</p>
+      <h3>Server Scanner</h3>
+      <p>Bot worker pulls DexScreener boosted tokens every 10 minutes, 24/7. The DB grows even when no one's on the page.</p>
+    </div>
+    <div class="rs-feat">
+      <div class="rs-feat-icon">🌐</div>
+      <h3>Shared Leaderboards</h3>
+      <p>Most Wanted &amp; Hall of Fame are global — every visitor sees the same ranked devs, sorted by reputation score.</p>
     </div>
     <div class="rs-feat">
       <div class="rs-feat-icon">💾</div>
-      <h3>Local Tracking</h3>
-      <p>Every token investigated or scanned is saved to your browser. Your watchlist follows you across sessions, no account needed.</p>
+      <h3>Local Fallback</h3>
+      <p>If the backend's down, the page seamlessly switches to your browser-only watchlist so the tool keeps working.</p>
     </div>
     <div class="rs-feat">
       <div class="rs-feat-icon">⏱️</div>
       <h3>Smart Refresh</h3>
-      <p>Each tracked token is re-checked at most once an hour. Calls are batched (up to 30 tokens / request) — zero API spam.</p>
+      <p>Each tracked token re-checked at most once per hour. Calls batched (up to 30 tokens / request) — zero API spam.</p>
     </div>
     <div class="rs-feat">
       <div class="rs-feat-icon">🚨</div>
       <h3>Outcome Alerts</h3>
-      <p>If a tracked token's status changes since your last visit (alive → rugged, etc.), a banner pops up at the top.</p>
+      <p>If one of your local tokens flips state since your last visit (alive → rugged), a banner pops up at the top.</p>
     </div>
     <div class="rs-feat">
-      <div class="rs-feat-icon">📊</div>
-      <h3>Auto-Leaderboard</h3>
-      <p>Most Wanted &amp; Hall of Fame fill themselves over time. Sorted by reputation score, lowest scammers first.</p>
-    </div>
-    <div class="rs-feat">
-      <div class="rs-feat-icon">🌐</div>
+      <div class="rs-feat-icon">🌍</div>
       <h3>Cross-Chain</h3>
       <p>One reputation, three chains: Ethereum, Base, Solana. Auto-detected from address shape.</p>
     </div>
@@ -236,7 +240,7 @@ body { padding-top: 72px; }
 
 <div class="rs-bottom-cta">
   <h2>Be First on the Watchlist</h2>
-  <p>Want a real backend with deployer scanning, Telegram alerts on new launches, and shared leaderboards across users? Join the Telegram for updates as RugSheet rolls out its full server stack.</p>
+  <p>Phase 2: Postgres replaces JSON. Phase 3: Telegram alerts on dev launches. Phase 4: real deployer lookup via Etherscan/Helius. Join the Telegram for rollout pings.</p>
   <div class="rs-bottom-cta-btns">
     <a class="rs-cta" target="_blank" rel="noopener" href="https://t.me/SalaryIsScam">💬 Join Telegram</a>
     <a class="rs-cta" style="background:transparent;color:var(--rs-text);border:1px solid var(--rs-border-bright)" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?text=Just%20found%20RugSheet%20%E2%80%94%20cross-chain%20dev%20reputation%20tracker.%20Every%20scammer%20gets%20a%20wanted%20poster.%20byeboss.live%2Frugsheet.html">𝕏 Share</a>
