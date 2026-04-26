@@ -2412,7 +2412,19 @@ body::before {
 <!-- ═══════════════════════════════════════════════════════
      WATCHLIST + ACTIVITY LOG — always visible under the signals table
      ═══════════════════════════════════════════════════════ -->
-<div class="main-grid">
+<div style="max-width:1400px;margin:8px auto 0;padding:0 16px;text-align:center">
+  <button onclick="toggleMainGrid()" id="mainGridToggle" style="background:#0d1117;border:1px solid #1a3d20;color:#c0ffce;padding:8px 18px;border-radius:6px;cursor:pointer;font-family:Orbitron,monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700">▸ Open Terminal</button>
+</div>
+<script>
+function toggleMainGrid() {
+  const g = document.getElementById('mainGrid');
+  const b = document.getElementById('mainGridToggle');
+  if (!g || !b) return;
+  g.hidden = !g.hidden;
+  b.textContent = g.hidden ? '▸ Open Terminal' : '▾ Close Terminal';
+}
+</script>
+<div class="main-grid" id="mainGrid" hidden>
   <!-- LEFT: WATCHLIST -->
   <div class="panel">
     <div class="panel-header">
