@@ -318,39 +318,63 @@ body { background: #060a10; color: #dfe4ed; font-family: 'JetBrains Mono', 'DM S
 <div class="main">
   <div class="hero">
     <div class="hero-icon">🔥</div>
-    <h1>Token <span>Burner</span></h1>
-    <p>Burn worthless tokens from your wallet.<br>Close token accounts and recover SOL rent.</p>
+    <h1>BURN <span>TERMINAL</span></h1>
+    <p>Incinerate worthless tokens. Recover SOL rent.</p>
   </div>
 
-  <!-- STATS -->
-  <!-- GLOBAL BURN COUNTER -->
-  <div style="background:linear-gradient(135deg,rgba(255,59,79,0.1),rgba(255,23,68,0.05));border:1px solid rgba(255,59,79,0.3);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px">
-    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:6px">🔥 $BYEBOSS BURNED GLOBALLY (ON-CHAIN)</div>
-    <div style="font-family:var(--mono);font-size:28px;font-weight:900;color:var(--red)" id="globalBurned">...</div>
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px">Supply: <span id="currentSupply">...</span> / 1,000,000,000</div>
+  <div class="global-burn">
+    <div class="global-burn-lbl">$BYEBOSS BURNED GLOBALLY · ON-CHAIN</div>
+    <div class="global-burn-val" id="globalBurned">…</div>
+    <div class="global-burn-sub">Supply: <span id="currentSupply">…</span> / 1,000,000,000</div>
   </div>
 
-  <div class="burn-stats">
-    <div class="burn-stat"><div class="burn-stat-val" id="tokenCount">0</div><div class="burn-stat-lbl">YOUR TOKENS</div></div>
-    <div class="burn-stat"><div class="burn-stat-val red" id="selectedCount">0</div><div class="burn-stat-lbl">SELECTED</div></div>
-    <div class="burn-stat"><div class="burn-stat-val" id="rentRecover" style="color:var(--green)">0</div><div class="burn-stat-lbl">SOL RECOVER</div></div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Your Tokens</div>
+      <div class="kpi-value" id="tokenCount">0</div>
+      <div class="kpi-sub">In wallet</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Selected</div>
+      <div class="kpi-value red" id="selectedCount">0</div>
+      <div class="kpi-sub">Marked to burn</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">SOL Recover</div>
+      <div class="kpi-value green" id="rentRecover">0</div>
+      <div class="kpi-sub">From closed accounts</div>
+    </div>
   </div>
 
-  <!-- ACTIONS -->
-  <button class="burn-all" onclick="selectAll()">☑ Select All Worthless Tokens</button>
-
-  <!-- TOKEN LIST -->
-  <div id="tokenList">
-    <div class="empty">Connect wallet to scan tokens</div>
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">TOKEN VAULT</div>
+      <div class="panel-actions">
+        <span class="panel-meta">SCAN ON CONNECT</span>
+      </div>
+    </div>
+    <div class="panel-body dense">
+      <button class="burn-all" onclick="selectAll()" style="margin-bottom:8px">☑ SELECT ALL WORTHLESS</button>
+      <div class="token-list" id="tokenList">
+        <div class="empty">Connect wallet to scan tokens</div>
+      </div>
+    </div>
   </div>
 
-  <!-- BURN BUTTON -->
   <button class="burn-btn" id="burnBtn" onclick="burnSelected()" disabled>🔥 BURN SELECTED TOKENS</button>
 
-  <!-- RECENT BURNS -->
-  <div class="history-title">RECENT $BYEBOSS BURNS</div>
-  <div class="history-list" id="burnHistory">
-    <div class="history-empty">Loading recent burns…</div>
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">BURN ACTIVITY</div>
+      <div class="panel-actions">
+        <span class="panel-meta">$BYEBOSS · LAST 15</span>
+      </div>
+    </div>
+    <div class="panel-body dense">
+      <div class="history-list" id="burnHistory">
+        <div class="history-empty">Loading recent burns…</div>
+      </div>
+    </div>
   </div>
 
   <div class="disclaimer">
