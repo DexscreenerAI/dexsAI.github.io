@@ -298,7 +298,7 @@ function renderPoster(d) {
     `${tag.toUpperCase()} on @ByeBoss RugSheet:\n\n${d.ens || shortAddr(d.addr)} — Score ${d.score}\n${d.deployed} tokens deployed${d.rugged ? `, ${d.rugged} rugged` : ''}\n\nbyeboss.live/rugsheet.html`
   );
   return `
-    <div class="rs-poster ${cls}">
+    <div class="rs-poster ${cls}" style="cursor:pointer" onclick="openDevDetail('${d.addr}')">
       <div class="rs-poster-tag">${tag}</div>
       <img class="rs-poster-mug" src="${MUG_API}${encodeURIComponent(d.addr)}" alt="mugshot">
       ${d.ens ? `<div class="rs-poster-ens">${d.ens}</div>` : ''}
