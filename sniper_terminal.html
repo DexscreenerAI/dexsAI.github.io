@@ -2262,6 +2262,9 @@ body::before {
   .scanner-bar { flex-direction: column; gap: 4px; padding: 6px 10px; }
   .scanner-stats { flex-wrap: wrap; gap: 6px; font-size: 10px; }
 }
+
+.sn-status.promo{background:linear-gradient(135deg,#ffaa00,#ffd700);color:#000;font-weight:800;border:1px solid #ffd700;text-shadow:none}
+.sn-card.promo{border:1px solid #ffd700 !important;background:linear-gradient(180deg,rgba(255,215,0,0.06),rgba(255,170,0,0.02)) !important}
 </style>
 <style>
 /* === Nav overflow fix — horizontally scroll when links overflow === */
@@ -4388,9 +4391,46 @@ function soulShort(addr) {
 // Unified signal view: normalise open positions + closed history into
 // one {symbol, name, ca, chain, entryMcUsd, currentMcUsd, x, peakX,
 // ageMs, score, status, dexUrl, logoUrl, openedAt} list.
+let promotedSignals = [];
+async function fetchPromotedSignals() {
+  try {
+    const SUPABASE_URL = 'https://sollomdaapwxutpykzlq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvbGxvbWRhYXB3eHV0cHlremxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NDMzODksImV4cCI6MjA5MDIxOTM4OX0.03bYy4wzKCbuyf9Zf4i200TMAbqpR3gMTfWmrcF6Hl8';
+    const r = await fetch(SUPABASE_URL + '/rest/v1/active_promotions?select=*&order=approved_at.desc&limit=20', {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+    });
+    if (!r.ok) return;
+    const rows = await r.json();
+    const cutoff = Date.now() - 6 * 60 * 60 * 1000;
+    promotedSignals = (rows || []).filter(p => p.approved_at && new Date(p.approved_at).getTime() > cutoff);
+  } catch (_) {}
+}
+fetchPromotedSignals();
+setInterval(fetchPromotedSignals, 60 * 1000);
+
 function buildSoulSignalList() {
   const sigs = [];
   const now = Date.now();
+  for (const p of promotedSignals) {
+    const openedAt = new Date(p.approved_at).getTime();
+    const chainLow = (p.chain || 'solana').toLowerCase();
+    sigs.push({
+      symbol: p.ticker || '',
+      name: p.token_name || '',
+      ca: p.contract_address || '',
+      chain: chainLow,
+      pairAddress: '',
+      entryMcUsd: 0,
+      currentMcUsd: 0,
+      x: 1, peakX: 0,
+      ageMs: now - openedAt,
+      score: 0,
+      status: 'PROMOTION',
+      dexUrl: 'https://dexscreener.com/' + chainLow + '/' + (p.contract_address || ''),
+      logoUrl: p.logo_url || '',
+      openedAt,
+    });
+  }
 
   for (const p of (positions || [])) {
     const x = 1 + ((p.pnlPct || 0) / 100);
@@ -4470,7 +4510,7 @@ function renderSoulSignals() {
     if (!body) return;
     let sigs = buildSoulSignalList();
 
-    if (soulActiveTab === 'live')   sigs = sigs.filter(s => s.status === 'LIVE');
+    if (soulActiveTab === 'live')   sigs = sigs.filter(s => s.status === 'LIVE' || s.status === 'PROMOTION');
     if (soulActiveTab === 'closed') sigs = sigs.filter(s => s.status === 'CLOSED' || (s.peakX || 0) >= 5);
 
     // newest first by default; archive tab shows best peak X first
@@ -4495,8 +4535,8 @@ function renderSoulSignals() {
       const pumpUrl = s.ca ? `https://pump.fun/coin/${s.ca}` : '';
       const dexUrl = s.dexUrl || (s.ca ? `https://dexscreener.com/solana/${s.ca}` : '');
       const targetUrl = dexUrl || pumpUrl;
-      const statusChipCls = s.status === 'LIVE' ? (isNew ? 'new' : 'live') : 'archived';
-      const statusChipLbl = s.status === 'LIVE' ? (isNew ? '⚡ NEW SIGNAL' : '● LIVE') : '🏁 ARCHIVED';
+      const statusChipCls = s.status === 'PROMOTION' ? 'promo' : (s.status === 'LIVE' ? (isNew ? 'new' : 'live') : 'archived');
+      const statusChipLbl = s.status === 'PROMOTION' ? '⭐ PROMOTION' : (s.status === 'LIVE' ? (isNew ? '⚡ NEW SIGNAL' : '● LIVE') : '🏁 ARCHIVED');
 
       return `
         <div class="sn-card ${s.status === 'LIVE' ? '' : 'archived'}" onclick="snOpen(event,'${esc(targetUrl)}')">
