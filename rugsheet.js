@@ -450,6 +450,27 @@ async function investigate() {
   }
 }
 
+let topDevs = [];
+
+async function fetchTopPerformers() {
+  try {
+    const r = await fetch(BACKEND_API + '/leaderboard?type=peakmc&limit=12', { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) { topDevs = []; return; }
+    const d = await r.json();
+    topDevs = Array.isArray(d?.devs) ? d.devs : [];
+  } catch (e) { topDevs = []; }
+}
+
+function renderTopGrid() {
+  const el = document.getElementById('rs-top-grid');
+  if (!el) return;
+  if (!topDevs.length) {
+    el.innerHTML = '<div class="rs-empty">No real devs with peak MC data yet — backend still indexing.</div>';
+    return;
+  }
+  el.innerHTML = topDevs.map(d => renderPoster(d)).join('');
+}
+
 // ─── Boot ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   // First paint with whatever we have locally
