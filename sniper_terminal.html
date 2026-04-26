@@ -4473,8 +4473,9 @@ function renderSoulSignals() {
     if (soulActiveTab === 'live')   sigs = sigs.filter(s => s.status === 'LIVE');
     if (soulActiveTab === 'closed') sigs = sigs.filter(s => s.status === 'CLOSED');
 
-    // newest first
-    sigs.sort((a, b) => b.openedAt - a.openedAt);
+    // newest first by default; archive tab shows best peak X first
+    if (soulActiveTab === 'closed') sigs.sort((a, b) => (b.peakX || 0) - (a.peakX || 0));
+    else sigs.sort((a, b) => b.openedAt - a.openedAt);
     sigs = sigs.slice(0, 50);
 
     if (!sigs.length) {
