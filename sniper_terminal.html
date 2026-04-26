@@ -2392,10 +2392,10 @@ body::before {
     </div>
 
     <div class="kpi-strip">
-      <div class="kpi-card"><div class="kpi-value" id="kpi24hSignals">—</div><div class="kpi-label">24h Signals</div></div>
-      <div class="kpi-card"><div class="kpi-value" id="kpi24hWinRate">—</div><div class="kpi-label">24h Win Rate</div></div>
-      <div class="kpi-card"><div class="kpi-value" id="kpi24hAvgX">—</div><div class="kpi-label">24h Avg Xs</div></div>
-      <div class="kpi-card"><div class="kpi-value" id="kpi24hTotalX">—</div><div class="kpi-label">24h Total Xs</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi24hSignals">—</div><div class="kpi-label">Total Signals</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi24hWinRate">—</div><div class="kpi-label">Win Rate</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi24hAvgX">—</div><div class="kpi-label">Avg Xs</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi24hTotalX">—</div><div class="kpi-label">Total Xs</div></div>
       <div class="kpi-card"><div class="kpi-value" id="kpiBestCall">—</div><div class="kpi-label">Best Call</div></div>
       <div class="kpi-card"><div class="kpi-value" id="kpi7dSignals">—</div><div class="kpi-label">7d Signals</div></div>
     </div>
@@ -4444,7 +4444,7 @@ function renderSoulKPIs() {
     const day = 24 * 60 * 60 * 1000;
     const week = 7 * day;
 
-    const last24h = sigs.filter(s => (now - s.openedAt) <= day);
+    const last24h = sigs; // lifetime
     const last7d  = sigs.filter(s => (now - s.openedAt) <= week);
 
     const count24 = last24h.length;
