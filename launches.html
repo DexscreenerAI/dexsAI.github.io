@@ -1321,6 +1321,7 @@ function renderLaunches(list) {
               <a class="sn-icon-btn dex" href="${escapeHtml(chartUrl)}" target="_blank" rel="noopener" title="DexScreener">📈</a>
               <a class="sn-icon-btn" href="${escapeHtml(solscan)}" target="_blank" rel="noopener" title="Solscan">🔎</a>
               ${l.signature ? `<a class="sn-icon-btn" href="https://solscan.io/tx/${encodeURIComponent(l.signature)}" target="_blank" rel="noopener" title="Launch tx">🧾</a>` : ''}
+              <a class="sn-icon-btn tw" href="https://twitter.com/intent/tweet?text=${encodeURIComponent("🚀 $" + l.symbol + " launched via @ByeBoss" + (l.name ? " · " + l.name : "") + (mcVal ? " · MC $" + mcVal : "") + " · byeboss.live/launches.html")}" target="_blank" rel="noopener" title="Share this launch">𝕏</a>
             </div>
           </div>
         </div>
