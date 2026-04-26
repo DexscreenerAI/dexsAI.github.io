@@ -1071,9 +1071,28 @@ async function submitForm(e) {
       throw new Error(errorText || 'Submission failed');
     }
     
+    // Try instant on-chain validation; cron will reconcile if this fails
+    let approvedInstant = false;
+    try {
+      const vRes = await fetch('https://dexscreener-telegram-bot-production.up.railway.app/api/promote/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tx_hash: data.tx_hash, chain: data.chain })
+      });
+      const vJson = await vRes.json();
+      approvedInstant = !!(vJson.valid && vJson.approved);
+    } catch (_) {}
+
     // Show success
     form.style.display = 'none';
-    document.getElementById('successMessage').classList.add('show');
+    const msg = document.getElementById('successMessage');
+    msg.classList.add('show');
+    if (approvedInstant) {
+      const note = document.createElement('div');
+      note.style.cssText = 'margin-top:14px;padding:10px;background:rgba(0,255,128,0.12);border:1px solid #00ff80;border-radius:8px;color:#00ff80;font-family:monospace;font-size:12px';
+      note.innerHTML = '⚡ APPROVED INSTANTLY — Your token is now live in the rotation';
+      msg.appendChild(note);
+    }
     
   } catch (err) {
     console.error('Submission error:', err);
