@@ -1,23 +1,10 @@
-// rugsheet.js — Search + render logic for the dev reputation tracker
+// rugsheet.js — Search + localStorage persistence + leaderboard + outcome alerts.
 
 const DEX_API = 'https://api.dexscreener.com/latest/dex/tokens/';
+const DEX_SEARCH = 'https://api.dexscreener.com/latest/dex/search?q=';
 const MUG_API = 'https://api.dicebear.com/7.x/identicon/svg?seed=';
-
-// ─── Demo data — replaces the real backend until the worker ships ─────
-const MOST_WANTED = [
-  { addr: '0x4a3b8c2d1e9f7a6b5c4d3e2f1a9b8c7d6e5f4a3b', chain: 'ethereum', ens: 'rugmaster.eth', deployed: 47, rugged: 41, damage: 2400000, score: -89 },
-  { addr: 'HnT9k2pQ7vYzL4mN8RxBcDfWjXgVtKuEsAYpzJi3rM5n', chain: 'solana', ens: null, deployed: 23, rugged: 19, damage: 880000, score: -82 },
-  { addr: '0x9e8d7c6b5a4f3e2d1c0b9a8e7d6c5b4a3e2f1d0c', chain: 'base', ens: 'serialscam.eth', deployed: 38, rugged: 34, damage: 1200000, score: -90 },
-  { addr: '0x1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c', chain: 'ethereum', ens: null, deployed: 18, rugged: 12, damage: 540000, score: -65 },
-  { addr: '7Fxp2v5Yzm9kLwBnHcRtJqDsAGvUnWxKpEsZbMi4Tro', chain: 'solana', ens: null, deployed: 31, rugged: 25, damage: 1050000, score: -75 },
-  { addr: '0xcafe1234567890abcdef1234567890abcdef1234', chain: 'ethereum', ens: 'punisher.eth', deployed: 56, rugged: 49, damage: 3200000, score: -91 },
-];
-
-const HALL_OF_FAME = [
-  { addr: '0xa1b2c3d4e5f60708091a2b3c4d5e6f708192a3b4', chain: 'ethereum', ens: 'cleanbuild.eth', deployed: 8, success: 6, moon: 1, damage: 0, score: 87 },
-  { addr: 'C1eAnD3v9BuiLd2zP6rT4mNk8YxJqFwSaVtZcEbR5oH', chain: 'solana', ens: null, deployed: 4, success: 3, moon: 0, damage: 0, score: 78 },
-  { addr: '0xfeed1234567890abcdeffedcba0987654321abcd', chain: 'base', ens: 'longterm.eth', deployed: 11, success: 7, moon: 2, damage: 0, score: 92 },
-];
+const STORE_KEY = 'rugsheet-v1';
+const REFRESH_TTL_MS = 60 * 60 * 1000; // re-check each tracked token at most every hour
 
 // ─── Helpers ───────────────────────────────────────────────────────────
 const $ = sel => document.querySelector(sel);
@@ -43,7 +30,34 @@ const fmtAge = ts => {
   return Math.floor(h / 24) + 'd';
 };
 
-// ─── Outcome classification (client-side, simplified) ────────────────────
+// ─── Chain detection from address shape ───────────────────────────────
+function detectChain(input) {
+  const s = (input || '').trim();
+  if (/^0x[a-fA-F0-9]{40}$/.test(s)) return 'evm';        // ethereum or base
+  if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s)) return 'solana';
+  return null; // probably a symbol
+}
+
+// ─── localStorage store ───────────────────────────────────────────────
+function loadStore() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return { tokens: {}, devs: {}, lastVisit: 0, alerts: [] };
+    const s = JSON.parse(raw);
+    s.tokens = s.tokens || {};
+    s.devs = s.devs || {};
+    s.alerts = s.alerts || [];
+    return s;
+  } catch (e) {
+    return { tokens: {}, devs: {}, lastVisit: 0, alerts: [] };
+  }
+}
+function saveStore() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(STORE)); } catch (e) {}
+}
+let STORE = loadStore();
+
+// ─── Outcome classification (client-side, simplified) ─────────────────
 function classifyOutcome(pair) {
   const ageH = pair.pairCreatedAt ? (Date.now() - pair.pairCreatedAt) / 3600000 : 0;
   const liq = parseFloat(pair.liquidity?.usd) || 0;
@@ -59,17 +73,118 @@ function classifyOutcome(pair) {
   return { code: 'alive', label: 'Alive', desc: 'Still trading' };
 }
 
-// ─── Reputation score (client-side fake from limited data) ────────────────
-function computeRep(stats) {
-  const total = stats.deployed || 0;
+// ─── Reputation formula ────────────────────────────────────────────────
+function computeRep(s) {
+  const total = s.deployed || 0;
   if (total === 0) return 0;
-  const pos = (stats.success || 0) * 100 + (stats.moon || 0) * 200 + (stats.alive || 0) * 10;
-  const neg = (stats.rugged || 0) * 80 + (stats.honeypot || 0) * 150 + (stats.dead || 0) * 5;
+  const pos = (s.success || 0) * 100 + (s.moon || 0) * 200 + (s.alive || 0) * 10;
+  const neg = (s.rugged || 0) * 80 + (s.honeypot || 0) * 150 + (s.dead || 0) * 5;
   return Math.max(-100, Math.min(100, Math.round((pos - neg) / total)));
 }
 
-// ─── Render a wanted poster card ──────────────────────────────────────────
-function renderPoster(d, opts = {}) {
+// ─── Save a token result (links to a pseudo-dev keyed by token addr) ──
+// Real deployer lookup needs a backend with Etherscan/Helius keys; until
+// then each token becomes its own "dev" in the local store.
+function saveTokenResult(pair, outcome) {
+  const addr = (pair.baseToken?.address || '').toLowerCase();
+  if (!addr) return;
+  const chain = (pair.chainId || 'unknown').toLowerCase();
+  const liq = parseFloat(pair.liquidity?.usd) || 0;
+  const mc = parseFloat(pair.marketCap || pair.fdv) || 0;
+  const prev = STORE.tokens[addr];
+
+  STORE.tokens[addr] = {
+    addr,
+    chain,
+    symbol: pair.baseToken?.symbol || '?',
+    name: pair.baseToken?.name || '',
+    pairAddress: pair.pairAddress,
+    deployedAt: pair.pairCreatedAt || prev?.deployedAt || Date.now(),
+    initialLiq: prev?.initialLiq && prev.initialLiq > 0 ? prev.initialLiq : liq,
+    currentLiq: liq,
+    currentMc: mc,
+    peakMc: Math.max(prev?.peakMc || 0, mc),
+    priceChange24h: parseFloat(pair.priceChange?.h24) || 0,
+    volume24h: parseFloat(pair.volume?.h24) || 0,
+    outcome: outcome.code,
+    outcomeAt: prev && prev.outcome === outcome.code ? prev.outcomeAt : Date.now(),
+    lastChecked: Date.now(),
+    firstSeen: prev?.firstSeen || Date.now(),
+  };
+
+  // Pseudo-dev linkage (until backend gives us real deployer)
+  const devKey = addr;
+  const dev = STORE.devs[devKey] || { addr: devKey, chain, ens: null, deployed: [], firstSeen: Date.now() };
+  if (!dev.deployed.includes(addr)) dev.deployed.push(addr);
+  STORE.devs[devKey] = dev;
+
+  saveStore();
+}
+
+// ─── Aggregate dev stats from tokens in store ─────────────────────────
+function devStats(devKey) {
+  const dev = STORE.devs[devKey];
+  if (!dev) return null;
+  const tokens = (dev.deployed || []).map(a => STORE.tokens[a]).filter(Boolean);
+  const stats = { deployed: tokens.length, rugged: 0, dead: 0, alive: 0, success: 0, moon: 0, damage: 0 };
+  for (const t of tokens) {
+    if (t.outcome === 'rugged')      { stats.rugged++; stats.damage += t.initialLiq || 0; }
+    else if (t.outcome === 'dead')   { stats.dead++; }
+    else if (t.outcome === 'alive')  { stats.alive++; }
+    else if (t.outcome === 'success'){ stats.success++; }
+    else if (t.outcome === 'moon')   { stats.moon++; }
+  }
+  stats.score = computeRep(stats);
+  return { ...dev, ...stats };
+}
+
+// ─── Refresh stale tokens via batched DexScreener calls (up to 30/req) ─
+async function refreshStaleTokens() {
+  const now = Date.now();
+  const stale = Object.values(STORE.tokens).filter(t => now - (t.lastChecked || 0) > REFRESH_TTL_MS);
+  if (!stale.length) return [];
+
+  const newAlerts = [];
+  for (let i = 0; i < stale.length; i += 30) {
+    const batch = stale.slice(i, i + 30);
+    const addrs = batch.map(t => t.addr).join(',');
+    try {
+      const res = await fetch(DEX_API + addrs, { signal: AbortSignal.timeout(15000) });
+      const data = await res.json();
+      const pairs = data?.pairs || [];
+      for (const tok of batch) {
+        const matches = pairs.filter(p => (p.baseToken?.address || '').toLowerCase() === tok.addr);
+        if (!matches.length) {
+          // If liquidity vanished entirely, mark as rugged
+          const oldOutcome = tok.outcome;
+          if (oldOutcome !== 'rugged' && oldOutcome !== 'pending') {
+            STORE.tokens[tok.addr].outcome = 'rugged';
+            STORE.tokens[tok.addr].lastChecked = Date.now();
+            STORE.tokens[tok.addr].outcomeAt = Date.now();
+            newAlerts.push({ ts: Date.now(), addr: tok.addr, symbol: tok.symbol, from: oldOutcome, to: 'rugged', msg: `$${tok.symbol}: ${oldOutcome.toUpperCase()} → RUGGED` });
+          }
+          continue;
+        }
+        matches.sort((a, b) => (parseFloat(b.liquidity?.usd) || 0) - (parseFloat(a.liquidity?.usd) || 0));
+        const top = matches[0];
+        const outcome = classifyOutcome(top);
+        const oldOutcome = tok.outcome;
+        saveTokenResult(top, outcome);
+        if (oldOutcome && oldOutcome !== outcome.code && oldOutcome !== 'pending') {
+          newAlerts.push({ ts: Date.now(), addr: tok.addr, symbol: tok.symbol, from: oldOutcome, to: outcome.code, msg: `$${tok.symbol}: ${oldOutcome.toUpperCase()} → ${outcome.code.toUpperCase()}` });
+        }
+      }
+    } catch (e) { console.warn('Refresh batch failed', e); }
+  }
+  if (newAlerts.length) {
+    STORE.alerts = (STORE.alerts || []).concat(newAlerts);
+    saveStore();
+  }
+  return newAlerts;
+}
+
+// ─── Render a poster card ─────────────────────────────────────────────
+function renderPoster(d) {
   const isHonored = d.score > 50;
   const isWanted = d.score < 0;
   const cls = isHonored ? 'honored' : (isWanted ? 'wanted' : 'neutral');
@@ -85,7 +200,7 @@ function renderPoster(d, opts = {}) {
       ${d.ens ? `<div class="rs-poster-ens">${d.ens}</div>` : ''}
       <div class="rs-poster-addr">${shortAddr(d.addr)} · ${d.chain || 'unknown'}</div>
       <div class="rs-poster-score">${d.score > 0 ? '+' : ''}${d.score}</div>
-      ${d.damage ? `<div class="rs-poster-bounty">Estimated damage: <strong>${fmtUSD(d.damage)}</strong></div>` : '<div class="rs-poster-bounty">No reported damage</div>'}
+      ${d.damage > 0 ? `<div class="rs-poster-bounty">Estimated damage: <strong>${fmtUSD(d.damage)}</strong></div>` : '<div class="rs-poster-bounty">No reported damage</div>'}
       <div class="rs-poster-stats">
         <div><div class="rs-poster-stat-val">${d.deployed || 0}</div><div class="rs-poster-stat-lbl">Deployed</div></div>
         <div><div class="rs-poster-stat-val">${d.rugged || 0}</div><div class="rs-poster-stat-lbl">Rugged</div></div>
@@ -99,25 +214,67 @@ function renderPoster(d, opts = {}) {
   `;
 }
 
-// ─── Render the Most Wanted + Hall of Fame grids ──────────────────────────
-function renderGrids() {
+// ─── Render local leaderboards from store ─────────────────────────────
+function renderLocalLeaderboards() {
+  const allDevs = Object.keys(STORE.devs).map(devStats).filter(Boolean);
   const wanted = $('#rs-wanted-grid');
-  if (wanted) wanted.innerHTML = MOST_WANTED.map(d => renderPoster(d)).join('');
   const honored = $('#rs-honored-grid');
-  if (honored) honored.innerHTML = HALL_OF_FAME.map(d => renderPoster(d)).join('');
+
+  if (!allDevs.length) {
+    if (wanted) wanted.innerHTML = '<div class="rs-empty">Local board is empty. Search any token to start tracking devs.</div>';
+    if (honored) honored.innerHTML = '<div class="rs-empty">No honored devs yet.</div>';
+    return;
+  }
+  const sorted = [...allDevs].sort((a, b) => a.score - b.score);
+  const worst = sorted.filter(d => d.score < 0).slice(0, 12);
+  const best = [...sorted].reverse().filter(d => d.score > 0).slice(0, 12);
+
+  if (wanted) wanted.innerHTML = worst.length
+    ? worst.map(d => renderPoster(d)).join('')
+    : '<div class="rs-empty">No flagged devs yet — keep investigating.</div>';
+  if (honored) honored.innerHTML = best.length
+    ? best.map(d => renderPoster(d)).join('')
+    : '<div class="rs-empty">No honored devs yet.</div>';
 }
 
-// ─── Counters animation ──────────────────────────────────────────────────
-function animateCounters() {
-  const totalDevs = MOST_WANTED.length + HALL_OF_FAME.length;
-  const totalRugs = MOST_WANTED.reduce((s, d) => s + (d.rugged || 0), 0);
-  const totalDamage = MOST_WANTED.reduce((s, d) => s + (d.damage || 0), 0);
-  $('#rs-c-devs').textContent = `${totalDevs}+`;
-  $('#rs-c-rugs').textContent = fmtNum(totalRugs);
-  $('#rs-c-damage').textContent = fmtUSD(totalDamage);
+// ─── Counters from store ──────────────────────────────────────────────
+function renderCounters() {
+  const tokens = Object.values(STORE.tokens);
+  const devs = Object.values(STORE.devs);
+  const ruggedCount = tokens.filter(t => t.outcome === 'rugged').length;
+  const damage = tokens.filter(t => t.outcome === 'rugged').reduce((s, t) => s + (t.initialLiq || 0), 0);
+  $('#rs-c-devs').textContent = devs.length ? devs.length.toString() : '—';
+  $('#rs-c-rugs').textContent = ruggedCount ? fmtNum(ruggedCount) : '—';
+  $('#rs-c-damage').textContent = damage ? fmtUSD(damage) : '—';
 }
 
-// ─── Token search ────────────────────────────────────────────────────────
+// ─── Alert banner ─────────────────────────────────────────────────────
+function showAlertBanner() {
+  const banner = $('#rs-alert-banner');
+  const alerts = STORE.alerts || [];
+  if (!banner || !alerts.length) { if (banner) banner.hidden = true; return; }
+  banner.hidden = false;
+  banner.innerHTML = `
+    <div class="rs-alert-bar">
+      <div>
+        <strong>🚨 ${alerts.length} change${alerts.length > 1 ? 's' : ''}</strong> since last visit
+        <div class="rs-alert-list">
+          ${alerts.slice(-5).reverse().map(a => `<div>· ${a.msg}</div>`).join('')}
+          ${alerts.length > 5 ? `<div class="rs-alert-more">+${alerts.length - 5} more</div>` : ''}
+        </div>
+      </div>
+      <button class="rs-poster-btn" onclick="dismissAlerts()">Dismiss</button>
+    </div>
+  `;
+}
+function dismissAlerts() {
+  STORE.alerts = [];
+  saveStore();
+  showAlertBanner();
+}
+window.dismissAlerts = dismissAlerts;
+
+// ─── Search / investigate ─────────────────────────────────────────────
 async function investigate() {
   const input = $('#rs-input');
   const raw = (input.value || '').trim();
@@ -125,21 +282,25 @@ async function investigate() {
 
   const result = $('#rs-result');
   result.hidden = false;
-  result.innerHTML = '<div class="rs-loading"><span class="rs-spinner"></span> Investigating ' + shortAddr(raw) + '…</div>';
+  const detected = detectChain(raw);
+  const detLabel = detected === 'evm' ? 'ETH/Base detected'
+                 : detected === 'solana' ? 'Solana detected'
+                 : 'Treating as symbol search';
+  result.innerHTML = `<div class="rs-loading"><span class="rs-spinner"></span> Investigating ${shortAddr(raw)} · ${detLabel}…</div>`;
 
   try {
-    const res = await fetch(DEX_API + encodeURIComponent(raw), { signal: AbortSignal.timeout(10000) });
+    const url = detected ? (DEX_API + encodeURIComponent(raw)) : (DEX_SEARCH + encodeURIComponent(raw));
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
     const data = await res.json();
     const pairs = data?.pairs || [];
     if (!pairs.length) {
-      result.innerHTML = '<div class="rs-error">No pair found for this address. Make sure it is a valid token contract on ETH / Base / Solana.</div>';
+      result.innerHTML = '<div class="rs-error">No pair found for this query. Try a token contract on ETH / Base / Solana, or a symbol like PEPE.</div>';
       return;
     }
-
-    // Pick the pair with highest liquidity
     pairs.sort((a, b) => (parseFloat(b.liquidity?.usd) || 0) - (parseFloat(a.liquidity?.usd) || 0));
     const top = pairs[0];
     const outcome = classifyOutcome(top);
+    saveTokenResult(top, outcome);
 
     const symbol = top.baseToken?.symbol || '?';
     const name = top.baseToken?.name || '';
@@ -148,28 +309,18 @@ async function investigate() {
     const mc = parseFloat(top.marketCap || top.fdv) || 0;
     const vol24 = parseFloat(top.volume?.h24) || 0;
     const chg24 = parseFloat(top.priceChange?.h24) || 0;
-    const logo = top.info?.imageUrl || `https://dd.dexscreener.com/ds-data/tokens/${chain}/${raw.toLowerCase()}.png`;
+    const tokAddr = (top.baseToken?.address || '').toLowerCase();
+    const logo = top.info?.imageUrl || `https://dd.dexscreener.com/ds-data/tokens/${chain}/${tokAddr}.png`;
     const dexUrl = top.url || `https://dexscreener.com/${chain}/${top.pairAddress}`;
+    const explorerUrl = chain === 'solana' ? `https://solscan.io/token/${tokAddr}`
+                      : chain === 'base'   ? `https://basescan.org/token/${tokAddr}`
+                      :                       `https://etherscan.io/token/${tokAddr}`;
 
-    // Pseudo-dev (we don't know the real deployer client-side without an API key)
-    // Use the token addr as a placeholder seed — the live backend will replace this.
-    const pseudoDev = {
-      addr: raw,
-      chain,
-      ens: null,
-      deployed: 1,
-      rugged: outcome.code === 'rugged' ? 1 : 0,
-      success: outcome.code === 'success' ? 1 : 0,
-      moon: outcome.code === 'moon' ? 1 : 0,
-      alive: outcome.code === 'alive' ? 1 : 0,
-      damage: outcome.code === 'rugged' ? liq : 0,
-      score: 0,
-    };
-    pseudoDev.score = computeRep(pseudoDev);
+    const dev = devStats(tokAddr) || { addr: tokAddr, chain, deployed: 1, score: 0 };
 
     result.innerHTML = `
       <div class="rs-result">
-        <div>${renderPoster(pseudoDev)}</div>
+        <div>${renderPoster(dev)}</div>
         <div class="rs-token-card">
           <div class="rs-token-head">
             <div class="rs-token-logo"><img src="${logo}" onerror="this.parentElement.textContent='🪙'" alt=""></div>
@@ -179,32 +330,49 @@ async function investigate() {
             </div>
           </div>
           <div class="rs-outcome ${outcome.code}">${outcome.label}</div>
-          <div style="font-size:12px;color:var(--rs-bone-dim);margin-bottom:14px">${outcome.desc}</div>
+          <div style="font-size:12px;color:var(--rs-text-dim);margin-bottom:14px">${outcome.desc}</div>
           <div class="rs-stats-grid">
             <div class="rs-stat-tile"><div class="rs-stat-tile-val">${fmtUSD(mc)}</div><div class="rs-stat-tile-lbl">Market Cap</div></div>
             <div class="rs-stat-tile"><div class="rs-stat-tile-val">${fmtUSD(liq)}</div><div class="rs-stat-tile-lbl">Liquidity</div></div>
             <div class="rs-stat-tile"><div class="rs-stat-tile-val">${fmtUSD(vol24)}</div><div class="rs-stat-tile-lbl">Vol 24h</div></div>
-            <div class="rs-stat-tile"><div class="rs-stat-tile-val" style="color:${chg24>=0?'#22c55e':'var(--rs-blood)'}">${chg24>=0?'+':''}${chg24.toFixed(1)}%</div><div class="rs-stat-tile-lbl">Change 24h</div></div>
+            <div class="rs-stat-tile"><div class="rs-stat-tile-val" style="color:${chg24>=0?'var(--rs-green)':'var(--rs-red)'}">${chg24>=0?'+':''}${chg24.toFixed(1)}%</div><div class="rs-stat-tile-lbl">Change 24h</div></div>
           </div>
           <div class="rs-token-links">
             <a class="rs-token-link" target="_blank" rel="noopener" href="${dexUrl}">📈 DexScreener</a>
-            <a class="rs-token-link" target="_blank" rel="noopener" href="https://${chain==='solana'?'solscan.io/token/':chain==='base'?'basescan.org/token/':'etherscan.io/token/'}${raw}">🔍 Explorer</a>
+            <a class="rs-token-link" target="_blank" rel="noopener" href="${explorerUrl}">🔍 Explorer</a>
           </div>
-          <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--rs-border);font-size:10px;color:var(--rs-bone-dim);line-height:1.6">
-            ⚠️ Single-token reputation is a teaser preview. Full deployer lookup, historical token list, and 60-min cross-chain alerts ship with the backend rollout.
+          <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--rs-border-bright);font-size:10px;color:var(--rs-text-dim);line-height:1.6">
+            ✅ Saved locally. This token is now tracked — its outcome auto-refreshes on every visit (max 1 fetch / hour / token).
           </div>
         </div>
       </div>
     `;
+
+    // Refresh leaderboards + counters with the new entry
+    renderLocalLeaderboards();
+    renderCounters();
   } catch (e) {
     result.innerHTML = '<div class="rs-error">Investigation failed: ' + (e?.message || 'network error') + '</div>';
   }
 }
 
-// ─── Boot ────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  renderGrids();
-  animateCounters();
+// ─── Boot ─────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  renderCounters();
+  renderLocalLeaderboards();
+  showAlertBanner();
+
+  // Background refresh — only stale tokens (last_checked > 1h ago) are refetched
+  const newAlerts = await refreshStaleTokens();
+  if (newAlerts.length) {
+    renderLocalLeaderboards();
+    renderCounters();
+    showAlertBanner();
+  }
+
+  STORE.lastVisit = Date.now();
+  saveStore();
+
   $('#rs-go')?.addEventListener('click', investigate);
   $('#rs-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') investigate(); });
 });
