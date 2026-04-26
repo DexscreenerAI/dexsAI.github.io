@@ -12,9 +12,6 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Orbitron:wght@500;700;800;900&display=swap" rel="stylesheet">
 
 <style>
-/* ═══════════════════════════════════════════════════════
-   NAVBAR — canonical block, identical to other pages.
-   ═══════════════════════════════════════════════════════ */
 .navbar {
   --nav-bg: rgba(5, 6, 8, 0.88);
   --nav-border: rgba(0, 255, 65, 0.12);
@@ -45,85 +42,49 @@
 .navbar > .pill.nav-pill-links .nav-links::-webkit-scrollbar { display: none; height: 0; }
 .navbar > .pill.nav-pill-links .nav-links > a { flex-shrink: 0; }
 .navbar > .pill + .pill { margin-left: -8px; }
-
-.navbar .nav-logo {
-  display: flex; align-items: center; gap: 10px;
-  text-decoration: none; color: #fff;
-  font-family: var(--nav-font); font-size: 13px; font-weight: 700; letter-spacing: 1px;
-}
+.navbar .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; font-family: var(--nav-font); font-size: 13px; font-weight: 700; letter-spacing: 1px; }
 .navbar .nav-logo img { width: 28px; height: 28px; border-radius: 6px; }
-
 .navbar .nav-links { display: flex; align-items: center; gap: 24px; }
-
-.navbar .nav-link {
-  color: var(--nav-muted); text-decoration: none;
-  font-family: var(--nav-font); font-size: 11px; font-weight: 500; letter-spacing: 0.5px;
-  transition: color .15s; white-space: nowrap;
-}
+.navbar .nav-link { color: var(--nav-muted); text-decoration: none; font-family: var(--nav-font); font-size: 11px; font-weight: 500; letter-spacing: 0.5px; transition: color .15s; white-space: nowrap; }
 .navbar .nav-link:hover { color: var(--nav-cyan); }
 .navbar .nav-link.active { color: var(--nav-cyan); }
-
 .navbar .nav-link.accent-red    { color: var(--nav-red);    font-weight: 700; }
 .navbar .nav-link.accent-red:hover { color: #ff4070; }
 .navbar .nav-link.accent-cyan   { color: var(--nav-cyan);   font-weight: 700; }
 .navbar .nav-link.accent-cyan:hover { color: #40f8ff; }
 .navbar .nav-link.accent-purple { color: var(--nav-purple); font-weight: 700; }
 .navbar .nav-link.accent-purple:hover { color: #d040ff; }
-
 .navbar .nav-socials { display: flex; gap: 12px; align-items: center; }
 .navbar .nav-social { color: var(--nav-muted); text-decoration: none; font-size: 16px; transition: color .15s; }
 .navbar .nav-social:hover { color: var(--nav-cyan); }
-
-.navbar .pill {
-  position: relative; display: inline-flex; align-items: center;
-  height: 44px; padding: 0;
-  background: linear-gradient(180deg, rgba(0,255,65,0.04), rgba(0,255,65,0));
-  clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 100%, 0 100%);
-  border: 0;
-}
-.navbar .pill::before {
-  content: ''; position: absolute; inset: 0;
-  clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 100%, 0 100%);
-  background:
-    linear-gradient(var(--nav-panel), var(--nav-panel)) padding-box,
-    linear-gradient(180deg, rgba(0,240,255,0.35), rgba(0,255,65,0.15)) border-box;
-  border: 1px solid transparent; z-index: 0;
-}
-.navbar .pill-inner {
-  position: relative; z-index: 1; display: inline-flex; align-items: center;
-  gap: 18px; padding: 0 22px; height: 44px; white-space: nowrap;
-}
+.navbar .pill { position: relative; display: inline-flex; align-items: center; height: 44px; padding: 0; background: linear-gradient(180deg, rgba(0,255,65,0.04), rgba(0,255,65,0)); clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 100%, 0 100%); border: 0; }
+.navbar .pill::before { content: ''; position: absolute; inset: 0; clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 100%, 0 100%); background: linear-gradient(var(--nav-panel), var(--nav-panel)) padding-box, linear-gradient(180deg, rgba(0,240,255,0.35), rgba(0,255,65,0.15)) border-box; border: 1px solid transparent; z-index: 0; }
+.navbar .pill-inner { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 18px; padding: 0 22px; height: 44px; white-space: nowrap; }
 .navbar .pill-reverse { clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 16px 100%); }
 .navbar .pill-reverse::before { clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 16px 100%); }
-
 .navbar .font-display { font-family: var(--nav-display); letter-spacing: 2px; }
-
-.mobile-menu-btn {
-  display: none; background: none; border: 1px solid var(--nav-border);
-  color: var(--nav-text); font-size: 14px; cursor: pointer;
-  padding: 6px 10px; border-radius: 4px; margin-left: 8px;
-}
-.mobile-menu {
-  display: none; position: fixed; top: 72px; left: 0; right: 0;
-  background: #0d1117; border-bottom: 1px solid rgba(0, 255, 65, 0.12);
-  padding: 8px; z-index: 999; flex-direction: column; gap: 2px;
-  max-height: 70vh; overflow-y: auto;
-}
+.mobile-menu-btn { display: none; background: none; border: 1px solid var(--nav-border); color: var(--nav-text); font-size: 14px; cursor: pointer; padding: 6px 10px; border-radius: 4px; margin-left: 8px; }
+.mobile-menu { display: none; position: fixed; top: 72px; left: 0; right: 0; background: #0d1117; border-bottom: 1px solid rgba(0, 255, 65, 0.12); padding: 8px; z-index: 999; flex-direction: column; gap: 2px; max-height: 70vh; overflow-y: auto; }
 .mobile-menu.open { display: flex; }
-.mobile-menu a {
-  color: #e6edf3; text-decoration: none; font-size: 11px;
-  padding: 10px 12px; border-radius: 4px; transition: background 0.1s;
-  font-family: 'JetBrains Mono', monospace;
-}
+.mobile-menu a { color: #e6edf3; text-decoration: none; font-size: 11px; padding: 10px 12px; border-radius: 4px; transition: background 0.1s; font-family: 'JetBrains Mono', monospace; }
 .mobile-menu a:hover { background: rgba(255,255,255,0.04); }
 .mobile-menu a.active { color: var(--nav-cyan); background: rgba(0,209,255,0.1); }
-
 @media (max-width: 900px) {
   .navbar .nav-links { display: none; }
   .mobile-menu-btn { display: block; }
 }
-
 body { padding-top: 72px; }
+
+#rs-scan-indicator {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(192, 255, 206, 0.55);
+  margin: 16px auto 0;
+  letter-spacing: 1px;
+  font-family: 'Orbitron', 'JetBrains Mono', monospace;
+  font-weight: 600;
+  text-transform: uppercase;
+}
 </style>
 
 <link rel="stylesheet" href="rugsheet.css">
@@ -188,16 +149,14 @@ body { padding-top: 72px; }
   <a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank">📈 Chart</a>
 </div>
 
-<!-- ALERT BANNER (shown when stored tokens have changed outcome) ─── -->
 <div class="rs-alert-banner-wrap"><div id="rs-alert-banner" hidden></div></div>
 
-<!-- HERO ──────────────────────────────────────────────────── -->
 <section class="rs-hero">
   <div class="rs-badge">DEV REPUTATION TRACKER · BETA</div>
   <h1>Rug<span>Sheet</span></h1>
   <p class="rs-tagline">
     Every scam dev. Every rug. Every wallet.<br>
-    Tracked locally. Refreshed on every visit. No spam.
+    Auto-scans the market every 10 min. The DB grows on its own.
   </p>
 
   <div class="rs-counters">
@@ -210,14 +169,14 @@ body { padding-top: 72px; }
     <input id="rs-input" class="rs-search" placeholder="Token address (ETH / BASE / SOL) or symbol…" autocomplete="off">
     <button id="rs-go" class="rs-cta">Investigate</button>
   </div>
+
+  <div id="rs-scan-indicator">🟡 Scanning market…</div>
 </section>
 
-<!-- RESULT — appears on search ─────────────────────────────── -->
 <section class="rs-section">
   <div id="rs-result" hidden></div>
 </section>
 
-<!-- MOST WANTED — fed from local store ─────────────────────── -->
 <section class="rs-section">
   <div class="rs-section-head">
     <span class="rs-marker">//</span>
@@ -227,7 +186,6 @@ body { padding-top: 72px; }
   <div class="rs-grid" id="rs-wanted-grid"></div>
 </section>
 
-<!-- HALL OF FAME — fed from local store ────────────────────── -->
 <section class="rs-section">
   <div class="rs-section-head">
     <span class="rs-marker" style="color:var(--rs-yellow)">//</span>
@@ -237,7 +195,6 @@ body { padding-top: 72px; }
   <div class="rs-grid" id="rs-honored-grid"></div>
 </section>
 
-<!-- FEATURES ────────────────────────────────────────────────── -->
 <section class="rs-section">
   <div class="rs-section-head">
     <span class="rs-marker">//</span>
@@ -245,14 +202,19 @@ body { padding-top: 72px; }
   </div>
   <div class="rs-features">
     <div class="rs-feat">
+      <div class="rs-feat-icon">🛰️</div>
+      <h3>Auto-Scan</h3>
+      <p>Every 10 minutes the page pulls fresh boosted tokens from DexScreener. New devs land in your local DB without a single click.</p>
+    </div>
+    <div class="rs-feat">
       <div class="rs-feat-icon">💾</div>
       <h3>Local Tracking</h3>
-      <p>Every token you investigate gets saved to your browser. Your watchlist follows you across sessions, no account needed.</p>
+      <p>Every token investigated or scanned is saved to your browser. Your watchlist follows you across sessions, no account needed.</p>
     </div>
     <div class="rs-feat">
       <div class="rs-feat-icon">⏱️</div>
       <h3>Smart Refresh</h3>
-      <p>Each tracked token is re-checked at most once an hour. No spam — DexScreener calls are batched (up to 30 tokens per request).</p>
+      <p>Each tracked token is re-checked at most once an hour. Calls are batched (up to 30 tokens / request) — zero API spam.</p>
     </div>
     <div class="rs-feat">
       <div class="rs-feat-icon">🚨</div>
@@ -262,12 +224,7 @@ body { padding-top: 72px; }
     <div class="rs-feat">
       <div class="rs-feat-icon">📊</div>
       <h3>Auto-Leaderboard</h3>
-      <p>Most Wanted &amp; Hall of Fame fill themselves as you investigate. Sorted by reputation score, lowest scammers first.</p>
-    </div>
-    <div class="rs-feat">
-      <div class="rs-feat-icon">🪪</div>
-      <h3>Shareable Mugshots</h3>
-      <p>Each profile = a mugshot poster. One-click Twitter share to expose scammers.</p>
+      <p>Most Wanted &amp; Hall of Fame fill themselves over time. Sorted by reputation score, lowest scammers first.</p>
     </div>
     <div class="rs-feat">
       <div class="rs-feat-icon">🌐</div>
@@ -277,7 +234,6 @@ body { padding-top: 72px; }
   </div>
 </section>
 
-<!-- BOTTOM CTA ──────────────────────────────────────────────── -->
 <div class="rs-bottom-cta">
   <h2>Be First on the Watchlist</h2>
   <p>Want a real backend with deployer scanning, Telegram alerts on new launches, and shared leaderboards across users? Join the Telegram for updates as RugSheet rolls out its full server stack.</p>
