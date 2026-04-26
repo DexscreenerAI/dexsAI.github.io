@@ -188,13 +188,16 @@ body { padding-top: 72px; }
   <a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank">📈 Chart</a>
 </div>
 
+<!-- ALERT BANNER (shown when stored tokens have changed outcome) ─── -->
+<div class="rs-alert-banner-wrap"><div id="rs-alert-banner" hidden></div></div>
+
 <!-- HERO ──────────────────────────────────────────────────── -->
 <section class="rs-hero">
   <div class="rs-badge">DEV REPUTATION TRACKER · BETA</div>
   <h1>Rug<span>Sheet</span></h1>
   <p class="rs-tagline">
     Every scam dev. Every rug. Every wallet.<br>
-    Cross-chain reputation on Ethereum, Base &amp; Solana.
+    Tracked locally. Refreshed on every visit. No spam.
   </p>
 
   <div class="rs-counters">
@@ -204,7 +207,7 @@ body { padding-top: 72px; }
   </div>
 
   <div class="rs-search-wrap">
-    <input id="rs-input" class="rs-search" placeholder="Paste a token address (ETH / BASE / SOL)…" autocomplete="off">
+    <input id="rs-input" class="rs-search" placeholder="Token address (ETH / BASE / SOL) or symbol…" autocomplete="off">
     <button id="rs-go" class="rs-cta">Investigate</button>
   </div>
 </section>
@@ -214,22 +217,22 @@ body { padding-top: 72px; }
   <div id="rs-result" hidden></div>
 </section>
 
-<!-- MOST WANTED ─────────────────────────────────────────────── -->
+<!-- MOST WANTED — fed from local store ─────────────────────── -->
 <section class="rs-section">
   <div class="rs-section-head">
     <span class="rs-marker">//</span>
     <h2>Most Wanted</h2>
-    <span class="rs-sub"><span class="rs-demo-tag">Demo</span></span>
+    <span class="rs-sub"><span class="rs-demo-tag">Local</span></span>
   </div>
   <div class="rs-grid" id="rs-wanted-grid"></div>
 </section>
 
-<!-- HALL OF FAME ────────────────────────────────────────────── -->
+<!-- HALL OF FAME — fed from local store ────────────────────── -->
 <section class="rs-section">
   <div class="rs-section-head">
     <span class="rs-marker" style="color:var(--rs-yellow)">//</span>
     <h2 style="color:var(--rs-yellow)">Hall of Fame</h2>
-    <span class="rs-sub"><span class="rs-demo-tag">Demo</span></span>
+    <span class="rs-sub"><span class="rs-demo-tag">Local</span></span>
   </div>
   <div class="rs-grid" id="rs-honored-grid"></div>
 </section>
@@ -238,38 +241,38 @@ body { padding-top: 72px; }
 <section class="rs-section">
   <div class="rs-section-head">
     <span class="rs-marker">//</span>
-    <h2>What's Coming</h2>
+    <h2>How It Works</h2>
   </div>
   <div class="rs-features">
     <div class="rs-feat">
-      <div class="rs-feat-icon">⏱️</div>
-      <h3>Live Scanner</h3>
-      <p>Worker scans every new contract on ETH/Base/Solana every 30s. We catch deployers the moment liquidity is added.</p>
+      <div class="rs-feat-icon">💾</div>
+      <h3>Local Tracking</h3>
+      <p>Every token you investigate gets saved to your browser. Your watchlist follows you across sessions, no account needed.</p>
     </div>
     <div class="rs-feat">
-      <div class="rs-feat-icon">🔗</div>
-      <h3>Linked Wallets</h3>
-      <p>Devs that funded each other or shared deploys are linked. One bad actor → its full network exposed.</p>
+      <div class="rs-feat-icon">⏱️</div>
+      <h3>Smart Refresh</h3>
+      <p>Each tracked token is re-checked at most once an hour. No spam — DexScreener calls are batched (up to 30 tokens per request).</p>
     </div>
     <div class="rs-feat">
       <div class="rs-feat-icon">🚨</div>
-      <h3>Telegram Alerts</h3>
-      <p>Track any dev. Get pinged the second they launch a new token, even before DexScreener indexes the pool.</p>
+      <h3>Outcome Alerts</h3>
+      <p>If a tracked token's status changes since your last visit (alive → rugged, etc.), a banner pops up at the top.</p>
     </div>
     <div class="rs-feat">
       <div class="rs-feat-icon">📊</div>
-      <h3>Outcome Engine</h3>
-      <p>Every token classified: rugged, honeypot, dead, alive, success, moon. Reputation auto-updates as outcomes evolve.</p>
+      <h3>Auto-Leaderboard</h3>
+      <p>Most Wanted &amp; Hall of Fame fill themselves as you investigate. Sorted by reputation score, lowest scammers first.</p>
     </div>
     <div class="rs-feat">
       <div class="rs-feat-icon">🪪</div>
       <h3>Shareable Mugshots</h3>
-      <p>Each dev profile = a wanted poster with auto-generated OG image. One-click Twitter share to expose scammers.</p>
+      <p>Each profile = a mugshot poster. One-click Twitter share to expose scammers.</p>
     </div>
     <div class="rs-feat">
       <div class="rs-feat-icon">🌐</div>
       <h3>Cross-Chain</h3>
-      <p>One reputation, three chains. A dev that rugged on Solana then moves to Base? We follow the money trail.</p>
+      <p>One reputation, three chains: Ethereum, Base, Solana. Auto-detected from address shape.</p>
     </div>
   </div>
 </section>
@@ -277,7 +280,7 @@ body { padding-top: 72px; }
 <!-- BOTTOM CTA ──────────────────────────────────────────────── -->
 <div class="rs-bottom-cta">
   <h2>Be First on the Watchlist</h2>
-  <p>RugSheet's full backend rolls out in stages. Join the Telegram to get tagged when scanner alerts go live.</p>
+  <p>Want a real backend with deployer scanning, Telegram alerts on new launches, and shared leaderboards across users? Join the Telegram for updates as RugSheet rolls out its full server stack.</p>
   <div class="rs-bottom-cta-btns">
     <a class="rs-cta" target="_blank" rel="noopener" href="https://t.me/SalaryIsScam">💬 Join Telegram</a>
     <a class="rs-cta" style="background:transparent;color:var(--rs-text);border:1px solid var(--rs-border-bright)" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?text=Just%20found%20RugSheet%20%E2%80%94%20cross-chain%20dev%20reputation%20tracker.%20Every%20scammer%20gets%20a%20wanted%20poster.%20byeboss.live%2Frugsheet.html">𝕏 Share</a>
