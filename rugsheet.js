@@ -1,10 +1,15 @@
-// rugsheet.js — Search + localStorage persistence + leaderboard + outcome alerts.
+// rugsheet.js — Search + localStorage persistence + leaderboard + outcome alerts + auto-scan.
 
 const DEX_API = 'https://api.dexscreener.com/latest/dex/tokens/';
 const DEX_SEARCH = 'https://api.dexscreener.com/latest/dex/search?q=';
+const DEX_BOOSTS_LATEST = 'https://api.dexscreener.com/token-boosts/latest/v1';
+const DEX_BOOSTS_TOP = 'https://api.dexscreener.com/token-boosts/top/v1';
 const MUG_API = 'https://api.dicebear.com/7.x/identicon/svg?seed=';
 const STORE_KEY = 'rugsheet-v1';
 const REFRESH_TTL_MS = 60 * 60 * 1000; // re-check each tracked token at most every hour
+const SCAN_INTERVAL_MS = 10 * 60 * 1000; // re-scan boosted tokens every 10 min while open
+
+let scanStats = { added: 0, lastScan: 0 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────
 const $ = sel => document.querySelector(sel);
@@ -30,12 +35,11 @@ const fmtAge = ts => {
   return Math.floor(h / 24) + 'd';
 };
 
-// ─── Chain detection from address shape ───────────────────────────────
 function detectChain(input) {
   const s = (input || '').trim();
-  if (/^0x[a-fA-F0-9]{40}$/.test(s)) return 'evm';        // ethereum or base
+  if (/^0x[a-fA-F0-9]{40}$/.test(s)) return 'evm';
   if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s)) return 'solana';
-  return null; // probably a symbol
+  return null;
 }
 
 // ─── localStorage store ───────────────────────────────────────────────
@@ -52,12 +56,10 @@ function loadStore() {
     return { tokens: {}, devs: {}, lastVisit: 0, alerts: [] };
   }
 }
-function saveStore() {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(STORE)); } catch (e) {}
-}
+function saveStore() { try { localStorage.setItem(STORE_KEY, JSON.stringify(STORE)); } catch (e) {} }
 let STORE = loadStore();
 
-// ─── Outcome classification (client-side, simplified) ─────────────────
+// ─── Outcome classification ───────────────────────────────────────────
 function classifyOutcome(pair) {
   const ageH = pair.pairCreatedAt ? (Date.now() - pair.pairCreatedAt) / 3600000 : 0;
   const liq = parseFloat(pair.liquidity?.usd) || 0;
@@ -73,7 +75,6 @@ function classifyOutcome(pair) {
   return { code: 'alive', label: 'Alive', desc: 'Still trading' };
 }
 
-// ─── Reputation formula ────────────────────────────────────────────────
 function computeRep(s) {
   const total = s.deployed || 0;
   if (total === 0) return 0;
@@ -82,9 +83,6 @@ function computeRep(s) {
   return Math.max(-100, Math.min(100, Math.round((pos - neg) / total)));
 }
 
-// ─── Save a token result (links to a pseudo-dev keyed by token addr) ──
-// Real deployer lookup needs a backend with Etherscan/Helius keys; until
-// then each token becomes its own "dev" in the local store.
 function saveTokenResult(pair, outcome) {
   const addr = (pair.baseToken?.address || '').toLowerCase();
   if (!addr) return;
@@ -94,15 +92,13 @@ function saveTokenResult(pair, outcome) {
   const prev = STORE.tokens[addr];
 
   STORE.tokens[addr] = {
-    addr,
-    chain,
+    addr, chain,
     symbol: pair.baseToken?.symbol || '?',
     name: pair.baseToken?.name || '',
     pairAddress: pair.pairAddress,
     deployedAt: pair.pairCreatedAt || prev?.deployedAt || Date.now(),
     initialLiq: prev?.initialLiq && prev.initialLiq > 0 ? prev.initialLiq : liq,
-    currentLiq: liq,
-    currentMc: mc,
+    currentLiq: liq, currentMc: mc,
     peakMc: Math.max(prev?.peakMc || 0, mc),
     priceChange24h: parseFloat(pair.priceChange?.h24) || 0,
     volume24h: parseFloat(pair.volume?.h24) || 0,
@@ -112,16 +108,13 @@ function saveTokenResult(pair, outcome) {
     firstSeen: prev?.firstSeen || Date.now(),
   };
 
-  // Pseudo-dev linkage (until backend gives us real deployer)
   const devKey = addr;
   const dev = STORE.devs[devKey] || { addr: devKey, chain, ens: null, deployed: [], firstSeen: Date.now() };
   if (!dev.deployed.includes(addr)) dev.deployed.push(addr);
   STORE.devs[devKey] = dev;
-
   saveStore();
 }
 
-// ─── Aggregate dev stats from tokens in store ─────────────────────────
 function devStats(devKey) {
   const dev = STORE.devs[devKey];
   if (!dev) return null;
@@ -138,7 +131,7 @@ function devStats(devKey) {
   return { ...dev, ...stats };
 }
 
-// ─── Refresh stale tokens via batched DexScreener calls (up to 30/req) ─
+// ─── Refresh stale tokens ─────────────────────────────────────────────
 async function refreshStaleTokens() {
   const now = Date.now();
   const stale = Object.values(STORE.tokens).filter(t => now - (t.lastChecked || 0) > REFRESH_TTL_MS);
@@ -155,7 +148,6 @@ async function refreshStaleTokens() {
       for (const tok of batch) {
         const matches = pairs.filter(p => (p.baseToken?.address || '').toLowerCase() === tok.addr);
         if (!matches.length) {
-          // If liquidity vanished entirely, mark as rugged
           const oldOutcome = tok.outcome;
           if (oldOutcome !== 'rugged' && oldOutcome !== 'pending') {
             STORE.tokens[tok.addr].outcome = 'rugged';
@@ -183,6 +175,73 @@ async function refreshStaleTokens() {
   return newAlerts;
 }
 
+// ─── Auto-scan: pull boosted tokens (paid promotion = new launches) ────
+async function autoScan() {
+  let added = 0;
+  try {
+    const [latestRes, topRes] = await Promise.all([
+      fetch(DEX_BOOSTS_LATEST, { signal: AbortSignal.timeout(10000) }).then(r => r.json()).catch(() => []),
+      fetch(DEX_BOOSTS_TOP, { signal: AbortSignal.timeout(10000) }).then(r => r.json()).catch(() => []),
+    ]);
+    const all = [...(Array.isArray(latestRes) ? latestRes : []), ...(Array.isArray(topRes) ? topRes : [])];
+
+    const seen = new Set();
+    const newAddresses = [];
+    for (const b of all) {
+      if (!b.tokenAddress) continue;
+      const key = b.tokenAddress.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (STORE.tokens[key]) continue; // already tracked
+      newAddresses.push(b.tokenAddress);
+    }
+
+    if (!newAddresses.length) {
+      scanStats.lastScan = Date.now();
+      renderScanIndicator();
+      return 0;
+    }
+
+    // Batch-fetch pair details (DexScreener allows up to 30 addresses per call)
+    for (let i = 0; i < newAddresses.length && i < 60; i += 30) {
+      const batch = newAddresses.slice(i, i + 30);
+      try {
+        const res = await fetch(DEX_API + batch.join(','), { signal: AbortSignal.timeout(15000) });
+        const data = await res.json();
+        const pairs = data?.pairs || [];
+        for (const addr of batch) {
+          const matches = pairs.filter(p => (p.baseToken?.address || '').toLowerCase() === addr.toLowerCase());
+          if (!matches.length) continue;
+          matches.sort((a, b) => (parseFloat(b.liquidity?.usd) || 0) - (parseFloat(a.liquidity?.usd) || 0));
+          const top = matches[0];
+          const outcome = classifyOutcome(top);
+          saveTokenResult(top, outcome);
+          added++;
+        }
+      } catch (e) { console.warn('autoScan batch failed', e); }
+    }
+
+    scanStats.added += added;
+    scanStats.lastScan = Date.now();
+    renderScanIndicator();
+    return added;
+  } catch (e) {
+    console.warn('Auto-scan failed', e);
+    return 0;
+  }
+}
+
+function renderScanIndicator() {
+  const el = $('#rs-scan-indicator');
+  if (!el) return;
+  if (!scanStats.lastScan) { el.textContent = '🟡 Scanning market…'; return; }
+  const minutes = Math.floor((Date.now() - scanStats.lastScan) / 60000);
+  const ago = minutes < 1 ? 'just now' : `${minutes}m ago`;
+  el.textContent = scanStats.added
+    ? `🟢 ${scanStats.added} new dev${scanStats.added > 1 ? 's' : ''} added this session · last scan ${ago}`
+    : `🟢 No new boosted tokens · last scan ${ago}`;
+}
+
 // ─── Render a poster card ─────────────────────────────────────────────
 function renderPoster(d) {
   const isHonored = d.score > 50;
@@ -192,7 +251,6 @@ function renderPoster(d) {
   const tweetText = encodeURIComponent(
     `${tag.toUpperCase()} on @ByeBoss RugSheet:\n\n${d.ens || shortAddr(d.addr)} — Score ${d.score}\n${d.deployed} tokens deployed${d.rugged ? `, ${d.rugged} rugged` : ''}\n\nbyeboss.live/rugsheet.html`
   );
-
   return `
     <div class="rs-poster ${cls}">
       <div class="rs-poster-tag">${tag}</div>
@@ -214,14 +272,13 @@ function renderPoster(d) {
   `;
 }
 
-// ─── Render local leaderboards from store ─────────────────────────────
 function renderLocalLeaderboards() {
   const allDevs = Object.keys(STORE.devs).map(devStats).filter(Boolean);
   const wanted = $('#rs-wanted-grid');
   const honored = $('#rs-honored-grid');
 
   if (!allDevs.length) {
-    if (wanted) wanted.innerHTML = '<div class="rs-empty">Local board is empty. Search any token to start tracking devs.</div>';
+    if (wanted) wanted.innerHTML = '<div class="rs-empty">Local board is empty. Auto-scan will fill it as you stay on the page.</div>';
     if (honored) honored.innerHTML = '<div class="rs-empty">No honored devs yet.</div>';
     return;
   }
@@ -229,15 +286,10 @@ function renderLocalLeaderboards() {
   const worst = sorted.filter(d => d.score < 0).slice(0, 12);
   const best = [...sorted].reverse().filter(d => d.score > 0).slice(0, 12);
 
-  if (wanted) wanted.innerHTML = worst.length
-    ? worst.map(d => renderPoster(d)).join('')
-    : '<div class="rs-empty">No flagged devs yet — keep investigating.</div>';
-  if (honored) honored.innerHTML = best.length
-    ? best.map(d => renderPoster(d)).join('')
-    : '<div class="rs-empty">No honored devs yet.</div>';
+  if (wanted) wanted.innerHTML = worst.length ? worst.map(d => renderPoster(d)).join('') : '<div class="rs-empty">No flagged devs yet — keep scanning.</div>';
+  if (honored) honored.innerHTML = best.length ? best.map(d => renderPoster(d)).join('') : '<div class="rs-empty">No honored devs yet.</div>';
 }
 
-// ─── Counters from store ──────────────────────────────────────────────
 function renderCounters() {
   const tokens = Object.values(STORE.tokens);
   const devs = Object.values(STORE.devs);
@@ -248,7 +300,6 @@ function renderCounters() {
   $('#rs-c-damage').textContent = damage ? fmtUSD(damage) : '—';
 }
 
-// ─── Alert banner ─────────────────────────────────────────────────────
 function showAlertBanner() {
   const banner = $('#rs-alert-banner');
   const alerts = STORE.alerts || [];
@@ -264,14 +315,9 @@ function showAlertBanner() {
         </div>
       </div>
       <button class="rs-poster-btn" onclick="dismissAlerts()">Dismiss</button>
-    </div>
-  `;
+    </div>`;
 }
-function dismissAlerts() {
-  STORE.alerts = [];
-  saveStore();
-  showAlertBanner();
-}
+function dismissAlerts() { STORE.alerts = []; saveStore(); showAlertBanner(); }
 window.dismissAlerts = dismissAlerts;
 
 // ─── Search / investigate ─────────────────────────────────────────────
@@ -283,9 +329,7 @@ async function investigate() {
   const result = $('#rs-result');
   result.hidden = false;
   const detected = detectChain(raw);
-  const detLabel = detected === 'evm' ? 'ETH/Base detected'
-                 : detected === 'solana' ? 'Solana detected'
-                 : 'Treating as symbol search';
+  const detLabel = detected === 'evm' ? 'ETH/Base detected' : detected === 'solana' ? 'Solana detected' : 'Treating as symbol search';
   result.innerHTML = `<div class="rs-loading"><span class="rs-spinner"></span> Investigating ${shortAddr(raw)} · ${detLabel}…</div>`;
 
   try {
@@ -312,10 +356,7 @@ async function investigate() {
     const tokAddr = (top.baseToken?.address || '').toLowerCase();
     const logo = top.info?.imageUrl || `https://dd.dexscreener.com/ds-data/tokens/${chain}/${tokAddr}.png`;
     const dexUrl = top.url || `https://dexscreener.com/${chain}/${top.pairAddress}`;
-    const explorerUrl = chain === 'solana' ? `https://solscan.io/token/${tokAddr}`
-                      : chain === 'base'   ? `https://basescan.org/token/${tokAddr}`
-                      :                       `https://etherscan.io/token/${tokAddr}`;
-
+    const explorerUrl = chain === 'solana' ? `https://solscan.io/token/${tokAddr}` : chain === 'base' ? `https://basescan.org/token/${tokAddr}` : `https://etherscan.io/token/${tokAddr}`;
     const dev = devStats(tokAddr) || { addr: tokAddr, chain, deployed: 1, score: 0 };
 
     result.innerHTML = `
@@ -348,7 +389,6 @@ async function investigate() {
       </div>
     `;
 
-    // Refresh leaderboards + counters with the new entry
     renderLocalLeaderboards();
     renderCounters();
   } catch (e) {
@@ -360,18 +400,25 @@ async function investigate() {
 document.addEventListener('DOMContentLoaded', async () => {
   renderCounters();
   renderLocalLeaderboards();
+  renderScanIndicator();
   showAlertBanner();
 
-  // Background refresh — only stale tokens (last_checked > 1h ago) are refetched
+  // Refresh stale tokens (anything tracked > 1h ago)
   const newAlerts = await refreshStaleTokens();
-  if (newAlerts.length) {
-    renderLocalLeaderboards();
-    renderCounters();
-    showAlertBanner();
-  }
+  if (newAlerts.length) { renderLocalLeaderboards(); renderCounters(); showAlertBanner(); }
+
+  // Auto-scan boosted tokens — pulls in new devs without user action
+  const added = await autoScan();
+  if (added > 0) { renderLocalLeaderboards(); renderCounters(); }
 
   STORE.lastVisit = Date.now();
   saveStore();
+
+  // Periodic re-scan while page is open
+  setInterval(async () => {
+    const a = await autoScan();
+    if (a > 0) { renderLocalLeaderboards(); renderCounters(); }
+  }, SCAN_INTERVAL_MS);
 
   $('#rs-go')?.addEventListener('click', investigate);
   $('#rs-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') investigate(); });
