@@ -193,8 +193,8 @@ body {
 .cand-actions { display: flex; gap: 4px; }
 .cand-btn {
   flex: 1; display: inline-flex; align-items: center; justify-content: center;
-  gap: 3px; padding: 5px 4px; border-radius: 6px;
-  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
+  gap: 4px; padding: 5px 8px; border-radius: 6px;
+  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
   text-decoration: none; transition: all .15s; cursor: pointer; border: 1px solid;
 }
 .cand-btn.og { background: rgba(0,209,255,0.08); border-color: rgba(0,209,255,0.3); color: var(--cyan); }
@@ -438,75 +438,19 @@ function renderCandidatesTable(candidates) {
   }
   list.innerHTML = candidates.map(function (c) {
     const t = encodeURIComponent(c.ticker);
-    const ogSolUrl = './og-detector.html?q=' + t + '&chain=solana';
-    const ogEthUrl = './og-detector.html?q=' + t + '&chain=ethereum';
-    const dexUrl   = 'https://dexscreener.com/search?q=' + t;
-    const xUrl     = 'https://x.com/search?q=%24' + t + '&f=live';
+    const ogUrl  = './og-detector.html?q=' + t;
+    const dexUrl = 'https://dexscreener.com/search?q=' + t;
+    const xUrl   = 'https://x.com/search?q=%24' + t + '&f=live';
     return ''
       + '<div class="cand-row">'
       +   '<div class="cand-row-top">'
-      +     '<div class="cand-name">
-  }).join('');
-}
-
-async function loadFeed() {
-  try {
-    const r = await fetch(API_BASE + '/feed?limit=50', { signal: AbortSignal.timeout(10000) });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const data = await r.json();
-    const tweets = data.tweets || [];
-    const status = data.status || {};
-
-    const badge = document.getElementById('statusBadge');
-    badge.classList.remove('offline');
-    badge.innerHTML = '<span class="dot"></span> LIVE';
-
-    document.getElementById('kpiHandle').textContent = '@' + (status.handle || 'elonmusk');
-    document.getElementById('kpiSeen').textContent = (status.seenCount || 0).toLocaleString();
-    const candidates = aggregateCandidates(tweets);
-    document.getElementById('kpiCandidates').textContent = candidates.length.toLocaleString();
-    const sources = [];
-    if (status.sourcesEnabled?.xapi) sources.push('xapi');
-    if (status.sourcesEnabled?.tg) sources.push('tg');
-    if (status.sourcesEnabled?.ai) sources.push('ai');
-    document.getElementById('kpiSources').textContent = sources.length;
-    document.getElementById('kpiSourceMeta').textContent = sources.join(' + ') + (status.xApiRateLimited ? ' (xapi rate-limited)' : '');
-
-    const feedEl = document.getElementById('feed');
-    if (tweets.length === 0) {
-      feedEl.innerHTML = '<div class="empty">No tweets yet. The watcher polls every 60s — first capture coming.</div>';
-    } else {
-      feedEl.innerHTML = tweets.map(renderTweet).join('');
-      lastIds = new Set(tweets.map(t => t.id));
-    }
-
-    renderCandidatesTable(candidates);
-  } catch (e) {
-    const badge = document.getElementById('statusBadge');
-    badge.classList.add('offline');
-    badge.innerHTML = '<span class="dot"></span> OFFLINE';
-    const feedEl = document.getElementById('feed');
-    if (lastIds.size === 0) {
-      feedEl.innerHTML = '<div class="empty">Backend unreachable: ' + esc(e.message) + '</div>';
-    }
-    console.warn('feed fetch failed:', e.message);
-  }
-}
-
-loadFeed();
-setInterval(loadFeed, 15000);
-</script>
-
-</body>
-</html>
- + esc(c.ticker) + '</div>'
+      +     '<div class="cand-name">$' + esc(c.ticker) + '</div>'
       +     '<div class="cand-count" title="mentions in feed">×' + c.count + '</div>'
       +   '</div>'
       +   '<div class="cand-actions">'
-      +     '<a class="cand-btn og"  href="' + ogSolUrl + '" title="OG on Solana">🟣 SOL</a>'
-      +     '<a class="cand-btn og"  href="' + ogEthUrl + '" title="OG on Ethereum">🔵 ETH</a>'
-      +     '<a class="cand-btn dex" href="' + dexUrl + '" target="_blank" rel="noopener" title="DexScreener">📈</a>'
-      +     '<a class="cand-btn x"   href="' + xUrl + '" target="_blank" rel="noopener" title="X cashtag search">𝕏</a>'
+      +     '<a class="cand-btn og"  href="' + ogUrl  + '" title="OG Detector">🔍 OG</a>'
+      +     '<a class="cand-btn dex" href="' + dexUrl + '" target="_blank" rel="noopener" title="DexScreener">📈 DEX</a>'
+      +     '<a class="cand-btn x"   href="' + xUrl   + '" target="_blank" rel="noopener" title="X / Twitter cashtag search">𝕏 $</a>'
       +   '</div>'
       + '</div>';
   }).join('');
