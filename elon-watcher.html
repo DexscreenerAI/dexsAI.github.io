@@ -79,7 +79,7 @@ body {
 :root {
   --bg: #060a10; --bg2: #0b1018; --bg3: #101822;
   --card: #111a26; --border: #1a2636;
-  --red: #ff3b4f; --cyan: #00d1ff; --green: #00ff88; --yellow: #ffaa00;
+  --red: #ff3b4f; --cyan: #00d1ff; --green: #00ff88; --yellow: #ffaa00; --purple: #b388ff;
   --text: #dfe4ed; --text2: rgba(255,255,255,0.5); --text3: rgba(255,255,255,0.25);
   --mono: 'JetBrains Mono', monospace;
 }
@@ -88,7 +88,7 @@ body {
 @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 @keyframes spin { to{transform:rotate(360deg)} }
 
-.main { max-width: 900px; margin: 0 auto; padding: 16px 16px 60px; }
+.main { max-width: 1300px; margin: 0 auto; padding: 16px 16px 60px; }
 
 .term-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -114,6 +114,10 @@ body {
 .kpi-value.green { color: var(--green); }
 .kpi-value.red { color: var(--red); }
 .kpi-sub { font-size: 9px; color: var(--text3); margin-top: 4px; }
+
+/* Two-column layout: feed on the left, candidates table on the right */
+.two-col { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; align-items: start; }
+@media(max-width: 1000px) { .two-col { grid-template-columns: 1fr; } }
 
 .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
 .panel-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0,209,255,0.04), transparent); }
@@ -166,6 +170,41 @@ body {
 .empty { text-align: center; padding: 50px 20px; color: var(--text3); font-size: 12px; }
 .spinner { width: 14px; height: 14px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin .8s linear infinite; display: inline-block; }
 .disclaimer { text-align: center; font-size: 9px; color: var(--text3); padding: 16px 8px; line-height: 1.6; }
+
+/* Right sidebar — candidates table */
+.cand-sidebar { position: sticky; top: 88px; }
+@media(max-width: 1000px) { .cand-sidebar { position: static; } }
+
+.cand-list { display: flex; flex-direction: column; gap: 6px; max-height: 70vh; overflow-y: auto; }
+.cand-list::-webkit-scrollbar { width: 6px; }
+.cand-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.cand-row {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;
+  transition: border-color .15s;
+}
+.cand-row:hover { border-color: var(--green); }
+
+.cand-row-top { display: flex; align-items: center; gap: 8px; }
+.cand-name { font-family: var(--mono); font-size: 13px; font-weight: 800; color: var(--green); flex: 1; word-break: break-all; }
+.cand-count { font-family: var(--mono); font-size: 9px; color: var(--text3); padding: 2px 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: 999px; }
+
+.cand-actions { display: flex; gap: 4px; }
+.cand-btn {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center;
+  gap: 4px; padding: 5px 8px; border-radius: 6px;
+  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+  text-decoration: none; transition: all .15s; cursor: pointer; border: 1px solid;
+}
+.cand-btn.og { background: rgba(0,209,255,0.08); border-color: rgba(0,209,255,0.3); color: var(--cyan); }
+.cand-btn.og:hover { background: rgba(0,209,255,0.18); }
+.cand-btn.dex { background: rgba(0,255,128,0.08); border-color: rgba(0,255,128,0.3); color: var(--green); }
+.cand-btn.dex:hover { background: rgba(0,255,128,0.18); }
+.cand-btn.x { background: rgba(179,136,255,0.08); border-color: rgba(179,136,255,0.3); color: var(--purple); }
+.cand-btn.x:hover { background: rgba(179,136,255,0.18); }
+
+.cand-empty { text-align: center; padding: 30px 14px; color: var(--text3); font-size: 11px; }
 </style>
   <link rel="stylesheet" href="theme.css">
 </head>
@@ -256,9 +295,9 @@ body {
       <div class="kpi-sub">total since boot</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Candidates Found</div>
+      <div class="kpi-label">Unique Candidates</div>
       <div class="kpi-value green" id="kpiCandidates">—</div>
-      <div class="kpi-sub">across last 50 tweets</div>
+      <div class="kpi-sub">deduped from feed</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Sources</div>
@@ -267,20 +306,38 @@ body {
     </div>
   </div>
 
-  <div class="panel">
-    <div class="panel-head">
-      <div class="panel-title">LIVE TWEET FEED</div>
-      <div class="panel-meta" id="panelMeta">refreshing every 15s</div>
-    </div>
-    <div class="panel-body">
-      <div class="feed" id="feed">
-        <div class="empty"><span class="spinner"></span> Loading feed…</div>
+  <div class="two-col">
+    <div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">LIVE TWEET FEED</div>
+          <div class="panel-meta" id="panelMeta">refreshing every 15s</div>
+        </div>
+        <div class="panel-body">
+          <div class="feed" id="feed">
+            <div class="empty"><span class="spinner"></span> Loading feed…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="disclaimer">
+        Phase A2 · candidates extracted &amp; AI-filtered. Click a row in the right table to investigate (OG Detector, DexScreener, X search).
       </div>
     </div>
-  </div>
 
-  <div class="disclaimer">
-    Phase A2 · candidates extracted but not yet matched on-chain. A3 will cross-check each candidate against DexScreener.
+    <div class="cand-sidebar">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">CANDIDATES</div>
+          <div class="panel-meta" id="candMeta">0 tickers</div>
+        </div>
+        <div class="panel-body">
+          <div class="cand-list" id="candList">
+            <div class="cand-empty">Waiting for AI-filtered candidates from the feed…</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -315,7 +372,6 @@ function fmtAgo(ts) {
 }
 
 function renderTweet(t) {
-  const isNew = !lastIds.has(t.id);
   const cls = ['tweet'];
   if (t.candidates && t.candidates.length > 0) cls.push('has-candidates');
   if (t.isRT) cls.push('is-rt');
@@ -353,6 +409,53 @@ function renderTweet(t) {
   return html;
 }
 
+// Aggregate ticker candidates from the feed: dedupe + count occurrences across tweets.
+// Newest tweet first wins for the source attribution.
+function aggregateCandidates(tweets) {
+  const map = new Map();
+  for (const t of tweets) {
+    if (!t.candidates) continue;
+    for (const c of t.candidates) {
+      const key = String(c).toUpperCase();
+      const entry = map.get(key);
+      if (entry) {
+        entry.count++;
+        if (t.seenAt > entry.lastSeenAt) entry.lastSeenAt = t.seenAt;
+      } else {
+        map.set(key, { ticker: key, count: 1, lastSeenAt: t.seenAt });
+      }
+    }
+  }
+  return Array.from(map.values()).sort((a, b) => b.lastSeenAt - a.lastSeenAt);
+}
+
+function renderCandidatesTable(candidates) {
+  const list = document.getElementById('candList');
+  document.getElementById('candMeta').textContent = candidates.length + ' ticker' + (candidates.length === 1 ? '' : 's');
+  if (candidates.length === 0) {
+    list.innerHTML = '<div class="cand-empty">No candidates yet. Wait for an Elon tweet that mentions a meme/project name.</div>';
+    return;
+  }
+  list.innerHTML = candidates.map(function (c) {
+    const t = encodeURIComponent(c.ticker);
+    const ogUrl  = './og-detector.html?q=' + t;
+    const dexUrl = 'https://dexscreener.com/search?q=' + t;
+    const xUrl   = 'https://x.com/search?q=%24' + t + '&f=live';
+    return ''
+      + '<div class="cand-row">'
+      +   '<div class="cand-row-top">'
+      +     '<div class="cand-name">$' + esc(c.ticker) + '</div>'
+      +     '<div class="cand-count" title="mentions in feed">×' + c.count + '</div>'
+      +   '</div>'
+      +   '<div class="cand-actions">'
+      +     '<a class="cand-btn og"  href="' + ogUrl  + '" title="OG Detector">🔍 OG</a>'
+      +     '<a class="cand-btn dex" href="' + dexUrl + '" target="_blank" rel="noopener" title="DexScreener">📈 DEX</a>'
+      +     '<a class="cand-btn x"   href="' + xUrl   + '" target="_blank" rel="noopener" title="X / Twitter cashtag search">𝕏 $</a>'
+      +   '</div>'
+      + '</div>';
+  }).join('');
+}
+
 async function loadFeed() {
   try {
     const r = await fetch(API_BASE + '/feed?limit=50', { signal: AbortSignal.timeout(10000) });
@@ -361,22 +464,21 @@ async function loadFeed() {
     const tweets = data.tweets || [];
     const status = data.status || {};
 
-    // Update status
     const badge = document.getElementById('statusBadge');
     badge.classList.remove('offline');
     badge.innerHTML = '<span class="dot"></span> LIVE';
 
     document.getElementById('kpiHandle').textContent = '@' + (status.handle || 'elonmusk');
     document.getElementById('kpiSeen').textContent = (status.seenCount || 0).toLocaleString();
-    const candCount = tweets.reduce((sum, t) => sum + (t.candidates ? t.candidates.length : 0), 0);
-    document.getElementById('kpiCandidates').textContent = candCount.toLocaleString();
+    const candidates = aggregateCandidates(tweets);
+    document.getElementById('kpiCandidates').textContent = candidates.length.toLocaleString();
     const sources = [];
     if (status.sourcesEnabled?.xapi) sources.push('xapi');
     if (status.sourcesEnabled?.tg) sources.push('tg');
+    if (status.sourcesEnabled?.ai) sources.push('ai');
     document.getElementById('kpiSources').textContent = sources.length;
     document.getElementById('kpiSourceMeta').textContent = sources.join(' + ') + (status.xApiRateLimited ? ' (xapi rate-limited)' : '');
 
-    // Render feed
     const feedEl = document.getElementById('feed');
     if (tweets.length === 0) {
       feedEl.innerHTML = '<div class="empty">No tweets yet. The watcher polls every 60s — first capture coming.</div>';
@@ -384,6 +486,8 @@ async function loadFeed() {
       feedEl.innerHTML = tweets.map(renderTweet).join('');
       lastIds = new Set(tweets.map(t => t.id));
     }
+
+    renderCandidatesTable(candidates);
   } catch (e) {
     const badge = document.getElementById('statusBadge');
     badge.classList.add('offline');
