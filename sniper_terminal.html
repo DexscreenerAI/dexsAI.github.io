@@ -4849,7 +4849,31 @@ renderPnlChart();
 
 // Auto-connect to server
 pollServerStatus();
-serverPollInterval = setInterval(pollServerStatus, 10000);
+// SSE live updates — push instead of blind polling
+let sniperSSE = null;
+let lastSSETrigger = 0;
+function connectSniperSSE() {
+  if (sniperSSE) try { sniperSSE.close(); } catch(_) {}
+  try {
+    sniperSSE = new EventSource(SNIPER_API + '/stream');
+    sniperSSE.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg && (msg.type === 'STATE' || msg.type === 'TRADE')) {
+          const now = Date.now();
+          if (now - lastSSETrigger > 500) {
+            lastSSETrigger = now;
+            pollServerStatus();
+          }
+        }
+      } catch(_) {}
+    };
+    sniperSSE.onerror = () => { setTimeout(connectSniperSSE, 5000); };
+  } catch (e) { setTimeout(connectSniperSSE, 10000); }
+}
+connectSniperSSE();
+// Slow fallback poll covers SSE drops + first paint
+serverPollInterval = setInterval(pollServerStatus, 60000);
 
 // Boot sequence
 const bootSequence = [
