@@ -4434,7 +4434,10 @@ function buildSoulSignalList() {
     });
   }
 
-  for (const p of (positions || [])) {
+  // Dedup positions against promotions (a promoted token might also be a live signal)
+    for (const p of (positions || [])) {
+    const pCa = (p.address || '').toLowerCase();
+    if (pCa && sigs.some(x => (x.ca || '').toLowerCase() === pCa)) continue;
     const x = 1 + ((p.pnlPct || 0) / 100);
     const peakX = 1 + ((p.highestPnlPct || 0) / 100);
     const entryMc = p.entryMarketCap || 0;
@@ -4455,9 +4458,14 @@ function buildSoulSignalList() {
       openedAt: p.entryTime || now,
     });
   }
-  for (const h of (history || [])) {
+  // Skip tokens we already saw in promotion / live so the same coin never doubles in the list
+  const seenCAs = new Set(sigs.map(x => (x.ca || '').toLowerCase()).filter(Boolean));
+    for (const h of (history || [])) {
     const x = 1 + ((h.pnlPct || 0) / 100);
     const peakX = 1 + ((h.highestPnlPct || h.pnlPct || 0) / 100);
+    const hCa = (h.address || '').toLowerCase();
+    if (hCa && seenCAs.has(hCa)) continue;
+    if (hCa) seenCAs.add(hCa);
     const entryMc = h.entryMarketCap || 0;
     sigs.push({
       symbol: h.symbol || '',
