@@ -115,7 +115,6 @@ body {
 .kpi-value.red { color: var(--red); }
 .kpi-sub { font-size: 9px; color: var(--text3); margin-top: 4px; }
 
-/* Two-column layout: feed on the left, candidates table on the right */
 .two-col { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; align-items: start; }
 @media(max-width: 1000px) { .two-col { grid-template-columns: 1fr; } }
 
@@ -171,7 +170,6 @@ body {
 .spinner { width: 14px; height: 14px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin .8s linear infinite; display: inline-block; }
 .disclaimer { text-align: center; font-size: 9px; color: var(--text3); padding: 16px 8px; line-height: 1.6; }
 
-/* Right sidebar — candidates table */
 .cand-sidebar { position: sticky; top: 88px; }
 @media(max-width: 1000px) { .cand-sidebar { position: static; } }
 
@@ -193,16 +191,18 @@ body {
 .cand-actions { display: flex; gap: 4px; }
 .cand-btn {
   flex: 1; display: inline-flex; align-items: center; justify-content: center;
-  gap: 4px; padding: 5px 8px; border-radius: 6px;
-  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+  gap: 3px; padding: 5px 4px; border-radius: 6px;
+  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
   text-decoration: none; transition: all .15s; cursor: pointer; border: 1px solid;
 }
-.cand-btn.og { background: rgba(0,209,255,0.08); border-color: rgba(0,209,255,0.3); color: var(--cyan); }
-.cand-btn.og:hover { background: rgba(0,209,255,0.18); }
-.cand-btn.dex { background: rgba(0,255,128,0.08); border-color: rgba(0,255,128,0.3); color: var(--green); }
+.cand-btn.sol { background: rgba(179,136,255,0.10); border-color: rgba(179,136,255,0.35); color: var(--purple); }
+.cand-btn.sol:hover { background: rgba(179,136,255,0.20); }
+.cand-btn.eth { background: rgba(0,209,255,0.10); border-color: rgba(0,209,255,0.35); color: var(--cyan); }
+.cand-btn.eth:hover { background: rgba(0,209,255,0.20); }
+.cand-btn.dex { background: rgba(0,255,128,0.08); border-color: rgba(0,255,128,0.30); color: var(--green); }
 .cand-btn.dex:hover { background: rgba(0,255,128,0.18); }
-.cand-btn.x { background: rgba(179,136,255,0.08); border-color: rgba(179,136,255,0.3); color: var(--purple); }
-.cand-btn.x:hover { background: rgba(179,136,255,0.18); }
+.cand-btn.x { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.15); color: var(--text); }
+.cand-btn.x:hover { background: rgba(255,255,255,0.10); }
 
 .cand-empty { text-align: center; padding: 30px 14px; color: var(--text3); font-size: 11px; }
 </style>
@@ -321,7 +321,7 @@ body {
       </div>
 
       <div class="disclaimer">
-        Phase A2 · candidates extracted &amp; AI-filtered. Click a row in the right table to investigate (OG Detector, DexScreener, X search).
+        Phase A2 · candidates extracted &amp; AI-filtered. Click 🟣 SOL or 🔵 ETH to investigate the OG on that chain.
       </div>
     </div>
 
@@ -409,8 +409,6 @@ function renderTweet(t) {
   return html;
 }
 
-// Aggregate ticker candidates from the feed: dedupe + count occurrences across tweets.
-// Newest tweet first wins for the source attribution.
 function aggregateCandidates(tweets) {
   const map = new Map();
   for (const t of tweets) {
@@ -426,7 +424,7 @@ function aggregateCandidates(tweets) {
       }
     }
   }
-  return Array.from(map.values()).sort((a, b) => b.lastSeenAt - a.lastSeenAt);
+  return Array.from(map.values()).sort(function (a, b) { return b.lastSeenAt - a.lastSeenAt; });
 }
 
 function renderCandidatesTable(candidates) {
@@ -436,24 +434,29 @@ function renderCandidatesTable(candidates) {
     list.innerHTML = '<div class="cand-empty">No candidates yet. Wait for an Elon tweet that mentions a meme/project name.</div>';
     return;
   }
-  list.innerHTML = candidates.map(function (c) {
+  const rows = [];
+  for (const c of candidates) {
     const t = encodeURIComponent(c.ticker);
-    const ogUrl  = './og-detector.html?q=' + t;
-    const dexUrl = 'https://dexscreener.com/search?q=' + t;
-    const xUrl   = 'https://x.com/search?q=%24' + t + '&f=live';
-    return ''
-      + '<div class="cand-row">'
-      +   '<div class="cand-row-top">'
-      +     '<div class="cand-name">$' + esc(c.ticker) + '</div>'
-      +     '<div class="cand-count" title="mentions in feed">×' + c.count + '</div>'
-      +   '</div>'
-      +   '<div class="cand-actions">'
-      +     '<a class="cand-btn og"  href="' + ogUrl  + '" title="OG Detector">🔍 OG</a>'
-      +     '<a class="cand-btn dex" href="' + dexUrl + '" target="_blank" rel="noopener" title="DexScreener">📈 DEX</a>'
-      +     '<a class="cand-btn x"   href="' + xUrl   + '" target="_blank" rel="noopener" title="X / Twitter cashtag search">𝕏 $</a>'
-      +   '</div>'
-      + '</div>';
-  }).join('');
+    const ogSolUrl = './og-detector.html?q=' + t + '&chain=solana';
+    const ogEthUrl = './og-detector.html?q=' + t + '&chain=ethereum';
+    const dexUrl   = 'https://dexscreener.com/search?q=' + t;
+    const xUrl     = 'https://x.com/search?q=%24' + t + '&f=live';
+    const html =
+      '<div class="cand-row">' +
+        '<div class="cand-row-top">' +
+          '<div class="cand-name">$' + esc(c.ticker) + '</div>' +
+          '<div class="cand-count" title="mentions in feed">×' + c.count + '</div>' +
+        '</div>' +
+        '<div class="cand-actions">' +
+          '<a class="cand-btn sol" href="' + ogSolUrl + '" title="OG on Solana">🟣 SOL</a>' +
+          '<a class="cand-btn eth" href="' + ogEthUrl + '" title="OG on Ethereum">🔵 ETH</a>' +
+          '<a class="cand-btn dex" href="' + dexUrl + '" target="_blank" rel="noopener" title="DexScreener">📈</a>' +
+          '<a class="cand-btn x" href="' + xUrl + '" target="_blank" rel="noopener" title="X cashtag search">𝕏</a>' +
+        '</div>' +
+      '</div>';
+    rows.push(html);
+  }
+  list.innerHTML = rows.join('');
 }
 
 async function loadFeed() {
@@ -473,9 +476,9 @@ async function loadFeed() {
     const candidates = aggregateCandidates(tweets);
     document.getElementById('kpiCandidates').textContent = candidates.length.toLocaleString();
     const sources = [];
-    if (status.sourcesEnabled?.xapi) sources.push('xapi');
-    if (status.sourcesEnabled?.tg) sources.push('tg');
-    if (status.sourcesEnabled?.ai) sources.push('ai');
+    if (status.sourcesEnabled && status.sourcesEnabled.xapi) sources.push('xapi');
+    if (status.sourcesEnabled && status.sourcesEnabled.tg) sources.push('tg');
+    if (status.sourcesEnabled && status.sourcesEnabled.ai) sources.push('ai');
     document.getElementById('kpiSources').textContent = sources.length;
     document.getElementById('kpiSourceMeta').textContent = sources.join(' + ') + (status.xApiRateLimited ? ' (xapi rate-limited)' : '');
 
@@ -484,7 +487,7 @@ async function loadFeed() {
       feedEl.innerHTML = '<div class="empty">No tweets yet. The watcher polls every 60s — first capture coming.</div>';
     } else {
       feedEl.innerHTML = tweets.map(renderTweet).join('');
-      lastIds = new Set(tweets.map(t => t.id));
+      lastIds = new Set(tweets.map(function (t) { return t.id; }));
     }
 
     renderCandidatesTable(candidates);
