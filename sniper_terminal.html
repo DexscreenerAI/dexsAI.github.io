@@ -4557,7 +4557,7 @@ function renderSoulSignals() {
                 ${pumpUrl ? `<a class="sn-icon-btn pf"  href="${esc(pumpUrl)}" target="_blank" rel="noopener" title="Pump.fun">🎰</a>` : ''}
                 ${dexUrl  ? `<a class="sn-icon-btn dex" href="${esc(dexUrl)}"  target="_blank" rel="noopener" title="DexScreener">📈</a>` : ''}
                 <a class="sn-icon-btn" href="trade.html" title="Trade">💎</a>
-                <a class="sn-icon-btn" href="https://twitter.com/intent/tweet?text=${encodeURIComponent("$" + s.symbol + " just hit " + soulFmtX(s.peakX) + " 🚀\n\nBYEBOSS sniper called it" + (s.entryMcUsd ? (" from $" + soulFmtNum(s.entryMcUsd) + " MC") : "") + ".\nYou weren't in the TG. Now you know." + (s["ca"] ? ("\n\nCA: " + s["ca"]) : "") + "\n\nNext one drops here ⤵\nhttps://t.me/SalaryIsScam")}&url=${encodeURIComponent(s.dexUrl || (s["ca"] ? ("https://dexscreener.com/" + (s.chain || "solana").toLowerCase() + "/" + s["ca"]) : "https://byeboss.live/sniper_terminal.html"))}" target="_blank" rel="noopener" title="Tweet this signal">𝕏</a>
+                <a class="sn-icon-btn" href="https://twitter.com/intent/tweet?text=${encodeURIComponent("$" + s.symbol + " just hit " + soulFmtX(s.peakX) + " 🚀\n\nBYEBOSS sniper called it" + (s.entryMcUsd ? (" from $" + soulFmtNum(s.entryMcUsd) + " MC") : "") + "." + (s["ca"] ? ("\n\nCA: " + s["ca"]) : "") + "\n\n" + (s.dexUrl || (s["ca"] ? ("https://dexscreener.com/" + (s.chain || "solana").toLowerCase() + "/" + s["ca"]) : "https://byeboss.live/sniper_terminal.html")))}" target="_blank" rel="noopener" title="Tweet this signal">𝕏</a>
               </div>
             </div>
           </div>
