@@ -4539,8 +4539,11 @@ function renderSoulSignals() {
       const xPctCls = xChange >= 0 ? 'up' : 'down';
       const isNew = s.status === 'LIVE' && s.x === 1;
       const initial = ((s.symbol || '?')[0] || '?').toUpperCase();
-      const avatar = s.logoUrl
-        ? `<img src="${esc(s.logoUrl)}" alt="${esc(s.symbol || '')}" onerror="this.parentNode.textContent='${esc(initial)}';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--text-dim)'">`
+      // Fallback to DexScreener CDN when the engine didn't capture imageUrl at open time
+      const cdnLogo = s.ca ? `https://dd.dexscreener.com/ds-data/tokens/${(s.chain||'solana').toLowerCase()}/${s.ca}.png` : '';
+      const logoSrc = s.logoUrl || cdnLogo;
+      const avatar = logoSrc
+        ? `<img src="${esc(logoSrc)}" alt="${esc(s.symbol || '')}" onerror="this.parentNode.textContent='${esc(initial)}';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--text-dim)'">`
         : esc(initial);
       const pumpUrl = s.ca ? `https://pump.fun/coin/${s.ca}` : '';
       const dexUrl = s.dexUrl || (s.ca ? `https://dexscreener.com/solana/${s.ca}` : '');
