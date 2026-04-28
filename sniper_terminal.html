@@ -4458,10 +4458,11 @@ function renderSoulSignals() {
     let sigs = buildSoulSignalList();
 
     if (soulActiveTab === 'live')   sigs = sigs.filter(s => s.status === 'LIVE');
-    if (soulActiveTab === 'closed') sigs = sigs.filter(s => s.status === 'CLOSED');
+    if (soulActiveTab === 'closed') sigs = sigs.filter(s => s.status === 'CLOSED' || (s.peakX || 0) >= 5);
 
-    // newest first
-    sigs.sort((a, b) => b.openedAt - a.openedAt);
+    // archive: best peak X first; others: newest first
+    if (soulActiveTab === 'closed') sigs.sort((a, b) => (b.peakX || 0) - (a.peakX || 0));
+    else sigs.sort((a, b) => b.openedAt - a.openedAt);
     sigs = sigs.slice(0, 50);
 
     if (!sigs.length) {
