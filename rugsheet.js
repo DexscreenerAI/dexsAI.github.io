@@ -485,31 +485,7 @@ function renderTopGrid() {
   el.innerHTML = topDevs.map(d => renderPoster(d)).join('');
 }
 
-// ─── Top ATH Dev hero card ──────────────────────────────────────────
-function renderTopAthDev() {
-  const el = document.getElementById('rs-top-ath-card');
-  if (!el) return;
-  const devs = backendDevs || [];
-  const top = devs.reduce((b, d) => (d.bestPeakMc || 0) > (b?.bestPeakMc || 0) ? d : b, null);
-  if (!top || !top.bestPeakMc) { el.innerHTML = '<div class="rs-empty">Top ATH dev — backend still indexing.</div>'; return; }
-  const tok = top.latestToken;
-  el.innerHTML = `
-    <div class="rs-top-ath" onclick="openDevDetail('${top.addr}')">
-      <img class="rs-top-ath-mug" src="${MUG_API}${encodeURIComponent(top.addr)}" alt="">
-      <div class="rs-top-ath-body">
-        <div class="rs-top-ath-crown">👑 Top ATH dev</div>
-        <div class="rs-top-ath-addr">${shortAddr(top.addr)}</div>
-        <div class="rs-top-ath-tok">${top.deployed || 0} deployed · avg ATH <strong>${fmtUSD(top.avgPeakMc || 0)}</strong>${tok ? ` · latest $${tok.symbol || '?'}` : ''}</div>
-      </div>
-      <div class="rs-top-ath-num">
-        <div class="rs-top-ath-num-val">${fmtUSD(top.bestPeakMc || 0)}</div>
-        <div class="rs-top-ath-num-lbl">Best ATH</div>
-      </div>
-    </div>
-  `;
-}
-
-// ─── Live feed — Just Deployed ──────────────────────────────────────
+// ─── Live feed — High Potential ─────────────────────────────────────
 const OUTCOME_LABELS = { rugged: 'Rugged', dead: 'Dead', alive: 'Alive', success: 'Win', moon: 'Moon', pending: 'Pending' };
 let recentTokens = [];
 let feedThreshold = 50000; // Min deployer avg ATH to display
@@ -537,8 +513,25 @@ function renderLiveFeed() {
     el.innerHTML = '<div class="rs-empty">Scanning fresh launches… new tokens appear here in real time.</div>';
     return;
   }
+  // Build a deployer lookup from backendDevs so we have avg ATH even when
+  // the recent-tokens payload doesn't ship those fields yet.
+  const devLookup = {};
+  for (const d of (backendDevs || [])) {
+    if (d?.addr) devLookup[String(d.addr).toLowerCase()] = d;
+  }
+  // Enrich each token with the best info we can find
+  const enriched = recentTokens.map(t => {
+    const dk = (t.deployer || '').toLowerCase();
+    const d = devLookup[dk];
+    return {
+      ...t,
+      deployerAvgPeakMc: t.deployerAvgPeakMc != null ? t.deployerAvgPeakMc : (d?.avgPeakMc || 0),
+      deployerBestPeakMc: t.deployerBestPeakMc != null ? t.deployerBestPeakMc : (d?.bestPeakMc || 0),
+      deployerDeployed: t.deployerDeployed != null ? t.deployerDeployed : (d?.deployed || 0),
+    };
+  });
   // Filter: deployer avg ATH ≥ threshold AND has at least 2 past deploys
-  const filtered = recentTokens
+  const filtered = enriched
     .filter(t => (t.deployerAvgPeakMc || 0) >= feedThreshold && (t.deployerDeployed || 0) >= 2)
     .sort((a, b) => (b.deployerAvgPeakMc || 0) - (a.deployerAvgPeakMc || 0));
 
@@ -685,7 +678,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await fetchRecentTokens();
   renderSyncIndicator();
   renderCounters();
-  renderTopAthDev();
   renderLeaderboards();
   renderLiveFeed();
   renderScanIndicator();
@@ -711,8 +703,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchBackend();
     renderSyncIndicator();
     renderCounters();
-    renderTopAthDev();
-    renderLeaderboards();
+      renderLeaderboards();
     renderScanIndicator();
   }, BACKEND_REFRESH_MS);
 
