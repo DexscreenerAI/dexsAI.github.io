@@ -200,6 +200,36 @@ body { padding-top: 72px; }
 .loading-text{font-family:var(--mono);font-size:12px;color:var(--text2);}
 .results-empty{text-align:center;padding:40px 20px;}.results-empty-icon{font-size:40px;margin-bottom:12px;}.results-empty p{color:var(--text2);font-size:14px;}
 
+/* OG Scanner section */
+.og-scanner{max-width:1100px;margin:0 auto 60px;padding:0 20px;}
+.og-scanner-head{display:flex;align-items:baseline;gap:14px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--card-border);flex-wrap:wrap;}
+.og-scanner-title{font-family:var(--mono);font-size:18px;font-weight:800;color:var(--cyan);letter-spacing:2px;}
+.og-scanner-sub{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);}
+.og-bracket-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+.og-bracket-tab{padding:8px 14px;border:1px solid var(--card-border);background:transparent;color:var(--text2);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:1px;border-radius:8px;cursor:pointer;transition:all .15s;}
+.og-bracket-tab:hover{border-color:var(--cyan);color:var(--cyan);}
+.og-bracket-tab.active{background:rgba(0,255,65,0.08);border-color:var(--cyan);color:var(--cyan);}
+.og-bracket-tab .count{margin-left:6px;color:var(--text3);font-size:9px;}
+.og-bracket-tab.active .count{color:var(--cyan);}
+.og-bracket-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:10px;}
+.og-card{display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;padding:10px 12px;background:var(--card);border:1px solid var(--card-border);border-radius:10px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s;cursor:pointer;}
+.og-card:hover{background:rgba(0,255,65,0.04);border-color:var(--cyan);}
+.og-card-logo{position:relative;width:40px;height:40px;border-radius:10px;border:1px solid var(--card-border);background:var(--bg);overflow:hidden;}
+.og-card-logo span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:16px;color:var(--text);}
+.og-card-logo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;}
+.og-card-logo img.loaded{display:block;}
+.og-card-body{min-width:0;}
+.og-card-line1{display:flex;align-items:baseline;gap:6px;}
+.og-card-ticker{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--text);}
+.og-card-name{font-family:var(--mono);font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.og-card-line2{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:nowrap;overflow:hidden;}
+.og-card-line2 .mc{color:var(--cyan);font-weight:700;}
+.og-card-line2 .age{color:var(--text2);}
+.og-card-actions{display:flex;gap:4px;}
+.og-card-act{width:26px;height:26px;border:1px solid var(--card-border);border-radius:6px;background:transparent;color:var(--text2);font-size:11px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;}
+.og-card-act:hover{border-color:var(--cyan);color:var(--cyan);}
+.og-empty{padding:30px 20px;text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;letter-spacing:1px;border:1px dashed var(--card-border);border-radius:8px;}
+
 /* Info */
 .info-section{max-width:700px;margin:0 auto 60px;padding:0 20px;}
 .info-box{background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:28px;}
@@ -329,6 +359,22 @@ body { padding-top: 72px; }
     <span class="results-count" id="resultsCount"></span>
   </div>
   <div class="results-list" id="resultsList"></div>
+</div>
+
+<!-- OG SCANNER (auto-discovered OGs grouped by MC bracket) -->
+<div class="og-scanner">
+  <div class="og-scanner-head">
+    <span class="og-scanner-title">🔭 OG SCANNER</span>
+    <span class="og-scanner-sub" id="ogScannerSub">Auto-detecting OG tokens of trending tickers · scans every 15min</span>
+  </div>
+  <div class="og-bracket-tabs">
+    <button class="og-bracket-tab active" data-bracket="1k-10k">$1K – $10K</button>
+    <button class="og-bracket-tab" data-bracket="10k-50k">$10K – $50K</button>
+    <button class="og-bracket-tab" data-bracket="50k-100k">$50K – $100K</button>
+    <button class="og-bracket-tab" data-bracket="100k-500k">$100K – $500K</button>
+    <button class="og-bracket-tab" data-bracket="500k+">$500K+</button>
+  </div>
+  <div class="og-bracket-grid" id="ogBracketGrid"></div>
 </div>
 
 <!-- INFO -->
@@ -694,6 +740,117 @@ loadPromoBanner();
 
 // Focus input on load
 document.getElementById('searchInput').focus();
+
+// ─── OG Scanner — fetch + render brackets ───────────────────────────────
+const OG_BACKEND = 'https://dexscreener-telegram-bot-production.up.railway.app/api/og/feed';
+const OG_BRACKET_LABELS = {
+  '1k-10k': '$1K – $10K',
+  '10k-50k': '$10K – $50K',
+  '50k-100k': '$50K – $100K',
+  '100k-500k': '$100K – $500K',
+  '500k+': '$500K+',
+};
+let ogFeed = { brackets: {}, lastScan: 0 };
+let ogActiveBracket = '1k-10k';
+
+function ogFmtUSD(n) {
+  if (!isFinite(n) || n < 0) return '$0';
+  if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+  return '$' + Math.round(n).toLocaleString();
+}
+function ogFmtAge(ts) {
+  if (!ts) return '?';
+  const d = (Date.now() - ts) / 86400000;
+  if (d >= 365) return Math.floor(d / 365) + 'y';
+  if (d >= 30) return Math.floor(d / 30) + 'mo';
+  if (d >= 1) return Math.floor(d) + 'd';
+  const h = (Date.now() - ts) / 3600000;
+  return Math.floor(h) + 'h';
+}
+
+async function fetchOgFeed() {
+  try {
+    const r = await fetch(OG_BACKEND, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return;
+    ogFeed = await r.json();
+  } catch (_) {}
+  updateBracketCounts();
+  renderOgBracket();
+  const sub = document.getElementById('ogScannerSub');
+  if (sub) {
+    const minsAgo = ogFeed.lastScan ? Math.floor((Date.now() - ogFeed.lastScan) / 60000) : null;
+    sub.textContent = `${ogFeed.total || 0} OGs indexed${minsAgo !== null ? ` · last scan ${minsAgo}m ago` : ''}`;
+  }
+}
+
+function updateBracketCounts() {
+  for (const tab of document.querySelectorAll('.og-bracket-tab')) {
+    const b = tab.dataset.bracket;
+    const c = (ogFeed.brackets?.[b] || []).length;
+    let countSpan = tab.querySelector('.count');
+    if (!countSpan) {
+      countSpan = document.createElement('span');
+      countSpan.className = 'count';
+      tab.appendChild(countSpan);
+    }
+    countSpan.textContent = `(${c})`;
+  }
+}
+
+function renderOgBracket() {
+  const grid = document.getElementById('ogBracketGrid');
+  if (!grid) return;
+  const items = ogFeed.brackets?.[ogActiveBracket] || [];
+  if (!items.length) {
+    grid.innerHTML = `<div class="og-empty">No OGs in this bracket yet — scanner indexes ~40 trending tickers every 15 min.</div>`;
+    return;
+  }
+  const escAttr = (s) => String(s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  grid.innerHTML = items.map(og => {
+    const ticker = og.ticker || '?';
+    const initial = ticker.charAt(0).toUpperCase();
+    const dexUrl = og.dexUrl || `https://dexscreener.com/${(og.chain || 'solana')}/${og.pairAddress || og.addr}`;
+    return `
+      <a class="og-card" href="${escAttr(dexUrl)}" target="_blank" rel="noopener">
+        <div class="og-card-logo">
+          <span>${initial}</span>
+          ${og.logo ? `<img src="${escAttr(og.logo)}" alt="" onload="this.classList.add('loaded')" onerror="this.remove()">` : ''}
+        </div>
+        <div class="og-card-body">
+          <div class="og-card-line1">
+            <span class="og-card-ticker">$${ticker}</span>
+            <span class="og-card-name" title="${escAttr(og.name || '')}">${og.name || ''}</span>
+          </div>
+          <div class="og-card-line2">
+            <span class="mc">${ogFmtUSD(og.currentMc || 0)}</span>
+            <span>·</span>
+            <span class="age">deployed ${ogFmtAge(og.deployedAt)} ago</span>
+            <span>·</span>
+            <span>${(og.chain || '?').toUpperCase()}</span>
+          </div>
+        </div>
+        <div class="og-card-actions">
+          <a class="og-card-act" href="${escAttr(dexUrl)}" target="_blank" rel="noopener" title="DexScreener" onclick="event.stopPropagation()">📈</a>
+          ${og.twitter ? `<a class="og-card-act" href="${escAttr(og.twitter)}" target="_blank" rel="noopener" title="Twitter" onclick="event.stopPropagation()">𝕏</a>` : ''}
+        </div>
+      </a>
+    `;
+  }).join('');
+}
+
+document.querySelectorAll('.og-bracket-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.og-bracket-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    ogActiveBracket = tab.dataset.bracket;
+    renderOgBracket();
+  });
+});
+
+fetchOgFeed();
+setInterval(fetchOgFeed, 60 * 1000);
 </script>
 
 <script>
