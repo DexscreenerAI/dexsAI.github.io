@@ -306,17 +306,15 @@ main, nav, .rs-hero, .rs-section, .rs-bottom-cta, .rs-alert-banner-wrap {
 .rs-feed-avatar {
   position: relative; width: 56px; height: 56px; border-radius: 12px;
   border: 1px solid rgba(0, 255, 65, 0.25); overflow: hidden; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
   background: var(--rs-bg-card); font-family: var(--rs-display);
-  font-weight: 700; color: var(--rs-text-dim); font-size: 22px;
+  font-weight: 700; color: var(--rs-text); font-size: 22px;
 }
-.rs-feed-avatar::before {
-  content: attr(data-initial);
-  position: absolute; inset: 0;
+.rs-feed-avatar-letter {
+  position: absolute; inset: 0; z-index: 0;
   display: flex; align-items: center; justify-content: center;
-  z-index: 0; pointer-events: none;
+  pointer-events: none;
 }
-.rs-feed-avatar img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: none; }
+.rs-feed-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 1; }
 .rs-feed-avatar img.loaded { display: block; }
 .rs-feed-badge-ovl {
   position: absolute; top: -6px; left: -6px;
