@@ -505,6 +505,7 @@ function renderTopAthDev() {
 // ─── Live feed — Just Deployed ──────────────────────────────────────
 const OUTCOME_LABELS = { rugged: 'Rugged', dead: 'Dead', alive: 'Alive', success: 'Win', moon: 'Moon', pending: 'Pending' };
 let recentTokens = [];
+let feedThreshold = 50000; // Min deployer avg ATH to display
 const FEED_REFRESH_MS = 30 * 1000;
 
 async function fetchRecentTokens() {
@@ -529,9 +530,18 @@ function renderLiveFeed() {
     el.innerHTML = '<div class="rs-empty">Scanning fresh launches… new tokens appear here in real time.</div>';
     return;
   }
+  // Filter: deployer avg ATH ≥ threshold AND has at least 2 past deploys
+  const filtered = recentTokens
+    .filter(t => (t.deployerAvgPeakMc || 0) >= feedThreshold && (t.deployerDeployed || 0) >= 2)
+    .sort((a, b) => (b.deployerAvgPeakMc || 0) - (a.deployerAvgPeakMc || 0));
+
+  if (!filtered.length) {
+    el.innerHTML = `<div class="rs-empty">No high-potential launches above ${fmtUSD(feedThreshold)} avg ATH right now. Lower the threshold or wait for the next drop.</div>`;
+    return;
+  }
   const known = knownDevSet();
   const escAttr = (s) => String(s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  el.innerHTML = recentTokens.map(t => {
+  el.innerHTML = filtered.map(t => {
     const dev = (t.deployer || '').toLowerCase();
     const isKnown = dev && known.has(dev);
     const chain = (t.chain || 'solana').toLowerCase();
@@ -566,8 +576,8 @@ function renderLiveFeed() {
             <span>${ageStr}</span>
             <span class="sep">·</span>
             <span class="mc">${currentMc}</span>
-            <span class="sep">→</span>
-            <span class="ath" title="All-time high market cap">${peakMc}</span>
+            <span class="sep">·</span>
+            <span class="dev-avg" title="Deployer's avg ATH across ${t.deployerDeployed || 0} past deploys">dev avg ${fmtUSD(t.deployerAvgPeakMc || 0)}</span>
             ${isKnown ? '<span class="known" title="Dev already on file">📁</span>' : ''}
           </div>
         </div>
@@ -706,4 +716,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   $('#rs-go')?.addEventListener('click', investigate);
   $('#rs-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') investigate(); });
+
+  // Threshold pills for the High Potential feed
+  document.querySelectorAll('.rs-feed-threshold').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.rs-feed-threshold').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      feedThreshold = parseInt(btn.dataset.threshold, 10) || 50000;
+      renderLiveFeed();
+    });
+  });
 });

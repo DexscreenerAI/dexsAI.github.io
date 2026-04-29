@@ -318,6 +318,20 @@ main, nav, .rs-hero, .rs-section, .rs-bottom-cta, .rs-alert-banner-wrap {
   .rs-top-ath-num { grid-column: 1 / -1; text-align: left; }
 }
 
+/* High potential threshold controls */
+.rs-feed-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.rs-feed-controls-lbl { font-family: var(--rs-mono); font-size: 11px; color: var(--rs-text-dim); letter-spacing: 0.5px; margin-right: 4px; }
+.rs-feed-threshold {
+  padding: 6px 12px; border-radius: 6px;
+  border: 1px solid var(--rs-border-bright); background: transparent;
+  color: var(--rs-text-dim); font-family: var(--rs-display); font-size: 10px;
+  letter-spacing: 1px; cursor: pointer; transition: all .15s;
+}
+.rs-feed-threshold:hover { border-color: var(--rs-green); color: var(--rs-green); }
+.rs-feed-threshold.active { border-color: var(--rs-green); background: rgba(0, 255, 65, 0.1); color: var(--rs-green); }
+
+.rs-feed-line2 .dev-avg { color: var(--rs-yellow); font-weight: 700; }
+
 /* Live feed — Just Deployed (compact horizontal rows) */
 .rs-feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 10px; }
 
