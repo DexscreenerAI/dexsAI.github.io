@@ -440,20 +440,30 @@ async function searchOG() {
   showLoading();
   
   try {
-    const response = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`, {
-      signal: AbortSignal.timeout(15000)
-    });
-    
-    if (!response.ok) throw new Error('API error');
-    
-    const data = await response.json();
-    
+    // Backend proxy merges DexScreener + pump.fun (Cloudflare blocks
+    // direct browser → pump.fun calls)
+    const backend = 'https://dexscreener-telegram-bot-production.up.railway.app';
+    const url = `${backend}/api/og/search?q=${encodeURIComponent(query)}&chain=${encodeURIComponent(selectedChain)}`;
+    let data = null;
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
+      if (r.ok) data = await r.json();
+    } catch (_) { /* fall through to dexscreener */ }
+    if (!data || !Array.isArray(data.pairs)) {
+      const fallback = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`, {
+        signal: AbortSignal.timeout(15000)
+      });
+      if (!fallback.ok) throw new Error('API error');
+      data = await fallback.json();
+    }
+
     if (!data.pairs || data.pairs.length === 0) {
       showEmpty(query);
       return;
     }
-    
-    // Filter by chain if selected
+
+    // Filter by chain if selected (backend already filters, but DexScreener
+    // fallback path needs it)
     let pairs = data.pairs;
     if (selectedChain !== 'all') {
       pairs = pairs.filter(p => p.chainId === selectedChain);
