@@ -201,7 +201,7 @@ body { padding-top: 72px; }
 .results-empty{text-align:center;padding:40px 20px;}.results-empty-icon{font-size:40px;margin-bottom:12px;}.results-empty p{color:var(--text2);font-size:14px;}
 
 /* OG Scanner section */
-.og-scanner{max-width:1100px;margin:0 auto 60px;padding:0 20px;}
+.og-scanner{max-width:1200px;margin:0 auto 60px;padding:0 20px;}
 .og-scanner-head{display:flex;align-items:baseline;gap:14px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--card-border);flex-wrap:wrap;}
 .og-scanner-title{font-family:var(--mono);font-size:18px;font-weight:800;color:var(--cyan);letter-spacing:2px;}
 .og-scanner-sub{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);}
@@ -211,24 +211,42 @@ body { padding-top: 72px; }
 .og-bracket-tab.active{background:rgba(0,255,65,0.08);border-color:var(--cyan);color:var(--cyan);}
 .og-bracket-tab .count{margin-left:6px;color:var(--text3);font-size:9px;}
 .og-bracket-tab.active .count{color:var(--cyan);}
-.og-bracket-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:10px;}
-.og-card{display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;padding:10px 12px;background:var(--card);border:1px solid var(--card-border);border-radius:10px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s;cursor:pointer;}
-.og-card:hover{background:rgba(0,255,65,0.04);border-color:var(--cyan);}
-.og-card-logo{position:relative;width:40px;height:40px;border-radius:10px;border:1px solid var(--card-border);background:var(--bg);overflow:hidden;}
-.og-card-logo span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:16px;color:var(--text);}
+
+.og-bracket-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px;}
+
+.og-card{display:flex;flex-direction:column;gap:12px;padding:16px;background:rgba(0,0,0,0.35);border:1px solid rgba(0,255,65,0.14);border-radius:14px;color:var(--text);text-decoration:none;cursor:pointer;transition:border-color .15s,background .15s;}
+.og-card:hover{background:rgba(0,255,65,0.04);border-color:rgba(0,255,65,0.4);}
+
+.og-card-top{display:flex;gap:12px;align-items:flex-start;}
+.og-card-logo{position:relative;width:56px;height:56px;border-radius:12px;border:1px solid rgba(0,255,65,0.25);background:var(--card);overflow:hidden;flex-shrink:0;}
+.og-card-logo span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:22px;color:var(--text);}
 .og-card-logo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;}
 .og-card-logo img.loaded{display:block;}
-.og-card-body{min-width:0;}
-.og-card-line1{display:flex;align-items:baseline;gap:6px;}
-.og-card-ticker{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--text);}
-.og-card-name{font-family:var(--mono);font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.og-card-line2{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:nowrap;overflow:hidden;}
-.og-card-line2 .mc{color:var(--cyan);font-weight:700;}
-.og-card-line2 .age{color:var(--text2);}
-.og-card-actions{display:flex;gap:4px;}
-.og-card-act{width:26px;height:26px;border:1px solid var(--card-border);border-radius:6px;background:transparent;color:var(--text2);font-size:11px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;}
-.og-card-act:hover{border-color:var(--cyan);color:var(--cyan);}
-.og-empty{padding:30px 20px;text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;letter-spacing:1px;border:1px dashed var(--card-border);border-radius:8px;}
+
+.og-card-head{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px;}
+.og-card-title{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0;}
+.og-card-ticker{font-family:var(--mono);font-weight:700;font-size:18px;color:var(--text);letter-spacing:0.3px;flex-shrink:0;}
+.og-card-name{font-family:var(--mono);font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+
+.og-card-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.og-card-chip{padding:4px 9px;border-radius:8px;font-family:var(--mono);font-size:10px;border:1px solid rgba(0,255,65,0.2);color:var(--text2);background:transparent;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.og-card-chip.chain{color:var(--cyan);border-color:rgba(0,255,65,0.4);}
+.og-card-chip.og{color:var(--yellow);border-color:rgba(240,255,0,0.5);background:rgba(240,255,0,0.08);font-weight:700;letter-spacing:1px;}
+
+.og-card-sep{height:1px;background:rgba(255,255,255,0.07);border:0;margin:0;}
+
+.og-card-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.og-card-stat{padding:10px 12px;border-radius:10px;border:1px solid rgba(0,255,65,0.15);background:rgba(0,0,0,0.25);}
+.og-card-stat-val{font-family:var(--mono);font-weight:700;font-size:16px;color:var(--text);}
+.og-card-stat-val.peak{color:var(--yellow);}
+.og-card-stat-lbl{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px;letter-spacing:0.3px;}
+
+.og-card-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.og-card-act{flex:1;min-width:0;padding:8px 10px;border:1px solid rgba(0,255,65,0.2);background:transparent;color:var(--text2);font-family:var(--mono);font-size:11px;border-radius:8px;text-decoration:none;text-align:center;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.og-card-act:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,255,65,0.05);}
+.og-card-act.tw:hover{border-color:#1da1f2;color:#1da1f2;}
+
+.og-empty{padding:30px 20px;text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;letter-spacing:1px;border:1px dashed var(--card-border);border-radius:8px;grid-column:1 / -1;}
 
 /* Info */
 .info-section{max-width:700px;margin:0 auto 60px;padding:0 20px;}
@@ -812,28 +830,40 @@ function renderOgBracket() {
     const ticker = og.ticker || '?';
     const initial = ticker.charAt(0).toUpperCase();
     const dexUrl = og.dexUrl || `https://dexscreener.com/${(og.chain || 'solana')}/${og.pairAddress || og.addr}`;
+    const chain = (og.chain || 'solana').toUpperCase();
     return `
       <a class="og-card" href="${escAttr(dexUrl)}" target="_blank" rel="noopener">
-        <div class="og-card-logo">
-          <span>${initial}</span>
-          ${og.logo ? `<img src="${escAttr(og.logo)}" alt="" onload="this.classList.add('loaded')" onerror="this.remove()">` : ''}
-        </div>
-        <div class="og-card-body">
-          <div class="og-card-line1">
-            <span class="og-card-ticker">$${ticker}</span>
-            <span class="og-card-name" title="${escAttr(og.name || '')}">${og.name || ''}</span>
+        <div class="og-card-top">
+          <div class="og-card-logo">
+            <span>${initial}</span>
+            ${og.logo ? `<img src="${escAttr(og.logo)}" alt="" onload="this.classList.add('loaded')" onerror="this.remove()">` : ''}
           </div>
-          <div class="og-card-line2">
-            <span class="mc">${ogFmtUSD(og.currentMc || 0)}</span>
-            <span>·</span>
-            <span class="age">deployed ${ogFmtAge(og.deployedAt)} ago</span>
-            <span>·</span>
-            <span>${(og.chain || '?').toUpperCase()}</span>
+          <div class="og-card-head">
+            <div class="og-card-title">
+              <span class="og-card-ticker">$${ticker}</span>
+              <span class="og-card-name" title="${escAttr(og.name || '')}">${og.name || ''}</span>
+            </div>
+            <div class="og-card-chips">
+              <span class="og-card-chip og">✦ OG</span>
+              <span class="og-card-chip chain">${chain}</span>
+              <span class="og-card-chip">🕐 ${ogFmtAge(og.deployedAt)}</span>
+            </div>
+          </div>
+        </div>
+        <hr class="og-card-sep">
+        <div class="og-card-stats">
+          <div class="og-card-stat">
+            <div class="og-card-stat-val">${ogFmtUSD(og.currentMc || 0)}</div>
+            <div class="og-card-stat-lbl">Market Cap</div>
+          </div>
+          <div class="og-card-stat">
+            <div class="og-card-stat-val peak">${ogFmtUSD(og.peakMc || og.currentMc || 0)}</div>
+            <div class="og-card-stat-lbl">Peak MC</div>
           </div>
         </div>
         <div class="og-card-actions">
-          <a class="og-card-act" href="${escAttr(dexUrl)}" target="_blank" rel="noopener" title="DexScreener" onclick="event.stopPropagation()">📈</a>
-          ${og.twitter ? `<a class="og-card-act" href="${escAttr(og.twitter)}" target="_blank" rel="noopener" title="Twitter" onclick="event.stopPropagation()">𝕏</a>` : ''}
+          <a class="og-card-act" href="${escAttr(dexUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📈 DexScreener</a>
+          ${og.twitter ? `<a class="og-card-act tw" href="${escAttr(og.twitter)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">𝕏 Twitter</a>` : ''}
         </div>
       </a>
     `;
