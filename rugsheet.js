@@ -305,6 +305,12 @@ function renderPoster(d) {
       <div class="rs-poster-addr">${shortAddr(d.addr)} · ${d.chain || 'unknown'}</div>
       <div class="rs-poster-score">${d.score > 0 ? '+' : ''}${d.score}</div>
       ${d.damage > 0 ? `<div class="rs-poster-bounty">Estimated damage: <strong>${fmtUSD(d.damage)}</strong></div>` : '<div class="rs-poster-bounty">No reported damage</div>'}
+      ${d.latestToken ? `
+        <div class="rs-poster-latest">
+          <div class="rs-poster-latest-lbl">Latest deploy · ${fmtAge(d.latestToken.deployedAt)} ago</div>
+          <div class="rs-poster-latest-tok">$${d.latestToken.symbol || '?'}<span class="rs-poster-latest-mc">${fmtUSD(d.latestToken.peakMc || d.latestToken.currentMc || 0)}</span></div>
+        </div>
+      ` : ''}
       <div class="rs-poster-stats">
         <div><div class="rs-poster-stat-val">${d.deployed || 0}</div><div class="rs-poster-stat-lbl">Deployed</div></div>
         <div><div class="rs-poster-stat-val">${d.rugged || 0}</div><div class="rs-poster-stat-lbl">Rugged</div></div>
