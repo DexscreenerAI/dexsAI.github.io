@@ -472,6 +472,7 @@ function renderTopGrid() {
 }
 
 // ─── Live feed — Just Deployed ──────────────────────────────────────
+const OUTCOME_LABELS = { rugged: 'Rugged', dead: 'Dead', alive: 'Alive', success: 'Win', moon: 'Moon', pending: 'Pending' };
 let recentTokens = [];
 const FEED_REFRESH_MS = 30 * 1000;
 
@@ -498,35 +499,68 @@ function renderLiveFeed() {
     return;
   }
   const known = knownDevSet();
+  const escAttr = (s) => String(s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   el.innerHTML = recentTokens.map(t => {
     const dev = (t.deployer || '').toLowerCase();
     const isKnown = dev && known.has(dev);
     const chain = (t.chain || 'solana').toLowerCase();
     const ca = t.addrOriginal || t.addr;
     const dexUrl = t.pairAddress ? `https://dexscreener.com/${chain}/${t.pairAddress}` : `https://dexscreener.com/${chain}/${ca}`;
-    const onclick = isKnown
-      ? `event.preventDefault(); openDevDetail('${dev}')`
-      : ``;
+    const pumpUrl = chain === 'solana' ? `https://pump.fun/coin/${ca}` : '';
+    const symbol = (t.symbol || '?').toString();
+    const initial = symbol.slice(0, 1).toUpperCase();
+    const logo = `https://dd.dexscreener.com/ds-data/tokens/${chain}/${(ca || '').toLowerCase()}.png`;
+    const ageStr = t.firstSeen ? fmtAge(t.firstSeen) + ' ago' : '—';
+    const isFresh = t.firstSeen && (Date.now() - t.firstSeen) < 60 * 60 * 1000;
+    const outcome = (t.outcome || 'pending').toLowerCase();
+    const outcomeLbl = OUTCOME_LABELS[outcome] || outcome;
+    const peakMc = fmtUSD(t.peakMc || 0);
+    const currentMc = fmtUSD(t.currentMc || 0);
+    const cardOnclick = isKnown
+      ? `if(!event.target.closest('a,button')){event.preventDefault();openDevDetail('${dev}');}`
+      : '';
     return `
-      <a class="rs-feed-card ${isKnown ? 'known-dev' : ''}" href="${dexUrl}" target="_blank" rel="noopener" ${onclick ? `onclick="${onclick}"` : ''}>
+      <a class="rs-feed-card ${isKnown ? 'known-dev' : ''}" href="${dexUrl}" target="_blank" rel="noopener" ${cardOnclick ? `onclick="${cardOnclick}"` : ''}>
         <div class="rs-feed-top">
-          <span class="rs-feed-sym">$${(t.symbol || '?').toString()}</span>
-          <span class="rs-feed-chain">${chain}</span>
+          <div class="rs-feed-avatar">
+            <img src="${escAttr(logo)}" alt="${escAttr(symbol)}" onerror="this.parentNode.textContent='${escAttr(initial)}';this.parentNode.style.fontSize='22px'">
+            <span class="rs-feed-badge-ovl">🎯</span>
+          </div>
+          <div class="rs-feed-head">
+            <div class="rs-feed-title">
+              <span class="rs-feed-ticker">$${symbol}</span>
+              <span class="rs-feed-name" title="${escAttr(t.name || '')}">${(t.name || '').toString()}</span>
+            </div>
+            <div class="rs-feed-chips">
+              <span class="rs-feed-chip ${isFresh ? 'new' : outcome}">${isFresh ? '⚡ NEW' : outcomeLbl}</span>
+              <span class="rs-feed-chip">🕐 ${ageStr}</span>
+              <span class="rs-feed-chip">⛓ ${chain.toUpperCase()}</span>
+            </div>
+            <div class="rs-feed-icons">
+              ${pumpUrl ? `<a class="rs-feed-icon-btn pf" href="${pumpUrl}" target="_blank" rel="noopener" title="Pump.fun" onclick="event.stopPropagation()">🎰</a>` : ''}
+              <a class="rs-feed-icon-btn dex" href="${dexUrl}" target="_blank" rel="noopener" title="DexScreener" onclick="event.stopPropagation()">📈</a>
+              ${isKnown ? `<button class="rs-feed-icon-btn" title="Dev profile" onclick="event.preventDefault();event.stopPropagation();openDevDetail('${dev}')">👤</button>` : ''}
+            </div>
+          </div>
         </div>
-        <div class="rs-feed-name">${(t.name || '').toString()}</div>
+        <hr class="rs-feed-sep">
         <div class="rs-feed-stats">
-          <span>${t.firstSeen ? fmtAge(t.firstSeen) + ' ago' : '?'}</span>
-          <span class="rs-feed-mc">${fmtUSD(t.peakMc || t.currentMc || 0)}</span>
+          <div class="rs-feed-stat">
+            <div class="rs-feed-stat-val">${currentMc}</div>
+            <div class="rs-feed-stat-lbl">Market Cap</div>
+          </div>
+          <div class="rs-feed-stat">
+            <div class="rs-feed-stat-val peak">${peakMc}</div>
+            <div class="rs-feed-stat-lbl">Peak MC (ATH)</div>
+          </div>
         </div>
-        ${isKnown ? '<div class="rs-feed-known-tag">📁 dev on file — click for profile</div>' : ''}
+        ${isKnown ? '<div class="rs-feed-known-tag">📁 Dev on file — click for full profile</div>' : ''}
       </a>
     `;
   }).join('');
 }
 
 // ─── Dev detail modal ────────────────────────────────────────────────
-const OUTCOME_LABELS = { rugged: 'Rugged', dead: 'Dead', alive: 'Alive', success: 'Win', moon: 'Moon', pending: 'Pending' };
-
 async function openDevDetail(addr) {
   if (!addr) return;
   const modal = document.getElementById('rs-dev-modal');

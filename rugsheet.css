@@ -289,19 +289,79 @@ main, nav, .rs-hero, .rs-section, .rs-bottom-cta, .rs-alert-banner-wrap {
 
 [hidden] { display: none !important; }
 
-/* Live feed — Just Deployed */
-.rs-feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
-.rs-feed-card { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; background: var(--rs-bg-card); border: 1px solid var(--rs-border); border-radius: 6px; cursor: pointer; transition: border-color .15s, box-shadow .15s; text-decoration: none; color: inherit; min-width: 0; }
-.rs-feed-card:hover { border-color: var(--rs-border-bright); }
-.rs-feed-card.known-dev { border-color: var(--rs-green); box-shadow: 0 0 0 1px var(--rs-green) inset, 0 0 18px rgba(0, 255, 65, 0.18); }
-.rs-feed-card.known-dev:hover { box-shadow: 0 0 0 1px var(--rs-green) inset, 0 0 24px rgba(0, 255, 65, 0.32); }
-.rs-feed-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.rs-feed-sym { font-family: var(--rs-display); font-size: 13px; color: var(--rs-text); letter-spacing: 0.5px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rs-feed-chain { font-size: 8px; padding: 2px 6px; border-radius: 3px; border: 1px solid var(--rs-border-bright); color: var(--rs-text-dim); letter-spacing: 1px; text-transform: uppercase; flex-shrink: 0; }
-.rs-feed-name { font-size: 10px; color: var(--rs-text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rs-feed-stats { display: flex; justify-content: space-between; font-size: 10px; color: var(--rs-text-dim); margin-top: 2px; }
-.rs-feed-mc { color: var(--rs-yellow); font-family: var(--rs-display); }
-.rs-feed-known-tag { font-size: 8px; color: var(--rs-green); letter-spacing: 1px; text-transform: uppercase; font-family: var(--rs-display); }
+/* Live feed — Just Deployed (sniper-terminal card style) */
+.rs-feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.rs-feed-card {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 14px; background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 255, 65, 0.14); border-radius: 14px;
+  color: var(--rs-text); transition: border-color .15s, background .15s, box-shadow .15s;
+  text-decoration: none; cursor: pointer; min-width: 0;
+}
+.rs-feed-card:hover { background: rgba(0, 255, 65, 0.04); border-color: rgba(0, 255, 65, 0.35); }
+.rs-feed-card.known-dev { border-color: var(--rs-green); box-shadow: 0 0 0 1px var(--rs-green) inset, 0 0 22px rgba(0, 255, 65, 0.22); }
+.rs-feed-card.known-dev:hover { box-shadow: 0 0 0 1px var(--rs-green) inset, 0 0 30px rgba(0, 255, 65, 0.36); }
+
+.rs-feed-top { display: flex; gap: 14px; align-items: flex-start; }
+.rs-feed-avatar {
+  position: relative; width: 56px; height: 56px; border-radius: 12px;
+  border: 1px solid rgba(0, 255, 65, 0.25); overflow: hidden; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--rs-bg-card); font-family: var(--rs-display);
+  font-weight: 700; color: var(--rs-text-dim); font-size: 18px;
+}
+.rs-feed-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rs-feed-badge-ovl {
+  position: absolute; top: -6px; left: -6px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--rs-bg-panel); border: 1px solid rgba(0, 255, 65, 0.4);
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+}
+
+.rs-feed-head { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.rs-feed-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.rs-feed-ticker { font-family: var(--rs-display); font-weight: 700; font-size: 16px; color: var(--rs-text); letter-spacing: 0.5px; flex-shrink: 0; }
+.rs-feed-name { font-family: var(--rs-mono); font-weight: 400; font-size: 12px; color: var(--rs-text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 0 1 auto; }
+
+.rs-feed-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.rs-feed-chip {
+  padding: 4px 9px; border-radius: 8px; font-family: var(--rs-mono);
+  font-size: 10px; color: var(--rs-text-dim);
+  border: 1px solid rgba(0, 255, 65, 0.2); background: transparent;
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.rs-feed-chip.new    { color: var(--rs-green); border-color: var(--rs-green); background: rgba(0, 255, 65, 0.08); font-weight: 700; }
+.rs-feed-chip.alive  { color: var(--rs-green); border-color: rgba(0, 255, 65, 0.4); }
+.rs-feed-chip.rugged { color: var(--rs-red); border-color: rgba(255, 0, 64, 0.4); }
+.rs-feed-chip.dead   { color: var(--rs-text-dim); border-color: rgba(255, 255, 255, 0.15); }
+.rs-feed-chip.success{ color: var(--rs-green); border-color: var(--rs-green); }
+.rs-feed-chip.moon   { color: var(--rs-yellow); border-color: var(--rs-yellow); }
+
+.rs-feed-icons { display: flex; gap: 6px; flex-wrap: wrap; }
+.rs-feed-icon-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid rgba(0, 255, 65, 0.2); background: transparent;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--rs-text-dim); cursor: pointer;
+  text-decoration: none; transition: all .15s;
+}
+.rs-feed-icon-btn:hover { border-color: var(--rs-green); color: var(--rs-green); background: rgba(0, 255, 65, 0.05); }
+.rs-feed-icon-btn.pf:hover  { border-color: var(--rs-yellow); color: var(--rs-yellow); }
+.rs-feed-icon-btn.dex:hover { border-color: var(--rs-red); color: var(--rs-red); }
+
+.rs-feed-sep { height: 1px; background: rgba(255, 255, 255, 0.07); border: 0; margin: 0; }
+
+.rs-feed-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+.rs-feed-stat {
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid rgba(0, 255, 65, 0.15); background: rgba(0, 0, 0, 0.25);
+  min-width: 0;
+}
+.rs-feed-stat-val { font-family: var(--rs-display); font-weight: 700; font-size: 15px; color: var(--rs-text); }
+.rs-feed-stat-val.peak { color: var(--rs-yellow); }
+.rs-feed-stat-lbl { font-family: var(--rs-mono); font-size: 10px; color: var(--rs-text-dim); margin-top: 4px; letter-spacing: 0.3px; }
+
+.rs-feed-known-tag { font-size: 9px; color: var(--rs-green); letter-spacing: 1px; text-transform: uppercase; font-family: var(--rs-display); padding: 6px 10px; border: 1px dashed rgba(0, 255, 65, 0.4); border-radius: 6px; text-align: center; }
 
 /* Dev detail modal */
 .rs-modal { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 24px; }
