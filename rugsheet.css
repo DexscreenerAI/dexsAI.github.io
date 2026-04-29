@@ -293,31 +293,6 @@ main, nav, .rs-hero, .rs-section, .rs-bottom-cta, .rs-alert-banner-wrap {
 
 [hidden] { display: none !important; }
 
-/* Top ATH Dev hero card */
-.rs-top-ath {
-  display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center;
-  padding: 20px 22px;
-  background: linear-gradient(135deg, rgba(240, 255, 0, 0.08), rgba(0, 255, 65, 0.04));
-  border: 1px solid var(--rs-yellow);
-  border-radius: 10px;
-  box-shadow: 0 0 28px rgba(240, 255, 0, 0.18);
-  cursor: pointer; transition: box-shadow .15s, transform .15s;
-}
-.rs-top-ath:hover { box-shadow: 0 0 40px rgba(240, 255, 0, 0.32); transform: translateY(-2px); }
-.rs-top-ath-mug { width: 64px; height: 64px; border-radius: 12px; border: 2px solid var(--rs-yellow); background: var(--rs-bg-card); filter: hue-rotate(50deg) saturate(0.5); flex-shrink: 0; }
-.rs-top-ath-body { min-width: 0; }
-.rs-top-ath-crown { font-family: var(--rs-display); font-size: 10px; color: var(--rs-yellow); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
-.rs-top-ath-addr { font-family: var(--rs-display); font-size: 16px; color: var(--rs-text); font-weight: 700; }
-.rs-top-ath-tok { font-family: var(--rs-mono); font-size: 11px; color: var(--rs-text-muted); margin-top: 6px; }
-.rs-top-ath-tok strong { color: var(--rs-yellow); font-family: var(--rs-display); }
-.rs-top-ath-num { text-align: right; }
-.rs-top-ath-num-val { font-family: var(--rs-display); font-size: clamp(24px, 4.5vw, 36px); color: var(--rs-yellow); font-weight: 800; line-height: 1; }
-.rs-top-ath-num-lbl { font-family: var(--rs-display); font-size: 9px; color: var(--rs-text-dim); margin-top: 4px; letter-spacing: 1.5px; text-transform: uppercase; }
-@media (max-width: 600px) {
-  .rs-top-ath { grid-template-columns: auto 1fr; gap: 12px; padding: 16px; }
-  .rs-top-ath-num { grid-column: 1 / -1; text-align: left; }
-}
-
 /* High potential threshold controls */
 .rs-feed-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
 .rs-feed-controls-lbl { font-family: var(--rs-mono); font-size: 11px; color: var(--rs-text-dim); letter-spacing: 0.5px; margin-right: 4px; }
