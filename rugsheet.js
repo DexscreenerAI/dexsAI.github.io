@@ -336,9 +336,16 @@ function renderLeaderboards() {
     if (honored) honored.innerHTML = '<div class="rs-empty">No honored devs yet.</div>';
     return;
   }
-  const sorted = [...source].sort((a, b) => a.score - b.score);
-  const worst = sorted.filter(d => d.score < 0).slice(0, 12);
-  const best = [...sorted].reverse().filter(d => d.score > 0).slice(0, 12);
+  // Most Wanted = score < 0, sorted by best ATH desc (biggest pumps before rug)
+  const worst = source
+    .filter(d => d.score < 0)
+    .sort((a, b) => (b.bestPeakMc || 0) - (a.bestPeakMc || 0))
+    .slice(0, 12);
+  // Hall of Fame = score > 0, sorted by best ATH desc
+  const best = source
+    .filter(d => d.score > 0)
+    .sort((a, b) => (b.bestPeakMc || 0) - (a.bestPeakMc || 0))
+    .slice(0, 12);
 
   if (wanted) wanted.innerHTML = worst.length ? worst.map(d => renderPoster(d)).join('') : '<div class="rs-empty">No flagged devs yet.</div>';
   if (honored) honored.innerHTML = best.length ? best.map(d => renderPoster(d)).join('') : '<div class="rs-empty">No honored devs yet.</div>';
