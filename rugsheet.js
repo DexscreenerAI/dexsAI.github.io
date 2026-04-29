@@ -582,12 +582,15 @@ async function openDevDetail(addr) {
           <div class="rs-modal-sub">Score ${d.score > 0 ? '+' : ''}${d.score} · first seen ${d.firstSeen ? fmtAge(d.firstSeen) + ' ago' : '?'}</div>
         </div>
       </div>
+      <div class="rs-modal-hero">
+        <div class="rs-modal-hero-val">${fmtUSD(d.avgPeakMc || 0)}</div>
+        <div class="rs-modal-hero-lbl">Avg ATH per deploy</div>
+      </div>
       <div class="rs-modal-stats">
         <div class="rs-modal-stat"><div class="rs-modal-stat-val">${d.deployed || 0}</div><div class="rs-modal-stat-lbl">Deployed</div></div>
+        <div class="rs-modal-stat"><div class="rs-modal-stat-val" style="color:var(--rs-yellow)">${fmtUSD(d.bestPeakMc || 0)}</div><div class="rs-modal-stat-lbl">Best ATH</div></div>
         <div class="rs-modal-stat"><div class="rs-modal-stat-val" style="color:var(--rs-red)">${d.rugged || 0}</div><div class="rs-modal-stat-lbl">Rugged</div></div>
         <div class="rs-modal-stat"><div class="rs-modal-stat-val" style="color:var(--rs-green)">${(d.success || 0) + (d.moon || 0)}</div><div class="rs-modal-stat-lbl">Wins</div></div>
-        <div class="rs-modal-stat"><div class="rs-modal-stat-val" style="color:var(--rs-yellow)">${fmtUSD(d.bestPeakMc || 0)}</div><div class="rs-modal-stat-lbl">Best ATH</div></div>
-        <div class="rs-modal-stat"><div class="rs-modal-stat-val">${fmtUSD(d.avgPeakMc || 0)}</div><div class="rs-modal-stat-lbl">Avg ATH</div></div>
       </div>
       <div class="rs-modal-section">Tokens deployed (${tokens.length})</div>
       <div class="rs-tokens-list">

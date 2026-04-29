@@ -378,6 +378,15 @@ main, nav, .rs-hero, .rs-section, .rs-bottom-cta, .rs-alert-banner-wrap {
 .rs-modal-mug { width: 56px; height: 56px; border-radius: 8px; border: 1px solid var(--rs-border-bright); flex-shrink: 0; }
 .rs-modal-title { font-family: var(--rs-display); font-size: 14px; letter-spacing: 1px; color: var(--rs-text); word-break: break-all; }
 .rs-modal-sub { font-size: 11px; color: var(--rs-text-dim); margin-top: 4px; }
+.rs-modal-hero {
+  background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(240, 255, 0, 0.05));
+  border: 1px solid var(--rs-green);
+  border-radius: 8px; padding: 18px 20px; margin-bottom: 14px;
+  text-align: center;
+  box-shadow: 0 0 24px rgba(0, 255, 65, 0.18);
+}
+.rs-modal-hero-val { font-family: var(--rs-display); font-size: clamp(28px, 6vw, 42px); color: var(--rs-yellow); font-weight: 800; letter-spacing: 1px; line-height: 1.1; }
+.rs-modal-hero-lbl { font-family: var(--rs-display); font-size: 10px; color: var(--rs-text-dim); margin-top: 6px; letter-spacing: 2px; text-transform: uppercase; }
 .rs-modal-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-bottom: 22px; }
 .rs-modal-stat { background: var(--rs-bg); border: 1px solid var(--rs-border); border-radius: 6px; padding: 10px 12px; text-align: center; }
 .rs-modal-stat-val { font-family: var(--rs-display); font-size: 16px; color: var(--rs-text); }
