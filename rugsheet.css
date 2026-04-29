@@ -294,7 +294,7 @@ main, nav, .rs-hero, .rs-section, .rs-bottom-cta, .rs-alert-banner-wrap {
 [hidden] { display: none !important; }
 
 /* Live feed — Just Deployed (compact horizontal rows) */
-.rs-feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 10px; }
+.rs-feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 10px; }
 
 .rs-feed-card {
   display: grid;
@@ -337,7 +337,7 @@ main, nav, .rs-hero, .rs-section, .rs-bottom-cta, .rs-alert-banner-wrap {
 .rs-feed-ticker { font-family: var(--rs-display); font-weight: 700; font-size: 14px; color: var(--rs-text); flex-shrink: 0; }
 .rs-feed-name { font-family: var(--rs-mono); font-size: 11px; color: var(--rs-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 
-.rs-feed-line2 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-family: var(--rs-mono); font-size: 10px; color: var(--rs-text-dim); }
+.rs-feed-line2 { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; font-family: var(--rs-mono); font-size: 10px; color: var(--rs-text-dim); white-space: nowrap; overflow: hidden; }
 .rs-feed-line2 .sep { color: var(--rs-border-bright); }
 .rs-feed-line2 .mc { color: var(--rs-text); }
 .rs-feed-line2 .ath { color: var(--rs-yellow); }
