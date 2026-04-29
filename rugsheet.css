@@ -182,7 +182,7 @@ main, nav, .rs-hero, .rs-section, .rs-bottom-cta, .rs-alert-banner-wrap {
 .rs-poster.neutral .rs-poster-score { color: var(--rs-text); }
 
 .rs-poster-bounty { font-size: 10px; color: var(--rs-text-dim); letter-spacing: 1px; margin-bottom: 14px; text-transform: uppercase; }
-.rs-poster-bounty strong { color: var(--rs-red); font-size: 13px; font-family: var(--rs-display); font-weight: 700; }
+.rs-poster-bounty strong { color: var(--rs-yellow); font-size: 13px; font-family: var(--rs-display); font-weight: 700; }
 .rs-poster-latest { background: rgba(0, 255, 65, 0.06); border: 1px solid rgba(0, 255, 65, 0.25); border-radius: 6px; padding: 8px 10px; margin-bottom: 14px; }
 .rs-poster-latest-lbl { font-family: var(--rs-mono); font-size: 9px; color: var(--rs-text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
 .rs-poster-latest-tok { font-family: var(--rs-display); font-size: 14px; color: var(--rs-text); font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
