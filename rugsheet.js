@@ -169,7 +169,7 @@ function renderSyncIndicator() {
   if (!el) return;
   if (backendOk && backendStats) {
     const lastScanMin = backendStats.lastScan ? Math.floor((Date.now() - backendStats.lastScan) / 60000) : null;
-    el.innerHTML = `<span style="color:var(--rs-green)">🌐 Global DB synced</span> · ${fmtNum(backendStats.devsTracked)} devs · ${fmtNum(backendStats.rugsDetected)} rugs · ${fmtUSD(backendStats.estimatedDamage)} damage${lastScanMin !== null ? ` · server scan ${lastScanMin}m ago` : ''}`;
+    el.innerHTML = `<span style="color:var(--rs-green)">🌐 Global DB synced</span> · ${fmtNum(backendStats.devsTracked)} devs · ${fmtNum(backendStats.tokensTracked || 0)} tokens · ${fmtNum(backendStats.rugsDetected)} rugs${lastScanMin !== null ? ` · server scan ${lastScanMin}m ago` : ''}`;
   } else {
     el.innerHTML = `<span style="color:var(--rs-yellow)">💾 Local-only mode</span> · backend unreachable, your watchlist is still saved in this browser`;
   }
@@ -304,7 +304,7 @@ function renderPoster(d) {
       ${d.ens ? `<div class="rs-poster-ens">${d.ens}</div>` : ''}
       <div class="rs-poster-addr">${shortAddr(d.addr)} · ${d.chain || 'unknown'}</div>
       <div class="rs-poster-score">${d.score > 0 ? '+' : ''}${d.score}</div>
-      ${d.damage > 0 ? `<div class="rs-poster-bounty">Estimated damage: <strong>${fmtUSD(d.damage)}</strong></div>` : '<div class="rs-poster-bounty">No reported damage</div>'}
+      <div class="rs-poster-bounty">ATH avg: <strong>${fmtUSD(d.avgPeakMc || 0)}</strong></div>
       ${d.latestToken ? `
         <div class="rs-poster-latest">
           <div class="rs-poster-latest-lbl">Latest deploy · ${fmtAge(d.latestToken.deployedAt)} ago</div>
@@ -348,16 +348,17 @@ function renderCounters() {
   if (backendOk && backendStats) {
     $('#rs-c-devs').textContent = backendStats.devsTracked ? fmtNum(backendStats.devsTracked) : '—';
     $('#rs-c-rugs').textContent = backendStats.rugsDetected ? fmtNum(backendStats.rugsDetected) : '—';
-    $('#rs-c-damage').textContent = backendStats.estimatedDamage ? fmtUSD(backendStats.estimatedDamage) : '—';
+    const topAth = (backendDevs || []).reduce((m, d) => Math.max(m, d.bestPeakMc || 0), 0);
+    $('#rs-c-damage').textContent = topAth > 0 ? fmtUSD(topAth) : '—';
     return;
   }
   const tokens = Object.values(STORE.tokens);
   const devs = Object.values(STORE.devs);
   const ruggedCount = tokens.filter(t => t.outcome === 'rugged').length;
-  const damage = tokens.filter(t => t.outcome === 'rugged').reduce((s, t) => s + (t.initialLiq || 0), 0);
+  const topAth = tokens.reduce((m, t) => Math.max(m, t.peakMc || 0), 0);
   $('#rs-c-devs').textContent = devs.length ? devs.length.toString() : '—';
   $('#rs-c-rugs').textContent = ruggedCount ? fmtNum(ruggedCount) : '—';
-  $('#rs-c-damage').textContent = damage ? fmtUSD(damage) : '—';
+  $('#rs-c-damage').textContent = topAth ? fmtUSD(topAth) : '—';
 }
 
 function showAlertBanner() {
@@ -587,7 +588,6 @@ async function openDevDetail(addr) {
         <div class="rs-modal-stat"><div class="rs-modal-stat-val" style="color:var(--rs-green)">${(d.success || 0) + (d.moon || 0)}</div><div class="rs-modal-stat-lbl">Wins</div></div>
         <div class="rs-modal-stat"><div class="rs-modal-stat-val" style="color:var(--rs-yellow)">${fmtUSD(d.bestPeakMc || 0)}</div><div class="rs-modal-stat-lbl">Best ATH</div></div>
         <div class="rs-modal-stat"><div class="rs-modal-stat-val">${fmtUSD(d.avgPeakMc || 0)}</div><div class="rs-modal-stat-lbl">Avg ATH</div></div>
-        <div class="rs-modal-stat"><div class="rs-modal-stat-val" style="color:var(--rs-red)">${fmtUSD(d.damage || 0)}</div><div class="rs-modal-stat-lbl">Damage</div></div>
       </div>
       <div class="rs-modal-section">Tokens deployed (${tokens.length})</div>
       <div class="rs-tokens-list">
