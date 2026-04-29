@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style id="no-zoom-guard">html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;}</style>
 <title>OG Detector — $ByeBoss</title>
-<link rel="icon" type="image/png" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png">
+<link rel="icon" type="image/png" href="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png">
 <style>
 /* ═══════════════════════════════════════════════════════
    NAVBAR — canonical block. Self-contained, uses its own
@@ -106,7 +106,7 @@
 }
 .mobile-menu {
   display: none; position: fixed; top: 72px; left: 0; right: 0;
-  background: var(--nav-panel); border-bottom: 1px solid var(--nav-border);
+  background: #0d1117; border-bottom: 1px solid rgba(0, 255, 65, 0.12);
   padding: 8px; z-index: 999; flex-direction: column; gap: 2px;
   max-height: 70vh; overflow-y: auto;
 }
@@ -234,7 +234,7 @@ body { padding-top: 72px; }
   <span class="pill nav-pill-logo">
     <span class="pill-inner">
       <a href="./index.html" class="nav-logo">
-        <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="Logo">
+        <img src="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png" alt="Logo">
         <span class="font-display">$ByeBoss</span>
       </a>
     </span>
@@ -244,10 +244,11 @@ body { padding-top: 72px; }
     <span class="pill-inner">
       <div class="nav-links">
         <a href="./index.html" class="nav-link"                 data-nav="app">App</a>
-        <a href="./gems.html" class="nav-link"                  data-nav="gems">Gems</a>
         <a href="./sniper_terminal.html" class="nav-link"       data-nav="sniper">Sniper</a>
         <a href="./og-detector.html" class="nav-link active"    data-nav="og">OG Detector</a>
+        <a href="./rugsheet.html" class="nav-link accent-red"  data-nav="rugsheet">☠ RugSheet</a>
         <a href="./shazam_crypto.html" class="nav-link"         data-nav="shazam">Shazam</a>
+        <a href="./elon-watcher.html" class="nav-link accent-cyan"   data-nav="elon">🐦 Elon</a>
         <a href="./promote.html" class="nav-link"               data-nav="promote">Promote</a>
         <a href="./launchpad.html" class="nav-link accent-red"  data-nav="launchpad">🚀 Launchpad</a>
         <a href="./launches.html" class="nav-link accent-red"   data-nav="launches">📊 Launches</a>
@@ -273,19 +274,30 @@ body { padding-top: 72px; }
 
 <!-- Mobile Menu -->
 <div class="mobile-menu" id="mobileMenu">
-  <a href="./index.html"            data-nav="app">🏠 App</a>
-  <a href="./gems.html"             data-nav="gems">💎 Gems</a>
-  <a href="./sniper_terminal.html"  data-nav="sniper">🎯 Sniper</a>
-  <a href="./og-detector.html" class="active" data-nav="og">🔍 OG Detector</a>
-  <a href="./shazam_crypto.html"    data-nav="shazam">🔬 Shazam</a>
-  <a href="./promote.html"          data-nav="promote">⭐ Promote</a>
-  <a href="./launchpad.html"        data-nav="launchpad">🚀 Launchpad</a>
-  <a href="./launches.html"         data-nav="launches">📊 Launches</a>
-  <a href="./lock.html"             data-nav="lock">🔒 Lock</a>
-  <a href="./burn.html"             data-nav="burn">🔥 Burn</a>
-  <a href="./trade.html"            data-nav="trade">💎 Trade</a>
-  <a href="./byeboss.html"          data-nav="docs">📖 Docs</a>
+  <a href="./index.html">🏠 App</a>
+  <a href="./sniper_terminal.html">🎯 Sniper</a>
+  <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./rugsheet.html">☠ RugSheet</a>
+  <a href="./shazam_crypto.html">🔬 Shazam</a>
+  <a href="./elon-watcher.html">🐦 Elon</a>
+  <a href="./promote.html">⭐ Promote</a>
+  <a href="./launchpad.html">🚀 Launchpad</a>
+  <a href="./launches.html">📊 Launches</a>
+  <a href="./lock.html">🔒 Lock</a>
+  <a href="./burn.html">🔥 Burn</a>
+  <a href="./trade.html">💎 Trade</a>
+  <a href="./byeboss.html">📖 Docs</a>
+  <a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank">📈 Chart</a>
 </div>
+<script>
+  (function(){
+    var p = location.pathname.split('/').pop().toLowerCase();
+    document.querySelectorAll('#mobileMenu a, .nav-links a, .nav-link').forEach(function(a){
+      var h = (a.getAttribute('href')||'').replace('./','').toLowerCase();
+      if (h && h === p) a.classList.add('active');
+    });
+  })();
+</script>
 
 <!-- HERO -->
 <section class="hero">
@@ -658,6 +670,27 @@ async function loadPromoBanner() {
 
 // Load promo on page load
 loadPromoBanner();
+
+// URL prefill: ?q=TICKER&chain=solana auto-fills the input + selects chain + triggers search
+(function(){
+  try {
+    const params = new URLSearchParams(location.search);
+    const q = params.get('q') || params.get('ticker');
+    const chain = (params.get('chain') || '').toLowerCase();
+    if (chain) {
+      const target = document.querySelector('.chain-btn[data-chain="' + chain + '"]');
+      if (target) selectChain(target);
+    }
+    if (q) {
+      const input = document.getElementById('searchInput');
+      if (input) {
+        input.value = q;
+        // Defer slightly so the chain selector update is committed
+        setTimeout(searchOG, 50);
+      }
+    }
+  } catch (_) {}
+})();
 
 // Focus input on load
 document.getElementById('searchInput').focus();

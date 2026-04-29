@@ -6,7 +6,7 @@
   <style id="no-zoom-guard">html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;}</style>
 <title>Byeboss — Launched Tokens</title>
 <meta name="description" content="All tokens launched via the Byeboss Launchpad. $ByeBoss market cap tracker with a road to 1B gauge." />
-<link rel="icon" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" />
+<link rel="icon" href="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -110,7 +110,7 @@
 }
 .mobile-menu {
   display: none; position: fixed; top: 72px; left: 0; right: 0;
-  background: var(--nav-panel); border-bottom: 1px solid var(--nav-border);
+  background: #0d1117; border-bottom: 1px solid rgba(0, 255, 65, 0.12);
   padding: 8px; z-index: 999; flex-direction: column; gap: 2px;
   max-height: 70vh; overflow-y: auto;
 }
@@ -708,7 +708,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <span class="pill nav-pill-logo">
     <span class="pill-inner">
       <a href="./index.html" class="nav-logo">
-        <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="Logo">
+        <img src="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png" alt="Logo">
         <span class="font-display">$ByeBoss</span>
       </a>
     </span>
@@ -718,10 +718,11 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
     <span class="pill-inner">
       <div class="nav-links">
         <a href="./index.html" class="nav-link"                 data-nav="app">App</a>
-        <a href="./gems.html" class="nav-link"                  data-nav="gems">Gems</a>
         <a href="./sniper_terminal.html" class="nav-link"       data-nav="sniper">Sniper</a>
         <a href="./og-detector.html" class="nav-link"           data-nav="og">OG Detector</a>
+        <a href="./rugsheet.html" class="nav-link accent-red"  data-nav="rugsheet">☠ RugSheet</a>
         <a href="./shazam_crypto.html" class="nav-link"         data-nav="shazam">Shazam</a>
+        <a href="./elon-watcher.html" class="nav-link accent-cyan"   data-nav="elon">🐦 Elon</a>
         <a href="./promote.html" class="nav-link"               data-nav="promote">Promote</a>
         <a href="./launchpad.html" class="nav-link accent-red"  data-nav="launchpad">🚀 Launchpad</a>
         <a href="./launches.html" class="nav-link accent-red active" data-nav="launches">📊 Launches</a>
@@ -747,19 +748,30 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 <!-- Mobile Menu -->
 <div class="mobile-menu" id="mobileMenu">
-  <a href="./index.html"            data-nav="app">🏠 App</a>
-  <a href="./gems.html"             data-nav="gems">💎 Gems</a>
-  <a href="./sniper_terminal.html"  data-nav="sniper">🎯 Sniper</a>
-  <a href="./og-detector.html"      data-nav="og">🔍 OG Detector</a>
-  <a href="./shazam_crypto.html"    data-nav="shazam">🔬 Shazam</a>
-  <a href="./promote.html"          data-nav="promote">⭐ Promote</a>
-  <a href="./launchpad.html"        data-nav="launchpad">🚀 Launchpad</a>
-  <a href="./launches.html" class="active" data-nav="launches">📊 Launches</a>
-  <a href="./lock.html"             data-nav="lock">🔒 Lock</a>
-  <a href="./burn.html"             data-nav="burn">🔥 Burn</a>
-  <a href="./trade.html"            data-nav="trade">💎 Trade</a>
-  <a href="./byeboss.html"          data-nav="docs">📖 Docs</a>
+  <a href="./index.html">🏠 App</a>
+  <a href="./sniper_terminal.html">🎯 Sniper</a>
+  <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./rugsheet.html">☠ RugSheet</a>
+  <a href="./shazam_crypto.html">🔬 Shazam</a>
+  <a href="./elon-watcher.html">🐦 Elon</a>
+  <a href="./promote.html">⭐ Promote</a>
+  <a href="./launchpad.html">🚀 Launchpad</a>
+  <a href="./launches.html">📊 Launches</a>
+  <a href="./lock.html">🔒 Lock</a>
+  <a href="./burn.html">🔥 Burn</a>
+  <a href="./trade.html">💎 Trade</a>
+  <a href="./byeboss.html">📖 Docs</a>
+  <a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank">📈 Chart</a>
 </div>
+<script>
+  (function(){
+    var p = location.pathname.split('/').pop().toLowerCase();
+    document.querySelectorAll('#mobileMenu a, .nav-links a, .nav-link').forEach(function(a){
+      var h = (a.getAttribute('href')||'').replace('./','').toLowerCase();
+      if (h && h === p) a.classList.add('active');
+    });
+  })();
+</script>
 
 <main class="main">
 
@@ -772,7 +784,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <section class="byeboss-hero">
     <div class="bb-top">
       <div class="bb-id">
-        <img class="bb-logo" src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="$ByeBoss" />
+        <img class="bb-logo" src="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png" alt="$ByeBoss" />
         <div class="bb-meta">
           <h2>$ByeBoss</h2>
           <div class="sym">BYEBOSS · Salary Is A Scam</div>
@@ -937,7 +949,7 @@ const BYEBOSS_MINT   = 'BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump';
 const RPC_PROXY      = 'https://dexscreener-telegram-bot-production.up.railway.app/api/rpc';
 const INITIAL_SUPPLY = 1_000_000_000; // pump.fun tokens always start at 1B
 const BURN_TARGET_PCT = 50; // goal: burn 50% of supply
-const BYEBOSS_LOGO   = 'https://i.ibb.co/XxT1q0Fg/IMG-9805.png';
+const BYEBOSS_LOGO   = 'https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png';
 const LAUNCHES_API   = 'https://dexscreener-telegram-bot-production.up.railway.app/api/launches';
 const LAUNCHES_KEY   = 'byeboss_launches';
 const GOAL_MC        = 1_000_000_000; // $1B
@@ -1312,6 +1324,7 @@ function renderLaunches(list) {
               <a class="sn-icon-btn dex" href="${escapeHtml(chartUrl)}" target="_blank" rel="noopener" title="DexScreener">📈</a>
               <a class="sn-icon-btn" href="${escapeHtml(solscan)}" target="_blank" rel="noopener" title="Solscan">🔎</a>
               ${l.signature ? `<a class="sn-icon-btn" href="https://solscan.io/tx/${encodeURIComponent(l.signature)}" target="_blank" rel="noopener" title="Launch tx">🧾</a>` : ''}
+              <a class="sn-icon-btn tw" href="https://twitter.com/intent/tweet?text=${encodeURIComponent("🚀 $" + l.symbol + " launched via @ByeBoss" + (l.name ? " · " + l.name : "") + (mcVal ? " · MC $" + mcVal : "") + " · byeboss.live/launches.html")}" target="_blank" rel="noopener" title="Share this launch">𝕏</a>
             </div>
           </div>
         </div>

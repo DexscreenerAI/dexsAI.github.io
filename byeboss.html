@@ -6,7 +6,7 @@
   <style id="no-zoom-guard">html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;}</style>
 <title>$ByeBoss — Docs · Vision & Utilities</title>
 <meta name="description" content="$ByeBoss — Salary is a Scam. Read the vision, discover every live utility in the ecosystem: Launchpad, Lock, Burn, Trade, Sniper, OG Detector, Shazam, Gems, Promote." />
-<link rel="icon" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" />
+<link rel="icon" href="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -110,7 +110,7 @@
 }
 .mobile-menu {
   display: none; position: fixed; top: 72px; left: 0; right: 0;
-  background: var(--nav-panel); border-bottom: 1px solid var(--nav-border);
+  background: #0d1117; border-bottom: 1px solid rgba(0, 255, 65, 0.12);
   padding: 8px; z-index: 999; flex-direction: column; gap: 2px;
   max-height: 70vh; overflow-y: auto;
 }
@@ -323,7 +323,7 @@ a { color: inherit; text-decoration: none; }
   <span class="pill nav-pill-logo">
     <span class="pill-inner">
       <a href="./index.html" class="nav-logo">
-        <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="Logo">
+        <img src="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png" alt="Logo">
         <span class="font-display">$ByeBoss</span>
       </a>
     </span>
@@ -333,10 +333,11 @@ a { color: inherit; text-decoration: none; }
     <span class="pill-inner">
       <div class="nav-links">
         <a href="./index.html" class="nav-link"                 data-nav="app">App</a>
-        <a href="./gems.html" class="nav-link"                  data-nav="gems">Gems</a>
         <a href="./sniper_terminal.html" class="nav-link"       data-nav="sniper">Sniper</a>
         <a href="./og-detector.html" class="nav-link"           data-nav="og">OG Detector</a>
+        <a href="./rugsheet.html" class="nav-link accent-red"  data-nav="rugsheet">☠ RugSheet</a>
         <a href="./shazam_crypto.html" class="nav-link"         data-nav="shazam">Shazam</a>
+        <a href="./elon-watcher.html" class="nav-link accent-cyan"   data-nav="elon">🐦 Elon</a>
         <a href="./promote.html" class="nav-link"               data-nav="promote">Promote</a>
         <a href="./launchpad.html" class="nav-link accent-red"  data-nav="launchpad">🚀 Launchpad</a>
         <a href="./launches.html" class="nav-link accent-red"   data-nav="launches">📊 Launches</a>
@@ -362,19 +363,30 @@ a { color: inherit; text-decoration: none; }
 
 <!-- Mobile Menu -->
 <div class="mobile-menu" id="mobileMenu">
-  <a href="./index.html"            data-nav="app">🏠 App</a>
-  <a href="./gems.html"             data-nav="gems">💎 Gems</a>
-  <a href="./sniper_terminal.html"  data-nav="sniper">🎯 Sniper</a>
-  <a href="./og-detector.html"      data-nav="og">🔍 OG Detector</a>
-  <a href="./shazam_crypto.html"    data-nav="shazam">🔬 Shazam</a>
-  <a href="./promote.html"          data-nav="promote">⭐ Promote</a>
-  <a href="./launchpad.html"        data-nav="launchpad">🚀 Launchpad</a>
-  <a href="./launches.html"         data-nav="launches">📊 Launches</a>
-  <a href="./lock.html"             data-nav="lock">🔒 Lock</a>
-  <a href="./burn.html"             data-nav="burn">🔥 Burn</a>
-  <a href="./trade.html"            data-nav="trade">💎 Trade</a>
-  <a href="./byeboss.html" class="active" data-nav="docs">📖 Docs</a>
+  <a href="./index.html">🏠 App</a>
+  <a href="./sniper_terminal.html">🎯 Sniper</a>
+  <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./rugsheet.html">☠ RugSheet</a>
+  <a href="./shazam_crypto.html">🔬 Shazam</a>
+  <a href="./elon-watcher.html">🐦 Elon</a>
+  <a href="./promote.html">⭐ Promote</a>
+  <a href="./launchpad.html">🚀 Launchpad</a>
+  <a href="./launches.html">📊 Launches</a>
+  <a href="./lock.html">🔒 Lock</a>
+  <a href="./burn.html">🔥 Burn</a>
+  <a href="./trade.html">💎 Trade</a>
+  <a href="./byeboss.html">📖 Docs</a>
+  <a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank">📈 Chart</a>
 </div>
+<script>
+  (function(){
+    var p = location.pathname.split('/').pop().toLowerCase();
+    document.querySelectorAll('#mobileMenu a, .nav-links a, .nav-link').forEach(function(a){
+      var h = (a.getAttribute('href')||'').replace('./','').toLowerCase();
+      if (h && h === p) a.classList.add('active');
+    });
+  })();
+</script>
 
 <main class="main">
 
@@ -396,8 +408,9 @@ a { color: inherit; text-decoration: none; }
       </p>
       <p>
         Every utility on the site is <strong>live on Solana</strong>, built for
-        daily use by traders, token launchers and gem hunters alike. The
-        <em>$ByeBoss</em> token aligns the community, focuses incentives and
+        daily use by traders, token launchers and gem hunters alike. Sniper signals,
+        burns, locks and launches all <strong>auto-broadcast</strong> to Telegram and X.
+        The <em>$ByeBoss</em> token aligns the community, focuses incentives and
         funds the next bricks we ship.
       </p>
 
@@ -410,12 +423,12 @@ a { color: inherit; text-decoration: none; }
         <div class="pillar">
           <div class="pillar-icon">⚔️</div>
           <div class="pillar-title">ARSENAL</div>
-          <div class="pillar-text">Launchpad, Sniper, Trade, Burn, Lock — the full loadout to create, defend and invest.</div>
+          <div class="pillar-text">Launchpad, Sniper, RugSheet, Trade, Burn, Lock — the full loadout to create, defend and invest.</div>
         </div>
         <div class="pillar">
           <div class="pillar-icon">🫂</div>
           <div class="pillar-title">COMMUNITY</div>
-          <div class="pillar-text">An active Telegram, aligned holders, and a bot that pings burns and launches live.</div>
+          <div class="pillar-text">An active Telegram, aligned holders, and a bot that pings sniper signals, burns, locks and launches live.</div>
         </div>
       </div>
     </div>
@@ -462,9 +475,10 @@ a { color: inherit; text-decoration: none; }
           <span class="util-tag live">LIVE</span>
         </div>
         <div class="util-desc">
-          Full-stack terminal with a sniping engine, AI signals, open positions,
-          trade history, backup / restore. Built for traders who need to act
-          fast on fresh launches.
+          Live signal terminal with AI scoring, real-time SSE updates,
+          and on-chain rugcheck/goplus filters. Every signal and X milestone
+          (2X, 5X, 10X...) gets <strong>auto-tweeted</strong> as a thread on
+          @Byebossfan. Free, 24/7.
         </div>
         <span class="util-link">Launch Sniper →</span>
       </a>
@@ -483,7 +497,21 @@ a { color: inherit; text-decoration: none; }
         <span class="util-link">Detect OGs →</span>
       </a>
 
-      <a class="util" href="shazam_crypto.html">
+      <a class="util" href="rugsheet.html">
+        <div class="util-head">
+          <div class="util-emoji">☠️</div>
+          <div class="util-name">RugSheet</div>
+          <span class="util-tag live">LIVE</span>
+        </div>
+        <div class="util-desc">
+          Cross-chain dev reputation tracker. Every coin a dev has launched,
+          their average peak market cap, their rug count. Backend-synced (Postgres),
+          updated every 10 min. Check the history before you ape.
+        </div>
+        <span class="util-link">Check Devs →</span>
+      </a>
+
+            <a class="util" href="shazam_crypto.html">
         <div class="util-head">
           <div class="util-emoji">📸</div>
           <div class="util-name">Shazam Crypto</div>
@@ -504,9 +532,10 @@ a { color: inherit; text-decoration: none; }
           <span class="util-tag live">LIVE</span>
         </div>
         <div class="util-desc">
-          Push your token on ByeBoss: dedicated buy-bot (image, whale alerts,
-          live stats), home card, Telegram exposure. On-chain payment,
-          targeted reach to active holders.
+          List your token for <strong>0.2 SOL</strong> — 6 hours of full exposure:
+          banner on every page, Buy Bot tracking every purchase in our Telegram,
+          tweet on @Byebossfan, featured signal on Sniper Terminal.
+          <strong>Auto-validated on-chain</strong> via Helius webhook — live in seconds.
         </div>
         <span class="util-link">Promote a Token →</span>
       </a>
@@ -588,10 +617,10 @@ a { color: inherit; text-decoration: none; }
           <span class="util-tag live">LIVE</span>
         </div>
         <div class="util-desc">
-          The official $ByeBoss bot: <code>/burn</code> for live burn stats,
-          <code>/add &lt;contract&gt;</code> to enable buy-bot alerts,
-          <code>/ask</code> to chat with DEX AI. Auto notifs on every burn
-          and every new launch.
+          The official $ByeBoss bot. Commands: <code>/wallet</code> (treasury balances),
+          <code>/sniper</code>, <code>/add &lt;CA&gt;</code>, <code>/list</code>, <code>/og &lt;CA&gt;</code>,
+          <code>/analyze &lt;CA&gt;</code>, <code>/ask</code>. Auto notifs on every burn,
+          lock, launch, and sniper signal — with the X tweet URL <strong>auto-pinned</strong>.
         </div>
         <span class="util-link">Join Telegram →</span>
       </a>
@@ -599,9 +628,35 @@ a { color: inherit; text-decoration: none; }
     </div>
   </section>
 
-  <!-- TOKEN -->
+  <!-- AUTOMATIONS -->
   <section class="section">
-    <div class="section-title"><span class="num">03</span>$ByeBoss Token</div>
+    <div class="section-title"><span class="num">03</span>Automations</div>
+    <div class="section-body">
+      <p>Everything that happens on-chain inside the BYEBOSS ecosystem gets <em>auto-broadcast</em> across Telegram and X — no human in the loop.</p>
+      <div class="pillars">
+        <div class="pillar">
+          <div class="pillar-icon">🎯</div>
+          <div class="pillar-title">SNIPER → X</div>
+          <div class="pillar-text">Every signal opens a tweet. Each X milestone (2X, 5X, 10X...) replies under it, building a live thread.</div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">🔥</div>
+          <div class="pillar-title">BURN/LOCK/LAUNCH → X</div>
+          <div class="pillar-text">Every $ByeBoss burn, every lock, every new launch on the launchpad triggers a tweet on @Byebossfan.</div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">📌</div>
+          <div class="pillar-title">X → TG (PINNED)</div>
+          <div class="pillar-text">Each tweet URL is echoed in our Telegram and auto-pinned, so the latest activity is always visible.</div>
+        </div>
+      </div>
+      <p style="margin-top:18px">Tweet phrasing is <em>randomized</em> from a 96+ combo pool to stay under X anti-spam radar. Crypto-address rules respected (CA hidden in tweet body for the first 7 days post-auth, DexScreener URL provides the contract via card preview).</p>
+    </div>
+  </section>
+
+    <!-- TOKEN -->
+  <section class="section">
+    <div class="section-title"><span class="num">04</span>$ByeBoss Token</div>
     <div class="token-panel">
       <div class="token-row">
         <span class="token-label">Ticker</span>

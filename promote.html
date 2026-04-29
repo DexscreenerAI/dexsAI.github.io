@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style id="no-zoom-guard">html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;}</style>
 <title>🚀 Promote Your Token — $ByeBoss</title>
-<link rel="icon" type="image/png" href="https://i.ibb.co/XxT1q0Fg/IMG-9805.png">
+<link rel="icon" type="image/png" href="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -126,7 +126,7 @@
 }
 .mobile-menu {
   display: none; position: fixed; top: 72px; left: 0; right: 0;
-  background: var(--nav-panel); border-bottom: 1px solid var(--nav-border);
+  background: #0d1117; border-bottom: 1px solid rgba(0, 255, 65, 0.12);
   padding: 8px; z-index: 999; flex-direction: column; gap: 2px;
   max-height: 70vh; overflow-y: auto;
 }
@@ -750,7 +750,7 @@ body {
   <span class="pill nav-pill-logo">
     <span class="pill-inner">
       <a href="./index.html" class="nav-logo">
-        <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="Logo">
+        <img src="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png" alt="Logo">
         <span class="font-display">$ByeBoss</span>
       </a>
     </span>
@@ -760,10 +760,11 @@ body {
     <span class="pill-inner">
       <div class="nav-links">
         <a href="./index.html" class="nav-link"                 data-nav="app">App</a>
-        <a href="./gems.html" class="nav-link"                  data-nav="gems">Gems</a>
         <a href="./sniper_terminal.html" class="nav-link"       data-nav="sniper">Sniper</a>
         <a href="./og-detector.html" class="nav-link"           data-nav="og">OG Detector</a>
+        <a href="./rugsheet.html" class="nav-link accent-red"  data-nav="rugsheet">☠ RugSheet</a>
         <a href="./shazam_crypto.html" class="nav-link"         data-nav="shazam">Shazam</a>
+        <a href="./elon-watcher.html" class="nav-link accent-cyan"   data-nav="elon">🐦 Elon</a>
         <a href="./promote.html" class="nav-link active"        data-nav="promote">Promote</a>
         <a href="./launchpad.html" class="nav-link accent-red"  data-nav="launchpad">🚀 Launchpad</a>
         <a href="./launches.html" class="nav-link accent-red"   data-nav="launches">📊 Launches</a>
@@ -789,19 +790,30 @@ body {
 
 <!-- Mobile Menu -->
 <div class="mobile-menu" id="mobileMenu">
-  <a href="./index.html"            data-nav="app">🏠 App</a>
-  <a href="./gems.html"             data-nav="gems">💎 Gems</a>
-  <a href="./sniper_terminal.html"  data-nav="sniper">🎯 Sniper</a>
-  <a href="./og-detector.html"      data-nav="og">🔍 OG Detector</a>
-  <a href="./shazam_crypto.html"    data-nav="shazam">🔬 Shazam</a>
-  <a href="./promote.html" class="active" data-nav="promote">⭐ Promote</a>
-  <a href="./launchpad.html"        data-nav="launchpad">🚀 Launchpad</a>
-  <a href="./launches.html"         data-nav="launches">📊 Launches</a>
-  <a href="./lock.html"             data-nav="lock">🔒 Lock</a>
-  <a href="./burn.html"             data-nav="burn">🔥 Burn</a>
-  <a href="./trade.html"            data-nav="trade">💎 Trade</a>
-  <a href="./byeboss.html"          data-nav="docs">📖 Docs</a>
+  <a href="./index.html">🏠 App</a>
+  <a href="./sniper_terminal.html">🎯 Sniper</a>
+  <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./rugsheet.html">☠ RugSheet</a>
+  <a href="./shazam_crypto.html">🔬 Shazam</a>
+  <a href="./elon-watcher.html">🐦 Elon</a>
+  <a href="./promote.html">⭐ Promote</a>
+  <a href="./launchpad.html">🚀 Launchpad</a>
+  <a href="./launches.html">📊 Launches</a>
+  <a href="./lock.html">🔒 Lock</a>
+  <a href="./burn.html">🔥 Burn</a>
+  <a href="./trade.html">💎 Trade</a>
+  <a href="./byeboss.html">📖 Docs</a>
+  <a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank">📈 Chart</a>
 </div>
+<script>
+  (function(){
+    var p = location.pathname.split('/').pop().toLowerCase();
+    document.querySelectorAll('#mobileMenu a, .nav-links a, .nav-link').forEach(function(a){
+      var h = (a.getAttribute('href')||'').replace('./','').toLowerCase();
+      if (h && h === p) a.classList.add('active');
+    });
+  })();
+</script>
 
 <!-- Promo Banner -->
 <div class="promo-banner hidden" id="promoBanner">
@@ -811,14 +823,14 @@ body {
 <div class="container">
   <!-- Hero -->
   <div class="hero">
-    <div class="hero-badge">🔥 MAXIMUM EXPOSURE — 1 SOL ONLY</div>
+    <div class="hero-badge">🔥 MAXIMUM EXPOSURE — 0.2 SOL ONLY</div>
     <h1>
       Get Your Token<br>
       <span class="green">In Front</span> of <span class="cyan">Traders</span>
     </h1>
     <p>Banner on every page + Telegram post + Twitter post + <strong>Buy Bot</strong> in our group. Everything you need to create hype.</p>
     <div class="hero-price">
-      <span class="hero-price-val">1</span>
+      <span class="hero-price-val">0.2</span>
       <span class="hero-price-unit">SOL</span>
       <span class="hero-price-sub">ONLY</span>
     </div>
@@ -839,7 +851,7 @@ body {
     <div class="benefit">
       <div class="benefit-icon">𝕏</div>
       <div class="benefit-title">TWITTER</div>
-      <div class="benefit-text">Tweet from @dexscreenerai</div>
+      <div class="benefit-text">Tweet from @Byebossfan</div>
     </div>
     <div class="benefit">
       <div class="benefit-icon">🤖</div>
@@ -863,7 +875,7 @@ body {
 
   <!-- What You Get -->
   <div class="features-box">
-    <div class="features-title">🎁 WHAT YOU GET FOR 1 SOL</div>
+    <div class="features-title">🎁 WHAT YOU GET FOR 0.2 SOL</div>
     <div class="features-list">
       <div class="feature-item">
         <span class="feature-check">✓</span>
@@ -875,7 +887,7 @@ body {
       </div>
       <div class="feature-item">
         <span class="feature-check">✓</span>
-        <span>Promotional <strong>Twitter/X post</strong> from @dexscreenerai</span>
+        <span>Promotional <strong>Twitter/X post</strong> from @Byebossfan</span>
       </div>
       <div class="feature-item">
         <span class="feature-check">✓</span>
@@ -898,15 +910,15 @@ body {
       <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" style="width:28px;height:28px;border-radius:50%">
       LISTING FEE
     </div>
-    <div class="payment-amount">1 <span>SOL</span></div>
+    <div class="payment-amount">0.2 <span>SOL</span></div>
     <div class="payment-duration">⏱️ 6 Hours Premium Exposure</div>
     <div class="payment-address-label">Send to this address</div>
     <div class="payment-address">
-      <code id="walletAddress">9vtc4dD2bu7oHgZxvouiV4ey5q3HDoC8tnfTCnFrX95A</code>
+      <code id="walletAddress">BHPHdavJxQhra7FN7Z9WonBVAyhviHr8KCgsgaESVNtA</code>
       <button class="copy-btn" onclick="copyAddress()">COPY</button>
     </div>
     <div class="payment-note">
-      Verify on <a href="https://solscan.io/account/9vtc4dD2bu7oHgZxvouiV4ey5q3HDoC8tnfTCnFrX95A" target="_blank">Solscan ↗</a>
+      Verify on <a href="https://solscan.io/account/BHPHdavJxQhra7FN7Z9WonBVAyhviHr8KCgsgaESVNtA" target="_blank">Solscan ↗</a>
     </div>
   </div>
 
@@ -1062,9 +1074,28 @@ async function submitForm(e) {
       throw new Error(errorText || 'Submission failed');
     }
     
+    // Try instant on-chain validation; cron will reconcile if this fails
+    let approvedInstant = false;
+    try {
+      const vRes = await fetch('https://dexscreener-telegram-bot-production.up.railway.app/api/promote/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tx_hash: data.tx_hash, chain: data.chain })
+      });
+      const vJson = await vRes.json();
+      approvedInstant = !!(vJson.valid && vJson.approved);
+    } catch (_) {}
+
     // Show success
     form.style.display = 'none';
-    document.getElementById('successMessage').classList.add('show');
+    const msg = document.getElementById('successMessage');
+    msg.classList.add('show');
+    if (approvedInstant) {
+      const note = document.createElement('div');
+      note.style.cssText = 'margin-top:14px;padding:10px;background:rgba(0,255,128,0.12);border:1px solid #00ff80;border-radius:8px;color:#00ff80;font-family:monospace;font-size:12px';
+      note.innerHTML = '⚡ APPROVED INSTANTLY — Your token is now live in the rotation';
+      msg.appendChild(note);
+    }
     
   } catch (err) {
     console.error('Submission error:', err);

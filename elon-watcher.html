@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🐦 Elon Watcher — $ByeBoss</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+.navbar {
+  --nav-bg: rgba(5, 6, 8, 0.88);
+  --nav-border: rgba(0, 255, 65, 0.12);
+  --nav-panel: #0d1117;
+  --nav-text: #e6edf3;
+  --nav-muted: rgba(255, 255, 255, 0.55);
+  --nav-cyan: #00d1ff;
+  --nav-green: #00ff80;
+  --nav-red: #ff3b4f;
+  --nav-purple: #b388ff;
+  --nav-font: 'JetBrains Mono', 'Courier New', monospace;
+  --nav-display: 'Orbitron', 'JetBrains Mono', monospace;
+  position: fixed; top: 0; left: 0; right: 0;
+  background: var(--nav-bg); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--nav-border);
+  display: flex; align-items: center; justify-content: flex-start;
+  gap: 0; padding: 8px 16px; z-index: 1000; min-height: 56px;
+}
+.navbar > .pill { flex-shrink: 0; }
+.navbar > .pill.nav-pill-links { flex: 1 1 auto; min-width: 0; }
+.navbar > .pill.nav-pill-links .pill-inner { width: 100%; padding: 0 16px; }
+.navbar > .pill.nav-pill-links .nav-links {
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch; max-width: 100%;
+}
+.navbar > .pill.nav-pill-links .nav-links::-webkit-scrollbar { display: none; height: 0; }
+.navbar > .pill.nav-pill-links .nav-links > a { flex-shrink: 0; }
+.navbar > .pill + .pill { margin-left: -8px; }
+.navbar .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; font-family: var(--nav-font); font-size: 13px; font-weight: 700; letter-spacing: 1px; }
+.navbar .nav-logo img { width: 28px; height: 28px; border-radius: 6px; }
+.navbar .nav-links { display: flex; align-items: center; gap: 24px; }
+.navbar .nav-link { color: var(--nav-muted); text-decoration: none; font-family: var(--nav-font); font-size: 11px; font-weight: 500; letter-spacing: 0.5px; transition: color .15s; white-space: nowrap; }
+.navbar .nav-link:hover { color: var(--nav-cyan); }
+.navbar .nav-link.active { color: var(--nav-cyan); }
+.navbar .nav-link.accent-red { color: var(--nav-red); font-weight: 700; }
+.navbar .nav-link.accent-red:hover { color: #ff4070; }
+.navbar .nav-link.accent-cyan { color: var(--nav-cyan); font-weight: 700; }
+.navbar .nav-link.accent-cyan:hover { color: #40f8ff; }
+.navbar .nav-link.accent-purple { color: var(--nav-purple); font-weight: 700; }
+.navbar .nav-link.accent-purple:hover { color: #d040ff; }
+.navbar .nav-socials { display: flex; gap: 12px; align-items: center; }
+.navbar .nav-social { color: var(--nav-muted); text-decoration: none; font-size: 16px; transition: color .15s; }
+.navbar .nav-social:hover { color: var(--nav-cyan); }
+.navbar .pill { position: relative; display: inline-flex; align-items: center; height: 44px; padding: 0; background: linear-gradient(180deg, rgba(0,255,65,0.04), rgba(0,255,65,0)); clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 100%, 0 100%); border: 0; }
+.navbar .pill::before { content: ''; position: absolute; inset: 0; clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 100%, 0 100%); background: linear-gradient(var(--nav-panel), var(--nav-panel)) padding-box, linear-gradient(180deg, rgba(0,240,255,0.35), rgba(0,255,65,0.15)) border-box; border: 1px solid transparent; z-index: 0; }
+.navbar .pill-inner { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 18px; padding: 0 22px; height: 44px; white-space: nowrap; }
+.navbar .pill-reverse { clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 16px 100%); }
+.navbar .pill-reverse::before { clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 16px 100%); }
+.navbar .font-display { font-family: var(--nav-display); letter-spacing: 2px; }
+.mobile-menu-btn { display: none; background: none; border: 1px solid var(--nav-border); color: var(--nav-text); font-size: 14px; cursor: pointer; padding: 6px 10px; border-radius: 4px; margin-left: 8px; }
+.mobile-menu { display: none; position: fixed; top: 72px; left: 0; right: 0; background: #0d1117; border-bottom: 1px solid rgba(0, 255, 65, 0.12); padding: 8px; z-index: 999; flex-direction: column; gap: 2px; max-height: 70vh; overflow-y: auto; }
+.mobile-menu.open { display: flex; }
+.mobile-menu a { color: var(--nav-text); text-decoration: none; font-size: 11px; padding: 10px 12px; border-radius: 4px; transition: background 0.1s; font-family: var(--nav-font); }
+.mobile-menu a:hover { background: rgba(255,255,255,0.04); }
+.mobile-menu a.active { color: var(--nav-cyan); background: rgba(0,209,255,0.1); }
+@media (max-width: 900px) {
+  .navbar .nav-links { display: none; }
+  .mobile-menu-btn { display: block; }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #060a10;
+  color: #dfe4ed;
+  font-family: 'JetBrains Mono', 'DM Sans', monospace;
+  min-height: 100vh;
+  padding-top: 72px;
+  -webkit-font-smoothing: antialiased;
+}
+:root {
+  --bg: #060a10; --bg2: #0b1018; --bg3: #101822;
+  --card: #111a26; --border: #1a2636;
+  --red: #ff3b4f; --cyan: #00d1ff; --green: #00ff88; --yellow: #ffaa00; --purple: #b388ff;
+  --text: #dfe4ed; --text2: rgba(255,255,255,0.5); --text3: rgba(255,255,255,0.25);
+  --mono: 'JetBrains Mono', monospace;
+}
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+.main { max-width: 1300px; margin: 0 auto; padding: 16px 16px 60px; }
+
+.term-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; margin-bottom: 14px; font-family: var(--mono);
+  flex-wrap: wrap; gap: 12px;
+}
+.term-title { font-size: 14px; font-weight: 800; color: #fff; letter-spacing: 1.5px; display: flex; align-items: center; gap: 10px; }
+.term-title .accent { color: var(--cyan); }
+.term-title::before { content: '▸ '; color: var(--cyan); }
+.term-status { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; background: rgba(0,255,128,0.12); border: 1px solid rgba(0,255,128,0.3); border-radius: 999px; color: var(--green); font-size: 10px; font-weight: 800; letter-spacing: 1.2px; }
+.term-status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 1.4s infinite; }
+.term-status.offline { background: rgba(255,59,79,0.12); border-color: rgba(255,59,79,0.3); color: var(--red); }
+.term-status.offline .dot { background: var(--red); }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+@media(max-width: 700px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+.kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; position: relative; overflow: hidden; }
+.kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); opacity: 0.4; }
+.kpi-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: var(--text3); margin-bottom: 8px; text-transform: uppercase; }
+.kpi-value { font-size: 22px; font-weight: 900; color: #fff; line-height: 1; }
+.kpi-value.cyan { color: var(--cyan); }
+.kpi-value.green { color: var(--green); }
+.kpi-value.red { color: var(--red); }
+.kpi-sub { font-size: 9px; color: var(--text3); margin-top: 4px; }
+
+.two-col { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; align-items: start; }
+@media(max-width: 1000px) { .two-col { grid-template-columns: 1fr; } }
+
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0,209,255,0.04), transparent); }
+.panel-title { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #fff; }
+.panel-title::before { content: '▸ '; color: var(--cyan); }
+.panel-meta { font-size: 9px; color: var(--text3); letter-spacing: 1px; }
+.panel-body { padding: 12px; }
+
+.feed { display: flex; flex-direction: column; gap: 8px; }
+
+.tweet {
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+  transition: border-color .15s; animation: fadeIn .25s ease;
+}
+.tweet:hover { border-color: var(--cyan); }
+.tweet.has-candidates { border-left: 3px solid var(--green); }
+.tweet.is-rt { opacity: 0.55; }
+
+.tweet-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tweet-source { font-size: 9px; font-weight: 700; letter-spacing: 1px; padding: 3px 7px; border-radius: 4px; }
+.tweet-source.xapi { background: rgba(179,136,255,0.12); color: #b388ff; border: 1px solid rgba(179,136,255,0.3); }
+.tweet-source.tg { background: rgba(0,209,255,0.12); color: var(--cyan); border: 1px solid rgba(0,209,255,0.3); }
+.tweet-rt { font-size: 9px; font-weight: 700; padding: 3px 7px; background: rgba(255,170,0,0.12); border: 1px solid rgba(255,170,0,0.3); color: var(--yellow); border-radius: 4px; letter-spacing: 1px; }
+.tweet-time { font-size: 10px; color: var(--text3); margin-left: auto; }
+
+.tweet-body { font-size: 13px; line-height: 1.5; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+.tweet-body a { color: var(--cyan); text-decoration: none; }
+.tweet-body a:hover { text-decoration: underline; }
+
+.tweet-images { display: flex; gap: 6px; flex-wrap: wrap; }
+.tweet-image { max-width: 200px; max-height: 160px; border-radius: 8px; border: 1px solid var(--border); object-fit: cover; }
+
+.candidates { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 6px; border-top: 1px dashed var(--border); }
+.candidate {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 9px; background: rgba(0,255,128,0.08);
+  border: 1px solid rgba(0,255,128,0.3); border-radius: 999px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+  color: var(--green); cursor: pointer;
+  text-decoration: none; transition: all .15s;
+}
+.candidate:hover { background: rgba(0,255,128,0.15); transform: translateY(-1px); }
+
+.tweet-foot { display: flex; gap: 12px; font-size: 10px; }
+.tweet-link { color: var(--text3); text-decoration: none; transition: color .15s; }
+.tweet-link:hover { color: var(--cyan); }
+
+.empty { text-align: center; padding: 50px 20px; color: var(--text3); font-size: 12px; }
+.spinner { width: 14px; height: 14px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin .8s linear infinite; display: inline-block; }
+.disclaimer { text-align: center; font-size: 9px; color: var(--text3); padding: 16px 8px; line-height: 1.6; }
+
+.cand-sidebar { position: sticky; top: 88px; }
+@media(max-width: 1000px) { .cand-sidebar { position: static; } }
+
+.cand-list { display: flex; flex-direction: column; gap: 6px; max-height: 70vh; overflow-y: auto; }
+.cand-list::-webkit-scrollbar { width: 6px; }
+.cand-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.cand-row {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;
+  transition: border-color .15s;
+}
+.cand-row:hover { border-color: var(--green); }
+
+.cand-row-top { display: flex; align-items: center; gap: 8px; }
+.cand-name { font-family: var(--mono); font-size: 13px; font-weight: 800; color: var(--green); flex: 1; word-break: break-all; }
+.cand-count { font-family: var(--mono); font-size: 9px; color: var(--text3); padding: 2px 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: 999px; }
+
+.cand-actions { display: flex; gap: 4px; }
+.cand-btn {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center;
+  gap: 3px; padding: 5px 4px; border-radius: 6px;
+  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
+  text-decoration: none; transition: all .15s; cursor: pointer; border: 1px solid;
+}
+.cand-btn.sol { background: rgba(179,136,255,0.10); border-color: rgba(179,136,255,0.35); color: var(--purple); }
+.cand-btn.sol:hover { background: rgba(179,136,255,0.20); }
+.cand-btn.eth { background: rgba(0,209,255,0.10); border-color: rgba(0,209,255,0.35); color: var(--cyan); }
+.cand-btn.eth:hover { background: rgba(0,209,255,0.20); }
+.cand-btn.dex { background: rgba(0,255,128,0.08); border-color: rgba(0,255,128,0.30); color: var(--green); }
+.cand-btn.dex:hover { background: rgba(0,255,128,0.18); }
+.cand-btn.x { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.15); color: var(--text); }
+.cand-btn.x:hover { background: rgba(255,255,255,0.10); }
+
+.cand-empty { text-align: center; padding: 30px 14px; color: var(--text3); font-size: 11px; }
+</style>
+  <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <span class="pill nav-pill-logo">
+    <span class="pill-inner">
+      <a href="./index.html" class="nav-logo">
+        <img src="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png" alt="Logo">
+        <span class="font-display">$ByeBoss</span>
+      </a>
+    </span>
+  </span>
+
+  <span class="pill pill-reverse nav-pill-links">
+    <span class="pill-inner">
+      <div class="nav-links">
+        <a href="./index.html" class="nav-link" data-nav="app">App</a>
+        <a href="./sniper_terminal.html" class="nav-link" data-nav="sniper">Sniper</a>
+        <a href="./og-detector.html" class="nav-link" data-nav="og">OG Detector</a>
+        <a href="./rugsheet.html" class="nav-link accent-red" data-nav="rugsheet">☠ RugSheet</a>
+        <a href="./shazam_crypto.html" class="nav-link" data-nav="shazam">Shazam</a>
+        <a href="./elon-watcher.html" class="nav-link accent-cyan active" data-nav="elon">🐦 Elon</a>
+        <a href="./promote.html" class="nav-link" data-nav="promote">Promote</a>
+        <a href="./launchpad.html" class="nav-link accent-red" data-nav="launchpad">🚀 Launchpad</a>
+        <a href="./launches.html" class="nav-link accent-red" data-nav="launches">📊 Launches</a>
+        <a href="./lock.html" class="nav-link accent-cyan" data-nav="lock">🔒 Lock</a>
+        <a href="./burn.html" class="nav-link accent-red" data-nav="burn">🔥 Burn</a>
+        <a href="./trade.html" class="nav-link accent-red" data-nav="trade">💎 Trade</a>
+        <a href="./byeboss.html" class="nav-link accent-purple" data-nav="docs">📖 Docs</a>
+      </div>
+    </span>
+  </span>
+
+  <span class="pill nav-pill-socials">
+    <span class="pill-inner">
+      <div class="nav-socials">
+        <a href="https://t.me/SalaryIsScam" target="_blank" class="nav-social" title="Telegram">💬</a>
+      </div>
+    </span>
+  </span>
+
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="./index.html">🏠 App</a>
+  <a href="./sniper_terminal.html">🎯 Sniper</a>
+  <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./rugsheet.html">☠ RugSheet</a>
+  <a href="./shazam_crypto.html">🔬 Shazam</a>
+  <a href="./elon-watcher.html">🐦 Elon</a>
+  <a href="./promote.html">⭐ Promote</a>
+  <a href="./launchpad.html">🚀 Launchpad</a>
+  <a href="./launches.html">📊 Launches</a>
+  <a href="./lock.html">🔒 Lock</a>
+  <a href="./burn.html">🔥 Burn</a>
+  <a href="./trade.html">💎 Trade</a>
+  <a href="./byeboss.html">📖 Docs</a>
+</div>
+<script>
+  (function(){
+    var p = location.pathname.split('/').pop().toLowerCase();
+    document.querySelectorAll('#mobileMenu a, .nav-links a, .nav-link').forEach(function(a){
+      var h = (a.getAttribute('href')||'').replace('./','').toLowerCase();
+      if (h && h === p) a.classList.add('active');
+    });
+  })();
+  function toggleMobileMenu() { document.getElementById('mobileMenu').classList.toggle('open'); }
+</script>
+
+<div class="main">
+  <div class="term-header">
+    <div class="term-title">ELON <span class="accent">WATCHER</span></div>
+    <div class="term-status" id="statusBadge"><span class="dot"></span> CONNECTING…</div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Tracked Handle</div>
+      <div class="kpi-value cyan" id="kpiHandle">@elonmusk</div>
+      <div class="kpi-sub">primary target</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Tweets Captured</div>
+      <div class="kpi-value" id="kpiSeen">—</div>
+      <div class="kpi-sub">total since boot</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Unique Candidates</div>
+      <div class="kpi-value green" id="kpiCandidates">—</div>
+      <div class="kpi-sub">deduped from feed</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Sources</div>
+      <div class="kpi-value" id="kpiSources">—</div>
+      <div class="kpi-sub" id="kpiSourceMeta">—</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">LIVE TWEET FEED</div>
+          <div class="panel-meta" id="panelMeta">refreshing every 15s</div>
+        </div>
+        <div class="panel-body">
+          <div class="feed" id="feed">
+            <div class="empty"><span class="spinner"></span> Loading feed…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="disclaimer">
+        Phase A2 · candidates extracted &amp; AI-filtered. Click 🟣 SOL or 🔵 ETH to investigate the OG on that chain.
+      </div>
+    </div>
+
+    <div class="cand-sidebar">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">CANDIDATES</div>
+          <div class="panel-meta" id="candMeta">0 tickers</div>
+        </div>
+        <div class="panel-body">
+          <div class="cand-list" id="candList">
+            <div class="cand-empty">Waiting for AI-filtered candidates from the feed…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://dexscreener-telegram-bot-production.up.railway.app/api/elon';
+let lastIds = new Set();
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function linkify(text) {
+  return esc(text).replace(/(https?:\/\/[^\s<]+)/g, function (u) {
+    return '<a href="' + u + '" target="_blank" rel="noopener">' + u + '</a>';
+  });
+}
+
+function fmtAgo(ts) {
+  const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+  if (s < 60) return s + 's ago';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  const d = Math.floor(h / 24);
+  return d + 'd ago';
+}
+
+function renderTweet(t) {
+  const cls = ['tweet'];
+  if (t.candidates && t.candidates.length > 0) cls.push('has-candidates');
+  if (t.isRT) cls.push('is-rt');
+
+  let html = '<div class="' + cls.join(' ') + '">';
+  html += '<div class="tweet-head">';
+  html += '<span class="tweet-source ' + esc(t.source) + '">' + (t.source === 'xapi' ? '🐦 X API' : '📡 TG MIRROR') + '</span>';
+  if (t.isRT) html += '<span class="tweet-rt">RT</span>';
+  html += '<span class="tweet-time">' + fmtAgo(t.seenAt) + '</span>';
+  html += '</div>';
+
+  if (t.text) html += '<div class="tweet-body">' + linkify(t.text) + '</div>';
+
+  if (t.images && t.images.length > 0) {
+    html += '<div class="tweet-images">';
+    for (const url of t.images.slice(0, 4)) {
+      html += '<img class="tweet-image" src="' + esc(url) + '" loading="lazy" alt="" onerror="this.style.display=\'none\'">';
+    }
+    html += '</div>';
+  }
+
+  if (t.candidates && t.candidates.length > 0) {
+    html += '<div class="candidates">';
+    for (const c of t.candidates) {
+      const dexUrl = 'https://dexscreener.com/search?q=' + encodeURIComponent(c);
+      html += '<a class="candidate" href="' + dexUrl + '" target="_blank" rel="noopener" title="Search on DexScreener">$' + esc(c) + '</a>';
+    }
+    html += '</div>';
+  }
+
+  html += '<div class="tweet-foot">';
+  if (t.link) html += '<a class="tweet-link" href="' + esc(t.link) + '" target="_blank" rel="noopener">View on X ↗</a>';
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+function aggregateCandidates(tweets) {
+  const map = new Map();
+  for (const t of tweets) {
+    if (!t.candidates) continue;
+    for (const c of t.candidates) {
+      const key = String(c).toUpperCase();
+      const entry = map.get(key);
+      if (entry) {
+        entry.count++;
+        if (t.seenAt > entry.lastSeenAt) entry.lastSeenAt = t.seenAt;
+      } else {
+        map.set(key, { ticker: key, count: 1, lastSeenAt: t.seenAt });
+      }
+    }
+  }
+  return Array.from(map.values()).sort(function (a, b) { return b.lastSeenAt - a.lastSeenAt; });
+}
+
+function renderCandidatesTable(candidates) {
+  const list = document.getElementById('candList');
+  document.getElementById('candMeta').textContent = candidates.length + ' ticker' + (candidates.length === 1 ? '' : 's');
+  if (candidates.length === 0) {
+    list.innerHTML = '<div class="cand-empty">No candidates yet. Wait for an Elon tweet that mentions a meme/project name.</div>';
+    return;
+  }
+  const rows = [];
+  for (const c of candidates) {
+    const t = encodeURIComponent(c.ticker);
+    const ogSolUrl = './og-detector.html?q=' + t + '&chain=solana';
+    const ogEthUrl = './og-detector.html?q=' + t + '&chain=ethereum';
+    const dexUrl   = 'https://dexscreener.com/search?q=' + t;
+    const xUrl     = 'https://x.com/search?q=%24' + t + '&f=live';
+    const html =
+      '<div class="cand-row">' +
+        '<div class="cand-row-top">' +
+          '<div class="cand-name">$' + esc(c.ticker) + '</div>' +
+          '<div class="cand-count" title="mentions in feed">×' + c.count + '</div>' +
+        '</div>' +
+        '<div class="cand-actions">' +
+          '<a class="cand-btn sol" href="' + ogSolUrl + '" title="OG on Solana">🟣 SOL</a>' +
+          '<a class="cand-btn eth" href="' + ogEthUrl + '" title="OG on Ethereum">🔵 ETH</a>' +
+          '<a class="cand-btn dex" href="' + dexUrl + '" target="_blank" rel="noopener" title="DexScreener">📈</a>' +
+          '<a class="cand-btn x" href="' + xUrl + '" target="_blank" rel="noopener" title="X cashtag search">𝕏</a>' +
+        '</div>' +
+      '</div>';
+    rows.push(html);
+  }
+  list.innerHTML = rows.join('');
+}
+
+async function loadFeed() {
+  try {
+    const r = await fetch(API_BASE + '/feed?limit=50', { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    const tweets = data.tweets || [];
+    const status = data.status || {};
+
+    const badge = document.getElementById('statusBadge');
+    badge.classList.remove('offline');
+    badge.innerHTML = '<span class="dot"></span> LIVE';
+
+    document.getElementById('kpiHandle').textContent = '@' + (status.handle || 'elonmusk');
+    document.getElementById('kpiSeen').textContent = (status.seenCount || 0).toLocaleString();
+    const candidates = aggregateCandidates(tweets);
+    document.getElementById('kpiCandidates').textContent = candidates.length.toLocaleString();
+    const sources = [];
+    if (status.sourcesEnabled && status.sourcesEnabled.xapi) sources.push('xapi');
+    if (status.sourcesEnabled && status.sourcesEnabled.tg) sources.push('tg');
+    if (status.sourcesEnabled && status.sourcesEnabled.ai) sources.push('ai');
+    document.getElementById('kpiSources').textContent = sources.length;
+    document.getElementById('kpiSourceMeta').textContent = sources.join(' + ') + (status.xApiRateLimited ? ' (xapi rate-limited)' : '');
+
+    const feedEl = document.getElementById('feed');
+    if (tweets.length === 0) {
+      feedEl.innerHTML = '<div class="empty">No tweets yet. The watcher polls every 60s — first capture coming.</div>';
+    } else {
+      feedEl.innerHTML = tweets.map(renderTweet).join('');
+      lastIds = new Set(tweets.map(function (t) { return t.id; }));
+    }
+
+    renderCandidatesTable(candidates);
+  } catch (e) {
+    const badge = document.getElementById('statusBadge');
+    badge.classList.add('offline');
+    badge.innerHTML = '<span class="dot"></span> OFFLINE';
+    const feedEl = document.getElementById('feed');
+    if (lastIds.size === 0) {
+      feedEl.innerHTML = '<div class="empty">Backend unreachable: ' + esc(e.message) + '</div>';
+    }
+    console.warn('feed fetch failed:', e.message);
+  }
+}
+
+loadFeed();
+setInterval(loadFeed, 15000);
+</script>
+
+</body>
+</html>

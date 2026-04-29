@@ -191,7 +191,7 @@ body::after {
   inset: 0;
   clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 100%, 0 100%);
   background:
-    linear-gradient(var(--bg-panel), var(--bg-panel)) padding-box,
+    linear-gradient(#0d1117, #0d1117) padding-box,
     linear-gradient(180deg, rgba(0,240,255,0.35), rgba(0,255,65,0.15)) border-box;
   border: 1px solid transparent;
   z-index: 0;
@@ -208,7 +208,7 @@ body::after {
 }
 .pill.pill-active::before {
   background:
-    linear-gradient(var(--bg-panel), var(--bg-panel)) padding-box,
+    linear-gradient(#0d1117, #0d1117) padding-box,
     linear-gradient(180deg, var(--cyan), var(--green)) border-box;
   box-shadow:
     inset 0 0 20px rgba(0,240,255,0.12),
@@ -2263,6 +2263,9 @@ body::before {
   .scanner-bar { flex-direction: column; gap: 4px; padding: 6px 10px; }
   .scanner-stats { flex-wrap: wrap; gap: 6px; font-size: 10px; }
 }
+
+.sn-status.promo{background:linear-gradient(135deg,#ffaa00,#ffd700);color:#000;font-weight:800;border:1px solid #ffd700;text-shadow:none}
+.sn-card.promo{border:1px solid #ffd700 !important;background:linear-gradient(180deg,rgba(255,215,0,0.06),rgba(255,170,0,0.02)) !important}
 </style>
 <style>
 /* === Nav overflow fix — horizontally scroll when links overflow === */
@@ -2298,7 +2301,7 @@ body::before {
   <span class="pill nav-pill-logo">
     <span class="pill-inner">
       <a href="./index.html" class="nav-logo">
-        <img src="https://i.ibb.co/XxT1q0Fg/IMG-9805.png" alt="Logo">
+        <img src="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png" alt="Logo">
         <span class="font-display">$ByeBoss</span>
       </a>
     </span>
@@ -2308,10 +2311,11 @@ body::before {
     <span class="pill-inner">
       <div class="nav-links">
         <a href="./index.html" class="nav-link">App</a>
-        <a href="./gems.html" class="nav-link">Gems</a>
-        <a href="./sniper_terminal.html" class="nav-link active">Sniper</a>
+<a href="./sniper_terminal.html" class="nav-link active">Sniper</a>
         <a href="./og-detector.html" class="nav-link">OG Detector</a>
+        <a href="./rugsheet.html" class="nav-link accent-red"  data-nav="rugsheet">☠ RugSheet</a>
         <a href="./shazam_crypto.html" class="nav-link">Shazam</a>
+        <a href="./elon-watcher.html" class="nav-link accent-cyan"   data-nav="elon">🐦 Elon</a>
         <a href="./promote.html" class="nav-link">Promote</a>
         <a href="./launchpad.html" class="nav-link accent-red">🚀 Launchpad</a>
         <a href="./launches.html" class="nav-link accent-red">📊 Launches</a>
@@ -2338,15 +2342,29 @@ body::before {
 <!-- Mobile Menu -->
 <div class="mobile-menu" id="mobileMenu">
   <a href="./index.html">🏠 App</a>
-  <a href="./gems.html">💎 Gems</a>
-  <a href="./sniper_terminal.html" class="active">🎯 Sniper</a>
+  <a href="./sniper_terminal.html">🎯 Sniper</a>
   <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./rugsheet.html">☠ RugSheet</a>
   <a href="./shazam_crypto.html">🔬 Shazam</a>
+  <a href="./elon-watcher.html">🐦 Elon</a>
   <a href="./promote.html">⭐ Promote</a>
   <a href="./launchpad.html">🚀 Launchpad</a>
   <a href="./launches.html">📊 Launches</a>
   <a href="./lock.html">🔒 Lock</a>
+  <a href="./burn.html">🔥 Burn</a>
+  <a href="./trade.html">💎 Trade</a>
+  <a href="./byeboss.html">📖 Docs</a>
+  <a href="https://dexscreener.com/solana/ey6vkrmhqwygk7zqoecmy48uwakp5vx5l7w7hisp1xho" target="_blank">📈 Chart</a>
 </div>
+<script>
+  (function(){
+    var p = location.pathname.split('/').pop().toLowerCase();
+    document.querySelectorAll('#mobileMenu a, .nav-links a, .nav-link').forEach(function(a){
+      var h = (a.getAttribute('href')||'').replace('./','').toLowerCase();
+      if (h && h === p) a.classList.add('active');
+    });
+  })();
+</script>
 
 <!-- ═══════════════════════════════════════════════════════
      TOP BAR
@@ -2380,10 +2398,10 @@ body::before {
     </div>
 
     <div class="kpi-strip">
-      <div class="kpi-card"><div class="kpi-value" id="kpi24hSignals">—</div><div class="kpi-label">24h Signals</div></div>
-      <div class="kpi-card"><div class="kpi-value" id="kpi24hWinRate">—</div><div class="kpi-label">24h Win Rate</div></div>
-      <div class="kpi-card"><div class="kpi-value" id="kpi24hAvgX">—</div><div class="kpi-label">24h Avg Xs</div></div>
-      <div class="kpi-card"><div class="kpi-value" id="kpi24hTotalX">—</div><div class="kpi-label">24h Total Xs</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi24hSignals">—</div><div class="kpi-label">Total Signals</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi24hWinRate">—</div><div class="kpi-label">Win Rate</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi24hAvgX">—</div><div class="kpi-label">Avg Xs</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi24hTotalX">—</div><div class="kpi-label">Total Xs</div></div>
       <div class="kpi-card"><div class="kpi-value" id="kpiBestCall">—</div><div class="kpi-label">Best Call</div></div>
       <div class="kpi-card"><div class="kpi-value" id="kpi7dSignals">—</div><div class="kpi-label">7d Signals</div></div>
     </div>
@@ -4376,11 +4394,51 @@ function soulShort(addr) {
 // Unified signal view: normalise open positions + closed history into
 // one {symbol, name, ca, chain, entryMcUsd, currentMcUsd, x, peakX,
 // ageMs, score, status, dexUrl, logoUrl, openedAt} list.
+let promotedSignals = [];
+async function fetchPromotedSignals() {
+  try {
+    const SUPABASE_URL = 'https://sollomdaapwxutpykzlq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvbGxvbWRhYXB3eHV0cHlremxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NDMzODksImV4cCI6MjA5MDIxOTM4OX0.03bYy4wzKCbuyf9Zf4i200TMAbqpR3gMTfWmrcF6Hl8';
+    const r = await fetch(SUPABASE_URL + '/rest/v1/active_promotions?select=*&order=approved_at.desc&limit=20', {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+    });
+    if (!r.ok) return;
+    const rows = await r.json();
+    const cutoff = Date.now() - 6 * 60 * 60 * 1000;
+    promotedSignals = (rows || []).filter(p => p.approved_at && new Date(p.approved_at).getTime() > cutoff);
+  } catch (_) {}
+}
+fetchPromotedSignals();
+setInterval(fetchPromotedSignals, 60 * 1000);
+
 function buildSoulSignalList() {
   const sigs = [];
   const now = Date.now();
+  for (const p of promotedSignals) {
+    const openedAt = new Date(p.approved_at).getTime();
+    const chainLow = (p.chain || 'solana').toLowerCase();
+    sigs.push({
+      symbol: p.ticker || '',
+      name: p.token_name || '',
+      ca: p.contract_address || '',
+      chain: chainLow,
+      pairAddress: '',
+      entryMcUsd: 0,
+      currentMcUsd: 0,
+      x: 1, peakX: 0,
+      ageMs: now - openedAt,
+      score: 0,
+      status: 'PROMOTION',
+      dexUrl: 'https://dexscreener.com/' + chainLow + '/' + (p.contract_address || ''),
+      logoUrl: p.logo_url || '',
+      openedAt,
+    });
+  }
 
-  for (const p of (positions || [])) {
+  // Dedup positions against promotions (a promoted token might also be a live signal)
+    for (const p of (positions || [])) {
+    const pCa = (p.address || '').toLowerCase();
+    if (pCa && sigs.some(x => (x.ca || '').toLowerCase() === pCa)) continue;
     const x = 1 + ((p.pnlPct || 0) / 100);
     const peakX = 1 + ((p.highestPnlPct || 0) / 100);
     const entryMc = p.entryMarketCap || 0;
@@ -4401,9 +4459,14 @@ function buildSoulSignalList() {
       openedAt: p.entryTime || now,
     });
   }
-  for (const h of (history || [])) {
+  // Skip tokens we already saw in promotion / live so the same coin never doubles in the list
+  const seenCAs = new Set(sigs.map(x => (x.ca || '').toLowerCase()).filter(Boolean));
+    for (const h of (history || [])) {
     const x = 1 + ((h.pnlPct || 0) / 100);
     const peakX = 1 + ((h.highestPnlPct || h.pnlPct || 0) / 100);
+    const hCa = (h.address || '').toLowerCase();
+    if (hCa && seenCAs.has(hCa)) continue;
+    if (hCa) seenCAs.add(hCa);
     const entryMc = h.entryMarketCap || 0;
     sigs.push({
       symbol: h.symbol || '',
@@ -4432,7 +4495,7 @@ function renderSoulKPIs() {
     const day = 24 * 60 * 60 * 1000;
     const week = 7 * day;
 
-    const last24h = sigs.filter(s => (now - s.openedAt) <= day);
+    const last24h = sigs; // lifetime
     const last7d  = sigs.filter(s => (now - s.openedAt) <= week);
 
     const count24 = last24h.length;
@@ -4458,7 +4521,7 @@ function renderSoulSignals() {
     if (!body) return;
     let sigs = buildSoulSignalList();
 
-    if (soulActiveTab === 'live')   sigs = sigs.filter(s => s.status === 'LIVE');
+    if (soulActiveTab === 'live')   sigs = sigs.filter(s => s.status === 'LIVE' || s.status === 'PROMOTION');
     if (soulActiveTab === 'closed') sigs = sigs.filter(s => s.status === 'CLOSED' || (s.peakX || 0) >= 5);
 
     // archive: best peak X first; others: newest first
@@ -4477,14 +4540,17 @@ function renderSoulSignals() {
       const xPctCls = xChange >= 0 ? 'up' : 'down';
       const isNew = s.status === 'LIVE' && s.x === 1;
       const initial = ((s.symbol || '?')[0] || '?').toUpperCase();
-      const avatar = s.logoUrl
-        ? `<img src="${esc(s.logoUrl)}" alt="${esc(s.symbol || '')}" onerror="this.parentNode.textContent='${esc(initial)}';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--text-dim)'">`
+      // Fallback to DexScreener CDN when the engine didn't capture imageUrl at open time
+      const cdnLogo = s.ca ? `https://dd.dexscreener.com/ds-data/tokens/${(s.chain||'solana').toLowerCase()}/${s.ca}.png` : '';
+      const logoSrc = s.logoUrl || cdnLogo;
+      const avatar = logoSrc
+        ? `<img src="${esc(logoSrc)}" alt="${esc(s.symbol || '')}" onerror="this.parentNode.textContent='${esc(initial)}';this.parentNode.style.fontSize='22px';this.parentNode.style.color='var(--text-dim)'">`
         : esc(initial);
       const pumpUrl = s.ca ? `https://pump.fun/coin/${s.ca}` : '';
       const dexUrl = s.dexUrl || (s.ca ? `https://dexscreener.com/solana/${s.ca}` : '');
       const targetUrl = dexUrl || pumpUrl;
-      const statusChipCls = s.status === 'LIVE' ? (isNew ? 'new' : 'live') : 'archived';
-      const statusChipLbl = s.status === 'LIVE' ? (isNew ? '⚡ NEW SIGNAL' : '● LIVE') : '🏁 ARCHIVED';
+      const statusChipCls = s.status === 'PROMOTION' ? 'promo' : (s.status === 'LIVE' ? (isNew ? 'new' : 'live') : 'archived');
+      const statusChipLbl = s.status === 'PROMOTION' ? '⭐ PROMOTION' : (s.status === 'LIVE' ? (isNew ? '⚡ NEW SIGNAL' : '● LIVE') : '🏁 ARCHIVED');
 
       return `
         <div class="sn-card ${s.status === 'LIVE' ? '' : 'archived'}" onclick="snOpen(event,'${esc(targetUrl)}')">
@@ -4504,6 +4570,7 @@ function renderSoulSignals() {
                 ${s.ca ? `<button class="sn-icon-btn sn-copy-ca" data-ca="${esc(s.ca)}" title="Copy contract" onclick="event.preventDefault()">📋</button>` : ''}
                 ${pumpUrl ? `<a class="sn-icon-btn pf"  href="${esc(pumpUrl)}" target="_blank" rel="noopener" title="Pump.fun">🎰</a>` : ''}
                 ${dexUrl  ? `<a class="sn-icon-btn dex" href="${esc(dexUrl)}"  target="_blank" rel="noopener" title="DexScreener">📈</a>` : ''}
+                <a class="sn-icon-btn" href="https://twitter.com/intent/tweet?text=${encodeURIComponent("$" + s.symbol + " just hit " + soulFmtX(s.peakX) + " 🚀\n\nBYEBOSS sniper called it" + (s.entryMcUsd ? (" from $" + soulFmtNum(s.entryMcUsd) + " MC") : "") + "." + (s["ca"] ? ("\n\nCA: " + s["ca"]) : "") + "\n\n" + (s.dexUrl || (s["ca"] ? ("https://dexscreener.com/" + (s.chain || "solana").toLowerCase() + "/" + s["ca"]) : "https://byeboss.live/sniper_terminal.html")))}" target="_blank" rel="noopener" title="Tweet this signal">𝕏</a>
               </div>
             </div>
           </div>
@@ -4795,7 +4862,31 @@ renderPnlChart();
 
 // Auto-connect to server
 pollServerStatus();
-serverPollInterval = setInterval(pollServerStatus, 10000);
+// SSE live updates — push instead of blind polling
+let sniperSSE = null;
+let lastSSETrigger = 0;
+function connectSniperSSE() {
+  if (sniperSSE) try { sniperSSE.close(); } catch(_) {}
+  try {
+    sniperSSE = new EventSource(SNIPER_API + '/stream');
+    sniperSSE.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg && (msg.type === 'STATE' || msg.type === 'TRADE')) {
+          const now = Date.now();
+          if (now - lastSSETrigger > 500) {
+            lastSSETrigger = now;
+            pollServerStatus();
+          }
+        }
+      } catch(_) {}
+    };
+    sniperSSE.onerror = () => { setTimeout(connectSniperSSE, 5000); };
+  } catch (e) { setTimeout(connectSniperSSE, 10000); }
+}
+connectSniperSSE();
+// Slow fallback poll covers SSE drops + first paint
+serverPollInterval = setInterval(pollServerStatus, 60000);
 
 // Boot sequence
 const bootSequence = [
