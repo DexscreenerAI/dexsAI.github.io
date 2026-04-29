@@ -180,15 +180,10 @@ body { padding-top: 72px; }
 .result-stats{text-align:right;min-width:80px;}
 .result-mc{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--green);display:block;}
 .result-liq{font-family:var(--mono);font-size:10px;color:var(--text3);}
-.result-chain{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.5px;padding:4px 8px;border-radius:6px;border:1px solid var(--card-border);background:var(--bg);color:var(--text2);min-width:42px;text-align:center;}
-.result-chain.sol{color:#9945ff;border-color:rgba(153,69,255,0.4);background:rgba(153,69,255,0.08);}
-.result-chain.eth{color:#627eea;border-color:rgba(98,126,234,0.4);background:rgba(98,126,234,0.08);}
-.result-chain.bsc{color:#f3ba2f;border-color:rgba(243,186,47,0.4);background:rgba(243,186,47,0.08);}
-.result-chain.base{color:#0052ff;border-color:rgba(0,82,255,0.4);background:rgba(0,82,255,0.08);}
-.result-chain.arb{color:#28a0f0;border-color:rgba(40,160,240,0.4);background:rgba(40,160,240,0.08);}
-.result-chain.pol{color:#8247e5;border-color:rgba(130,71,229,0.4);background:rgba(130,71,229,0.08);}
-.result-chain.avax{color:#e84142;border-color:rgba(232,65,66,0.4);background:rgba(232,65,66,0.08);}
-.result-chain.op{color:#ff0420;border-color:rgba(255,4,32,0.4);background:rgba(255,4,32,0.08);}
+.result-chain{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.5px;padding:4px 9px 4px 6px;border-radius:6px;border:1px solid var(--card-border);background:var(--bg);color:var(--text);}
+.result-chain img{width:14px;height:14px;border-radius:50%;flex-shrink:0;display:block;}
+.chain-btn{display:inline-flex;align-items:center;gap:6px;}
+.chain-btn img{width:14px;height:14px;border-radius:50%;display:block;}
 .result-actions{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;}
 .action-btn{padding:7px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text2);font-family:var(--mono);font-size:10px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .15s;}
 .action-btn:hover{border-color:var(--cyan);color:var(--cyan);}
@@ -307,11 +302,11 @@ body { padding-top: 72px; }
   </div>
   <div class="chain-selector">
     <button class="chain-btn active" data-chain="all" onclick="selectChain(this)">All</button>
-    <button class="chain-btn" data-chain="solana" onclick="selectChain(this)">SOL</button>
-    <button class="chain-btn" data-chain="ethereum" onclick="selectChain(this)">ETH</button>
-    <button class="chain-btn" data-chain="bsc" onclick="selectChain(this)">BSC</button>
-    <button class="chain-btn" data-chain="base" onclick="selectChain(this)">BASE</button>
-    <button class="chain-btn" data-chain="arbitrum" onclick="selectChain(this)">ARB</button>
+    <button class="chain-btn" data-chain="solana" onclick="selectChain(this)"><img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png" alt="" onerror="this.remove()">SOL</button>
+    <button class="chain-btn" data-chain="ethereum" onclick="selectChain(this)"><img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png" alt="" onerror="this.remove()">ETH</button>
+    <button class="chain-btn" data-chain="bsc" onclick="selectChain(this)"><img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/smartchain/info/logo.png" alt="" onerror="this.remove()">BSC</button>
+    <button class="chain-btn" data-chain="base" onclick="selectChain(this)"><img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png" alt="" onerror="this.remove()">BASE</button>
+    <button class="chain-btn" data-chain="arbitrum" onclick="selectChain(this)"><img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/arbitrum/info/logo.png" alt="" onerror="this.remove()">ARB</button>
   </div>
 </div>
 
@@ -382,19 +377,21 @@ function formatDate(timestamp) {
   return `${mins}m ago`;
 }
 
+const CHAIN_LOGOS = {
+  'solana':    { label: 'SOL',  logo: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png'    },
+  'ethereum':  { label: 'ETH',  logo: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png'  },
+  'bsc':       { label: 'BSC',  logo: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/smartchain/info/logo.png' },
+  'base':      { label: 'BASE', logo: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png'      },
+  'arbitrum':  { label: 'ARB',  logo: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/arbitrum/info/logo.png'  },
+  'polygon':   { label: 'POL',  logo: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/info/logo.png'   },
+  'avalanche': { label: 'AVAX', logo: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/avalanchec/info/logo.png'},
+  'optimism':  { label: 'OP',   logo: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/optimism/info/logo.png'  },
+};
+
 function getChainBadge(chain) {
-  const map = {
-    'solana':    { label: 'SOL',  cls: 'sol'  },
-    'ethereum':  { label: 'ETH',  cls: 'eth'  },
-    'bsc':       { label: 'BSC',  cls: 'bsc'  },
-    'base':      { label: 'BASE', cls: 'base' },
-    'arbitrum':  { label: 'ARB',  cls: 'arb'  },
-    'polygon':   { label: 'POL',  cls: 'pol'  },
-    'avalanche': { label: 'AVAX', cls: 'avax' },
-    'optimism':  { label: 'OP',   cls: 'op'   },
-  };
-  const m = map[chain] || { label: (chain || '?').toUpperCase().slice(0, 4), cls: '' };
-  return `<span class="result-chain ${m.cls}">${m.label}</span>`;
+  const m = CHAIN_LOGOS[chain] || { label: (chain || '?').toUpperCase().slice(0, 4), logo: '' };
+  const img = m.logo ? `<img src="${m.logo}" alt="" onerror="this.remove()">` : '';
+  return `<span class="result-chain">${img}${m.label}</span>`;
 }
 
 function showLoading() {
