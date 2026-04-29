@@ -471,6 +471,80 @@ function renderTopGrid() {
   el.innerHTML = topDevs.map(d => renderPoster(d)).join('');
 }
 
+// ─── Dev detail modal ────────────────────────────────────────────────
+const OUTCOME_LABELS = { rugged: 'Rugged', dead: 'Dead', alive: 'Alive', success: 'Win', moon: 'Moon', pending: 'Pending' };
+
+async function openDevDetail(addr) {
+  if (!addr) return;
+  const modal = document.getElementById('rs-dev-modal');
+  const body = document.getElementById('rs-dev-modal-body');
+  if (!modal || !body) return;
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  body.innerHTML = `<button class="rs-modal-close" onclick="closeDevDetail()">×</button><div class="rs-loading"><span class="rs-spinner"></span> Loading dev profile…</div>`;
+
+  try {
+    const r = await fetch(BACKEND_API + '/dev/' + encodeURIComponent(addr), { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) throw new Error('not found');
+    const d = await r.json();
+    const tokens = (d.tokens || []).slice().sort((a, b) => (b.peakMc || 0) - (a.peakMc || 0));
+
+    body.innerHTML = `
+      <button class="rs-modal-close" onclick="closeDevDetail()">×</button>
+      <div class="rs-modal-head">
+        <img class="rs-modal-mug" src="${MUG_API}${encodeURIComponent(d.addr)}" alt="">
+        <div>
+          <div class="rs-modal-title">${shortAddr(d.addr)} · ${(d.chain || 'unknown').toUpperCase()}</div>
+          <div class="rs-modal-sub">Score ${d.score > 0 ? '+' : ''}${d.score} · first seen ${d.firstSeen ? fmtAge(d.firstSeen) + ' ago' : '?'}</div>
+        </div>
+      </div>
+      <div class="rs-modal-stats">
+        <div class="rs-modal-stat"><div class="rs-modal-stat-val">${d.deployed || 0}</div><div class="rs-modal-stat-lbl">Deployed</div></div>
+        <div class="rs-modal-stat"><div class="rs-modal-stat-val" style="color:var(--rs-red)">${d.rugged || 0}</div><div class="rs-modal-stat-lbl">Rugged</div></div>
+        <div class="rs-modal-stat"><div class="rs-modal-stat-val" style="color:var(--rs-green)">${(d.success || 0) + (d.moon || 0)}</div><div class="rs-modal-stat-lbl">Wins</div></div>
+        <div class="rs-modal-stat"><div class="rs-modal-stat-val" style="color:var(--rs-yellow)">${fmtUSD(d.bestPeakMc || 0)}</div><div class="rs-modal-stat-lbl">Best ATH</div></div>
+        <div class="rs-modal-stat"><div class="rs-modal-stat-val">${fmtUSD(d.avgPeakMc || 0)}</div><div class="rs-modal-stat-lbl">Avg ATH</div></div>
+        <div class="rs-modal-stat"><div class="rs-modal-stat-val" style="color:var(--rs-red)">${fmtUSD(d.damage || 0)}</div><div class="rs-modal-stat-lbl">Damage</div></div>
+      </div>
+      <div class="rs-modal-section">Tokens deployed (${tokens.length})</div>
+      <div class="rs-tokens-list">
+        ${tokens.length ? tokens.map(t => {
+          const chain = (t.chain || 'solana').toLowerCase();
+          const ca = t.addrOriginal || t.addr;
+          const dexUrl = t.pairAddress ? `https://dexscreener.com/${chain}/${t.pairAddress}` : `https://dexscreener.com/${chain}/${ca}`;
+          const out = t.outcome || 'pending';
+          return `
+            <a class="rs-token-row" href="${dexUrl}" target="_blank" rel="noopener">
+              <div class="rs-token-row-main">
+                <div class="rs-token-row-sym">$${(t.symbol || '?').toString()}</div>
+                <div class="rs-token-row-name">${(t.name || '').toString()}</div>
+              </div>
+              <div class="rs-token-row-ath">
+                <div class="rs-token-row-ath-val">${fmtUSD(t.peakMc || 0)}</div>
+                <div class="rs-token-row-ath-lbl">ATH MC</div>
+              </div>
+              <span class="rs-token-row-out ${out}">${OUTCOME_LABELS[out] || out}</span>
+            </a>
+          `;
+        }).join('') : '<div class="rs-empty">No tokens indexed yet for this dev.</div>'}
+      </div>
+    `;
+  } catch (e) {
+    body.innerHTML = `<button class="rs-modal-close" onclick="closeDevDetail()">×</button><div class="rs-error">Could not load dev profile (${e?.message || 'network error'}).</div>`;
+  }
+}
+
+function closeDevDetail() {
+  const modal = document.getElementById('rs-dev-modal');
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.style.overflow = '';
+}
+
+window.openDevDetail = openDevDetail;
+window.closeDevDetail = closeDevDetail;
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDevDetail(); });
+
 // ─── Boot ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   // First paint with whatever we have locally
