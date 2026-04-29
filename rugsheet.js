@@ -471,6 +471,59 @@ function renderTopGrid() {
   el.innerHTML = topDevs.map(d => renderPoster(d)).join('');
 }
 
+// ─── Live feed — Just Deployed ──────────────────────────────────────
+let recentTokens = [];
+const FEED_REFRESH_MS = 30 * 1000;
+
+async function fetchRecentTokens() {
+  try {
+    const r = await fetch(BACKEND_API + '/recent-tokens?limit=18', { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) { recentTokens = []; return; }
+    const d = await r.json();
+    recentTokens = Array.isArray(d?.tokens) ? d.tokens : [];
+  } catch (e) { recentTokens = []; }
+}
+
+function knownDevSet() {
+  const set = new Set();
+  for (const d of (backendDevs || [])) if (d?.addr) set.add(String(d.addr).toLowerCase());
+  return set;
+}
+
+function renderLiveFeed() {
+  const el = document.getElementById('rs-feed-grid');
+  if (!el) return;
+  if (!recentTokens.length) {
+    el.innerHTML = '<div class="rs-empty">Scanning fresh launches… new tokens appear here in real time.</div>';
+    return;
+  }
+  const known = knownDevSet();
+  el.innerHTML = recentTokens.map(t => {
+    const dev = (t.deployer || '').toLowerCase();
+    const isKnown = dev && known.has(dev);
+    const chain = (t.chain || 'solana').toLowerCase();
+    const ca = t.addrOriginal || t.addr;
+    const dexUrl = t.pairAddress ? `https://dexscreener.com/${chain}/${t.pairAddress}` : `https://dexscreener.com/${chain}/${ca}`;
+    const onclick = isKnown
+      ? `event.preventDefault(); openDevDetail('${dev}')`
+      : ``;
+    return `
+      <a class="rs-feed-card ${isKnown ? 'known-dev' : ''}" href="${dexUrl}" target="_blank" rel="noopener" ${onclick ? `onclick="${onclick}"` : ''}>
+        <div class="rs-feed-top">
+          <span class="rs-feed-sym">$${(t.symbol || '?').toString()}</span>
+          <span class="rs-feed-chain">${chain}</span>
+        </div>
+        <div class="rs-feed-name">${(t.name || '').toString()}</div>
+        <div class="rs-feed-stats">
+          <span>${t.firstSeen ? fmtAge(t.firstSeen) + ' ago' : '?'}</span>
+          <span class="rs-feed-mc">${fmtUSD(t.peakMc || t.currentMc || 0)}</span>
+        </div>
+        ${isKnown ? '<div class="rs-feed-known-tag">📁 dev on file — click for profile</div>' : ''}
+      </a>
+    `;
+  }).join('');
+}
+
 // ─── Dev detail modal ────────────────────────────────────────────────
 const OUTCOME_LABELS = { rugged: 'Rugged', dead: 'Dead', alive: 'Alive', success: 'Win', moon: 'Moon', pending: 'Pending' };
 
@@ -555,9 +608,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Try the backend in parallel — if it answers, stats/leaderboard switch to global
   await fetchBackend();
+  await fetchRecentTokens();
   renderSyncIndicator();
   renderCounters();
   renderLeaderboards();
+  renderLiveFeed();
   renderScanIndicator();
 
   // Refresh stale local tokens (anything tracked > 1h ago)
@@ -584,6 +639,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderLeaderboards();
     renderScanIndicator();
   }, BACKEND_REFRESH_MS);
+
+  setInterval(async () => {
+    await fetchRecentTokens();
+    renderLiveFeed();
+  }, FEED_REFRESH_MS);
 
   $('#rs-go')?.addEventListener('click', investigate);
   $('#rs-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') investigate(); });

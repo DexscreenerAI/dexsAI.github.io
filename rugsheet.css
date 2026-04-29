@@ -289,6 +289,20 @@ main, nav, .rs-hero, .rs-section, .rs-bottom-cta, .rs-alert-banner-wrap {
 
 [hidden] { display: none !important; }
 
+/* Live feed — Just Deployed */
+.rs-feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.rs-feed-card { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; background: var(--rs-bg-card); border: 1px solid var(--rs-border); border-radius: 6px; cursor: pointer; transition: border-color .15s, box-shadow .15s; text-decoration: none; color: inherit; min-width: 0; }
+.rs-feed-card:hover { border-color: var(--rs-border-bright); }
+.rs-feed-card.known-dev { border-color: var(--rs-green); box-shadow: 0 0 0 1px var(--rs-green) inset, 0 0 18px rgba(0, 255, 65, 0.18); }
+.rs-feed-card.known-dev:hover { box-shadow: 0 0 0 1px var(--rs-green) inset, 0 0 24px rgba(0, 255, 65, 0.32); }
+.rs-feed-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rs-feed-sym { font-family: var(--rs-display); font-size: 13px; color: var(--rs-text); letter-spacing: 0.5px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rs-feed-chain { font-size: 8px; padding: 2px 6px; border-radius: 3px; border: 1px solid var(--rs-border-bright); color: var(--rs-text-dim); letter-spacing: 1px; text-transform: uppercase; flex-shrink: 0; }
+.rs-feed-name { font-size: 10px; color: var(--rs-text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rs-feed-stats { display: flex; justify-content: space-between; font-size: 10px; color: var(--rs-text-dim); margin-top: 2px; }
+.rs-feed-mc { color: var(--rs-yellow); font-family: var(--rs-display); }
+.rs-feed-known-tag { font-size: 8px; color: var(--rs-green); letter-spacing: 1px; text-transform: uppercase; font-family: var(--rs-display); }
+
 /* Dev detail modal */
 .rs-modal { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .rs-modal-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(6px); }
