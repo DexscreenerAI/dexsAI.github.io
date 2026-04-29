@@ -522,7 +522,8 @@ function renderLiveFeed() {
     return `
       <a class="rs-feed-card ${isKnown ? 'known-dev' : ''}" href="${dexUrl}" target="_blank" rel="noopener" ${cardOnclick ? `onclick="${cardOnclick}"` : ''}>
         <div class="rs-feed-top">
-          <div class="rs-feed-avatar" data-initial="${escAttr(initial)}">
+          <div class="rs-feed-avatar">
+            <span class="rs-feed-avatar-letter">${initial}</span>
             <img src="${escAttr(logo)}" alt="${escAttr(symbol)}" onload="this.classList.add('loaded')" onerror="this.remove()">
             <span class="rs-feed-badge-ovl">🎯</span>
           </div>
