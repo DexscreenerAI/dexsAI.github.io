@@ -241,10 +241,6 @@ body { padding-top: 72px; }
 .og-card-stat-val.peak{color:var(--yellow);}
 .og-card-stat-lbl{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px;letter-spacing:0.3px;}
 
-.og-card-actions{display:flex;gap:6px;flex-wrap:wrap;}
-.og-card-act{width:34px;height:34px;border-radius:8px;border:1px solid rgba(0,255,65,0.2);background:transparent;color:var(--text2);font-family:var(--mono);font-size:13px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
-.og-card-act:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,255,65,0.05);}
-.og-card-act.tw:hover{border-color:#1da1f2;color:#1da1f2;}
 
 .og-empty{padding:30px 20px;text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;letter-spacing:1px;border:1px dashed var(--card-border);border-radius:8px;grid-column:1 / -1;}
 
@@ -860,10 +856,6 @@ function renderOgBracket() {
             <div class="og-card-stat-val peak">${ogFmtUSD(og.peakMc || og.currentMc || 0)}</div>
             <div class="og-card-stat-lbl">Peak MC</div>
           </div>
-        </div>
-        <div class="og-card-actions">
-          <a class="og-card-act" href="${escAttr(dexUrl)}" target="_blank" rel="noopener" title="DexScreener" onclick="event.stopPropagation()">📈</a>
-          ${og.twitter ? `<a class="og-card-act tw" href="${escAttr(og.twitter)}" target="_blank" rel="noopener" title="Twitter" onclick="event.stopPropagation()">𝕏</a>` : ''}
         </div>
       </a>
     `;
