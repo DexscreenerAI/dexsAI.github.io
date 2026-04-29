@@ -510,7 +510,7 @@ function renderLiveFeed() {
     const symbol = (t.symbol || '?').toString();
     const initial = symbol.slice(0, 1).toUpperCase();
     const logo = `https://dd.dexscreener.com/ds-data/tokens/${chain}/${(ca || '').toLowerCase()}.png`;
-    const ageStr = t.firstSeen ? fmtAge(t.firstSeen) + ' ago' : '—';
+    const ageStr = t.firstSeen ? fmtAge(t.firstSeen) : '—';
     const isFresh = t.firstSeen && (Date.now() - t.firstSeen) < 60 * 60 * 1000;
     const outcome = (t.outcome || 'pending').toLowerCase();
     const outcomeLbl = OUTCOME_LABELS[outcome] || outcome;
@@ -521,41 +521,29 @@ function renderLiveFeed() {
       : '';
     return `
       <a class="rs-feed-card ${isKnown ? 'known-dev' : ''}" href="${dexUrl}" target="_blank" rel="noopener" ${cardOnclick ? `onclick="${cardOnclick}"` : ''}>
-        <div class="rs-feed-top">
-          <div class="rs-feed-avatar">
-            <span class="rs-feed-avatar-letter">${initial}</span>
-            <img src="${escAttr(logo)}" alt="${escAttr(symbol)}" onload="this.classList.add('loaded')" onerror="this.remove()">
-            <span class="rs-feed-badge-ovl">🎯</span>
+        <div class="rs-feed-avatar">
+          <span class="rs-feed-avatar-letter">${initial}</span>
+          <img src="${escAttr(logo)}" alt="${escAttr(symbol)}" onload="this.classList.add('loaded')" onerror="this.remove()">
+        </div>
+        <div class="rs-feed-body">
+          <div class="rs-feed-line1">
+            <span class="rs-feed-ticker">$${symbol}</span>
+            <span class="rs-feed-name" title="${escAttr(t.name || '')}">${(t.name || '').toString()}</span>
           </div>
-          <div class="rs-feed-head">
-            <div class="rs-feed-title">
-              <span class="rs-feed-ticker">$${symbol}</span>
-              <span class="rs-feed-name" title="${escAttr(t.name || '')}">${(t.name || '').toString()}</span>
-            </div>
-            <div class="rs-feed-chips">
-              <span class="rs-feed-chip ${isFresh ? 'new' : outcome}">${isFresh ? '⚡ NEW' : outcomeLbl}</span>
-              <span class="rs-feed-chip">🕐 ${ageStr}</span>
-              <span class="rs-feed-chip">⛓ ${chain.toUpperCase()}</span>
-            </div>
-            <div class="rs-feed-icons">
-              ${pumpUrl ? `<a class="rs-feed-icon-btn pf" href="${pumpUrl}" target="_blank" rel="noopener" title="Pump.fun" onclick="event.stopPropagation()">🎰</a>` : ''}
-              <a class="rs-feed-icon-btn dex" href="${dexUrl}" target="_blank" rel="noopener" title="DexScreener" onclick="event.stopPropagation()">📈</a>
-              ${isKnown ? `<button class="rs-feed-icon-btn" title="Dev profile" onclick="event.preventDefault();event.stopPropagation();openDevDetail('${dev}')">👤</button>` : ''}
-            </div>
+          <div class="rs-feed-line2">
+            <span class="rs-feed-chip ${isFresh ? 'new' : outcome}">${isFresh ? 'NEW' : outcomeLbl}</span>
+            <span>${ageStr}</span>
+            <span class="sep">·</span>
+            <span class="mc">${currentMc}</span>
+            <span class="ath">/ ATH ${peakMc}</span>
+            ${isKnown ? '<span class="sep">·</span><span class="known">📁 on file</span>' : ''}
           </div>
         </div>
-        <hr class="rs-feed-sep">
-        <div class="rs-feed-stats">
-          <div class="rs-feed-stat">
-            <div class="rs-feed-stat-val">${currentMc}</div>
-            <div class="rs-feed-stat-lbl">Market Cap</div>
-          </div>
-          <div class="rs-feed-stat">
-            <div class="rs-feed-stat-val peak">${peakMc}</div>
-            <div class="rs-feed-stat-lbl">Peak MC (ATH)</div>
-          </div>
+        <div class="rs-feed-actions">
+          ${pumpUrl ? `<a class="rs-feed-action pf" href="${pumpUrl}" target="_blank" rel="noopener" title="Pump.fun" onclick="event.stopPropagation()">🎰</a>` : ''}
+          <a class="rs-feed-action dex" href="${dexUrl}" target="_blank" rel="noopener" title="DexScreener" onclick="event.stopPropagation()">📈</a>
+          ${isKnown ? `<button class="rs-feed-action" title="Dev profile" onclick="event.preventDefault();event.stopPropagation();openDevDetail('${dev}')">👤</button>` : ''}
         </div>
-        ${isKnown ? '<div class="rs-feed-known-tag">📁 Dev on file — click for full profile</div>' : ''}
       </a>
     `;
   }).join('');
