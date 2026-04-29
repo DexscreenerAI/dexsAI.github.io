@@ -523,11 +523,11 @@ function renderLiveFeed() {
     const outcomeLbl = OUTCOME_LABELS[outcome] || outcome;
     const peakMc = fmtUSD(t.peakMc || 0);
     const currentMc = fmtUSD(t.currentMc || 0);
-    const cardOnclick = isKnown
-      ? `if(!event.target.closest('a,button')){event.preventDefault();openDevDetail('${dev}');}`
-      : '';
+    const cardClick = isKnown
+      ? `openDevDetail('${dev}')`
+      : `window.open('${dexUrl}','_blank','noopener')`;
     return `
-      <a class="rs-feed-card ${isKnown ? 'known-dev' : ''}" href="${dexUrl}" target="_blank" rel="noopener" ${cardOnclick ? `onclick="${cardOnclick}"` : ''}>
+      <div class="rs-feed-card ${isKnown ? 'known-dev' : ''}" onclick="if(event.target.closest('a,button'))return;${cardClick}">
         <div class="rs-feed-avatar">
           <span class="rs-feed-avatar-letter">${initial}</span>
           <img src="${escAttr(logo)}" alt="${escAttr(symbol)}" onload="this.classList.add('loaded')" onerror="this.remove()">
@@ -550,9 +550,9 @@ function renderLiveFeed() {
         <div class="rs-feed-actions">
           ${pumpUrl ? `<a class="rs-feed-action pf" href="${pumpUrl}" target="_blank" rel="noopener" title="Pump.fun" onclick="event.stopPropagation()">🎰</a>` : ''}
           <a class="rs-feed-action dex" href="${dexUrl}" target="_blank" rel="noopener" title="DexScreener" onclick="event.stopPropagation()">📈</a>
-          ${isKnown ? `<button class="rs-feed-action" title="Dev profile" onclick="event.preventDefault();event.stopPropagation();openDevDetail('${dev}')">👤</button>` : ''}
+          ${isKnown ? `<button class="rs-feed-action" title="Dev profile" onclick="event.stopPropagation();openDevDetail('${dev}')">👤</button>` : ''}
         </div>
-      </a>
+      </div>
     `;
   }).join('');
 }
