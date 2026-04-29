@@ -541,8 +541,9 @@ function renderLiveFeed() {
             <span>${ageStr}</span>
             <span class="sep">·</span>
             <span class="mc">${currentMc}</span>
-            <span class="ath">/ ATH ${peakMc}</span>
-            ${isKnown ? '<span class="sep">·</span><span class="known">📁 on file</span>' : ''}
+            <span class="sep">→</span>
+            <span class="ath" title="All-time high market cap">${peakMc}</span>
+            ${isKnown ? '<span class="known" title="Dev already on file">📁</span>' : ''}
           </div>
         </div>
         <div class="rs-feed-actions">
