@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style id="no-zoom-guard">html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;}</style>
 <title>SNIPER // TERMINAL</title>
 <style>
 /* ═══════════════════════════════════════════════════════
@@ -4523,7 +4524,7 @@ function renderSoulSignals() {
     if (soulActiveTab === 'live')   sigs = sigs.filter(s => s.status === 'LIVE' || s.status === 'PROMOTION');
     if (soulActiveTab === 'closed') sigs = sigs.filter(s => s.status === 'CLOSED' || (s.peakX || 0) >= 5);
 
-    // newest first by default; archive tab shows best peak X first
+    // archive: best peak X first; others: newest first
     if (soulActiveTab === 'closed') sigs.sort((a, b) => (b.peakX || 0) - (a.peakX || 0));
     else sigs.sort((a, b) => b.openedAt - a.openedAt);
     sigs = sigs.slice(0, 50);
@@ -4569,7 +4570,6 @@ function renderSoulSignals() {
                 ${s.ca ? `<button class="sn-icon-btn sn-copy-ca" data-ca="${esc(s.ca)}" title="Copy contract" onclick="event.preventDefault()">📋</button>` : ''}
                 ${pumpUrl ? `<a class="sn-icon-btn pf"  href="${esc(pumpUrl)}" target="_blank" rel="noopener" title="Pump.fun">🎰</a>` : ''}
                 ${dexUrl  ? `<a class="sn-icon-btn dex" href="${esc(dexUrl)}"  target="_blank" rel="noopener" title="DexScreener">📈</a>` : ''}
-                <a class="sn-icon-btn" href="trade.html" title="Trade">💎</a>
                 <a class="sn-icon-btn" href="https://twitter.com/intent/tweet?text=${encodeURIComponent("$" + s.symbol + " just hit " + soulFmtX(s.peakX) + " 🚀\n\nBYEBOSS sniper called it" + (s.entryMcUsd ? (" from $" + soulFmtNum(s.entryMcUsd) + " MC") : "") + "." + (s["ca"] ? ("\n\nCA: " + s["ca"]) : "") + "\n\n" + (s.dexUrl || (s["ca"] ? ("https://dexscreener.com/" + (s.chain || "solana").toLowerCase() + "/" + s["ca"]) : "https://byeboss.live/sniper_terminal.html")))}" target="_blank" rel="noopener" title="Tweet this signal">𝕏</a>
               </div>
             </div>
