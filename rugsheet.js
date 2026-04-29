@@ -478,6 +478,30 @@ function renderTopGrid() {
   el.innerHTML = topDevs.map(d => renderPoster(d)).join('');
 }
 
+// ─── Top ATH Dev hero card ──────────────────────────────────────────
+function renderTopAthDev() {
+  const el = document.getElementById('rs-top-ath-card');
+  if (!el) return;
+  const devs = backendDevs || [];
+  const top = devs.reduce((b, d) => (d.bestPeakMc || 0) > (b?.bestPeakMc || 0) ? d : b, null);
+  if (!top || !top.bestPeakMc) { el.innerHTML = '<div class="rs-empty">Top ATH dev — backend still indexing.</div>'; return; }
+  const tok = top.latestToken;
+  el.innerHTML = `
+    <div class="rs-top-ath" onclick="openDevDetail('${top.addr}')">
+      <img class="rs-top-ath-mug" src="${MUG_API}${encodeURIComponent(top.addr)}" alt="">
+      <div class="rs-top-ath-body">
+        <div class="rs-top-ath-crown">👑 Top ATH dev</div>
+        <div class="rs-top-ath-addr">${shortAddr(top.addr)}</div>
+        <div class="rs-top-ath-tok">${top.deployed || 0} deployed · avg ATH <strong>${fmtUSD(top.avgPeakMc || 0)}</strong>${tok ? ` · latest $${tok.symbol || '?'}` : ''}</div>
+      </div>
+      <div class="rs-top-ath-num">
+        <div class="rs-top-ath-num-val">${fmtUSD(top.bestPeakMc || 0)}</div>
+        <div class="rs-top-ath-num-lbl">Best ATH</div>
+      </div>
+    </div>
+  `;
+}
+
 // ─── Live feed — Just Deployed ──────────────────────────────────────
 const OUTCOME_LABELS = { rugged: 'Rugged', dead: 'Dead', alive: 'Alive', success: 'Win', moon: 'Moon', pending: 'Pending' };
 let recentTokens = [];
@@ -644,6 +668,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await fetchRecentTokens();
   renderSyncIndicator();
   renderCounters();
+  renderTopAthDev();
   renderLeaderboards();
   renderLiveFeed();
   renderScanIndicator();
@@ -669,6 +694,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchBackend();
     renderSyncIndicator();
     renderCounters();
+    renderTopAthDev();
     renderLeaderboards();
     renderScanIndicator();
   }, BACKEND_REFRESH_MS);
