@@ -106,6 +106,13 @@ body { background: var(--bg); color: var(--text); font-family: var(--mono); padd
 .cto-add-msg.ok { color: var(--green); }
 .cto-add-msg.err { color: var(--red); }
 
+.cto-info { max-width: 800px; margin: 0 auto 22px; padding: 18px 22px; background: linear-gradient(135deg, rgba(0,255,65,0.08), rgba(0,240,255,0.04)); border: 1px solid var(--green); border-radius: 10px; text-align: center; }
+.cto-info h3 { font-family: var(--display); font-size: 14px; color: var(--green); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+.cto-info p { font-size: 13px; color: var(--text); line-height: 1.6; margin-bottom: 14px; }
+.cto-info .free { color: var(--yellow); font-weight: 700; }
+.cto-info-cta { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; background: var(--green); color: #000; border-radius: 8px; font-family: var(--display); font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; text-decoration: none; transition: all .15s; }
+.cto-info-cta:hover { background: transparent; color: var(--green); border: 1px solid var(--green); }
+
 .cto-section { max-width: 1100px; margin: 0 auto 60px; padding: 0 20px; }
 .cto-section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border-bright); flex-wrap: wrap; }
 .cto-section-head h2 { font-family: var(--display); font-size: clamp(20px, 4vw, 28px); color: var(--text); letter-spacing: 3px; text-transform: uppercase; font-weight: 800; }
@@ -221,6 +228,12 @@ body { background: var(--bg); color: var(--text); font-family: var(--mono); padd
     <div class="cto-stat"><div class="cto-stat-val yellow" id="cto-c-best">…</div><div class="cto-stat-lbl">Best X Hit</div></div>
   </div>
 </section>
+
+<div class="cto-info">
+  <h3>🤝 How to get listed</h3>
+  <p><span class="free">Listing is 100% FREE.</span> Just request it on the Telegram chat — drop your token contract address, the community votes if it's a real CTO, and we add it. No fee, ever.</p>
+  <a class="cto-info-cta" href="https://t.me/SalaryIsScam" target="_blank" rel="noopener">💬 Request on Telegram</a>
+</div>
 
 <div class="cto-add">
   <div class="cto-add-row">
