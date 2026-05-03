@@ -212,6 +212,12 @@ body { padding-top: 72px; }
 .og-bracket-tab .count{margin-left:6px;color:var(--text3);font-size:9px;}
 .og-bracket-tab.active .count{color:var(--cyan);}
 
+.og-chain-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;align-items:center;}
+.og-chain-lbl{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-right:4px;}
+.og-chain-tab{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--card-border);background:transparent;color:var(--text2);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:1px;border-radius:8px;cursor:pointer;transition:all .15s;}
+.og-chain-tab:hover{border-color:var(--cyan);color:var(--cyan);}
+.og-chain-tab.active{background:rgba(0,255,65,0.08);border-color:var(--cyan);color:var(--cyan);}
+.og-chain-tab img{width:14px;height:14px;border-radius:50%;display:block;}
 .og-bracket-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px;}
 
 .og-card{display:flex;flex-direction:column;gap:12px;padding:16px;background:rgba(0,0,0,0.35);border:1px solid rgba(0,255,65,0.14);border-radius:14px;color:var(--text);text-decoration:none;cursor:pointer;transition:border-color .15s,background .15s;}
@@ -389,6 +395,15 @@ body { padding-top: 72px; }
     <button class="og-bracket-tab" data-bracket="50k-100k">$50K – $100K</button>
     <button class="og-bracket-tab" data-bracket="100k-500k">$100K – $500K</button>
     <button class="og-bracket-tab" data-bracket="500k+">$500K+</button>
+  </div>
+  <div class="og-chain-tabs">
+    <span class="og-chain-lbl">Chain:</span>
+    <button class="og-chain-tab active" data-chain="all">All</button>
+    <button class="og-chain-tab" data-chain="solana"><img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png" alt="" onerror="this.remove()">SOL</button>
+    <button class="og-chain-tab" data-chain="ethereum"><img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png" alt="" onerror="this.remove()">ETH</button>
+    <button class="og-chain-tab" data-chain="bsc"><img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/smartchain/info/logo.png" alt="" onerror="this.remove()">BSC</button>
+    <button class="og-chain-tab" data-chain="base"><img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png" alt="" onerror="this.remove()">BASE</button>
+    <button class="og-chain-tab" data-chain="arbitrum"><img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/arbitrum/info/logo.png" alt="" onerror="this.remove()">ARB</button>
   </div>
   <div class="og-bracket-grid" id="ogBracketGrid"></div>
 </div>
@@ -768,6 +783,7 @@ const OG_BRACKET_LABELS = {
 };
 let ogFeed = { brackets: {}, lastScan: 0 };
 let ogActiveBracket = '1k-10k';
+let ogActiveChain = 'all';
 
 function ogFmtUSD(n) {
   if (!isFinite(n) || n < 0) return '$0';
@@ -804,23 +820,45 @@ async function fetchOgFeed() {
 function updateBracketCounts() {
   for (const tab of document.querySelectorAll('.og-bracket-tab')) {
     const b = tab.dataset.bracket;
-    const c = (ogFeed.brackets?.[b] || []).length;
+    let items = ogFeed.brackets?.[b] || [];
+    if (ogActiveChain !== 'all') items = items.filter(og => (og.chain || '').toLowerCase() === ogActiveChain);
     let countSpan = tab.querySelector('.count');
     if (!countSpan) {
       countSpan = document.createElement('span');
       countSpan.className = 'count';
       tab.appendChild(countSpan);
     }
-    countSpan.textContent = `(${c})`;
+    countSpan.textContent = `(${items.length})`;
+  }
+}
+
+function updateChainCounts() {
+  // Count OGs across the currently-active bracket per chain
+  const items = ogFeed.brackets?.[ogActiveBracket] || [];
+  const counts = {};
+  for (const og of items) {
+    const ch = (og.chain || '').toLowerCase();
+    counts[ch] = (counts[ch] || 0) + 1;
+  }
+  for (const tab of document.querySelectorAll('.og-chain-tab')) {
+    const c = tab.dataset.chain;
+    const n = c === 'all' ? items.length : (counts[c] || 0);
+    let span = tab.querySelector('.count');
+    if (!span) { span = document.createElement('span'); span.className = 'count'; span.style.marginLeft = '4px'; span.style.opacity = '0.6'; span.style.fontSize = '9px'; tab.appendChild(span); }
+    span.textContent = `(${n})`;
   }
 }
 
 function renderOgBracket() {
   const grid = document.getElementById('ogBracketGrid');
   if (!grid) return;
-  const items = ogFeed.brackets?.[ogActiveBracket] || [];
+  let items = ogFeed.brackets?.[ogActiveBracket] || [];
+  if (ogActiveChain !== 'all') {
+    items = items.filter(og => (og.chain || '').toLowerCase() === ogActiveChain);
+  }
+  updateChainCounts();
   if (!items.length) {
-    grid.innerHTML = `<div class="og-empty">No OGs in this bracket yet — scanner indexes ~40 trending tickers every 15 min.</div>`;
+    grid.innerHTML = `<div class="og-empty">No OGs match this filter yet — try another bracket or chain.</div>`;
     return;
   }
   const escAttr = (s) => String(s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -869,6 +907,15 @@ document.querySelectorAll('.og-bracket-tab').forEach(tab => {
     document.querySelectorAll('.og-bracket-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     ogActiveBracket = tab.dataset.bracket;
+    renderOgBracket();
+  });
+});
+
+document.querySelectorAll('.og-chain-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.og-chain-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    ogActiveChain = tab.dataset.chain;
     renderOgBracket();
   });
 });
