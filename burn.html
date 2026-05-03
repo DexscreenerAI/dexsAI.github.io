@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style id="no-zoom-guard">html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;}</style>
 <title>$ByeBoss — Token Burner</title>
-<link rel="icon" type="image/png" href="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png">
+<link rel="icon" type="image/png" href="https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════
@@ -249,7 +249,7 @@ body { background: #060a10; color: #dfe4ed; font-family: 'JetBrains Mono', 'DM S
   <span class="pill nav-pill-logo">
     <span class="pill-inner">
       <a href="./index.html" class="nav-logo">
-        <img src="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png" alt="Logo">
+        <img src="https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png" alt="Logo">
         <span class="font-display">$ByeBoss</span>
       </a>
     </span>
@@ -529,7 +529,7 @@ function renderTokens() {
     const burnAmt = burnAmounts[t.account] ?? t.amount;
     const fmtAmt = n => n >= 1e9 ? (n/1e9).toFixed(1)+'B' : n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : n.toFixed(2);
     const isByeBoss = t.mint === BYEBOSS_MINT || sym.toLowerCase().includes('byeboss') || sym.toLowerCase().includes('bye');
-    const logoUrl = isByeBoss ? 'https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png' : (t.logoUrl || `https://dd.dexscreener.com/ds-data/tokens/solana/${t.mint}.png`);
+    const logoUrl = isByeBoss ? 'https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png' : (t.logoUrl || `https://dd.dexscreener.com/ds-data/tokens/solana/${t.mint}.png`);
     const dexUrl = `https://dexscreener.com/solana/${t.mint}`;
 
     return `<div class="token-item ${isSelected ? 'selected' : ''}" id="tok-${t.account}">
