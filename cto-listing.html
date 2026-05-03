@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style id="no-zoom-guard">html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;}</style>
+<title>CTO Listing — $ByeBoss</title>
+<meta name="description" content="Community Take Over (CTO) listing — every CTO call timestamped, MC tracked from call point, peak X for life.">
+<link rel="icon" type="image/png" href="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Orbitron:wght@500;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+.navbar {
+  --nav-bg: rgba(5, 6, 8, 0.88);
+  --nav-border: rgba(0, 255, 65, 0.12);
+  --nav-panel: #0d1117;
+  --nav-text: #e6edf3;
+  --nav-muted: rgba(255, 255, 255, 0.75);
+  --nav-cyan: #00d1ff;
+  --nav-green: #00ff80;
+  --nav-red: #ff3b4f;
+  --nav-purple: #b388ff;
+  --nav-font: 'JetBrains Mono', 'Courier New', monospace;
+  --nav-display: 'Orbitron', 'JetBrains Mono', monospace;
+  position: fixed; top: 0; left: 0; right: 0;
+  background: var(--nav-bg);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--nav-border);
+  display: flex; align-items: center; justify-content: flex-start;
+  gap: 0; padding: 8px 16px; z-index: 1000; min-height: 56px;
+}
+.navbar > .pill { flex-shrink: 0; }
+.navbar > .pill.nav-pill-links { flex: 1 1 auto; min-width: 0; }
+.navbar > .pill.nav-pill-links .pill-inner { width: 100%; padding: 0 16px; }
+.navbar > .pill.nav-pill-links .nav-links { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; max-width: 100%; display: flex; align-items: center; gap: 24px; }
+.navbar > .pill.nav-pill-links .nav-links::-webkit-scrollbar { display: none; height: 0; }
+.navbar > .pill.nav-pill-links .nav-links > a { flex-shrink: 0; }
+.navbar > .pill + .pill { margin-left: -8px; }
+.navbar .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; font-family: var(--nav-font); font-size: 13px; font-weight: 700; letter-spacing: 1px; }
+.navbar .nav-logo img { width: 28px; height: 28px; border-radius: 6px; }
+.navbar .nav-link { color: var(--nav-muted); text-decoration: none; font-family: var(--nav-font); font-size: 11px; font-weight: 500; letter-spacing: 0.5px; transition: color .15s; white-space: nowrap; }
+.navbar .nav-link:hover, .navbar .nav-link.active { color: var(--nav-cyan); }
+.navbar .nav-link.accent-red { color: var(--nav-red); font-weight: 700; }
+.navbar .nav-link.accent-cyan { color: var(--nav-cyan); font-weight: 700; }
+.navbar .nav-link.accent-purple { color: var(--nav-purple); font-weight: 700; }
+.navbar .pill { position: relative; display: inline-flex; align-items: center; height: 44px; padding: 0; background: linear-gradient(180deg, rgba(0,255,65,0.04), rgba(0,255,65,0)); clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 100%, 0 100%); border: 0; }
+.navbar .pill::before { content: ''; position: absolute; inset: 0; clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 100%, 0 100%); background: linear-gradient(var(--nav-panel), var(--nav-panel)) padding-box, linear-gradient(180deg, rgba(0,240,255,0.35), rgba(0,255,65,0.15)) border-box; border: 1px solid transparent; z-index: 0; }
+.navbar .pill-inner { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 18px; padding: 0 22px; height: 44px; white-space: nowrap; }
+.navbar .pill-reverse { clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 16px 100%); }
+.navbar .pill-reverse::before { clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 16px 100%); }
+.navbar .font-display { font-family: var(--nav-display); letter-spacing: 2px; }
+.mobile-menu-btn { display: none; background: none; border: 1px solid var(--nav-border); color: var(--nav-text); font-size: 14px; cursor: pointer; padding: 6px 10px; border-radius: 4px; margin-left: 8px; }
+.mobile-menu { display: none; position: fixed; top: 72px; left: 0; right: 0; background: #0d1117; border-bottom: 1px solid rgba(0, 255, 65, 0.12); padding: 8px; z-index: 999; flex-direction: column; gap: 2px; max-height: 70vh; overflow-y: auto; }
+.mobile-menu.open { display: flex; }
+.mobile-menu a { color: var(--nav-text); text-decoration: none; font-size: 11px; padding: 10px 12px; border-radius: 4px; font-family: var(--nav-font); }
+.mobile-menu a:hover { background: rgba(255,255,255,0.04); }
+@media (max-width: 900px) { .navbar .nav-links { display: none; } .mobile-menu-btn { display: block; } }
+
+:root {
+  --bg: #050608;
+  --bg-panel: #0d1117;
+  --card: #0c1015;
+  --border: #0f1f12;
+  --border-bright: #1a3d20;
+  --green: #00ff41;
+  --green-dim: rgba(0, 255, 65, 0.12);
+  --green-glow: rgba(0, 255, 65, 0.6);
+  --red: #ff0040;
+  --cyan: #00f0ff;
+  --yellow: #f0ff00;
+  --purple: #bf00ff;
+  --text: #c0ffce;
+  --text-muted: rgba(192, 255, 206, 0.55);
+  --text-dim: rgba(192, 255, 206, 0.3);
+  --display: 'Orbitron', 'JetBrains Mono', monospace;
+  --mono: 'JetBrains Mono', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: var(--mono); padding-top: 72px; min-height: 100vh; line-height: 1.5; overflow-x: hidden; }
+
+.cto-hero { text-align: center; padding: 60px 20px 30px; max-width: 900px; margin: 0 auto; }
+.cto-badge { display: inline-block; padding: 5px 12px; border: 1px solid var(--green); background: var(--green-dim); color: var(--green); font-size: 10px; letter-spacing: 3px; margin-bottom: 18px; text-transform: uppercase; font-family: var(--display); font-weight: 700; }
+.cto-hero h1 { font-family: var(--display); font-size: clamp(40px, 8vw, 72px); line-height: 1; color: var(--text); margin-bottom: 14px; letter-spacing: 4px; text-transform: uppercase; font-weight: 900; text-shadow: 0 0 24px var(--green-glow); }
+.cto-hero h1 span { color: var(--green); }
+.cto-hero .tagline { color: var(--text-muted); font-size: 14px; letter-spacing: 1px; margin-bottom: 26px; }
+
+.cto-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; max-width: 800px; margin: 0 auto 30px; }
+.cto-stat { background: var(--bg-panel); border: 1px solid var(--border-bright); border-radius: 6px; padding: 14px 10px; text-align: center; position: relative; overflow: hidden; }
+.cto-stat::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--green), transparent); }
+.cto-stat-val { font-family: var(--display); font-size: 22px; color: var(--green); font-weight: 800; }
+.cto-stat-val.yellow { color: var(--yellow); }
+.cto-stat-lbl { font-size: 9px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+.cto-add { max-width: 800px; margin: 0 auto 30px; padding: 18px 20px; background: var(--card); border: 1px solid var(--border-bright); border-radius: 10px; }
+.cto-add-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.cto-add-row input { flex: 1; min-width: 200px; padding: 12px 14px; background: var(--bg-panel); border: 1px solid var(--border-bright); border-radius: 6px; color: var(--text); font-family: var(--mono); font-size: 13px; }
+.cto-add-row input:focus { outline: 2px solid var(--green); border-color: var(--green); }
+.cto-add-row input.key { max-width: 200px; }
+.cto-add-cta { padding: 12px 22px; background: var(--green); color: #000; border: 1px solid var(--green); border-radius: 6px; font-family: var(--display); font-size: 12px; cursor: pointer; letter-spacing: 2px; text-transform: uppercase; font-weight: 800; }
+.cto-add-cta:hover { background: transparent; color: var(--green); }
+.cto-add-cta:disabled { opacity: 0.4; cursor: not-allowed; }
+.cto-add-msg { margin-top: 10px; font-size: 11px; font-family: var(--mono); }
+.cto-add-msg.ok { color: var(--green); }
+.cto-add-msg.err { color: var(--red); }
+
+.cto-section { max-width: 1100px; margin: 0 auto 60px; padding: 0 20px; }
+.cto-section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border-bright); flex-wrap: wrap; }
+.cto-section-head h2 { font-family: var(--display); font-size: clamp(20px, 4vw, 28px); color: var(--text); letter-spacing: 3px; text-transform: uppercase; font-weight: 800; }
+.cto-section-head .marker { font-family: var(--display); color: var(--green); font-size: 18px; font-weight: 800; }
+.cto-section-head .sub { margin-left: auto; font-size: 11px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; }
+
+.cto-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.cto-tab { padding: 8px 14px; border: 1px solid var(--border-bright); background: transparent; color: var(--text-muted); font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 1px; border-radius: 8px; cursor: pointer; transition: all .15s; }
+.cto-tab:hover { border-color: var(--cyan); color: var(--cyan); }
+.cto-tab.active { background: rgba(0,255,65,0.08); border-color: var(--green); color: var(--green); }
+.cto-tab .count { margin-left: 6px; color: var(--text-dim); font-size: 9px; }
+.cto-tab.active .count { color: var(--green); }
+
+.cto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 14px; }
+.cto-card { display: flex; flex-direction: column; gap: 12px; padding: 14px; background: rgba(0,0,0,0.35); border: 1px solid rgba(0,255,65,0.14); border-radius: 14px; color: var(--text); text-decoration: none; cursor: pointer; transition: border-color .15s, background .15s; }
+.cto-card:hover { background: rgba(0,255,65,0.04); border-color: rgba(0,255,65,0.4); }
+.cto-card-top { display: flex; gap: 12px; align-items: flex-start; }
+.cto-card-logo { position: relative; width: 50px; height: 50px; border-radius: 12px; border: 1px solid rgba(0,255,65,0.25); background: var(--card); overflow: hidden; flex-shrink: 0; }
+.cto-card-logo span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 700; font-size: 20px; color: var(--text); }
+.cto-card-logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+.cto-card-logo img.loaded { display: block; }
+.cto-card-head { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.cto-card-title { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.cto-card-ticker { font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--text); }
+.cto-card-name { font-family: var(--mono); font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cto-card-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.cto-card-chip { padding: 3px 8px; border-radius: 6px; font-family: var(--mono); font-size: 9px; border: 1px solid rgba(0,255,65,0.2); color: var(--text-muted); white-space: nowrap; letter-spacing: 0.5px; text-transform: uppercase; }
+.cto-card-chip.chain { color: var(--cyan); border-color: rgba(0,240,255,0.35); }
+.cto-card-chip.cto { color: var(--yellow); border-color: rgba(240,255,0,0.5); background: rgba(240,255,0,0.06); font-weight: 700; }
+.cto-card-sep { height: 1px; background: rgba(255,255,255,0.07); border: 0; margin: 0; }
+.cto-card-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.cto-card-stat { padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(0,255,65,0.15); background: rgba(0,0,0,0.25); }
+.cto-card-stat-val { font-family: var(--display); font-weight: 700; font-size: 13px; color: var(--text); }
+.cto-card-stat-val.peak { color: var(--yellow); }
+.cto-card-stat-val.x { color: var(--green); }
+.cto-card-stat-val.x.down { color: var(--red); }
+.cto-card-stat-lbl { font-family: var(--mono); font-size: 9px; color: var(--text-dim); margin-top: 3px; letter-spacing: 0.3px; text-transform: uppercase; }
+
+.cto-empty { padding: 30px 20px; text-align: center; color: var(--text-dim); font-family: var(--display); font-size: 11px; letter-spacing: 1px; border: 1px dashed var(--border-bright); border-radius: 8px; grid-column: 1 / -1; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body class="cto-body">
+
+<nav class="navbar">
+  <span class="pill nav-pill-logo">
+    <span class="pill-inner">
+      <a href="./index.html" class="nav-logo">
+        <img src="https://i.ibb.co/RkQxSL6d/6017249620242664569-1-Photoroom.png" alt="Logo">
+        <span class="font-display">$ByeBoss</span>
+      </a>
+    </span>
+  </span>
+
+  <span class="pill pill-reverse nav-pill-links">
+    <span class="pill-inner">
+      <div class="nav-links">
+        <a href="./index.html" class="nav-link">App</a>
+        <a href="./sniper_terminal.html" class="nav-link">Sniper</a>
+        <a href="./og-detector.html" class="nav-link">OG Detector</a>
+        <a href="./cto-listing.html" class="nav-link accent-cyan">🤝 CTO</a>
+        <a href="./rugsheet.html" class="nav-link accent-red">☠ RugSheet</a>
+        <a href="./shazam_crypto.html" class="nav-link">Shazam</a>
+        <a href="./elon-watcher.html" class="nav-link accent-cyan">🐦 Elon</a>
+        <a href="./promote.html" class="nav-link">Promote</a>
+        <a href="./launchpad.html" class="nav-link accent-red">🚀 Launchpad</a>
+        <a href="./launches.html" class="nav-link accent-red">📊 Launches</a>
+        <a href="./lock.html" class="nav-link accent-cyan">🔒 Lock</a>
+        <a href="./burn.html" class="nav-link accent-red">🔥 Burn</a>
+        <a href="./trade.html" class="nav-link accent-red">💎 Trade</a>
+        <a href="./byeboss.html" class="nav-link accent-purple">📖 Docs</a>
+      </div>
+    </span>
+  </span>
+
+  <span class="pill nav-pill-socials">
+    <span class="pill-inner">
+      <div class="nav-socials">
+        <a href="https://t.me/SalaryIsScam" target="_blank" class="nav-link" title="Telegram">💬</a>
+      </div>
+    </span>
+  </span>
+
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="./index.html">🏠 App</a>
+  <a href="./sniper_terminal.html">🎯 Sniper</a>
+  <a href="./og-detector.html">🔍 OG Detector</a>
+  <a href="./cto-listing.html">🤝 CTO</a>
+  <a href="./rugsheet.html">☠ RugSheet</a>
+  <a href="./shazam_crypto.html">🔬 Shazam</a>
+  <a href="./elon-watcher.html">🐦 Elon</a>
+  <a href="./promote.html">⭐ Promote</a>
+  <a href="./launchpad.html">🚀 Launchpad</a>
+  <a href="./launches.html">📊 Launches</a>
+  <a href="./lock.html">🔒 Lock</a>
+  <a href="./burn.html">🔥 Burn</a>
+  <a href="./trade.html">💎 Trade</a>
+  <a href="./byeboss.html">📖 Docs</a>
+</div>
+
+<section class="cto-hero">
+  <div class="cto-badge">COMMUNITY TAKE OVER · BETA</div>
+  <h1>CTO <span>Listing</span></h1>
+  <p class="tagline">When the dev abandons it, the community takes over. Every CTO call timestamped, MC tracked from call point — for life.</p>
+
+  <div class="cto-stats">
+    <div class="cto-stat"><div class="cto-stat-val" id="cto-c-total">…</div><div class="cto-stat-lbl">Total CTOs</div></div>
+    <div class="cto-stat"><div class="cto-stat-val" id="cto-c-sol">…</div><div class="cto-stat-lbl">Solana</div></div>
+    <div class="cto-stat"><div class="cto-stat-val" id="cto-c-eth">…</div><div class="cto-stat-lbl">Ethereum</div></div>
+    <div class="cto-stat"><div class="cto-stat-val yellow" id="cto-c-best">…</div><div class="cto-stat-lbl">Best X Hit</div></div>
+  </div>
+</section>
+
+<div class="cto-add">
+  <div class="cto-add-row">
+    <input id="cto-input" placeholder="Token contract address (ETH / SOL / Base / BSC)…" autocomplete="off">
+    <input id="cto-key" class="key" placeholder="Admin key" type="password" autocomplete="off">
+    <button id="cto-add-btn" class="cto-add-cta">Add CTO</button>
+  </div>
+  <div class="cto-add-msg" id="cto-add-msg"></div>
+</div>
+
+<section class="cto-section">
+  <div class="cto-section-head">
+    <span class="marker">//</span>
+    <h2>Listed CTOs</h2>
+    <span class="sub" id="cto-sub">Live feed · refresh 60s</span>
+  </div>
+  <div class="cto-tabs">
+    <button class="cto-tab active" data-chain="all">All</button>
+    <button class="cto-tab" data-chain="solana">SOL</button>
+    <button class="cto-tab" data-chain="ethereum">ETH</button>
+    <button class="cto-tab" data-chain="base">BASE</button>
+    <button class="cto-tab" data-chain="bsc">BSC</button>
+  </div>
+  <div class="cto-grid" id="cto-grid"></div>
+</section>
+
+<script>
+function toggleMobileMenu() { const m = document.getElementById('mobileMenu'); if (m) m.classList.toggle('open'); }
+(function(){
+  var p = location.pathname.split('/').pop().toLowerCase();
+  document.querySelectorAll('#mobileMenu a, .nav-links a, .nav-link').forEach(function(a){
+    var h = (a.getAttribute('href')||'').replace('./','').toLowerCase();
+    if (h && h === p) a.classList.add('active');
+  });
+})();
+
+const BACKEND = 'https://dexscreener-telegram-bot-production.up.railway.app/api/cto';
+let allCtos = [];
+let activeChain = 'all';
+
+const fmtUSD = n => {
+  if (!isFinite(n) || n < 0) return '$0';
+  if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+  return '$' + Math.round(n).toLocaleString();
+};
+const fmtX = x => x >= 100 ? Math.round(x) + 'X' : x.toFixed(x >= 10 ? 1 : 2) + 'X';
+const fmtAge = ts => {
+  if (!ts) return '?';
+  const h = (Date.now() - ts) / 3600000;
+  if (h < 1) return Math.floor(h * 60) + 'm';
+  if (h < 24) return Math.floor(h) + 'h';
+  return Math.floor(h / 24) + 'd';
+};
+const escAttr = s => String(s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+async function loadList() {
+  try {
+    const r = await fetch(BACKEND + '/list', { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return;
+    const d = await r.json();
+    allCtos = Array.isArray(d?.ctos) ? d.ctos : [];
+    const stats = d?.stats || {};
+    document.getElementById('cto-c-total').textContent = stats.total || '0';
+    document.getElementById('cto-c-sol').textContent = stats.solana || '0';
+    document.getElementById('cto-c-eth').textContent = stats.ethereum || '0';
+    document.getElementById('cto-c-best').textContent = stats.bestX ? fmtX(stats.bestX) + (stats.bestSym ? ' $' + stats.bestSym : '') : '—';
+    updateCounts(stats);
+    render();
+  } catch (e) {}
+}
+
+function updateCounts(stats) {
+  for (const tab of document.querySelectorAll('.cto-tab')) {
+    const c = tab.dataset.chain;
+    let n;
+    if (c === 'all') n = stats.total || 0;
+    else n = stats[c] || 0;
+    let span = tab.querySelector('.count');
+    if (!span) { span = document.createElement('span'); span.className = 'count'; tab.appendChild(span); }
+    span.textContent = '(' + n + ')';
+  }
+}
+
+function render() {
+  const grid = document.getElementById('cto-grid');
+  if (!grid) return;
+  const filtered = activeChain === 'all' ? allCtos : allCtos.filter(c => (c.chain || '').toLowerCase() === activeChain);
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="cto-empty">No CTOs in this view yet — be the first to add one.</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(c => {
+    const ticker = c.ticker || '?';
+    const initial = ticker.slice(0, 1).toUpperCase();
+    const peakX = c.peakX || 1;
+    const currentX = c.currentX || 1;
+    const xClass = currentX >= 1 ? 'x' : 'x down';
+    const dexUrl = c.dexUrl || `https://dexscreener.com/${(c.chain || 'solana')}/${c.pairAddress || c.addr}`;
+    const chain = (c.chain || 'solana').toUpperCase();
+    return `
+      <a class="cto-card" href="${escAttr(dexUrl)}" target="_blank" rel="noopener">
+        <div class="cto-card-top">
+          <div class="cto-card-logo">
+            <span>${initial}</span>
+            ${c.logo ? `<img src="${escAttr(c.logo)}" alt="" onload="this.classList.add('loaded')" onerror="this.remove()">` : ''}
+          </div>
+          <div class="cto-card-head">
+            <div class="cto-card-title">
+              <span class="cto-card-ticker">$${ticker}</span>
+              <span class="cto-card-name" title="${escAttr(c.name || '')}">${c.name || ''}</span>
+            </div>
+            <div class="cto-card-chips">
+              <span class="cto-card-chip cto">🤝 CTO</span>
+              <span class="cto-card-chip chain">${chain}</span>
+              <span class="cto-card-chip">🕐 ${fmtAge(c.calledAt)}</span>
+            </div>
+          </div>
+        </div>
+        <hr class="cto-card-sep">
+        <div class="cto-card-stats">
+          <div class="cto-card-stat">
+            <div class="cto-card-stat-val">${fmtUSD(c.calledMc || 0)}</div>
+            <div class="cto-card-stat-lbl">Called MC</div>
+          </div>
+          <div class="cto-card-stat">
+            <div class="cto-card-stat-val ${xClass}">${fmtX(currentX)}</div>
+            <div class="cto-card-stat-lbl">Current</div>
+          </div>
+          <div class="cto-card-stat">
+            <div class="cto-card-stat-val peak">${fmtX(peakX)}</div>
+            <div class="cto-card-stat-lbl">Peak</div>
+          </div>
+        </div>
+      </a>
+    `;
+  }).join('');
+}
+
+document.querySelectorAll('.cto-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.cto-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    activeChain = tab.dataset.chain;
+    render();
+  });
+});
+
+document.getElementById('cto-add-btn').addEventListener('click', async () => {
+  const addr = document.getElementById('cto-input').value.trim();
+  const key = document.getElementById('cto-key').value.trim();
+  const msg = document.getElementById('cto-add-msg');
+  msg.textContent = '';
+  msg.className = 'cto-add-msg';
+  if (!addr) { msg.textContent = 'Address required.'; msg.classList.add('err'); return; }
+  const btn = document.getElementById('cto-add-btn');
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = 'Adding…';
+  try {
+    const r = await fetch(BACKEND + '/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address: addr, key }),
+    });
+    const d = await r.json();
+    if (!r.ok || d.error) {
+      msg.textContent = '❌ ' + (d.error || 'failed');
+      msg.classList.add('err');
+    } else {
+      msg.textContent = '✅ $' + (d.cto?.ticker || '?') + ' added — sniper terminal + Telegram alerted.';
+      msg.classList.add('ok');
+      document.getElementById('cto-input').value = '';
+      try { localStorage.setItem('cto_admin_key', key); } catch (_) {}
+      loadList();
+    }
+  } catch (e) {
+    msg.textContent = '❌ ' + (e?.message || 'network error');
+    msg.classList.add('err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+});
+
+document.getElementById('cto-input').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('cto-add-btn').click(); });
+try { document.getElementById('cto-key').value = localStorage.getItem('cto_admin_key') || ''; } catch (_) {}
+
+loadList();
+setInterval(loadList, 60 * 1000);
+</script>
+</body>
+</html>
