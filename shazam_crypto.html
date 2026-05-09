@@ -648,24 +648,81 @@ async function captureAndAnalyze() {
 async function analyzeWithAI(imageBase64, token) {
   const fN = n => n >= 1e9 ? (n/1e9).toFixed(2)+'B' : n >= 1e6 ? (n/1e6).toFixed(2)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : (n||0).toFixed(0);
   const t = token;
-  const prompt = `You are an expert crypto analyst. Analyze $${t.symbol} (${t.name}) on ${t.chain}.${imageBase64 ? ' A chart image is attached.' : ''}
 
-LIVE DATA:
+  // Pre-compute the framework signals we feed to Claude. These match
+  // the empirical patterns from auditing 554 sniper signals.
+  const mc = t.mc || 0;
+  const liq = t.liq || 0;
+  const vol = t.vol || 0;
+  const liqRatio = mc > 0 ? (liq / mc) * 100 : 0;
+  const volMcRatio = mc > 0 ? vol / mc : 0;
+
+  // Gold-zone classification
+  let mcZone, mcZoneNote;
+  if (mc >= 10000 && mc <= 30000) { mcZone = 'GOLD ZONE'; mcZoneNote = '3.4% of historical signals here hit 10X+ (best 37.7X $ELIEN). Highest moonshot probability.'; }
+  else if (mc < 10000 && mc >= 5000) { mcZone = 'EARLY (sub-gold)'; mcZoneNote = 'Below gold zone — high rug risk, but gem potential if liquidity supports it.'; }
+  else if (mc < 5000) { mcZone = 'PRE-LAUNCH'; mcZoneNote = 'Very early. Gem potential but extreme rug risk. Need strong fundamentals.'; }
+  else if (mc > 30000 && mc <= 80000) { mcZone = 'LATE-GOLD'; mcZoneNote = 'Past peak entry. 7% historical 5X rate but only 2.3% 10X. Diminishing returns.'; }
+  else if (mc > 80000 && mc <= 150000) { mcZone = 'MID-CAP'; mcZoneNote = 'Only 1.2% hit 10X+. Better win rate but ceiling drops fast.'; }
+  else { mcZone = 'MATURE'; mcZoneNote = 'Zero 10X observed in this range across 143 historical signals. Avoid for moonshot plays.'; }
+
+  // Pump-trap detection (data-derived)
+  const pumpTrap = vol > 300000 && mc < 80000;
+  const pumpTrapNote = pumpTrap
+    ? 'PUMP-TRAP DETECTED: bottom-20 stuck-at-1X signals had median volume $367K vs winners\' $58K. High volume on low MC = pump already happened. We\'d be buying the top.'
+    : '';
+
+  // Liquidity ratio sweet spot
+  let liqRatioGrade;
+  if (liqRatio >= 10 && liqRatio <= 20) liqRatioGrade = 'OPTIMAL (10-20% sweet spot — 70% historical win rate, 35.7% 2X)';
+  else if (liqRatio >= 5 && liqRatio < 10) liqRatioGrade = 'THIN (below sweet spot — moonshots possible but illiquid)';
+  else if (liqRatio > 20 && liqRatio <= 40) liqRatioGrade = 'COMFORTABLE (above sweet spot — safer but slightly lower 2X rate)';
+  else if (liqRatio > 40) liqRatioGrade = 'OVER-LIQUID (suspicious — sometimes a honeypot signal)';
+  else liqRatioGrade = 'TOO THIN (rug bait — liquidity too small to support a sustained move)';
+
+  // Buy/sell pressure
+  const buys5m = t.buys5m || 0, sells5m = t.sells5m || 0;
+  const buyRatio5m = (buys5m + sells5m) > 0 ? (buys5m / (buys5m + sells5m)) * 100 : 50;
+  const buyPressure = buyRatio5m >= 70 ? 'STRONG BULLISH' : buyRatio5m >= 55 ? 'MILD BULLISH' : buyRatio5m >= 45 ? 'NEUTRAL' : buyRatio5m >= 30 ? 'MILD BEARISH' : 'STRONG BEARISH';
+
+  // Honeypot quick-check
+  const honeypotRisk = (sells5m === 0 && buys5m > 15) || ((t.sells1h || 0) === 0 && (t.buys1h || 0) > 30);
+
+  const prompt = `You are the lead analyst for $ByeBoss, a crypto signal engine that audited 554 historical signals and identified the empirical patterns of moonshots. Apply that framework to $${t.symbol} (${t.name}) on ${t.chain}.${imageBase64 ? ' A chart image is attached.' : ''}
+
+═══ LIVE ON-CHAIN DATA ═══
 Price: $${formatPrice(t.price)}
-Market Cap: $${fN(t.mc || 0)}
-Liquidity: $${fN(t.liq || 0)}
-Volume 24h: $${fN(t.vol || 0)}
-5min: ${(t.chg5m||0) > 0 ? '+' : ''}${(t.chg5m||0).toFixed(1)}%
-1h: ${(t.chg1h||0) > 0 ? '+' : ''}${(t.chg1h||0).toFixed(1)}%
+Market Cap: $${fN(mc)}
+Liquidity: $${fN(liq)} (${liqRatio.toFixed(1)}% of MC)
+Volume 24h: $${fN(vol)} (${volMcRatio.toFixed(1)}× MC)
+5m: ${(t.chg5m||0) > 0 ? '+' : ''}${(t.chg5m||0).toFixed(1)}% · Buys ${buys5m}/Sells ${sells5m} (${buyRatio5m.toFixed(0)}% buy ratio)
+1h: ${(t.chg1h||0) > 0 ? '+' : ''}${(t.chg1h||0).toFixed(1)}% · Buys ${t.buys1h||0}/Sells ${t.sells1h||0}
 6h: ${(t.chg6h||0) > 0 ? '+' : ''}${(t.chg6h||0).toFixed(1)}%
 24h: ${(t.change||0) > 0 ? '+' : ''}${(t.change||0).toFixed(1)}%
-Buys 5m: ${t.buys5m||0} | Sells 5m: ${t.sells5m||0}
-Buys 1h: ${t.buys1h||0} | Sells 1h: ${t.sells1h||0}
 
-Give a confident, decisive analysis using this REAL data. Never say "insufficient data".
+═══ $ByeBoss FRAMEWORK READOUT ═══
+🎯 MC Zone: ${mcZone}
+   → ${mcZoneNote}
+
+💧 Liquidity ratio: ${liqRatioGrade}
+
+🔄 Buy pressure (5m): ${buyPressure} (${buyRatio5m.toFixed(0)}% buy)
+
+${pumpTrap ? '🚨 ' + pumpTrapNote : '✅ No pump-trap pattern (volume vs MC looks healthy)'}
+
+${honeypotRisk ? '🚨 HONEYPOT SUSPECT: very few sells vs buys → can\'t exit cleanly' : '✅ No honeypot signature'}
+
+═══ DECISION FRAMEWORK ═══
+- Solana: top historical hits 37.7X $ELIEN, 17X $DUNALD, 14X CATCOIN, 12.5X GOR, 10.6X CHUD
+- ETH: ceiling lower (best 7.6X) — Solana is the moonshot chain
+- Survivor rule: a token that already hit 3X is a winner — hold until it crashes 60% off peak
+- Score sweet spot: tokens with score 100-125 outperform score 150+ (which often = pump trap)
+
+═══ TASK ═══
+Use the framework above to deliver a confident, data-grounded verdict. Reference the MC zone, liq ratio grade, buy pressure, and pump-trap/honeypot flags explicitly in your analysis. Never say "insufficient data" — you have the framework.
 
 Respond ONLY with valid JSON (no markdown, no backticks):
-{"token":"${t.symbol}","timeframe":"5m/1h/6h","trend":"BULLISH/BEARISH/NEUTRAL","confidence":0-100,"patterns":["2-3 patterns"],"supports":["2 price levels"],"resistances":["2 price levels"],"indicators":["2-3 indicators"],"signal":"BUY/SELL/HOLD","analysis":"2-3 decisive sentences using the real data above","risk":"LOW/MEDIUM/HIGH","target":"realistic target price","stoploss":"stop loss price"}`;
+{"token":"${t.symbol}","timeframe":"5m/1h/6h","trend":"BULLISH/BEARISH/NEUTRAL","confidence":0-100,"patterns":["2-3 patterns from price action"],"supports":["2 price levels"],"resistances":["2 price levels"],"indicators":["2-3 indicators citing the framework readout"],"signal":"BUY/SELL/HOLD","analysis":"3-4 decisive sentences citing the MC zone, liq ratio, and any pump-trap/honeypot flags","risk":"LOW/MEDIUM/HIGH","target":"realistic target price","stoploss":"stop loss price","mcZone":"${mcZone}","big_x_potential":"LOW/MEDIUM/HIGH — based on MC zone and liq ratio"}`;
 
   try {
     const response = await fetch(API_PROXY_URL, {
@@ -688,6 +745,16 @@ function displayAnalysis(a) {
   let html = `<div class="signal-card ${signal}"><div class="signal-main"><span class="signal-badge ${signal}">${a.signal || 'HOLD'}</span><div><div class="signal-token">$${a.token || 'Unknown'}</div><div class="signal-timeframe">${a.timeframe || '-'}</div></div></div><div class="confidence-bar-wrap"><div class="confidence-label"><span>Confidence</span><span style="color:${trendColor}">${confidence}%</span></div><div class="confidence-bar"><div class="confidence-fill" style="width:${confidence}%;background:${trendColor}"></div></div></div></div>
   <div class="stats-grid"><div class="stat-box"><div class="stat-label">TREND</div><div class="stat-value ${trendClass}">${trend === 'BULLISH' ? '↑ ' : trend === 'BEARISH' ? '↓ ' : ''}${trend}</div></div><div class="stat-box"><div class="stat-label">RISK</div><div class="stat-value ${risk === 'HIGH' ? 'bearish' : risk === 'LOW' ? 'bullish' : 'neutral'}">${risk}</div></div></div>`;
   if (a.target || a.stoploss) { html += `<div class="stats-grid">`; if (a.target) html += `<div class="stat-box"><div class="stat-label">🎯 TARGET</div><div class="stat-value bullish">${a.target}</div></div>`; if (a.stoploss) html += `<div class="stat-box"><div class="stat-label">🛑 STOP LOSS</div><div class="stat-value bearish">${a.stoploss}</div></div>`; html += `</div>`; }
+  // ByeBoss framework readout — MC zone + Big-X potential
+  if (a.mcZone || a.big_x_potential) {
+    const bigX = (a.big_x_potential || '').toUpperCase();
+    const bigXColor = bigX === 'HIGH' ? 'bullish' : bigX === 'MEDIUM' ? 'neutral' : 'bearish';
+    const zoneColor = (a.mcZone || '').includes('GOLD') ? 'bullish' : (a.mcZone || '').includes('MATURE') ? 'bearish' : 'neutral';
+    html += `<div class="stats-grid">`;
+    if (a.mcZone) html += `<div class="stat-box"><div class="stat-label">🎯 MC ZONE</div><div class="stat-value ${zoneColor}">${a.mcZone}</div></div>`;
+    if (a.big_x_potential) html += `<div class="stat-box"><div class="stat-label">💎 BIG-X POTENTIAL</div><div class="stat-value ${bigXColor}">${a.big_x_potential}</div></div>`;
+    html += `</div>`;
+  }
   if (a.patterns?.length) html += `<div class="tags-section"><div class="tags-label">PATTERNS</div><div class="tags-container">${a.patterns.map(p => `<span class="tag tag-pattern">${p}</span>`).join('')}</div></div>`;
   if (a.supports?.length || a.resistances?.length) { html += `<div class="stats-grid">`; if (a.supports?.length) html += `<div><div class="tags-label">SUPPORTS</div><div class="tags-container">${a.supports.map(s => `<span class="tag tag-support">${s}</span>`).join('')}</div></div>`; if (a.resistances?.length) html += `<div><div class="tags-label">RESISTANCES</div><div class="tags-container">${a.resistances.map(r => `<span class="tag tag-resistance">${r}</span>`).join('')}</div></div>`; html += `</div>`; }
   if (a.indicators?.length) html += `<div class="tags-section"><div class="tags-label">INDICATORS</div><div class="tags-container">${a.indicators.map(i => `<span class="tag tag-indicator">${i}</span>`).join('')}</div></div>`;
