@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style id="no-zoom-guard">html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;}</style>
 <title>SNIPER // TERMINAL</title>
+<meta name="theme-color" content="#050608">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/png" href="https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png">
+<link rel="apple-touch-icon" href="https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sniper">
 <style>
 /* ═══════════════════════════════════════════════════════
    NAVBAR
@@ -2382,7 +2389,11 @@ body::before {
   </div>
   
   <div class="status-badges">
+    <span class="bb-conn recon" id="bbConn"><span class="dot"></span><span class="label">CONNECTING</span></span>
     <span class="status-badge live" id="modeBadge">LIVE · 24/7</span>
+    <span class="bb-chip" id="bbAlertChip" onclick="bbToggleAlerts()" title="Desktop + sound alert on every new signal">🔕 ALERTS</span>
+    <span class="bb-chip" id="bbCsvChip" onclick="exportSignalsCSV()" title="Download current signals as CSV">⬇ CSV</span>
+    <span class="bb-chip" id="bbAdminChip" onclick="bbToggleAdmin()" title="Operator only — unlock sniper controls">🔒 ADMIN</span>
     <a href="./sniper-access.html" style="text-decoration:none;padding:5px 14px;font-size:10px;font-weight:600;letter-spacing:1px;border:1px solid var(--cyan);border-radius:4px;color:var(--cyan);background:rgba(255,59,79,0.08);cursor:pointer;transition:all .15s;font-family:'JetBrains Mono',monospace;" onmouseover="this.style.background='rgba(255,59,79,0.2)'" onmouseout="this.style.background='rgba(255,59,79,0.08)'">🤖 ACCESS THE BOT</a>
   </div>
 </div>
@@ -2406,6 +2417,16 @@ body::before {
       <div class="kpi-card"><div class="kpi-value" id="kpi24hTotalX">—</div><div class="kpi-label">Total Xs</div></div>
       <div class="kpi-card"><div class="kpi-value" id="kpiBestCall">—</div><div class="kpi-label">Best Call</div></div>
       <div class="kpi-card"><div class="kpi-value" id="kpi7dSignals">—</div><div class="kpi-label">7d Signals</div></div>
+    </div>
+
+    <div class="bb-soul-controls">
+      <input id="bbSoulSearch" type="text" placeholder="🔎 Filter by ticker, name or contract…" oninput="bbOnSoulSearch(this.value)" autocomplete="off" spellcheck="false">
+      <select id="bbSoulSort" onchange="bbOnSoulSort(this.value)" title="Sort signals">
+        <option value="new">↓ Newest</option>
+        <option value="peak">↓ Peak X</option>
+        <option value="x">↓ Now X</option>
+        <option value="age">↑ Oldest</option>
+      </select>
     </div>
 
     <div class="signal-list-wrap">
@@ -2727,6 +2748,144 @@ const $ = id => document.getElementById(id);
 const AI_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/chat';
 const SNIPER_API = 'https://dexscreener-telegram-bot-production.up.railway.app/api/sniper';
 
+// ═══════════════════════════════════════════════════════════════
+// TERMINAL UX LAYER — toasts, live-connection state, opt-in alerts,
+// authenticated controls, CSV export, sort/filter. Self-contained.
+// ═══════════════════════════════════════════════════════════════
+(function bbInjectUxCss(){
+  var css = [
+    '.bb-toast-wrap{position:fixed;right:14px;bottom:14px;z-index:99999;display:flex;flex-direction:column;gap:8px;max-width:min(92vw,360px)}',
+    '.bb-toast{font-family:var(--mono,"JetBrains Mono",monospace);font-size:12px;line-height:1.35;color:#e6edf3;background:rgba(13,17,23,.96);border:1px solid rgba(255,255,255,.12);border-left-width:3px;border-radius:8px;padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.45);animation:bbIn .18s ease;word-break:break-word}',
+    '.bb-toast.ok{border-left-color:#00ff80}.bb-toast.err{border-left-color:#ff3b4f}.bb-toast.info{border-left-color:#00d1ff}.bb-toast.warn{border-left-color:#ffaa00}',
+    '@keyframes bbIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}',
+    '.bb-conn{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono,monospace);font-size:10px;font-weight:600;letter-spacing:1px;padding:4px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6)}',
+    '.bb-conn .dot{width:7px;height:7px;border-radius:50%;background:#666}',
+    '.bb-conn.live{color:#00ff80;border-color:rgba(0,255,128,.3)}.bb-conn.live .dot{background:#00ff80;animation:bbBlink 1.6s infinite}',
+    '.bb-conn.recon{color:#ffaa00;border-color:rgba(255,170,0,.3)}.bb-conn.recon .dot{background:#ffaa00;animation:bbBlink .7s infinite}',
+    '.bb-conn.off{color:#ff3b4f;border-color:rgba(255,59,79,.3)}.bb-conn.off .dot{background:#ff3b4f}',
+    '@keyframes bbBlink{0%,100%{opacity:1}50%{opacity:.35}}',
+    '.bb-chip{cursor:pointer;display:inline-flex;align-items:center;font-family:var(--mono,monospace);font-size:10px;font-weight:600;letter-spacing:1px;padding:5px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);transition:all .15s;user-select:none}',
+    '.bb-chip:hover{color:#fff;border-color:rgba(255,255,255,.3)}',
+    '.bb-chip.on{color:#00ff80;border-color:rgba(0,255,128,.4);background:rgba(0,255,128,.06)}',
+    '.bb-soul-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px}',
+    '.bb-soul-controls input,.bb-soul-controls select{font-family:var(--mono,monospace);font-size:11px;color:#e6edf3;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:6px 9px;outline:none}',
+    '.bb-soul-controls input{flex:1;min-width:120px}',
+    '.bb-soul-controls input:focus,.bb-soul-controls select:focus{border-color:rgba(0,209,255,.5)}'
+  ].join('');
+  var s=document.createElement('style');s.textContent=css;document.head.appendChild(s);
+})();
+
+function showToast(msg, type, ms){
+  type = type || 'info'; ms = ms || 4200;
+  var wrap = document.getElementById('bbToastWrap');
+  if (!wrap){ wrap=document.createElement('div'); wrap.id='bbToastWrap'; wrap.className='bb-toast-wrap'; document.body.appendChild(wrap); }
+  var t=document.createElement('div'); t.className='bb-toast '+type; t.textContent=msg; wrap.appendChild(t);
+  setTimeout(function(){ t.style.transition='opacity .25s,transform .25s'; t.style.opacity='0'; t.style.transform='translateY(8px)'; setTimeout(function(){ t.remove(); },260); }, ms);
+}
+
+// ---- Live connection indicator (driven by SSE) ----
+function setConnState(state){
+  var el=document.getElementById('bbConn'); if(!el) return;
+  el.className='bb-conn '+state;
+  var lbl=el.querySelector('.label'); if(lbl) lbl.textContent = state==='live'?'LIVE':state==='recon'?'RECONNECT':'OFFLINE';
+}
+
+// ---- Admin auth (token kept in localStorage, never in source) ----
+var BB_ADMIN_KEY='bb_admin_token';
+function bbAdminToken(){ try{ return localStorage.getItem(BB_ADMIN_KEY)||''; }catch(_){ return ''; } }
+function isAdmin(){ return !!bbAdminToken(); }
+function bbSetAdmin(tok){ try{ tok?localStorage.setItem(BB_ADMIN_KEY,tok):localStorage.removeItem(BB_ADMIN_KEY); }catch(_){} bbUpdateAdminUi(); }
+function bbToggleAdmin(){
+  if(isAdmin()){ if(confirm('Admin mode is ON. Lock controls (clear token)?')){ bbSetAdmin(''); showToast('🔒 Admin locked','info'); } return; }
+  var tok=prompt('Enter admin token to unlock sniper controls:');
+  if(tok&&tok.trim()){ bbSetAdmin(tok.trim()); showToast('🔓 Admin unlocked','ok'); }
+}
+function bbUpdateAdminUi(){ var b=document.getElementById('bbAdminChip'); if(b){ b.textContent=isAdmin()?'🔓 ADMIN':'🔒 ADMIN'; b.classList.toggle('on',isAdmin()); } }
+
+// ---- Authenticated POST helper (admin header + UX feedback) ----
+async function sniperPost(path, btn){
+  var prev = btn ? btn.textContent : null;
+  if(btn){ btn.disabled=true; btn.dataset.prev=prev; btn.textContent='…'; btn.style.opacity='0.6'; }
+  try{
+    var headers={}; var tok=bbAdminToken(); if(tok) headers['x-admin-token']=tok;
+    var res=await fetch(SNIPER_API+path,{method:'POST',headers:headers,signal:AbortSignal.timeout(8000)});
+    if(res.status===401){ showToast('⛔ Admin token required or invalid','err'); bbSetAdmin(''); return {ok:false,status:401}; }
+    var data={}; try{ data=await res.json(); }catch(_){}
+    if(!res.ok||data.success===false){ showToast('⚠️ '+(data.message||data.error||('Request failed ('+res.status+')')),'warn'); return {ok:false,status:res.status,data:data}; }
+    return {ok:true,status:res.status,data:data};
+  }catch(e){
+    showToast('❌ '+(e.name==='TimeoutError'?'Request timed out':('Network error: '+e.message)),'err');
+    return {ok:false,error:e};
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent=btn.dataset.prev||prev; btn.style.opacity=''; }
+  }
+}
+
+// ---- Opt-in desktop + sound alerts on new signals ----
+var BB_ALERTS_KEY='bb_alerts_on';
+function alertsOn(){ try{ return localStorage.getItem(BB_ALERTS_KEY)==='1'; }catch(_){ return false; } }
+async function bbToggleAlerts(){
+  if(alertsOn()){ try{ localStorage.setItem(BB_ALERTS_KEY,'0'); }catch(_){} showToast('🔕 Signal alerts off','info'); bbUpdateAlertsUi(); return; }
+  try{ if('Notification'in window && Notification.permission!=='granted'){ var p=await Notification.requestPermission(); if(p!=='granted') showToast('Sound on — allow notifications for desktop pops','warn'); } }catch(_){}
+  try{ localStorage.setItem(BB_ALERTS_KEY,'1'); }catch(_){}
+  bbBeep(); showToast('🔔 Signal alerts on','ok'); bbUpdateAlertsUi();
+}
+function bbUpdateAlertsUi(){ var b=document.getElementById('bbAlertChip'); if(b){ b.textContent=alertsOn()?'🔔 ALERTS':'🔕 ALERTS'; b.classList.toggle('on',alertsOn()); } }
+var bbAudio=null;
+function bbBeep(freq){
+  freq=freq||880;
+  try{ bbAudio=bbAudio||new (window.AudioContext||window.webkitAudioContext)();
+    var o=bbAudio.createOscillator(), g=bbAudio.createGain(); o.connect(g); g.connect(bbAudio.destination);
+    o.type='sine'; o.frequency.value=freq; var t=bbAudio.currentTime;
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.18,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
+    o.start(t); o.stop(t+0.17);
+  }catch(_){}
+}
+function bbFireAlert(title, body, freq){
+  if(!alertsOn()) return;
+  bbBeep(freq);
+  try{ if('Notification'in window && Notification.permission==='granted'){ var n=new Notification(title,{body:body,icon:'https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png'}); setTimeout(function(){ try{n.close();}catch(_){}} ,6000);} }catch(_){}
+}
+
+// ---- New-signal detection (diff between refreshes) ----
+var bbSeenSignals=null; // null until first load → avoids an alert storm on boot
+function bbNotifyNewSignals(sigs){
+  try{
+    if(!Array.isArray(sigs)) return;
+    if(bbSeenSignals===null){ bbSeenSignals=new Set(sigs.map(function(s){return (s.ca||s.symbol||'').toLowerCase();})); return; }
+    for(var i=0;i<sigs.length;i++){
+      var s=sigs[i]; var key=(s.ca||s.symbol||'').toLowerCase(); if(!key||bbSeenSignals.has(key)) continue;
+      bbSeenSignals.add(key);
+      if(s.status==='LIVE'||s.status==='PROMOTION'){
+        var tag = s.status==='PROMOTION' ? '⭐ Promotion' : '⚡ New signal';
+        bbFireAlert('BYEBOSS · '+tag, '$'+(s.symbol||'?')+(s.name?(' — '+s.name):''), 1040);
+      }
+    }
+    if(bbSeenSignals.size>800){ bbSeenSignals=new Set(sigs.map(function(s){return (s.ca||s.symbol||'').toLowerCase();})); }
+  }catch(_){}
+}
+
+// ---- CSV export of the current signal list ----
+function exportSignalsCSV(){
+  var rows = (typeof buildSoulSignalList==='function') ? buildSoulSignalList() : [];
+  if(!rows.length){ showToast('No signals to export yet','warn'); return; }
+  var cols=['symbol','name','status','chain','contract','entryMcUsd','currentMcUsd','x','peakX','ageMin','dexUrl'];
+  var q=function(v){ return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'; };
+  var lines=[cols.join(',')];
+  rows.forEach(function(s){
+    lines.push([s.symbol,s.name,s.status,s.chain,s.ca,s.entryMcUsd,Math.round(s.currentMcUsd||0),(s.x||0).toFixed(3),(s.peakX||0).toFixed(3),Math.round((s.ageMs||0)/60000),s.dexUrl].map(q).join(','));
+  });
+  var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob); var a=document.createElement('a');
+  a.href=url; a.download='byeboss-signals-'+new Date().toISOString().slice(0,10)+'.csv'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); },1000);
+  showToast('⬇ Exported '+rows.length+' signals','ok');
+}
+
+// ---- Soul list sort/filter state (wired to controls) ----
+var soulSort='new';   // 'new' | 'peak' | 'age' | 'x'
+var soulQuery='';
+
 // ═══════════════════════════════════════════════════════
 // SERVER MODE - Connect to backend sniper engine
 // ═══════════════════════════════════════════════════════
@@ -2759,10 +2918,11 @@ async function pollServerStatus() {
     if ($('scanCounter')) $('scanCounter').textContent = 'SCAN: ' + scannedTotal;
     if ($('pnlBig')) {
       const pnl = state.totalPnL || 0;
-      $('pnlBig').textContent = 'P&L: ' + (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(0);
-      $('pnlBig').style.color = pnl >= 0 ? '#ff1744' : '#ff3b4f';
-      $('pnlBig').style.borderColor = pnl >= 0 ? 'rgba(255,23,68,0.25)' : 'rgba(255,59,79,0.25)';
-      $('pnlBig').style.background = pnl >= 0 ? 'rgba(255,23,68,0.06)' : 'rgba(255,59,79,0.06)';
+      const up = pnl >= 0; // gains green, losses red (was red for both)
+      $('pnlBig').textContent = 'P&L: ' + (up ? '+' : '') + '$' + pnl.toFixed(0);
+      $('pnlBig').style.color = up ? '#00ff80' : '#ff3b4f';
+      $('pnlBig').style.borderColor = up ? 'rgba(0,255,128,0.25)' : 'rgba(255,59,79,0.25)';
+      $('pnlBig').style.background = up ? 'rgba(0,255,128,0.06)' : 'rgba(255,59,79,0.06)';
     }
     if ($('uptimeBig')) $('uptimeBig').textContent = 'UPTIME: ' + (state.uptime || '--');
 
@@ -2795,46 +2955,42 @@ async function pollServerStatus() {
   }
 }
 
-async function serverStartStop() {
+async function serverStartStop(btn) {
+  // First check current state from server
+  let running = isRunning;
   try {
-    // First check current state from server
-    let running = isRunning;
-    try {
-      const statusRes = await fetch(SNIPER_API + '/status', { signal: AbortSignal.timeout(3000) });
-      const statusData = await statusRes.json();
-      running = statusData.isRunning || false;
-    } catch(e) {}
+    const statusRes = await fetch(SNIPER_API + '/status', { signal: AbortSignal.timeout(3000) });
+    const statusData = await statusRes.json();
+    running = statusData.isRunning || false;
+  } catch(e) {}
 
-    const endpoint = running ? '/stop' : '/start';
-    addLog('⏳', `Sending ${endpoint.slice(1).toUpperCase()} to server...`);
-
-    const res = await fetch(SNIPER_API + endpoint, { method: 'POST', signal: AbortSignal.timeout(8000) });
-    const data = await res.json();
-    if (data.success) {
-      isRunning = !running;
-      addLog('✅', `Server sniper ${endpoint === '/start' ? 'STARTED' : 'STOPPED'}`);
-      $('startBtn').textContent = isRunning ? '⏹ STOP' : '▶ START';
-    } else {
-      addLog('⚠️', data.message || 'Command failed');
-    }
-    setTimeout(pollServerStatus, 500);
-  } catch (e) {
-    addLog('❌', 'Server command failed: ' + e.message);
+  const endpoint = running ? '/stop' : '/start';
+  addLog('⏳', `Sending ${endpoint.slice(1).toUpperCase()} to server...`);
+  const r = await sniperPost(endpoint, btn); // sends admin token, handles 401 + errors
+  if (r.ok) {
+    isRunning = !running;
+    addLog('✅', `Server sniper ${endpoint === '/start' ? 'STARTED' : 'STOPPED'}`);
+    showToast(isRunning ? '▶ Sniper started' : '⏹ Sniper stopped', 'ok');
+    const sb = $('startBtn'); if (sb) sb.textContent = isRunning ? '⏹ STOP' : '▶ START';
   }
+  setTimeout(pollServerStatus, 500);
 }
 
-async function closePos(id) {
+async function closePos(id, btn) {
   if (!confirm('Close this position?')) return;
-  try { await fetch(SNIPER_API + '/close/' + id, { method: 'POST' }); pollServerStatus(); } catch(e) {}
+  const r = await sniperPost('/close/' + id, btn);
+  if (r.ok) { showToast('✅ Position closed', 'ok'); pollServerStatus(); }
 }
 
-async function extendPos(id) {
-  try { await fetch(SNIPER_API + '/extend/' + id, { method: 'POST' }); pollServerStatus(); } catch(e) {}
+async function extendPos(id, btn) {
+  const r = await sniperPost('/extend/' + id, btn);
+  if (r.ok) { showToast('⏱ Position extended +15min', 'ok'); pollServerStatus(); }
 }
 
-async function sellMoon(id) {
+async function sellMoon(id, btn) {
   if (!confirm('Sell this Moon Bag?')) return;
-  try { await fetch(SNIPER_API + '/sellmoon/' + id, { method: 'POST' }); pollServerStatus(); } catch(e) {}
+  const r = await sniperPost('/sellmoon/' + id, btn);
+  if (r.ok) { showToast('🌕 Moon bag sold', 'ok'); pollServerStatus(); }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3146,26 +3302,9 @@ function refreshStats() {
 // ═══════════════════════════════════════════════════════
 // BOT CONTROL
 // ═══════════════════════════════════════════════════════
-function startBot() {
-  if (isRunning) { stopBot(); return; }
-  isRunning = true;
-  sessionStartTime = Date.now();
-  
-  $('startBtn').textContent = '⏹ STOP';
-  $('modeBadge').textContent = 'LIVE';
-  $('modeBadge').className = 'status-badge live';
-  $('scannerDot').classList.add('active');
-  addLog('🚀', '<span class="green">Bot started</span> - Scanning...');
-  
-  scan();
-  scanInterval = setInterval(scan, 30000); // Scan every 30s — needed to catch pump.fun launches in time
-  updateInterval = setInterval(updatePositions, 5000); // Position PnL + rug detection every 5s (DexScreener, not Helius)
-  
-  const settings = getSettings();
-  if (settings.momentumExitEnabled) {
-    momentumInterval = setInterval(checkMomentumExit, settings.momentumInterval * 1000);
-  }
-}
+// [removed] startBot — legacy client-side simulation entry point. The terminal
+// now runs in server mode (pollServerStatus + SSE), so this and the scan/
+// updatePositions/checkMomentumExit loops it drove are dead and unreachable.
 
 function stopBot() {
   isRunning = false;
@@ -3204,12 +3343,7 @@ function resetBot() {
   addLog('🔄', 'Bot reset');
 }
 
-function closeAllPositions() {
-  if (positions.length === 0) return;
-  if (!confirm(`Close all ${positions.length} positions?`)) return;
-  for (const pos of [...positions]) closeTrade(pos, 'MANUAL');
-  addLog('⚠️', 'Closed all positions');
-}
+// [removed] closeAllPositions — legacy client-engine helper, never called in server mode
 
 // ═══════════════════════════════════════════════════════
 // AI ANALYSIS
@@ -3481,13 +3615,7 @@ function closeTrade(pos, reason, pair = null) {
   renderPnlChart();
 }
 
-function manualCloseTrade(address) {
-  const pos = positions.find(p => p.address === address);
-  if (!pos) return;
-  if (confirm(`Close $${pos.symbol}?`)) {
-    closeTrade(pos, 'MANUAL', null);
-  }
-}
+// [removed] manualCloseTrade — legacy client-engine helper, never called in server mode
 
 // ═══════════════════════════════════════════════════════
 // UPDATE POSITIONS
@@ -4292,10 +4420,10 @@ function renderCard(pos) {
       ${tags ? '<div class="pos-tags">' + tags + '</div>' : ''}
 
       <div class="pos-actions" style="gap:5px;margin-top:8px">
-        ${pos.isMoonBag
-          ? '<button onclick="sellMoon(' + (pos.id||0) + ')" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid #b388ff;background:rgba(179,136,255,0.08);color:#b388ff;cursor:pointer;transition:all .15s">SELL MOON</button>'
-          : '<button onclick="closePos(' + (pos.id||0) + ')" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--red);background:rgba(255,59,79,0.08);color:var(--red);cursor:pointer;transition:all .15s">CLOSE</button>' +
-            '<button onclick="extendPos(' + (pos.id||0) + ')" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--cyan);background:rgba(255,59,79,0.08);color:var(--cyan);cursor:pointer;transition:all .15s">+15min</button>'}
+        ${isAdmin() ? (pos.isMoonBag
+          ? '<button onclick="sellMoon(' + (pos.id||0) + ', this)" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid #b388ff;background:rgba(179,136,255,0.08);color:#b388ff;cursor:pointer;transition:all .15s">SELL MOON</button>'
+          : '<button onclick="closePos(' + (pos.id||0) + ', this)" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--red);background:rgba(255,59,79,0.08);color:var(--red);cursor:pointer;transition:all .15s">CLOSE</button>' +
+            '<button onclick="extendPos(' + (pos.id||0) + ', this)" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--cyan);background:rgba(255,59,79,0.08);color:var(--cyan);cursor:pointer;transition:all .15s">+15min</button>') : ''}
         <a href="${pos.dexUrl || '#'}" target="_blank" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--green);background:rgba(255,23,68,0.08);color:var(--green);cursor:pointer;text-decoration:none;text-align:center;transition:all .15s">DEX</a>
         <a href="/?ca=${pos.address||''}" target="_blank" style="flex:1;padding:7px 0;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--yellow);background:rgba(255,170,0,0.08);color:var(--yellow);cursor:pointer;text-decoration:none;text-align:center;transition:all .15s">ANALYZE</a>
       </div>
@@ -4522,13 +4650,24 @@ function renderSoulSignals() {
     const body = document.getElementById('soulSignalsBody');
     if (!body) return;
     let sigs = buildSoulSignalList();
+    bbNotifyNewSignals(sigs); // opt-in desktop/sound alert when a new signal appears
+
+    // free-text filter (ticker / name / contract)
+    if (soulQuery) {
+      const q = soulQuery.toLowerCase();
+      sigs = sigs.filter(s => (s.symbol||'').toLowerCase().includes(q)
+        || (s.name||'').toLowerCase().includes(q)
+        || (s.ca||'').toLowerCase().includes(q));
+    }
 
     if (soulActiveTab === 'live')   sigs = sigs.filter(s => s.status === 'LIVE' || s.status === 'PROMOTION');
     if (soulActiveTab === 'closed') sigs = sigs.filter(s => s.status === 'CLOSED' || (s.peakX || 0) >= 5);
 
-    // archive: best peak X first; others: newest first
-    if (soulActiveTab === 'closed') sigs.sort((a, b) => (b.peakX || 0) - (a.peakX || 0));
-    else sigs.sort((a, b) => b.openedAt - a.openedAt);
+    // sort honours the user's selection (defaults to newest first)
+    if (soulSort === 'peak')     sigs.sort((a, b) => (b.peakX || 0) - (a.peakX || 0));
+    else if (soulSort === 'x')   sigs.sort((a, b) => (b.x || 0) - (a.x || 0));
+    else if (soulSort === 'age') sigs.sort((a, b) => a.openedAt - b.openedAt);
+    else                          sigs.sort((a, b) => b.openedAt - a.openedAt);
     sigs = sigs.slice(0, 50);
 
     if (!sigs.length) {
@@ -4628,6 +4767,19 @@ document.addEventListener('click', (e) => {
 function refreshSoulUi() { renderSoulKPIs(); renderSoulSignals(); }
 setInterval(refreshSoulUi, 2000);
 refreshSoulUi();
+
+// Sort/filter handlers for the signal list
+function bbOnSoulSearch(v){ soulQuery = (v || '').trim(); renderSoulSignals(); }
+function bbOnSoulSort(v){ soulSort = v || 'new'; renderSoulSignals(); }
+
+// Initialise the status-bar chips on load
+bbUpdateAdminUi();
+bbUpdateAlertsUi();
+
+// Register the PWA service worker (network-first; silently no-ops on failure)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+}
 
 function renderPnlChart() {
   const container = $('pnlChart');
@@ -4867,10 +5019,13 @@ pollServerStatus();
 // SSE live updates — push instead of blind polling
 let sniperSSE = null;
 let lastSSETrigger = 0;
+let sseFails = 0;
 function connectSniperSSE() {
   if (sniperSSE) try { sniperSSE.close(); } catch(_) {}
   try {
+    setConnState('recon');
     sniperSSE = new EventSource(SNIPER_API + '/stream');
+    sniperSSE.onopen = () => { sseFails = 0; setConnState('live'); };
     sniperSSE.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
@@ -4883,8 +5038,12 @@ function connectSniperSSE() {
         }
       } catch(_) {}
     };
-    sniperSSE.onerror = () => { setTimeout(connectSniperSSE, 5000); };
-  } catch (e) { setTimeout(connectSniperSSE, 10000); }
+    sniperSSE.onerror = () => {
+      sseFails++;
+      setConnState(sseFails >= 3 ? 'off' : 'recon');
+      setTimeout(connectSniperSSE, Math.min(30000, 3000 * sseFails)); // backoff
+    };
+  } catch (e) { setConnState('off'); setTimeout(connectSniperSSE, 10000); }
 }
 connectSniperSSE();
 // Slow fallback poll covers SSE drops + first paint
@@ -4910,41 +5069,51 @@ bootSequence.forEach(({ delay, icon, text }) => {
 (function initMatrix() {
   const canvas = document.getElementById('matrix-bg');
   if (!canvas) return;
-  
-  const ctx = canvas.getContext('2d');
-  
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+
+  // Respect reduced-motion preference → skip the animation entirely.
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    canvas.style.display = 'none';
+    return;
   }
-  resize();
-  window.addEventListener('resize', resize);
-  
+
+  const ctx = canvas.getContext('2d');
   const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF$#@%&*<>[]{}';
   const charArray = chars.split('');
   const fontSize = 12;
-  const columns = Math.floor(canvas.width / fontSize);
-  const drops = Array(columns).fill(1);
-  
+  let drops = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const columns = Math.floor(canvas.width / fontSize);
+    drops = Array(columns).fill(1);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
   function draw() {
     ctx.fillStyle = 'rgba(5, 6, 8, 0.05)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
     ctx.fillStyle = '#00ff41';
     ctx.font = fontSize + 'px JetBrains Mono';
-    
     for (let i = 0; i < drops.length; i++) {
       const text = charArray[Math.floor(Math.random() * charArray.length)];
       ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-      
-      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-        drops[i] = 0;
-      }
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
       drops[i]++;
     }
   }
-  
-  setInterval(draw, 50);
+
+  // rAF loop throttled to ~20fps, paused while the tab is hidden → saves CPU/battery.
+  let last = 0;
+  function loop(ts) {
+    requestAnimationFrame(loop);
+    if (document.hidden) return;
+    if (ts - last < 50) return;
+    last = ts;
+    draw();
+  }
+  requestAnimationFrame(loop);
 })();
 </script>
 </body>

@@ -1,0 +1,25 @@
+{
+  "name": "ByeBoss Sniper Terminal",
+  "short_name": "Sniper",
+  "description": "Live BYEBOSS sniper signal terminal — real-time calls, KPIs and alerts.",
+  "start_url": "/sniper_terminal.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050608",
+  "theme_color": "#050608",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
