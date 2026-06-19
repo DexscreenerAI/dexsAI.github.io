@@ -352,10 +352,10 @@ document.getElementById('ca').addEventListener('click', function () {
   }).catch(() => {});
 });
 
-// Notify (opens Telegram — that's where the drop is announced)
+// Notify — visual only for now (email capture isn't wired to a backend yet).
 function notifyMe(e) {
   e.preventDefault();
-  window.open('https://t.me/SalaryIsScam', '_blank', 'noopener');
+  e.target.innerHTML = '<div style="font-family:var(--mono);font-size:13px;color:var(--green);text-align:center;width:100%;padding:11px 0">🚀 You\'re on the list! <span style="color:var(--muted)">— alerts go live soon</span></div>';
   return false;
 }
 </script>
