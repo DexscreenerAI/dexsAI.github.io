@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>$BYEBOSS — The Game Is Coming</title>
+<meta name="description" content="$BYEBOSS — a meme-powered GameFi experience. Built for degens, by degens. Play to earn, climb the leaderboards, and put $BYEBOSS to work in-game.">
+<meta name="theme-color" content="#0a0613">
+<link rel="icon" type="image/png" href="https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0613; --bg2:#0e0a1d; --card:#14102a; --border:#241a45;
+  --text:#e9e6f5; --muted:rgba(233,230,245,.55); --faint:rgba(233,230,245,.3);
+  --green:#39ff8b; --pink:#ff3fa4; --blue:#39b6ff; --purple:#a855f7; --gold:#ffb020; --red:#ff3b4f;
+  --mono:'JetBrains Mono',monospace; --sans:'Poppins',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;z-index:-2;background:
+  radial-gradient(900px 500px at 15% -5%,rgba(168,85,247,.18),transparent 60%),
+  radial-gradient(900px 600px at 85% 0%,rgba(57,182,255,.14),transparent 60%),
+  radial-gradient(800px 600px at 50% 110%,rgba(255,63,164,.12),transparent 60%),var(--bg)}
+a{color:inherit;text-decoration:none}
+section{scroll-margin-top:84px;padding:80px 20px;max-width:1140px;margin:0 auto}
+.eyebrow{font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--green);text-align:center;margin-bottom:10px}
+.h2{font-size:clamp(28px,5vw,46px);font-weight:900;text-align:center;letter-spacing:-1px;margin-bottom:14px}
+.sub{text-align:center;color:var(--muted);max-width:620px;margin:0 auto 44px;font-size:15px}
+.grad{background:linear-gradient(90deg,var(--blue),var(--purple),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.grad-g{background:linear-gradient(90deg,var(--green),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:18px;
+  padding:12px 22px;background:rgba(10,6,19,.78);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.brand img{width:38px;height:38px;border-radius:9px}
+.brand .bn{font-family:var(--mono);font-weight:800;font-size:16px;color:#fff;letter-spacing:1px}
+.brand .bn span{color:var(--gold)}
+.brand .bt{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:var(--red);font-weight:700}
+.nav-links{display:flex;gap:4px;margin-left:auto}
+.nav-links a{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--muted);padding:8px 12px;border-radius:8px;transition:.15s;text-transform:uppercase}
+.nav-links a:hover,.nav-links a.active{color:#fff;background:rgba(255,255,255,.06)}
+.nav-cta{font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:1px;color:#04140a;background:var(--green);
+  padding:9px 16px;border-radius:9px;box-shadow:0 0 18px rgba(57,255,139,.4);transition:.15s;white-space:nowrap}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 0 26px rgba(57,255,139,.6)}
+.socials{display:flex;gap:8px}
+.socials a{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:9px;color:var(--muted);font-size:14px;transition:.15s}
+.socials a:hover{color:var(--green);border-color:var(--green)}
+.burger{display:none;background:none;border:1px solid var(--border);color:#fff;font-size:18px;border-radius:8px;padding:6px 11px;cursor:pointer;margin-left:auto}
+
+/* HERO */
+.hero{position:relative;text-align:center;padding:130px 20px 60px;max-width:1000px;margin:0 auto;scroll-margin-top:0}
+.float{position:absolute;font-size:30px;opacity:.85;animation:float 6s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(255,176,32,.5))}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-18px) rotate(6deg)}}
+.badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:2px;
+  color:var(--green);background:rgba(57,255,139,.08);border:1px solid rgba(57,255,139,.3);border-radius:30px;padding:8px 18px;margin-bottom:22px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(57,255,139,.6)}70%{box-shadow:0 0 0 9px transparent}}
+.hero h1{font-size:clamp(40px,9vw,92px);font-weight:900;line-height:.95;letter-spacing:-2px;margin-bottom:6px}
+.hero .kick{font-family:var(--mono);font-weight:800;color:var(--gold);font-size:clamp(16px,2.6vw,24px);letter-spacing:4px;margin-bottom:8px}
+.hero .coming{font-size:clamp(18px,3vw,28px);font-weight:700;color:#fff;letter-spacing:2px;margin-top:8px}
+.hero p.tag{color:var(--muted);font-size:clamp(13px,2vw,16px);margin:22px auto 8px;max-width:560px}
+.hero p.tag b{color:var(--pink)}
+.cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:30px}
+.btn{font-family:var(--mono);font-weight:800;font-size:13px;letter-spacing:1px;padding:14px 26px;border-radius:11px;transition:.18s;cursor:pointer;border:none}
+.btn-green{background:var(--green);color:#04140a;box-shadow:0 0 22px rgba(57,255,139,.45)}
+.btn-green:hover{transform:translateY(-2px);box-shadow:0 0 32px rgba(57,255,139,.65)}
+.btn-ghost{background:transparent;color:#fff;border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--pink);color:var(--pink)}
+
+/* ART */
+.art-wrap{max-width:1000px;margin:10px auto 0;padding:0 20px}
+.art{width:100%;border-radius:18px;border:1px solid var(--border);display:block;box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 60px rgba(168,85,247,.15)}
+.art-cap{text-align:center;font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:2px;margin-top:10px;text-transform:uppercase}
+
+/* CARDS GRID */
+.grid{display:grid;gap:14px}
+.g5{grid-template-columns:repeat(5,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.feat{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px 18px;text-align:center;transition:.2s}
+.feat:hover{transform:translateY(-4px);border-color:var(--purple);box-shadow:0 14px 40px rgba(168,85,247,.18)}
+.feat .ic{font-size:30px;margin-bottom:12px;display:block}
+.feat h3{font-family:var(--mono);font-size:13px;font-weight:800;letter-spacing:.5px;margin-bottom:7px;text-transform:uppercase}
+.feat p{font-size:12.5px;color:var(--muted)}
+
+/* TOKEN */
+.token-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:30px;text-align:center;max-width:680px;margin:0 auto}
+.ca{font-family:var(--mono);font-size:13px;color:var(--green);background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  padding:13px 16px;margin:18px 0;word-break:break-all;cursor:pointer;transition:.15s}
+.ca:hover{border-color:var(--green)}
+.token-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* ROADMAP */
+.road{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.phase{display:flex;gap:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px}
+.phase .pn{font-family:var(--mono);font-weight:800;font-size:12px;color:var(--gold);flex-shrink:0;width:80px}
+.phase h4{font-size:15px;font-weight:700;margin-bottom:4px}
+.phase p{font-size:13px;color:var(--muted)}
+.phase.done{border-color:rgba(57,255,139,.3)}
+.tagp{font-family:var(--mono);font-size:9px;font-weight:800;letter-spacing:1px;padding:3px 8px;border-radius:20px;display:inline-block;margin-top:8px}
+.tagp.live{background:rgba(57,255,139,.12);color:var(--green)}
+.tagp.soon{background:rgba(255,63,164,.12);color:var(--pink)}
+
+/* TEAM */
+.team-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;text-align:center}
+.team-card .em{font-size:34px;margin-bottom:10px}
+.team-card h4{font-family:var(--mono);font-size:14px;margin-bottom:4px}
+.team-card p{font-size:12.5px;color:var(--muted)}
+
+/* FAQ */
+.faq{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.faq details{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0 20px;transition:.15s}
+.faq details[open]{border-color:var(--purple)}
+.faq summary{font-family:var(--mono);font-size:13.5px;font-weight:700;padding:18px 0;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'+';color:var(--green);font-weight:800}
+.faq details[open] summary::after{content:'–'}
+.faq p{font-size:13px;color:var(--muted);padding:0 0 18px}
+
+/* FINAL CTA */
+.final{display:grid;grid-template-columns:1.1fr 1fr 1.1fr;gap:14px;max-width:1140px;margin:0 auto;padding:0 20px}
+.fcard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px}
+.fcard.green{border-color:rgba(57,255,139,.35)}
+.fcard h3{font-family:var(--mono);font-size:18px;font-weight:800;margin-bottom:8px}
+.fcard p{font-size:13px;color:var(--muted);margin-bottom:16px}
+.signup{display:flex;gap:8px}
+.signup input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:#fff;font-family:var(--mono);font-size:12px;outline:none}
+.signup input:focus{border-color:var(--green)}
+.ppp{font-family:var(--sans);font-weight:900;font-size:30px;line-height:1.1}
+.why-row{display:flex;gap:14px;justify-content:space-between;text-align:center;flex-wrap:wrap}
+.why-row div{flex:1;min-width:80px}
+.why-row .wi{font-size:22px}
+.why-row h5{font-family:var(--mono);font-size:10px;letter-spacing:.5px;margin:6px 0 3px}
+.why-row small{font-size:10px;color:var(--faint)}
+
+/* FOOTER */
+footer{text-align:center;padding:60px 20px 50px;margin-top:40px;border-top:1px solid var(--border)}
+footer .ft{font-weight:900;font-size:clamp(20px,4vw,32px);letter-spacing:-1px}
+footer .fsoc{display:flex;gap:12px;justify-content:center;margin:22px 0 16px}
+footer .fsoc a{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:11px;color:var(--muted);font-size:16px;transition:.15s}
+footer .fsoc a:hover{color:var(--green);border-color:var(--green)}
+footer .disc{font-family:var(--mono);font-size:10px;color:var(--faint);max-width:560px;margin:14px auto 0;line-height:1.7}
+
+@media(max-width:860px){
+  .nav-links,.socials{display:none}
+  .nav-links.open{display:flex;position:fixed;top:63px;left:0;right:0;flex-direction:column;gap:2px;background:rgba(10,6,19,.97);backdrop-filter:blur(14px);padding:14px;border-bottom:1px solid var(--border)}
+  .nav-links.open a{padding:12px}
+  .burger{display:block}
+  .nav-cta{margin-left:auto;margin-right:8px}
+  .g5{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:1fr}
+  .final{grid-template-columns:1fr}
+  .phase{flex-direction:column;gap:8px}
+  .phase .pn{width:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="brand" href="#top">
+    <img src="https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png" alt="$ByeBoss">
+    <div><div class="bn">$<span>BYEBOSS</span></div><div class="bt">SALARY IS A SCAM</div></div>
+  </a>
+  <div class="nav-links" id="navlinks">
+    <a href="#about">About</a>
+    <a href="#game">Game</a>
+    <a href="#token">Token</a>
+    <a href="#utility">Utility</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="#team">Team</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <a class="nav-cta" href="https://byeboss.live" target="_blank" rel="noopener">BYEBOSS.LIVE ↗</a>
+  <div class="socials">
+    <a href="https://twitter.com/byebossonsol" target="_blank" rel="noopener" title="Twitter / X">𝕏</a>
+    <a href="https://t.me/SalaryIsScam" target="_blank" rel="noopener" title="Telegram">✈</a>
+    <a href="https://byeboss.live" target="_blank" rel="noopener" title="Discord">🎮</a>
+  </div>
+  <button class="burger" id="burger" aria-label="menu">☰</button>
+</nav>
+
+<!-- HERO / ABOUT -->
+<header class="hero" id="top">
+  <span class="float" style="top:60px;left:6%">🚀</span>
+  <span class="float" style="top:120px;right:8%;animation-delay:1.5s">💲</span>
+  <span class="float" style="top:260px;left:12%;animation-delay:.8s">🪙</span>
+  <span class="float" style="top:300px;right:14%;animation-delay:2.2s">🌙</span>
+  <div class="badge"><span class="dot"></span>COMING SOON — JOIN THE MOVEMENT</div>
+  <div class="kick">$BYEBOSS</div>
+  <h1 class="grad">THE GAME</h1>
+  <div class="coming">IS COMING…</div>
+  <p class="tag">A meme-powered <b>GameFi</b> experience.<br>Built for degens. By degens.</p>
+  <div class="cta-row">
+    <a class="btn btn-green" href="#notify">🔔 NOTIFY ME</a>
+    <a class="btn btn-ghost" href="https://byeboss.live" target="_blank" rel="noopener">🎯 ENTER THE APP</a>
+  </div>
+</header>
+
+<div class="art-wrap" id="about">
+  <img class="art" src="https://i.ibb.co/qFncFCnJ/B20460-FF-59-F1-4-E26-B1-FF-D64-E580-EB044.png" alt="$BYEBOSS The Game — preview" loading="lazy">
+  <div class="art-cap">▲ Concept art — the $ByeBoss universe</div>
+</div>
+
+<!-- GAME / WHAT TO EXPECT -->
+<section id="game">
+  <div class="eyebrow">What To Expect</div>
+  <h2 class="h2">More than a token. <span class="grad">A universe.</span></h2>
+  <p class="sub">$BYEBOSS is becoming a full meme-powered game where the community plays, competes, and earns — together.</p>
+  <div class="grid g5">
+    <div class="feat"><span class="ic">🎮</span><h3>Play to Earn</h3><p>Earn rewards while having fun.</p></div>
+    <div class="feat"><span class="ic">🚀</span><h3>Degen Adventures</h3><p>Epic missions in a meme universe.</p></div>
+    <div class="feat"><span class="ic">🏆</span><h3>Leaderboards</h3><p>Compete. Climb. Dominate.</p></div>
+    <div class="feat"><span class="ic">💲</span><h3>$BYEBOSS Integration</h3><p>Use $BYEBOSS in-game and unlock benefits.</p></div>
+    <div class="feat"><span class="ic">👥</span><h3>Community First</h3><p>Built with the community, for the community.</p></div>
+  </div>
+</section>
+
+<!-- TOKEN -->
+<section id="token">
+  <div class="eyebrow">The Token</div>
+  <h2 class="h2"><span class="grad-g">$BYEBOSS</span> — the fuel of the game</h2>
+  <p class="sub">One token across the whole ecosystem: the sniper, the rugsheet, and soon — the game. Hold it, use it, level up with it.</p>
+  <div class="token-box">
+    <div style="font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:2px">SOLANA CONTRACT</div>
+    <div class="ca" id="ca" title="Click to copy">BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump</div>
+    <div class="token-links">
+      <a class="btn btn-green" href="https://dexscreener.com/solana/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">📈 Chart</a>
+      <a class="btn btn-ghost" href="https://pump.fun/coin/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">🎰 Buy</a>
+      <a class="btn btn-ghost" href="https://byeboss.live" target="_blank" rel="noopener">🔴 App</a>
+    </div>
+  </div>
+</section>
+
+<!-- UTILITY -->
+<section id="utility">
+  <div class="eyebrow">Utility</div>
+  <h2 class="h2">What <span class="grad">$BYEBOSS</span> unlocks</h2>
+  <p class="sub">Real utility today, more tomorrow — every part of the ecosystem runs on $BYEBOSS.</p>
+  <div class="grid g3">
+    <div class="feat"><span class="ic">🪙</span><h3>In-Game Currency</h3><p>Spend $BYEBOSS on entries, boosts and cosmetics.</p></div>
+    <div class="feat"><span class="ic">⚡</span><h3>Power-Ups</h3><p>Holders unlock perks, multipliers &amp; exclusive missions.</p></div>
+    <div class="feat"><span class="ic">🎯</span><h3>Sniper &amp; Rugsheet</h3><p>Live tools already running on byeboss.live.</p></div>
+    <div class="feat"><span class="ic">🏆</span><h3>Leaderboard Entry</h3><p>Stake to climb the ranks and win the pot.</p></div>
+    <div class="feat"><span class="ic">💎</span><h3>Holder Rewards</h3><p>Loyalty perks &amp; airdrops for diamond hands.</p></div>
+    <div class="feat"><span class="ic">🗳️</span><h3>Community Power</h3><p>Vote on features, maps and the roadmap.</p></div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="eyebrow">Roadmap</div>
+  <h2 class="h2">The <span class="grad-g">journey</span></h2>
+  <div class="road">
+    <div class="phase done"><div class="pn">PHASE 1</div><div><h4>Token &amp; Community</h4><p>$BYEBOSS launch, the movement begins — "Salary is a Scam."<span class="tagp live">✓ DONE</span></p></div></div>
+    <div class="phase done"><div class="pn">PHASE 2</div><div><h4>The Tools</h4><p>AI Sniper, Rugsheet, CTO tracker &amp; live terminal — shipped on byeboss.live.<span class="tagp live">✓ LIVE</span></p></div></div>
+    <div class="phase"><div class="pn">PHASE 3</div><div><h4>The Game</h4><p>Play-to-earn meme universe, leaderboards &amp; $BYEBOSS integration.<span class="tagp soon">⚡ BUILDING</span></p></div></div>
+    <div class="phase"><div class="pn">PHASE 4</div><div><h4>Tournaments &amp; Expansion</h4><p>Seasons, prize pools, partnerships and new worlds.<span class="tagp soon">🔮 SOON</span></p></div></div>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section id="team">
+  <div class="eyebrow">Team</div>
+  <h2 class="h2">Built by <span class="grad">degens</span>, for degens</h2>
+  <p class="sub">An anon team that ships. We don't talk — we deliver: a live AI sniper, a rugsheet of 4,500+ tokens, and now, the game.</p>
+  <div class="grid g3">
+    <div class="team-card"><div class="em">👹</div><h4>THE BOSS</h4><p>Vision &amp; degeneracy. Quit the 9–5, built this instead.</p></div>
+    <div class="team-card"><div class="em">🛠️</div><h4>THE BUILDERS</h4><p>Anon devs shipping tools that actually work.</p></div>
+    <div class="team-card"><div class="em">🤝</div><h4>THE COMMUNITY</h4><p>You. The movement. The reason any of this exists.</p></div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="eyebrow">FAQ</div>
+  <h2 class="h2">Questions, <span class="grad-g">answered</span></h2>
+  <div class="faq">
+    <details open><summary>What is $BYEBOSS: The Game?</summary><p>A meme-powered GameFi experience where you play, compete on leaderboards, and earn — all powered by the $BYEBOSS token. Built for degens, by degens.</p></details>
+    <details><summary>When is it launching?</summary><p>The game is in active development (Phase 3). Join the Telegram or drop your email below to be the first to know when it drops.</p></details>
+    <details><summary>Do I need $BYEBOSS to play?</summary><p>$BYEBOSS is the in-game currency and unlocks perks, boosts and leaderboard entries. You can already use it across the live tools on byeboss.live.</p></details>
+    <details><summary>What can I use right now?</summary><p>The full toolkit is already live: the AI Sniper signal terminal, the Rugsheet (dev track-record database), CTO tracker and more — all at byeboss.live.</p></details>
+    <details><summary>Which chain is it on?</summary><p>$BYEBOSS lives on Solana. Contract: <b>Bpzn…Ypump</b> (full address in the Token section above).</p></details>
+    <details><summary>How do I stay updated?</summary><p>Follow on X, join the Telegram, and hit "Notify Me" below. No spam — just the drop.</p></details>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section id="notify">
+  <div class="final">
+    <div class="fcard green">
+      <h3 class="grad-g">The journey starts soon</h3>
+      <p>Join the movement and be the first to know when the game drops.</p>
+      <form class="signup" onsubmit="return notifyMe(event)">
+        <input type="email" id="email" placeholder="Enter your email" required>
+        <button class="btn btn-green" type="submit">NOTIFY ME 🚀</button>
+      </form>
+    </div>
+    <div class="fcard" style="display:flex;align-items:center;justify-content:center">
+      <div class="ppp"><span class="grad-g">PREPARE.</span><br><span class="grad">PLAY.</span><br><span style="color:var(--pink)">PROFIT.</span> 🎮</div>
+    </div>
+    <div class="fcard">
+      <h3 style="font-size:14px;color:var(--gold)">WHY $BYEBOSS?</h3>
+      <div class="why-row" style="margin-top:14px">
+        <div><div class="wi">🏆</div><h5>STRONG COMMUNITY</h5><small>Built by degens, for degens.</small></div>
+        <div><div class="wi">📈</div><h5>REAL UTILITY</h5><small>Powers the game &amp; ecosystem.</small></div>
+        <div><div class="wi">🛡️</div><h5>TRANSPARENCY</h5><small>Safety, audits &amp; trust first.</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="ft">MORE THAN A GAME. <span class="grad">A LIFESTYLE.</span></div>
+  <div class="fsoc">
+    <a href="https://twitter.com/byebossonsol" target="_blank" rel="noopener" title="Twitter / X">𝕏</a>
+    <a href="https://t.me/SalaryIsScam" target="_blank" rel="noopener" title="Telegram">✈</a>
+    <a href="https://byeboss.live" target="_blank" rel="noopener" title="App">🔴</a>
+  </div>
+  <div class="disc">$BYEBOSS is a community meme project. The game is in development and features may change. NFA. DYOR. Past performance does not guarantee future results.</div>
+</footer>
+
+<script>
+// Mobile menu
+const burger = document.getElementById('burger'), navlinks = document.getElementById('navlinks');
+burger.addEventListener('click', () => navlinks.classList.toggle('open'));
+navlinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navlinks.classList.remove('open')));
+
+// Active link on scroll
+const sections = [...document.querySelectorAll('section[id], div[id="about"]')];
+const navA = [...document.querySelectorAll('.nav-links a')];
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      navA.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+    }
+  });
+}, { rootMargin: '-45% 0px -50% 0px' });
+sections.forEach(s => obs.observe(s));
+
+// Copy CA
+document.getElementById('ca').addEventListener('click', function () {
+  navigator.clipboard.writeText(this.textContent.trim()).then(() => {
+    const t = this.textContent; this.textContent = '✓ Copied!';
+    setTimeout(() => this.textContent = t, 1100);
+  }).catch(() => {});
+});
+
+// Notify (opens Telegram — that's where the drop is announced)
+function notifyMe(e) {
+  e.preventDefault();
+  window.open('https://t.me/SalaryIsScam', '_blank', 'noopener');
+  return false;
+}
+</script>
+</body>
+</html>
