@@ -5,231 +5,51 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>$BYEBOSS — The Game Is Coming</title>
 <meta name="description" content="$BYEBOSS — a meme-powered GameFi experience. Built for degens, by degens.">
-<meta name="theme-color" content="#0a0613">
+<meta name="theme-color" content="#06040d">
 <link rel="icon" type="image/png" href="https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0a0613; --bg2:#0e0a1d; --card:#14102a; --border:#241a45;
-  --text:#e9e6f5; --muted:rgba(233,230,245,.55); --faint:rgba(233,230,245,.3);
-  --green:#39ff8b; --pink:#ff3fa4; --blue:#39b6ff; --purple:#a855f7; --gold:#ffb020; --red:#ff3b4f;
-  --mono:'JetBrains Mono',monospace; --sans:'Poppins',sans-serif;
-}
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{background:#06040d;color:var(--text);font-family:var(--sans);overflow-x:hidden;line-height:1.6}
-a{color:inherit;text-decoration:none}
-section{scroll-margin-top:16px;padding:78px 20px;max-width:1140px;margin:0 auto}
-.eyebrow{font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--green);text-align:center;margin-bottom:10px}
-.h2{font-size:clamp(28px,5vw,46px);font-weight:900;text-align:center;letter-spacing:-1px;margin-bottom:14px}
-.sub{text-align:center;color:var(--muted);max-width:620px;margin:0 auto 44px;font-size:15px}
-.grad{background:linear-gradient(90deg,var(--blue),var(--purple),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
-.grad-g{background:linear-gradient(90deg,var(--green),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+html,body{height:100%;width:100%;background:#06040d;overflow:hidden}
+/* Full-screen: the mockup fills the viewport, centered. */
+.screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:
+  radial-gradient(1200px 700px at 50% 0%,rgba(168,85,247,.12),transparent 60%),#06040d}
+.frame{position:relative;line-height:0;max-width:100vw;max-height:100vh}
+.frame img{max-width:100vw;max-height:100vh;width:auto;height:auto;display:block}
 
-/* ===== HERO = the mockup image, big, with clickable hotspots over it ===== */
-.hero{position:relative;width:100%;max-width:1456px;margin:0 auto;line-height:0;background:#06040d}
-.hero img{width:100%;display:block}
-/* Transparent clickable zones laid over the buttons drawn in the image.
-   Coordinates are % of the image, so they scale with it. Invisible until
-   hover (a faint glow shows where they are — handy to fine-tune). */
+/* Transparent clickable zones over the buttons drawn in the image.
+   %-based, so they scale with the image. Faint green glow on hover so the
+   positions are easy to see / fine-tune. */
 .hot{position:absolute;display:block;border-radius:8px;cursor:pointer;transition:box-shadow .15s,background .15s}
 .hot:hover{background:rgba(57,255,139,.16);box-shadow:0 0 0 2px rgba(57,255,139,.55) inset,0 0 18px rgba(57,255,139,.35)}
-.scroll-cue{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);font-family:var(--mono);font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.6);animation:bob 1.8s infinite;line-height:1.4;text-align:center}
-@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
-
-/* ===== Sections below ===== */
-.grid{display:grid;gap:14px}
-.g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
-.feat{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px 18px;text-align:center;transition:.2s}
-.feat:hover{transform:translateY(-4px);border-color:var(--purple);box-shadow:0 14px 40px rgba(168,85,247,.18)}
-.feat .ic{font-size:30px;margin-bottom:12px;display:block}
-.feat h3{font-family:var(--mono);font-size:13px;font-weight:800;margin-bottom:7px;text-transform:uppercase}
-.feat p{font-size:12.5px;color:var(--muted)}
-.token-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:30px;text-align:center;max-width:680px;margin:0 auto}
-.ca{font-family:var(--mono);font-size:13px;color:var(--green);background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:13px 16px;margin:18px 0;word-break:break-all;cursor:pointer}
-.ca:hover{border-color:var(--green)}
-.token-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.btn{font-family:var(--mono);font-weight:800;font-size:13px;letter-spacing:1px;padding:13px 24px;border-radius:11px;transition:.18s;cursor:pointer;border:none;display:inline-block}
-.btn-green{background:var(--green);color:#04140a;box-shadow:0 0 20px rgba(57,255,139,.4)}
-.btn-green:hover{transform:translateY(-2px)}
-.btn-ghost{background:transparent;color:#fff;border:1px solid var(--border)}
-.btn-ghost:hover{border-color:var(--pink);color:var(--pink)}
-.road{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
-.phase{display:flex;gap:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px}
-.phase.done{border-color:rgba(57,255,139,.3)}
-.phase .pn{font-family:var(--mono);font-weight:800;font-size:12px;color:var(--gold);flex-shrink:0;width:80px}
-.phase h4{font-size:15px;font-weight:700;margin-bottom:4px}
-.phase p{font-size:13px;color:var(--muted)}
-.tagp{font-family:var(--mono);font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;display:inline-block;margin-top:8px}
-.tagp.live{background:rgba(57,255,139,.12);color:var(--green)} .tagp.soon{background:rgba(255,63,164,.12);color:var(--pink)}
-.team-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;text-align:center}
-.team-card .em{font-size:34px;margin-bottom:10px} .team-card h4{font-family:var(--mono);font-size:14px;margin-bottom:4px} .team-card p{font-size:12.5px;color:var(--muted)}
-.faq{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
-.faq details{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0 20px}
-.faq details[open]{border-color:var(--purple)}
-.faq summary{font-family:var(--mono);font-size:13.5px;font-weight:700;padding:18px 0;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:12px}
-.faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:'+';color:var(--green);font-weight:800}
-.faq details[open] summary::after{content:'–'}
-.faq p{font-size:13px;color:var(--muted);padding:0 0 18px}
-.signup{display:flex;gap:8px;max-width:460px;margin:0 auto}
-.signup input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:12px 14px;color:#fff;font-family:var(--mono);font-size:12px;outline:none}
-.signup input:focus{border-color:var(--green)}
-footer{text-align:center;padding:56px 20px 50px;border-top:1px solid var(--border)}
-footer .ft{font-weight:900;font-size:clamp(20px,4vw,32px);letter-spacing:-1px}
-footer .fsoc{display:flex;gap:12px;justify-content:center;margin:22px 0 16px}
-footer .fsoc a{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:11px;color:var(--muted);font-size:16px;transition:.15s}
-footer .fsoc a:hover{color:var(--green);border-color:var(--green)}
-footer .disc{font-family:var(--mono);font-size:10px;color:var(--faint);max-width:560px;margin:14px auto 0;line-height:1.7}
-@media(max-width:760px){.g3{grid-template-columns:1fr}.phase{flex-direction:column;gap:8px}.phase .pn{width:auto}.scroll-cue{display:none}}
 </style>
 </head>
 <body>
 
-<!-- ============ HERO: the mockup, big, with clickable overlays ============ -->
-<div class="hero" id="top">
-  <img src="https://i.ibb.co/qFncFCnJ/B20460-FF-59-F1-4-E26-B1-FF-D64-E580-EB044.png" alt="$BYEBOSS — The Game Is Coming">
+<div class="screen">
+  <div class="frame">
+    <img src="https://i.ibb.co/qFncFCnJ/B20460-FF-59-F1-4-E26-B1-FF-D64-E580-EB044.png" alt="$BYEBOSS — The Game Is Coming">
 
-  <!-- NAV links (over the drawn nav bar) -> scroll to sections below -->
-  <a class="hot" href="#about"   style="left:23.8%;top:2.4%;width:6%;height:6%"   title="About"></a>
-  <a class="hot" href="#game"    style="left:30%;top:2.4%;width:5.5%;height:6%"   title="Game"></a>
-  <a class="hot" href="#token"   style="left:35.4%;top:2.4%;width:6%;height:6%"   title="Token"></a>
-  <a class="hot" href="#utility" style="left:41.4%;top:2.4%;width:6.6%;height:6%" title="Utility"></a>
-  <a class="hot" href="#roadmap" style="left:48%;top:2.4%;width:7%;height:6%"     title="Roadmap"></a>
-  <a class="hot" href="#team"    style="left:55.2%;top:2.4%;width:5.5%;height:6%" title="Team"></a>
-  <a class="hot" href="#faq"     style="left:60.8%;top:2.4%;width:4.6%;height:6%" title="FAQ"></a>
+    <!-- NAV links — placeholders for now (real pages coming later, page by page) -->
+    <a class="hot" href="#" onclick="return false" style="left:23.8%;top:2.4%;width:6%;height:6%"   title="About — page coming soon"></a>
+    <a class="hot" href="#" onclick="return false" style="left:30%;top:2.4%;width:5.5%;height:6%"   title="Game — page coming soon"></a>
+    <a class="hot" href="#" onclick="return false" style="left:35.4%;top:2.4%;width:6%;height:6%"   title="Token — page coming soon"></a>
+    <a class="hot" href="#" onclick="return false" style="left:41.4%;top:2.4%;width:6.6%;height:6%" title="Utility — page coming soon"></a>
+    <a class="hot" href="#" onclick="return false" style="left:48%;top:2.4%;width:7%;height:6%"     title="Roadmap — page coming soon"></a>
+    <a class="hot" href="#" onclick="return false" style="left:55.2%;top:2.4%;width:5.5%;height:6%" title="Team — page coming soon"></a>
+    <a class="hot" href="#" onclick="return false" style="left:60.8%;top:2.4%;width:4.6%;height:6%" title="FAQ — page coming soon"></a>
 
-  <!-- BYEBOSS.LIVE button -->
-  <a class="hot" href="https://byeboss.live" target="_blank" rel="noopener" style="left:66%;top:2.2%;width:13.6%;height:6.4%" title="byeboss.live"></a>
+    <!-- BYEBOSS.LIVE button -->
+    <a class="hot" href="https://byeboss.live" target="_blank" rel="noopener" style="left:66%;top:2.2%;width:13.6%;height:6.4%" title="byeboss.live"></a>
 
-  <!-- Socials (top right) -->
-  <a class="hot" href="https://twitter.com/byebossonsol" target="_blank" rel="noopener" style="left:83.3%;top:2.4%;width:4.2%;height:6%" title="Twitter / X"></a>
-  <a class="hot" href="https://t.me/SalaryIsScam"        target="_blank" rel="noopener" style="left:88%;top:2.4%;width:4.6%;height:6%" title="Telegram"></a>
-  <a class="hot" href="https://byeboss.live"             target="_blank" rel="noopener" style="left:93%;top:2.4%;width:4.6%;height:6%" title="Community"></a>
+    <!-- Socials (top right) -->
+    <a class="hot" href="https://twitter.com/byebossonsol" target="_blank" rel="noopener" style="left:83.3%;top:2.4%;width:4.2%;height:6%" title="Twitter / X"></a>
+    <a class="hot" href="https://t.me/SalaryIsScam"        target="_blank" rel="noopener" style="left:88%;top:2.4%;width:4.6%;height:6%" title="Telegram"></a>
+    <a class="hot" href="https://byeboss.live"             target="_blank" rel="noopener" style="left:93%;top:2.4%;width:4.6%;height:6%" title="Community"></a>
 
-  <!-- NOTIFY ME (bottom-left card) -->
-  <a class="hot" href="#notify" style="left:24.3%;top:90%;width:9.5%;height:4.6%" title="Notify me"></a>
-
-  <div class="scroll-cue">▾ EXPLORE ▾</div>
+    <!-- NOTIFY ME (bottom-left card) -> Telegram for now -->
+    <a class="hot" href="https://t.me/SalaryIsScam" target="_blank" rel="noopener" style="left:24.3%;top:90%;width:9.5%;height:4.6%" title="Get notified"></a>
+  </div>
 </div>
 
-<!-- ============ Sections (the nav links scroll here) ============ -->
-<section id="about">
-  <div class="eyebrow">About</div>
-  <h2 class="h2">More than a token. <span class="grad">A universe.</span></h2>
-  <p class="sub">$BYEBOSS started as a movement — "Salary is a Scam." Now it's becoming a meme-powered GameFi world where the community plays, competes, and earns together. The game is coming. The tools are already live.</p>
-</section>
-
-<section id="game">
-  <div class="eyebrow">What To Expect</div>
-  <h2 class="h2">The <span class="grad-g">$ByeBoss</span> game</h2>
-  <div class="grid g3">
-    <div class="feat"><span class="ic">🎮</span><h3>Play to Earn</h3><p>Earn rewards while having fun.</p></div>
-    <div class="feat"><span class="ic">🚀</span><h3>Degen Adventures</h3><p>Epic missions in a meme universe.</p></div>
-    <div class="feat"><span class="ic">🏆</span><h3>Leaderboards</h3><p>Compete. Climb. Dominate.</p></div>
-    <div class="feat"><span class="ic">💲</span><h3>$BYEBOSS Integration</h3><p>Use $BYEBOSS in-game and unlock benefits.</p></div>
-    <div class="feat"><span class="ic">👥</span><h3>Community First</h3><p>Built with the community, for the community.</p></div>
-    <div class="feat"><span class="ic">🔮</span><h3>More Coming</h3><p>Tournaments, seasons & new worlds.</p></div>
-  </div>
-</section>
-
-<section id="token">
-  <div class="eyebrow">The Token</div>
-  <h2 class="h2"><span class="grad-g">$BYEBOSS</span> — the fuel of the game</h2>
-  <p class="sub">One token across the whole ecosystem: the sniper, the rugsheet, and soon — the game.</p>
-  <div class="token-box">
-    <div style="font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:2px">SOLANA CONTRACT</div>
-    <div class="ca" id="ca" title="Click to copy">BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump</div>
-    <div class="token-links">
-      <a class="btn btn-green" href="https://dexscreener.com/solana/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">📈 Chart</a>
-      <a class="btn btn-ghost" href="https://pump.fun/coin/BpznYkiffoxhVtGb2pDq64qTPpUvfY9Rg89Yn2SYpump" target="_blank" rel="noopener">🎰 Buy</a>
-      <a class="btn btn-ghost" href="https://byeboss.live" target="_blank" rel="noopener">🔴 App</a>
-    </div>
-  </div>
-</section>
-
-<section id="utility">
-  <div class="eyebrow">Utility</div>
-  <h2 class="h2">What <span class="grad">$BYEBOSS</span> unlocks</h2>
-  <div class="grid g3">
-    <div class="feat"><span class="ic">🪙</span><h3>In-Game Currency</h3><p>Spend $BYEBOSS on entries, boosts &amp; cosmetics.</p></div>
-    <div class="feat"><span class="ic">⚡</span><h3>Power-Ups</h3><p>Holders unlock perks, multipliers &amp; exclusive missions.</p></div>
-    <div class="feat"><span class="ic">🎯</span><h3>Sniper &amp; Rugsheet</h3><p>Live tools already running on byeboss.live.</p></div>
-    <div class="feat"><span class="ic">🏆</span><h3>Leaderboard Entry</h3><p>Stake to climb the ranks and win the pot.</p></div>
-    <div class="feat"><span class="ic">💎</span><h3>Holder Rewards</h3><p>Loyalty perks &amp; airdrops for diamond hands.</p></div>
-    <div class="feat"><span class="ic">🗳️</span><h3>Community Power</h3><p>Vote on features, maps and the roadmap.</p></div>
-  </div>
-</section>
-
-<section id="roadmap">
-  <div class="eyebrow">Roadmap</div>
-  <h2 class="h2">The <span class="grad-g">journey</span></h2>
-  <div class="road">
-    <div class="phase done"><div class="pn">PHASE 1</div><div><h4>Token &amp; Community</h4><p>$BYEBOSS launch — the movement begins.<span class="tagp live">✓ DONE</span></p></div></div>
-    <div class="phase done"><div class="pn">PHASE 2</div><div><h4>The Tools</h4><p>AI Sniper, Rugsheet, CTO tracker &amp; live terminal on byeboss.live.<span class="tagp live">✓ LIVE</span></p></div></div>
-    <div class="phase"><div class="pn">PHASE 3</div><div><h4>The Game</h4><p>Play-to-earn meme universe, leaderboards &amp; $BYEBOSS integration.<span class="tagp soon">⚡ BUILDING</span></p></div></div>
-    <div class="phase"><div class="pn">PHASE 4</div><div><h4>Tournaments &amp; Expansion</h4><p>Seasons, prize pools, partnerships and new worlds.<span class="tagp soon">🔮 SOON</span></p></div></div>
-  </div>
-</section>
-
-<section id="team">
-  <div class="eyebrow">Team</div>
-  <h2 class="h2">Built by <span class="grad">degens</span>, for degens</h2>
-  <p class="sub">An anon team that ships. We don't talk — we deliver: a live AI sniper, a rugsheet of 4,500+ tokens, and now, the game.</p>
-  <div class="grid g3">
-    <div class="team-card"><div class="em">👹</div><h4>THE BOSS</h4><p>Vision &amp; degeneracy. Quit the 9–5, built this instead.</p></div>
-    <div class="team-card"><div class="em">🛠️</div><h4>THE BUILDERS</h4><p>Anon devs shipping tools that actually work.</p></div>
-    <div class="team-card"><div class="em">🤝</div><h4>THE COMMUNITY</h4><p>You. The movement. The reason any of this exists.</p></div>
-  </div>
-</section>
-
-<section id="faq">
-  <div class="eyebrow">FAQ</div>
-  <h2 class="h2">Questions, <span class="grad-g">answered</span></h2>
-  <div class="faq">
-    <details open><summary>What is $BYEBOSS: The Game?</summary><p>A meme-powered GameFi experience where you play, compete on leaderboards, and earn — all powered by the $BYEBOSS token. Built for degens, by degens.</p></details>
-    <details><summary>When is it launching?</summary><p>The game is in active development (Phase 3). Hit "Notify Me" or join the Telegram to be first to know when it drops.</p></details>
-    <details><summary>Do I need $BYEBOSS to play?</summary><p>$BYEBOSS is the in-game currency and unlocks perks, boosts and leaderboard entries. You can already use it across the live tools on byeboss.live.</p></details>
-    <details><summary>What can I use right now?</summary><p>The full toolkit is already live: the AI Sniper terminal, the Rugsheet, the CTO tracker and more — all at byeboss.live.</p></details>
-    <details><summary>Which chain is it on?</summary><p>$BYEBOSS lives on Solana. Full contract address is in the Token section above.</p></details>
-  </div>
-</section>
-
-<section id="notify" style="text-align:center">
-  <div class="eyebrow">Stay in the loop</div>
-  <h2 class="h2">The journey <span class="grad-g">starts soon</span></h2>
-  <p class="sub">Be the first to know when the game drops.</p>
-  <form class="signup" onsubmit="return notifyMe(event)">
-    <input type="email" id="email" placeholder="Enter your email" required>
-    <button class="btn btn-green" type="submit">NOTIFY ME 🚀</button>
-  </form>
-</section>
-
-<footer>
-  <div class="ft">MORE THAN A GAME. <span class="grad">A LIFESTYLE.</span></div>
-  <div class="fsoc">
-    <a href="https://twitter.com/byebossonsol" target="_blank" rel="noopener" title="Twitter / X">𝕏</a>
-    <a href="https://t.me/SalaryIsScam" target="_blank" rel="noopener" title="Telegram">✈</a>
-    <a href="https://byeboss.live" target="_blank" rel="noopener" title="App">🔴</a>
-  </div>
-  <div class="disc">$BYEBOSS is a community meme project. The game is in development and features may change. NFA. DYOR.</div>
-</footer>
-
-<script>
-// Copy CA
-document.getElementById('ca').addEventListener('click', function () {
-  navigator.clipboard.writeText(this.textContent.trim()).then(() => {
-    const t = this.textContent; this.textContent = '✓ Copied!';
-    setTimeout(() => this.textContent = t, 1100);
-  }).catch(() => {});
-});
-// Notify — visual only for now (no backend yet)
-function notifyMe(e) {
-  e.preventDefault();
-  e.target.innerHTML = '<div style="font-family:var(--mono);font-size:13px;color:var(--green);width:100%;padding:11px 0">🚀 You\'re on the list! <span style="color:var(--muted)">— alerts go live soon</span></div>';
-  return false;
-}
-</script>
 </body>
 </html>
