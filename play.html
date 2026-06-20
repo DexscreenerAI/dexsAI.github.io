@@ -546,6 +546,7 @@ for (let i=0;i<14;i++){
   g.add(body, f, b); spawnCoin(g); scene.add(g); coins.push(g);
 }
 let score = 0; const scoreVal = document.getElementById('scoreVal');
+scoreVal.textContent = '🔒';   // $BYEBOSS only counts once a wallet is connected
 
 // ---- player health / PvP loop ----
 const MAX_HP = 20;
@@ -571,7 +572,8 @@ async function connectWallet(){
   const prov = (window.phantom && window.phantom.solana) || window.solana;
   if (!prov || !prov.isPhantom){ window.open('https://phantom.app/', '_blank'); return; }
   try { const r = await prov.connect(); walletAddr = r.publicKey.toString();
-    walletBtn.textContent = '👻 ' + walletAddr.slice(0,4) + '…' + walletAddr.slice(-4); walletBtn.style.borderColor = '#39ff8b'; }
+    walletBtn.textContent = '👻 ' + walletAddr.slice(0,4) + '…' + walletAddr.slice(-4); walletBtn.style.borderColor = '#39ff8b';
+    scoreVal.textContent = score; }   // unlock the $BYEBOSS counter
   catch(e){ console.warn('wallet connect cancelled', e); }
 }
 // ===== multiplayer client (authoritative game server on Railway) =====
@@ -716,6 +718,7 @@ function triggerJump(){
   vy = JUMP_V; grounded = false;
 }
 function tryCollect(){
+  if (!walletAddr) return;   // no $BYEBOSS without a connected wallet (= an account)
   for (const c of coins){ if (c.userData.dead) continue;
     const dx = c.position.x - pos.x, dz = c.position.z - pos.z;
     if (dx*dx + dz*dz < 2.2){ c.userData.dead = true; c.visible = false; score++; scoreVal.textContent = score;
@@ -785,7 +788,7 @@ function hitMonsters(){
     const dx = m.pos.x - pos.x, dz = m.pos.z - pos.z, d = Math.hypot(dx, dz);
     if (d > MON_HIT_RANGE) continue;
     if (d > 0.2 && (dx/d*fx + dz/d*fz) < 0.1) continue;   // must be roughly in front of the player
-    if (--m.hp <= 0){ m.state = 'dying'; m.t = 0; if (!mpConnected){ score += m.byeboss; scoreVal.textContent = score; } }   // loot (solo; MP score is server-side)
+    if (--m.hp <= 0){ m.state = 'dying'; m.t = 0; if (!mpConnected && walletAddr){ score += m.byeboss; scoreVal.textContent = score; } }   // loot needs a wallet (solo; MP = server-side)
   }
 }
 // ===== bots — Skin #2 (char2) enemies you shoot to loot their $BYEBOSS =====
@@ -858,13 +861,20 @@ function ownerMonster(obj){ for (const m of monsters){ let o = obj; while (o){ i
 function fireGun(){
   if (muzzle){ muzzle.visible = true; muzzle.scale.setScalar(0.7 + Math.random()*0.7); muzzle.rotation.z = Math.random()*6.28; muzzleTimer = 0.05; }
   raycaster.setFromCamera(screenCenter, camera);
-  const hits = raycaster.intersectObjects(monsterGroup.children, true);
-  if (hits.length){
-    const m = ownerMonster(hits[0].object);
-    if (m && m.state === 'alive' && --m.hp <= 0){ m.state = 'dying'; m.t = 0; if (!mpConnected){ score += m.byeboss; scoreVal.textContent = score; } }
+  const ray = raycaster.ray;
+  // reliable bot hit: nearest bot to the aim ray (ray↔point — robust for skinned meshes)
+  let hitM = null, hitT = Infinity;
+  for (const m of monsters){
+    if (m.state !== 'alive') continue;
+    const ox = m.pos.x - ray.origin.x, oy = (m.pos.y + 1.3) - ray.origin.y, oz = m.pos.z - ray.origin.z;
+    const t = ox*ray.direction.x + oy*ray.direction.y + oz*ray.direction.z;
+    if (t < 0 || t > 140) continue;
+    const dx = ox - ray.direction.x*t, dy = oy - ray.direction.y*t, dz = oz - ray.direction.z*t;
+    if (dx*dx + dy*dy + dz*dz < 2.56 && t < hitT){ hitM = m; hitT = t; }   // ~1.6m hit radius
   }
-  // aim at where the crosshair points so bullets converge there (not parallel + low)
-  const aimPoint = hits.length ? hits[0].point : raycaster.ray.at(140, _v1);
+  if (hitM && --hitM.hp <= 0){ hitM.state = 'dying'; hitM.t = 0; if (!mpConnected && walletAddr){ score += hitM.byeboss; scoreVal.textContent = score; } }
+  // bullet converges on the crosshair
+  const aimPoint = ray.at(140, _v1);
   if (gunModel && gunModel.visible) gunTip.getWorldPosition(_v0);   // from the muzzle
   else _v0.set(pos.x, pos.y + 1.9, pos.z);                          // ...or the chest/shoulder (gun hidden / iso)
   spawnBullet(_v0, _v2.copy(aimPoint).sub(_v0).normalize());
