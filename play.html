@@ -166,7 +166,7 @@ trail.rotation.x = -Math.PI/2; trail.position.y = 0.02; scene.add(trail);
 // Trees: clones of a low-poly GLB, scattered around (skip the trail + spawn).
 const treeGroup = new THREE.Group(); scene.add(treeGroup);
 let treeTemplate = null, treeMinY = 0;
-const TREE = { count:70, scaleMin:0.9, scaleMax:1.8, area:230, yOffset:0 };   // tuned via the panel
+const TREE = { count:143, scaleMin:1.95, scaleMax:1.95, area:150, yOffset:-1.45 };   // tuned
 function makeRng(seed){ let s = seed>>>0; return () => { s = (Math.imul(s,1103515245)+12345)>>>0; return s/4294967296; }; }
 function scatterTrees(){
   treeGroup.clear();
@@ -188,58 +188,11 @@ function scatterTrees(){
     treeGroup.add(t); placed++;
   }
 }
-// TEMP tree-tuning panel — drag sliders, hit Copier, send me the values, then I bake + delete it.
-function buildTreePanel(){
-  if (document.getElementById('treedbg')) return;
-  const store = {};
-  const p = document.createElement('div'); p.id = 'treedbg';
-  p.style.cssText = 'position:fixed;top:64px;right:14px;width:248px;z-index:50;background:rgba(10,8,18,.93);border:1px solid rgba(124,77,255,.5);border-radius:12px;color:#eafff2;font:12px Trebuchet MS,Verdana,sans-serif;box-shadow:0 12px 32px rgba(0,0,0,.55);backdrop-filter:blur(6px);user-select:none';
-  const head = document.createElement('div');
-  head.style.cssText = 'cursor:move;padding:8px 10px;background:rgba(124,77,255,.22);border-radius:12px 12px 0 0;font-weight:800;display:flex;justify-content:space-between;align-items:center';
-  head.innerHTML = '<span>🌲 ARBRES — glisse-moi</span><span id="treeX" style="cursor:pointer;opacity:.75">✕</span>';
-  const body = document.createElement('div');
-  body.style.cssText = 'padding:10px 12px;display:flex;flex-direction:column;gap:9px;max-height:62vh;overflow:auto';
-  p.append(head, body);
-  function row(label, min, max, step, val, fn){
-    store[label] = +val;
-    const wrap = document.createElement('div');
-    const h = document.createElement('div'); h.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:2px';
-    const nm = document.createElement('span'); nm.textContent = label;
-    const out = document.createElement('span'); out.style.color = '#b69bff'; out.textContent = (+val).toFixed(2);
-    h.append(nm, out);
-    const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = val; inp.style.width = '100%';
-    inp.addEventListener('input', () => { const v = parseFloat(inp.value); out.textContent = v.toFixed(2); store[label] = v; fn(v); });
-    wrap.append(h, inp); body.append(wrap);
-  }
-  row('count',    5, 220, 1,    TREE.count,    v => { TREE.count = Math.round(v); scatterTrees(); });
-  row('scaleMin', 0.2, 3, 0.05, TREE.scaleMin, v => { TREE.scaleMin = v; scatterTrees(); });
-  row('scaleMax', 0.2, 4.5, 0.05, TREE.scaleMax, v => { TREE.scaleMax = v; scatterTrees(); });
-  row('area',     50, 320, 5,   TREE.area,     v => { TREE.area = v; scatterTrees(); });
-  row('yOffset', -3, 3, 0.05,   TREE.yOffset,  v => { TREE.yOffset = v; treeGroup.children.forEach(t => t.position.y = (t.userData.baseY || 0) + v); });
-  const btn = document.createElement('button');
-  btn.textContent = '📋 Copier les valeurs';
-  btn.style.cssText = 'margin-top:4px;padding:9px;border-radius:8px;border:1px solid #7c4dff;background:rgba(124,77,255,.22);color:#eafff2;font-weight:800;cursor:pointer';
-  btn.onclick = () => {
-    const txt = 'TREES ' + Object.entries(store).map(([k,v]) => `${k}=${(+v).toFixed(3)}`).join(' | ');
-    const done = () => { btn.textContent = '✅ Copié — colle-le-moi'; setTimeout(() => btn.textContent = '📋 Copier les valeurs', 1500); };
-    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done).catch(() => prompt('Copie ça :', txt));
-    else prompt('Copie ça :', txt);
-  };
-  body.append(btn);
-  p.addEventListener('keydown', e => e.stopPropagation());
-  let dragging = false, ox = 0, oy = 0;
-  head.addEventListener('pointerdown', e => { if (e.target.id === 'treeX') return; dragging = true; ox = e.clientX - p.offsetLeft; oy = e.clientY - p.offsetTop; e.preventDefault(); });
-  window.addEventListener('pointermove', e => { if (!dragging) return; p.style.left = Math.max(0, e.clientX - ox) + 'px'; p.style.top = Math.max(0, e.clientY - oy) + 'px'; p.style.right = 'auto'; });
-  window.addEventListener('pointerup', () => dragging = false);
-  head.querySelector('#treeX').onclick = () => p.remove();
-  document.body.appendChild(p);
-}
 total++;
 new GLTFLoader().load('./assets/game/tree.glb', (gltf) => {
   treeTemplate = gltf.scene;
   treeMinY = new THREE.Box3().setFromObject(treeTemplate).min.y;   // base offset so trunks sit on the ground
   scatterTrees();
-  buildTreePanel();
   asset();
 }, undefined, (err) => { console.error('tree GLB failed to load', err); asset(); });
 // bushes (ground detail)
