@@ -125,7 +125,7 @@
     <div class="hint"><b>WASD</b> bouge · <b>SOURIS</b> vise · <b>CLIC&nbsp;DROIT</b> tire · <b>SHIFT</b> run · <b>1–4</b> attaque</div>
     <canvas id="minimap" width="300" height="300" class="minimap"></canvas>
     <div id="crosshair" class="crosshair"></div>
-    <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;<b id="scoreVal">0</b></div>
+    <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;<b id="scoreVal">0</b><small id="capVal" style="margin-left:7px;opacity:.6;font-weight:600;font-size:11px"></small></div>
     <div class="hpbar"><span>❤️</span><div class="hpb"><i id="hpFill"></i></div></div>
     <button id="walletBtn" class="walletbtn">👻 Connect Phantom</button>
     <div id="mpCount" class="mpcount" style="display:none"></div>
@@ -534,17 +534,36 @@ const coinDiscGeo = new THREE.CircleGeometry(0.40, 28);                    // lo
 const coinSideMat = new THREE.MeshBasicMaterial({ color:'#caa12a' });
 const coinCapMat  = new THREE.MeshBasicMaterial({ color:'#ffd23a', side:THREE.DoubleSide });   // logo painted on once it loads
 const coins = [];
-function spawnCoin(c){
-  const a = Math.random()*6.28, r = 6 + Math.random()*70;
-  c.position.set(Math.cos(a)*r, 0.75, Math.sin(a)*r); c.visible = true; c.userData.dead = false;
-}
-for (let i=0;i<14;i++){
+function makeCoinMesh(){
   const g = new THREE.Group();
   const body = new THREE.Mesh(coinBodyGeo, coinSideMat); body.rotation.x = Math.PI/2;          // standing gold disc
   const f = new THREE.Mesh(coinDiscGeo, coinCapMat); f.position.z = 0.05;                       // front logo
   const b = new THREE.Mesh(coinDiscGeo, coinCapMat); b.position.z = -0.05; b.rotation.y = Math.PI; // back logo
-  g.add(body, f, b); spawnCoin(g); scene.add(g); coins.push(g);
+  g.add(body, f, b); return g;
 }
+function spawnCoin(c){
+  const a = Math.random()*6.28, r = 6 + Math.random()*70;
+  c.position.set(Math.cos(a)*r, 0.75, Math.sin(a)*r); c.visible = true; c.userData.dead = false;
+}
+// Solo / decorative coins (no wallet => purely visual, don't count).
+for (let i=0;i<14;i++){ const g = makeCoinMesh(); spawnCoin(g); scene.add(g); coins.push(g); }
+
+// Multiplayer: the SERVER owns the coins (spawns, validates pickups, respawns).
+// The client only renders them and asks to collect; the balance is authoritative.
+const serverCoins = new Map();      // server id -> { group, x, z }
+const _pendingCollect = new Set();  // ids we've already asked to collect (no spam)
+function syncServerCoins(list){
+  const seen = new Set();
+  for (const sc of (list||[])){
+    seen.add(sc.id);
+    let e = serverCoins.get(sc.id);
+    if (!e){ const group = makeCoinMesh(); scene.add(group); e = { group }; serverCoins.set(sc.id, e); }
+    e.x = sc.x; e.z = sc.z; e.group.position.set(sc.x, 0.75, sc.z); e.group.visible = true;
+    _pendingCollect.delete(sc.id);   // re-advertised by the server -> collectable again
+  }
+  for (const [id,e] of [...serverCoins]) if (!seen.has(id)){ scene.remove(e.group); serverCoins.delete(id); _pendingCollect.delete(id); }
+}
+function clearServerCoins(){ for (const [,e] of serverCoins) scene.remove(e.group); serverCoins.clear(); _pendingCollect.clear(); }
 let score = 0; const scoreVal = document.getElementById('scoreVal');
 scoreVal.textContent = '🔒';   // $BYEBOSS only counts once a wallet is connected
 
@@ -578,7 +597,9 @@ async function connectWallet(){
 }
 // ===== multiplayer client (authoritative game server on Railway) =====
 const MP_URL = 'wss://dexscreener-telegram-bot-production.up.railway.app/game';
-let mpWs = null, mpConnected = false, mpId = null, byebossTemplate = null;
+let mpWs = null, mpConnected = false, mpId = null, byebossTemplate = null, mpDailyCap = 400;
+const capVal = document.getElementById('capVal');
+function fmtPool(n){ n=+n; if(!isFinite(n)) return ''; if(n>=1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M'; if(n>=1e3) return Math.round(n/1e3)+'k'; return ''+n; }
 const remotePlayers = new Map();
 const mpCountEl = document.getElementById('mpCount');
 function b58encode(bytes){
@@ -602,13 +623,14 @@ function addRemote(pl){
 }
 function removeRemote(id){ const r = remotePlayers.get(id); if (r){ if (r.group) scene.remove(r.group); remotePlayers.delete(id); } }
 function onSnap(m){
-  if (mpCountEl) mpCountEl.textContent = `👥 ${m.online} en ligne · ${m.accounts} comptes`;
+  if (mpCountEl) mpCountEl.textContent = `👥 ${m.online} en ligne · ${m.accounts} comptes` + (Number.isFinite(m.pool) ? ` · pool ${fmtPool(m.pool)}` : '');
   const seen = new Set();
   for (const pl of m.players){
     seen.add(pl.id);
     if (pl.id === mpId){                              // my authoritative state from the server
       if (Number.isFinite(pl.hp)){ hp = Math.max(0, pl.hp); updateHpBar(); }
       if (Number.isFinite(pl.score)){ score = pl.score; scoreVal.textContent = score; }
+      if (capVal && Number.isFinite(pl.earnedToday)) capVal.textContent = `auj. ${pl.earnedToday}/${m.dailyCap || mpDailyCap}`;
       const srvDead = !pl.alive || hp <= 0;
       if (srvDead && !dead){ dead = true; aiming = false; if (respawnEl) respawnEl.classList.remove('hide'); }
       else if (!srvDead && dead){ dead = false; if (respawnEl) respawnEl.classList.add('hide'); }
@@ -639,12 +661,15 @@ function mpConnect(){
         const res = await prov.signMessage(new TextEncoder().encode(m.nonce), 'utf8');
         mpWs.send(JSON.stringify({ t: 'auth', wallet: walletAddr, sig: b58encode(res.signature || res) }));
       } catch(e){ console.warn('sign failed', e); try { mpWs.close(); } catch {} }
-    } else if (m.t === 'welcome'){ mpId = m.id; mpConnected = true; if (mpCountEl) mpCountEl.style.display = 'block'; }
+    } else if (m.t === 'welcome'){ mpId = m.id; mpConnected = true; mpDailyCap = m.dailyCap || 400; if (mpCountEl) mpCountEl.style.display = 'block';
+      for (const c of coins) c.visible = false;   // the server owns the coins now
+    }
     else if (m.t === 'denied'){ console.warn('multiplayer denied:', m.m); }
+    else if (m.t === 'coins'){ syncServerCoins(m.coins); }
     else if (m.t === 'snap'){ onSnap(m); }
     else if (m.t === 'left'){ removeRemote(m.id); }
   };
-  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); if (mpCountEl) mpCountEl.textContent = '🔴 hors-ligne'; };
+  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (mpCountEl) mpCountEl.textContent = '🔴 hors-ligne'; };
   mpWs.onerror = () => {};
 }
 async function mpJoin(){ if (!walletAddr) await connectWallet(); if (walletAddr) mpConnect(); }
@@ -719,6 +744,21 @@ function triggerJump(){
 }
 function tryCollect(){
   if (!walletAddr) return;   // no $BYEBOSS without a connected wallet (= an account)
+  if (mpConnected){
+    // Server owns the coins: ask to collect any we're standing on. The server
+    // validates proximity + daily cap + pool; the balance returns via the snap.
+    for (const [id,e] of serverCoins){
+      if (!e.group.visible || _pendingCollect.has(id)) continue;
+      const dx = e.x - pos.x, dz = e.z - pos.z;
+      if (dx*dx + dz*dz < 2.2){
+        e.group.visible = false;           // instant feedback; server confirms via next coins broadcast
+        _pendingCollect.add(id);
+        if (mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'collect', id }));
+      }
+    }
+    return;
+  }
+  // Solo (no server): local visual coins, counted locally.
   for (const c of coins){ if (c.userData.dead) continue;
     const dx = c.position.x - pos.x, dz = c.position.z - pos.z;
     if (dx*dx + dz*dz < 2.2){ c.userData.dead = true; c.visible = false; score++; scoreVal.textContent = score;
@@ -966,6 +1006,7 @@ function drawMinimap(){
   for (const m of buildingGroup.children){ mmCtx.fillRect(c+(m.position.x-pos.x)*sc-3, c+(m.position.z-pos.z)*sc-3, 6, 6); }
   mmCtx.fillStyle = '#ffd23a';
   for (const co of coins){ if (!co.visible) continue; mmCtx.beginPath(); mmCtx.arc(c+(co.position.x-pos.x)*sc, c+(co.position.z-pos.z)*sc, 2.4, 0, 6.28); mmCtx.fill(); }
+  for (const e of serverCoins.values()){ if (!e.group.visible) continue; mmCtx.beginPath(); mmCtx.arc(c+(e.x-pos.x)*sc, c+(e.z-pos.z)*sc, 2.4, 0, 6.28); mmCtx.fill(); }
   mmCtx.fillStyle = '#ff4d4d';
   for (const m of monsters){ if (m.state === 'dead') continue; mmCtx.beginPath(); mmCtx.arc(c+(m.pos.x-pos.x)*sc, c+(m.pos.z-pos.z)*sc, 3.2, 0, 6.28); mmCtx.fill(); }
   mmCtx.restore();
@@ -1044,6 +1085,7 @@ function update(dt){
   // auto-collect coins just by walking over them, then spin the rest
   tryCollect();
   for (const c of coins){ if (c.visible) c.rotation.y += dt*3; }
+  for (const e of serverCoins.values()){ if (e.group.visible) e.group.rotation.y += dt*3; }
 }
 
 let last = 0, running = false;
