@@ -517,7 +517,7 @@ function angleLerp(a, b, t){ let d = ((b - a + Math.PI) % (2*Math.PI)) - Math.PI
 // ---------------------------------------------------------------------------
 // Update + render
 // ---------------------------------------------------------------------------
-let camYaw = 0, camPitch = 0.42;                 // mouse-controlled view angle (shooter-style)
+let camYaw = 0, camPitch = 0;                     // mouse-controlled view angle (shooter-style)
 const CAM_DIST = 10, camTarget = new THREE.Vector3();
 const BOUND = 110;
 
@@ -679,7 +679,7 @@ function buildGunPanel(){
 }
 
 // ===== mouse / touch look (shooter-style) =====
-const LOOK_SENS = 0.0026, PITCH_MIN = 0.05, PITCH_MAX = 1.25;
+const LOOK_SENS = 0.0026, PITCH_MIN = -0.5, PITCH_MAX = 1.0;
 canvas.addEventListener('click', () => {
   const shopOpen = !document.getElementById('shop').classList.contains('hidden');
   if (!shopOpen && document.pointerLockElement !== canvas){ try { canvas.requestPointerLock(); } catch(e){} }
@@ -687,11 +687,11 @@ canvas.addEventListener('click', () => {
 document.addEventListener('mousemove', (e) => {
   if (document.pointerLockElement !== canvas) return;
   camYaw -= e.movementX*LOOK_SENS;
-  camPitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, camPitch + e.movementY*LOOK_SENS));
+  camPitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, camPitch - e.movementY*LOOK_SENS));
 });
 let lookId = null, lastTX = 0, lastTY = 0;
 canvas.addEventListener('touchstart', (e) => { for (const t of e.changedTouches){ if (lookId === null && t.clientX > window.innerWidth*0.42){ lookId = t.identifier; lastTX = t.clientX; lastTY = t.clientY; } } }, {passive:true});
-canvas.addEventListener('touchmove', (e) => { for (const t of e.changedTouches){ if (t.identifier === lookId){ camYaw -= (t.clientX-lastTX)*0.005; camPitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, camPitch + (t.clientY-lastTY)*0.005)); lastTX = t.clientX; lastTY = t.clientY; } } }, {passive:true});
+canvas.addEventListener('touchmove', (e) => { for (const t of e.changedTouches){ if (t.identifier === lookId){ camYaw -= (t.clientX-lastTX)*0.005; camPitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, camPitch - (t.clientY-lastTY)*0.005)); lastTX = t.clientX; lastTY = t.clientY; } } }, {passive:true});
 canvas.addEventListener('touchend', (e) => { for (const t of e.changedTouches){ if (t.identifier === lookId) lookId = null; } }, {passive:true});
 
 // ===== minimap (bottom-right): player, monsters, coins, buildings =====
@@ -762,17 +762,19 @@ function update(dt){
   if (aiming){ fireTimer -= dt; if (fireTimer <= 0){ fireTimer = FIRE_INTERVAL; fireGun(); } } else fireTimer = 0;
   if (muzzle && muzzle.visible){ muzzleTimer -= dt; if (muzzleTimer <= 0) muzzle.visible = false; }
 
-  // orbit camera (mouse-look; pulls in + zooms + over-shoulder while aiming)
-  const cp = Math.cos(camPitch), dist = CAM_DIST * (1 - 0.42*aimT), fov = 55 - 16*aimT;
+  // camera: stays behind+above; camPitch tilts the AIM up/down (so you can look at the sky)
+  const dist = CAM_DIST * (1 - 0.42*aimT), fov = 55 - 16*aimT;
   if (Math.abs(camera.fov - fov) > 0.05){ camera.fov = fov; camera.updateProjectionMatrix(); }
-  const rx = Math.cos(camYaw)*aimT, rz = -Math.sin(camYaw)*aimT;
-  camTarget.set(
-    pos.x + Math.sin(camYaw)*dist*cp + rx,
-    pos.y + camLookY + Math.sin(camPitch)*dist + 0.3*aimT,
-    pos.z + Math.cos(camYaw)*dist*cp + rz
-  );
+  const rx = Math.cos(camYaw)*aimT, rz = -Math.sin(camYaw)*aimT;       // over-shoulder side shift while aiming
+  const camH = camLookY + 3.4 - 1.6*aimT;
+  camTarget.set(pos.x + Math.sin(camYaw)*dist + rx, pos.y + camH, pos.z + Math.cos(camYaw)*dist + rz);
   camera.position.lerp(camTarget, 1 - Math.pow(0.0008, dt));
-  camera.lookAt(pos.x + rx, pos.y + camLookY + 0.3*aimT, pos.z + rz);
+  const cpp = Math.cos(camPitch);                                       // look target = forward + pitch
+  camera.lookAt(
+    pos.x - Math.sin(camYaw)*cpp*14,
+    pos.y + camLookY + Math.sin(camPitch)*14,
+    pos.z - Math.cos(camYaw)*cpp*14
+  );
   updateMonsters(dt);
   updateBullets(dt);
 
