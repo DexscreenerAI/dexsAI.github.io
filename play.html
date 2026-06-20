@@ -366,6 +366,7 @@ function playClip(name, once){
 const CHARACTERS = [
   { name:'ByeBoss', url:'./assets/game/byeboss.glb' },
   { name:'Skin #2', url:'./assets/game/char2.glb' },
+  { name:'Iso 2D', type:'sprite' },
 ];
 const CHAR_SCALE = 2.25, CHAR_Y = 1.052;
 // logical action -> first available clip name (each GLB may name them differently)
@@ -378,12 +379,14 @@ const CLIP_CAND = {
 const charCache = {};
 let activeModel = null;
 function applyChar(c){
+  spriteActive = false; if (isoSprite) isoSprite.visible = false; if (gunModel) gunModel.visible = true;
   if (activeModel) player.remove(activeModel);
   activeModel = c.model; player.add(activeModel);
   mixer = c.mixer; actions = c.actions; durations = c.durations; CLIP = c.CLIP; curAction = null;
   playClip(CLIP.idle, false);
 }
 function selectChar(i, onDone){
+  if (CHARACTERS[i].type === 'sprite'){ applyIsoChar(onDone); return; }
   if (charCache[i]){ applyChar(charCache[i]); onDone && onDone(); return; }
   new GLTFLoader().load(CHARACTERS[i].url, (gltf) => {
     const model = gltf.scene; model.traverse(o => { o.frustumCulled = false; });
@@ -412,6 +415,55 @@ selectChar(0, asset);   // first character is part of the loading sequence
   btn.onclick = () => panel.classList.toggle('hidden');
   closeX.onclick = () => panel.classList.add('hidden');
 })();
+
+// ---- iso sprite character (a 2D billboard option in the Shop) ----
+const ISO_STATES = { idle:{fps:7,loop:true}, walk:{fps:12,loop:true}, run:{fps:16,loop:true}, jump:{fps:16,loop:false}, shot:{fps:22,loop:true} };
+const ISO_DIRS = ['up','down','right'];
+const isoTex = {}; let isoLoaded = false, isoSprite = null, spriteActive = false, sprState = 'idle', sprT = 0;
+function loadIso(onDone){
+  if (isoLoaded){ onDone && onDone(); return; }
+  const total2 = ISO_DIRS.length * Object.keys(ISO_STATES).length; let n = 0;
+  const tick = () => { if (++n >= total2){ isoLoaded = true; onDone && onDone(); } };
+  for (const s in ISO_STATES) for (const d of ISO_DIRS){
+    const t = new THREE.TextureLoader().load('./assets/game/iso/'+s+'_'+d+'.png', tick, undefined, tick);
+    t.colorSpace = THREE.SRGBColorSpace; t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearFilter;
+    t.generateMipmaps = false; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1/5, 1/5);
+    isoTex[s+'_'+d] = t;
+  }
+  isoSprite = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 2.7),
+    new THREE.MeshBasicMaterial({ transparent:true, alphaTest:0.3, side:THREE.DoubleSide }));
+  isoSprite.visible = false; scene.add(isoSprite);
+}
+function applyIsoChar(onDone){
+  loadIso(() => {
+    if (activeModel){ player.remove(activeModel); activeModel = null; }   // hide the GLB
+    if (gunModel) gunModel.visible = false;                                // iso sprites already hold a gun
+    mixer = null; spriteActive = true; isoSprite.visible = true; sprState = 'idle'; sprT = 0;
+    onDone && onDone();
+  });
+}
+function isoDir(){   // character facing -> screen direction (relative to the camera)
+  const fx = Math.sin(faceAngle), fz = Math.cos(faceAngle);
+  const fdot = fx*(-Math.sin(camYaw)) + fz*(-Math.cos(camYaw));   // along camera forward
+  const rdot = fx*( Math.cos(camYaw)) + fz*(-Math.sin(camYaw));   // along camera right
+  if (Math.abs(fdot) >= Math.abs(rdot)) return fdot > 0 ? 'up' : 'down';
+  return rdot > 0 ? 'right' : 'left';
+}
+function updateSpriteChar(dt, moving){
+  let st;
+  if (aiming || locked) st = 'shot';
+  else if (!grounded) st = 'jump';
+  else if (moving) st = (keys.run ? 'run' : 'walk');
+  else st = 'idle';
+  if (st !== sprState){ sprState = st; sprT = 0; } else sprT += dt;
+  const dir = isoDir(), flip = dir === 'left', cfg = ISO_STATES[st];
+  let f = Math.floor(sprT*cfg.fps); f = cfg.loop ? f % 25 : Math.min(f, 24);
+  const tex = isoTex[st + '_' + (flip ? 'right' : dir)];
+  if (tex){ const col = f % 5, row = (f/5)|0; tex.offset.set(col/5, 1 - (row+1)/5); isoSprite.material.map = tex; isoSprite.material.needsUpdate = true; }
+  isoSprite.scale.x = flip ? -1 : 1;
+  isoSprite.position.set(pos.x, pos.y + 1.15, pos.z);
+  isoSprite.rotation.set(0, Math.atan2(camera.position.x - pos.x, camera.position.z - pos.z), 0);
+}
 
 // soft blob shadow under the character
 const shadow = new THREE.Mesh(
@@ -741,7 +793,8 @@ function update(dt){
   if (!grounded){ vy -= GRAV*dt; pos.y += vy*dt; if (pos.y <= 0){ pos.y = 0; vy = 0; grounded = true; } }
 
   // drive the animation
-  if (mixer){
+  if (spriteActive){ updateSpriteChar(dt, moving); }
+  else if (mixer){
     if (!locked){
       if (!grounded) playClip(CLIP.jump, false);
       else if (moving) playClip(keys.run ? CLIP.run : CLIP.walk, false);
