@@ -309,6 +309,22 @@ P({type:'fence', x:4640,d:0.50,len:3,broken:true});
 P({type:'rubble',x:4820,d:0.66});
 P({type:'crate', x:4900,d:0.60,key:'timber-square-planks-boarded'});
 
+// ===========================================================================
+// FOREST backdrop (AutoSprite-style 2.5D forest). THEME='forest' uses this;
+// THEME='village' falls back to the Kenney street built above.
+// ===========================================================================
+const THEME = 'forest';
+function makeRng(seed){ let s=seed>>>0; return ()=>{ s=(Math.imul(s,1103515245)+12345)>>>0; return s/4294967296; }; }
+const farTrees=[], midTrees=[], frontTrees=[], tufts=[], dapples=[];
+(function buildForest(){
+  const r=makeRng(1337);
+  for(let i=0;i<70;i++)  farTrees.push({x:r()*WORLD_W, s:0.55+r()*0.35});
+  for(let i=0;i<42;i++)  midTrees.push({x:r()*WORLD_W, s:0.85+r()*0.55});
+  for(let i=0;i<11;i++)  frontTrees.push({x:r()*WORLD_W, s:1.7+r()*0.9});
+  for(let i=0;i<175;i++) tufts.push({x:r()*WORLD_W, d:0.12+r()*0.9, s:0.6+r()*0.9});
+  for(let i=0;i<14;i++)  dapples.push({x:r()*WORLD_W, d:0.3+r()*0.6, s:0.6+r()*1.0});
+})();
+
 // Collectible $BYEBOSS coins
 const coins = [];
 function spawnCoin(){ coins.push({px:120+Math.random()*(WORLD_W-240), d:0.25+Math.random()*0.7, bob:Math.random()*6.28, dead:false}); }
@@ -544,6 +560,72 @@ function drawRubble(p){
 }
 function drawProp(p){ ({crate:drawCrate,well:drawWell,stall:drawStall,fence:drawFence,rubble:drawRubble}[p.type]||drawCrate)(p); }
 
+// ---- FOREST drawing ----
+function drawTree(sx, baseY, sc, tr, f1, f2){
+  const h=130*sc;
+  ctx.fillStyle=tr; ctx.fillRect(sx-5*sc, baseY-h*0.46, 10*sc, h*0.46);
+  ctx.fillStyle=f1;
+  ctx.beginPath(); ctx.ellipse(sx-20*sc, baseY-h*0.50, 26*sc, 24*sc,0,0,6.28); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(sx+20*sc, baseY-h*0.50, 26*sc, 24*sc,0,0,6.28); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(sx,       baseY-h*0.66, 34*sc, 30*sc,0,0,6.28); ctx.fill();
+  ctx.fillStyle=f2;
+  ctx.beginPath(); ctx.ellipse(sx-8*sc,  baseY-h*0.74, 22*sc, 17*sc,0,0,6.28); ctx.fill();
+}
+function drawForestSky(){
+  const hz=horizon();
+  const g=ctx.createLinearGradient(0,0,0,hz);
+  g.addColorStop(0,'#0f2a16'); g.addColorStop(0.5,'#1f4a27'); g.addColorStop(1,'#557e3c');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,hz+1);
+  // canopy hanging from the top
+  ctx.fillStyle='#0a2010'; const off=(camera.x*0.3)%80;
+  for(let x=-off-80;x<W+80;x+=80){ ctx.beginPath(); ctx.ellipse(x+40,0,60,48,0,0,Math.PI); ctx.fill(); }
+  // light shafts
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  for(let i=0;i<4;i++){ const x=(((i*340 - camera.x*0.2)%(W+340))+(W+340))%(W+340)-120;
+    ctx.fillStyle='rgba(225,240,180,.055)';
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x+60,0); ctx.lineTo(x+170,hz); ctx.lineTo(x+30,hz); ctx.closePath(); ctx.fill(); }
+  ctx.restore();
+}
+function drawForestBack(){
+  const hz=horizon();
+  for(const t of farTrees){ const sx=t.x-camera.x*0.6;  if(sx<-90||sx>W+90)continue;
+    drawTree(sx, hz+12, t.s*0.62, '#2e3a2a', '#3f5f3f', '#4f7048'); }
+  const mg=ctx.createLinearGradient(0,hz*0.5,0,hz+6);                            // soft ground mist near horizon
+  mg.addColorStop(0,'rgba(150,170,140,0)'); mg.addColorStop(1,'rgba(150,170,140,.40)');
+  ctx.fillStyle=mg; ctx.fillRect(0, hz*0.5, W, (hz+6)-hz*0.5);
+  for(const t of midTrees){ const sx=t.x-camera.x*0.82; if(sx<-110||sx>W+110)continue;
+    drawTree(sx, hz+26, t.s*0.70, '#241a10', '#16401f', '#27602f'); }
+}
+function drawForestFront(){
+  for(const t of frontTrees){ const sx=t.x-camera.x*1.12; if(sx<-170||sx>W+170)continue;
+    ctx.globalAlpha=0.82; drawTree(sx, H+44, t.s, '#0e0a06', '#08160c', '#0c1f10'); ctx.globalAlpha=1; }
+}
+function drawForestGround(){
+  const hz=horizon(), grass=tile['floor-ground-grass'];
+  const off=((camera.x)%TILE+TILE)%TILE;
+  for(let y=hz;y<H;y+=TILE) for(let x=-off;x<W;x+=TILE) ctx.drawImage(grass,x,y,TILE,TILE);
+  // forest trail (perspective dirt path down the middle of the world)
+  const cx = WORLD_W*0.5 - camera.x;
+  ctx.fillStyle='rgba(74,54,32,.85)';
+  ctx.beginPath(); ctx.moveTo(cx-26,hz); ctx.lineTo(cx+26,hz); ctx.lineTo(cx+210,H); ctx.lineTo(cx-210,H); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(40,28,16,.30)';
+  ctx.beginPath(); ctx.moveTo(cx-26,hz); ctx.lineTo(cx-6,hz); ctx.lineTo(cx-150,H); ctx.lineTo(cx-210,H); ctx.closePath(); ctx.fill();
+  // back-to-front darkening
+  const g=ctx.createLinearGradient(0,hz,0,frontY()); g.addColorStop(0,'rgba(6,20,10,.55)'); g.addColorStop(1,'rgba(6,20,10,0)');
+  ctx.fillStyle=g; ctx.fillRect(0,hz,W,frontY()-hz);
+  // grass tufts
+  for(const tf of tufts){ const sx=tf.x-camera.x; if(sx<-16||sx>W+16)continue;
+    const gy=groundY(tf.d), s=depthScale(tf.d)*tf.s;
+    ctx.strokeStyle='rgba(22,74,32,.85)'; ctx.lineWidth=2*s;
+    for(let k=-2;k<=2;k++){ ctx.beginPath(); ctx.moveTo(sx+k*3*s, gy); ctx.lineTo(sx+k*3.4*s, gy-(9+(k===0?5:0))*s); ctx.stroke(); } }
+  // sun dapples on the ground
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  for(const dp of dapples){ const sx=dp.x-camera.x; if(sx<-40||sx>W+40)continue;
+    const gy=groundY(dp.d), s=depthScale(dp.d)*dp.s;
+    ctx.fillStyle='rgba(230,240,160,.10)'; ctx.beginPath(); ctx.ellipse(sx,gy-6*s,26*s,9*s,0,0,6.28); ctx.fill(); }
+  ctx.restore();
+}
+
 function drawCoin(sx, gy, sc, bob){
   const y=gy-(26+Math.sin(bob)*5)*sc, r=12*sc;
   ctx.save(); ctx.translate(sx,y); ctx.scale(0.25+0.75*Math.abs(Math.cos(bob)),1);
@@ -566,18 +648,18 @@ function drawPlayer(sx, gy){
 
 function render(){
   ctx.clearRect(0,0,W,H);
-  drawSky();
-  drawGround();
-  drawHouses();    // back wall of the street
-  drawLamps();     // behind the player
-  drawFountains(); // plaza pools, flat on the ground
+  const forest = THEME==='forest';
+  if(forest){ drawForestSky(); drawForestBack(); drawForestGround(); drawLamps(); }
+  else      { drawSky(); drawGround(); drawHouses(); drawLamps(); drawFountains(); }
 
-  // foreground: depth-sort crates + coins + player
+  // foreground: depth-sort props + coins + player
   const list=[{d:player.d, draw:()=>drawPlayer(player.px-camera.x, groundY(player.d))}];
-  for(const p of props){ list.push({d:p.d, draw:()=>drawProp(p)}); }
+  if(!forest) for(const p of props){ list.push({d:p.d, draw:()=>drawProp(p)}); }
   for(const c of coins){ if(c.dead)continue; const sx=c.px-camera.x; if(sx<-60||sx>W+60)continue;
     list.push({d:c.d, draw:()=>drawCoin(sx, groundY(c.d), depthScale(c.d), c.bob)}); }
   list.sort((a,b)=>a.d-b.d); for(const it of list) it.draw();
+
+  if(forest) drawForestFront();   // blurred dark trees framing the very front
 
   const vg=ctx.createRadialGradient(W/2,H/2,H*0.32,W/2,H/2,H*0.78);
   vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.45)');
