@@ -20,6 +20,15 @@ html,body{width:100%;background:#06040d}
    positions are easy to see / fine-tune. */
 .hot{position:absolute;display:block;border-radius:8px;cursor:pointer;transition:box-shadow .15s,background .15s}
 .hot:hover{background:rgba(57,255,139,.16);box-shadow:0 0 0 2px rgba(57,255,139,.55) inset,0 0 18px rgba(57,255,139,.35)}
+
+/* Main CTA: the central red ByeBoss character opens the playable game.
+   Gentle pulse so visitors know it's clickable (no text added on the art). */
+.play{animation:playpulse 1.8s ease-in-out infinite}
+.play:hover{animation:none}
+@keyframes playpulse{
+  0%,100%{box-shadow:0 0 0 2px rgba(57,255,139,.28) inset,0 0 16px rgba(57,255,139,.20)}
+  50%    {box-shadow:0 0 0 3px rgba(57,255,139,.62) inset,0 0 30px rgba(57,255,139,.45)}
+}
 </style>
 </head>
 <body>
@@ -27,6 +36,9 @@ html,body{width:100%;background:#06040d}
 <div class="screen">
   <div class="frame">
     <img src="https://i.ibb.co/qFncFCnJ/B20460-FF-59-F1-4-E26-B1-FF-D64-E580-EB044.png" alt="$BYEBOSS — The Game Is Coming">
+
+    <!-- CENTER: clicking the red ByeBoss character launches the playable game -->
+    <a class="hot play" href="./play.html" style="left:39%;top:16%;width:22%;height:36%" title="▶ Play $BYEBOSS: STREETS"></a>
 
     <!-- NAV links — placeholders for now (real pages coming later, page by page) -->
     <a class="hot" href="#" onclick="return false" style="left:23.8%;top:2.4%;width:6%;height:6%"   title="About — page coming soon"></a>

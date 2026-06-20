@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>$BYEBOSS — STREETS (beta)</title>
+<meta name="description" content="$BYEBOSS: STREETS — a 2.5D meme brawler. Move, run, jump, fight, collect $BYEBOSS. Built for degens.">
+<meta name="theme-color" content="#06040d">
+<link rel="icon" type="image/png" href="https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;overflow:hidden;background:#06040d;
+    font-family:'Trebuchet MS',Verdana,system-ui,sans-serif;color:#eafff2;user-select:none;touch-action:none}
+  #game{position:fixed;inset:0;display:block}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:auto}
+
+  /* ---- HUD overlay ---- */
+  .hud{position:absolute;inset:0;pointer-events:none;z-index:5}
+  .hud > *{pointer-events:auto}
+
+  /* top hint pill (like the reference) */
+  .hint{position:absolute;top:14px;left:50%;transform:translateX(-50%);
+    background:rgba(6,4,13,.72);border:1px solid rgba(57,255,139,.25);
+    padding:9px 18px;border-radius:999px;font-size:13px;letter-spacing:.3px;
+    color:#cdebd9;white-space:nowrap;backdrop-filter:blur(6px);box-shadow:0 6px 22px rgba(0,0,0,.45)}
+  .hint b{color:#39ff8b;font-weight:700}
+
+  /* brand + back (top-left) */
+  .brand{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:10px}
+  .brand a.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+    background:rgba(6,4,13,.72);border:1px solid rgba(255,255,255,.14);color:#eafff2;
+    padding:8px 12px;border-radius:10px;font-size:13px;font-weight:700;backdrop-filter:blur(6px)}
+  .brand a.back:hover{border-color:rgba(57,255,139,.6);color:#39ff8b}
+  .brand .title{font-weight:800;font-size:15px;letter-spacing:.4px;
+    text-shadow:0 2px 10px rgba(0,0,0,.7)}
+  .brand .title .b{color:#ff3b3b}.brand .title .g{color:#39ff8b}
+  .brand .tag{font-size:10px;background:rgba(57,255,139,.16);color:#39ff8b;
+    border:1px solid rgba(57,255,139,.4);padding:2px 7px;border-radius:999px;font-weight:700;letter-spacing:.5px}
+
+  /* score (top-right) */
+  .score{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:8px;
+    background:rgba(6,4,13,.72);border:1px solid rgba(255,196,0,.35);
+    padding:8px 14px;border-radius:12px;font-weight:800;font-size:15px;backdrop-filter:blur(6px)}
+  .score .coin{width:18px;height:18px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#ffe680,#ffb300 55%,#b87900);
+    box-shadow:0 0 8px rgba(255,196,0,.6);display:grid;place-items:center;
+    color:#5a3b00;font-size:11px;font-weight:900}
+  .score b{color:#ffd54a}
+
+  /* bottom ability bar (matches the reference cards) */
+  .abilities{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
+    display:flex;gap:12px;z-index:6}
+  .ab{position:relative;width:88px;height:90px;border-radius:14px;cursor:pointer;
+    background:linear-gradient(180deg,rgba(20,14,34,.78),rgba(10,7,20,.82));
+    border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(6px);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    transition:transform .08s,border-color .12s,box-shadow .12s}
+  .ab:hover{border-color:rgba(57,255,139,.55)}
+  .ab:active,.ab.pressed{transform:translateY(2px) scale(.97);
+    border-color:#39ff8b;box-shadow:0 0 0 2px rgba(57,255,139,.35) inset,0 0 18px rgba(57,255,139,.35)}
+  .ab .num{position:absolute;top:-9px;left:-9px;width:24px;height:24px;border-radius:8px;
+    background:#0c0a17;border:1px solid rgba(255,255,255,.22);
+    display:grid;place-items:center;font-size:12px;font-weight:800;color:#eafff2}
+  .ab .ico{font-size:24px;line-height:1;color:#ffb300;filter:drop-shadow(0 0 6px rgba(255,179,0,.5))}
+  .ab .lbl{font-size:13px;font-weight:700;letter-spacing:.3px;color:#e7fff3}
+
+  /* touch controls (shown only on touch devices) */
+  .touch{display:none}
+  body.touch .touch{display:block}
+  .dpad{position:absolute;left:18px;bottom:120px;width:150px;height:150px;z-index:6}
+  .dpad button{position:absolute;width:50px;height:50px;border:none;border-radius:12px;
+    background:rgba(20,14,34,.8);border:1px solid rgba(255,255,255,.14);color:#cdebd9;
+    font-size:18px;display:grid;place-items:center}
+  .dpad button:active{background:rgba(57,255,139,.25);border-color:#39ff8b;color:#fff}
+  .dpad .up{left:50px;top:0}.dpad .down{left:50px;top:100px}
+  .dpad .left{left:0;top:50px}.dpad .right{left:100px;top:50px}
+  .rbtns{position:absolute;right:18px;bottom:120px;display:flex;flex-direction:column;gap:12px;z-index:6}
+  .rbtns button{width:78px;height:54px;border-radius:14px;border:1px solid rgba(255,255,255,.14);
+    background:rgba(20,14,34,.8);color:#eafff2;font-weight:800;font-size:13px;letter-spacing:.4px}
+  .rbtns button:active{background:rgba(57,255,139,.25);border-color:#39ff8b}
+
+  /* loading screen */
+  #load{position:absolute;inset:0;z-index:20;background:#06040d;display:grid;place-items:center;
+    transition:opacity .4s}
+  #load.hide{opacity:0;pointer-events:none}
+  #load .box{text-align:center}
+  #load .logo{font-size:34px;font-weight:900;letter-spacing:1px;margin-bottom:6px}
+  #load .logo .b{color:#ff3b3b}#load .logo .g{color:#39ff8b}
+  #load .sub{color:#9fb6a8;font-size:13px;margin-bottom:22px;letter-spacing:.5px}
+  #load .bar{width:240px;height:8px;border-radius:999px;background:rgba(255,255,255,.08);
+    overflow:hidden;margin:0 auto}
+  #load .bar i{display:block;height:100%;width:0;border-radius:999px;
+    background:linear-gradient(90deg,#39ff8b,#7c4dff);transition:width .2s}
+  #load .pct{margin-top:10px;font-size:12px;color:#6f8a7c}
+
+  @media (max-width:560px){
+    .hint{font-size:11px;padding:7px 12px}
+    .ab{width:70px;height:78px}.ab .ico{font-size:20px}.ab .lbl{font-size:11px}
+    .brand .title{font-size:13px}
+  }
+</style>
+</head>
+<body>
+
+<div id="game">
+  <canvas id="cv"></canvas>
+
+  <div class="hud">
+    <div class="brand">
+      <a class="back" href="./game.html" title="Back">‹ Back</a>
+      <span class="title"><span class="b">$BYE</span><span class="g">BOSS</span> · STREETS</span>
+      <span class="tag">BETA</span>
+    </div>
+
+    <div class="hint">
+      <b>WASD</b> move · <b>SHIFT</b> run · <b>SPACE</b> jump · <b>1–4</b> actions
+    </div>
+
+    <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;<b id="scoreVal">0</b></div>
+
+    <!-- touch movement -->
+    <div class="touch">
+      <div class="dpad">
+        <button class="up"    data-dir="up">▲</button>
+        <button class="down"  data-dir="down">▼</button>
+        <button class="left"  data-dir="left">◀</button>
+        <button class="right" data-dir="right">▶</button>
+      </div>
+      <div class="rbtns">
+        <button data-btn="run">RUN</button>
+        <button data-btn="jump">JUMP</button>
+      </div>
+    </div>
+
+    <!-- ability bar (also keys 1-4) -->
+    <div class="abilities">
+      <div class="ab" data-act="punch"><span class="num">1</span><span class="ico">★</span><span class="lbl">Punch</span></div>
+      <div class="ab" data-act="kick"><span class="num">2</span><span class="ico">★</span><span class="lbl">Kick</span></div>
+      <div class="ab" data-act="pickup"><span class="num">3</span><span class="ico">★</span><span class="lbl">Pickup</span></div>
+      <div class="ab" data-act="attack"><span class="num">4</span><span class="ico">★</span><span class="lbl">Attack</span></div>
+    </div>
+  </div>
+
+  <div id="load">
+    <div class="box">
+      <div class="logo"><span class="b">$BYE</span><span class="g">BOSS</span></div>
+      <div class="sub">STREETS · loading the block…</div>
+      <div class="bar"><i id="loadBar"></i></div>
+      <div class="pct" id="loadPct">0%</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// ---------------------------------------------------------------------------
+// Assets — 6 sprite sheets, each a 5x5 grid (25 frames) of 256x256 px.
+// ---------------------------------------------------------------------------
+const SHEET_COLS = 5, SHEET_ROWS = 5, FRAME = 256, FRAME_COUNT = 25;
+const SOURCES = {
+  idle:   './assets/game/idle.png',
+  run:    './assets/game/run.png',
+  jump:   './assets/game/jump.png',
+  kick:   './assets/game/kick.png',
+  attack: './assets/game/attack.png',
+  pickup: './assets/game/pickup.png',
+};
+
+// Animation config. frames defaults to 25; loop=false plays once.
+const ANIM = {
+  idle:   { sheet:'idle',   fps:7,  loop:true  },
+  run:    { sheet:'run',    fps:16, loop:true  },
+  jump:   { sheet:'jump',   fps:18, loop:false },
+  punch:  { sheet:'attack', fps:22, loop:false, frames:14 }, // quick jab (subset of the attack sheet)
+  attack: { sheet:'attack', fps:18, loop:false },            // full combo
+  kick:   { sheet:'kick',   fps:16, loop:false },
+  pickup: { sheet:'pickup', fps:14, loop:false },
+};
+
+const images = {};
+let loaded = 0;
+const keys = Object.keys(SOURCES);
+const loadBar = document.getElementById('loadBar');
+const loadPct = document.getElementById('loadPct');
+
+keys.forEach(k => {
+  const img = new Image();
+  img.onload = img.onerror = () => {
+    loaded++;
+    const p = Math.round(loaded / keys.length * 100);
+    loadBar.style.width = p + '%';
+    loadPct.textContent = p + '%';
+    if (loaded === keys.length) start();
+  };
+  img.src = SOURCES[k];
+  images[k] = img;
+});
+
+// ---------------------------------------------------------------------------
+// Canvas / view
+// ---------------------------------------------------------------------------
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.floor(W * DPR);
+  cv.height = Math.floor(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ---------------------------------------------------------------------------
+// World
+// ---------------------------------------------------------------------------
+const WORLD_W = 2800;                 // wider than the screen -> horizontal scroll
+const horizon = () => H * 0.46;       // where the ground meets the sky
+const frontY  = () => H * 0.90;       // screen-Y of the nearest (closest) feet
+// depth d in [0..1]: 0 = far (back, near horizon), 1 = near (front, bottom)
+const groundY = d => horizon() + (frontY() - horizon()) * d;
+const depthScale = d => 0.42 + 0.58 * d;   // sprite scale by depth
+const camera = { x: 0 };
+
+const player = {
+  px: WORLD_W * 0.5, d: 0.7, z: 0, vz: 0,
+  facing: 1, grounded: true,
+  state: 'idle', t: 0, locked: false,
+};
+const WALK = 150, RUN = 285, DEPTH_SPD = 0.62, JUMP_V = 560, GRAV = 1700;
+
+// Static-ish props (lamp posts + bushes) placed in world space with a depth.
+const props = [];
+(function buildProps(){
+  for (let i = 0; i < 7; i++){
+    props.push({ type:'lamp', px: 180 + i * 400 + (i%2?60:0), d: 0.18 + (i%3)*0.30 });
+  }
+  for (let i = 0; i < 46; i++){
+    props.push({ type:'tuft', px: Math.random()*WORLD_W, d: 0.12 + Math.random()*0.88,
+                 s: 0.7 + Math.random()*0.8 });
+  }
+})();
+
+// Collectible $BYEBOSS coins.
+const coins = [];
+function spawnCoin(){
+  coins.push({ px: 120 + Math.random()*(WORLD_W-240), d: 0.2 + Math.random()*0.75,
+               bob: Math.random()*Math.PI*2, dead:false });
+}
+for (let i = 0; i < 9; i++) spawnCoin();
+let score = 0;
+const scoreVal = document.getElementById('scoreVal');
+
+// ---------------------------------------------------------------------------
+// Input
+// ---------------------------------------------------------------------------
+const input = { up:false, down:false, left:false, right:false, run:false };
+const KEYMAP = {
+  KeyW:'up', ArrowUp:'up', KeyS:'down', ArrowDown:'down',
+  KeyA:'left', ArrowLeft:'left', KeyD:'right', ArrowRight:'right',
+};
+addEventListener('keydown', e => {
+  if (KEYMAP[e.code]) { input[KEYMAP[e.code]] = true; e.preventDefault(); }
+  else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = true;
+  else if (e.code === 'Space') { triggerJump(); e.preventDefault(); }
+  else if (e.code === 'Digit1') doAction('punch');
+  else if (e.code === 'Digit2') doAction('kick');
+  else if (e.code === 'Digit3') doAction('pickup');
+  else if (e.code === 'Digit4') doAction('attack');
+});
+addEventListener('keyup', e => {
+  if (KEYMAP[e.code]) input[KEYMAP[e.code]] = false;
+  else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = false;
+});
+
+// Ability buttons (click / tap)
+const abEls = {};
+document.querySelectorAll('.ab').forEach(el => {
+  const act = el.dataset.act; abEls[act] = el;
+  const fire = ev => { ev.preventDefault(); doAction(act); };
+  el.addEventListener('pointerdown', fire);
+});
+function flashAbility(act){
+  const el = abEls[act]; if (!el) return;
+  el.classList.add('pressed');
+  setTimeout(() => el.classList.remove('pressed'), 160);
+}
+
+// Touch controls
+if (('ontouchstart' in window) || navigator.maxTouchPoints > 0) document.body.classList.add('touch');
+document.querySelectorAll('.dpad button').forEach(b => {
+  const dir = b.dataset.dir;
+  const on  = e => { e.preventDefault(); input[dir] = true; };
+  const off = e => { e.preventDefault(); input[dir] = false; };
+  b.addEventListener('pointerdown', on);
+  b.addEventListener('pointerup', off);
+  b.addEventListener('pointerleave', off);
+  b.addEventListener('pointercancel', off);
+});
+document.querySelectorAll('.rbtns button').forEach(b => {
+  const which = b.dataset.btn;
+  if (which === 'run'){
+    b.addEventListener('pointerdown', e => { e.preventDefault(); input.run = true; });
+    b.addEventListener('pointerup',   e => { e.preventDefault(); input.run = false; });
+    b.addEventListener('pointerleave',e => { input.run = false; });
+  } else {
+    b.addEventListener('pointerdown', e => { e.preventDefault(); triggerJump(); });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Actions
+// ---------------------------------------------------------------------------
+function doAction(name){
+  if (!player.grounded || player.locked) return;   // one ground action at a time
+  player.state = name; player.t = 0; player.locked = true;
+  flashAbility(name);
+  if (name === 'pickup') tryCollect();
+}
+function triggerJump(){
+  if (!player.grounded || player.locked) return;
+  player.vz = JUMP_V; player.grounded = false;
+  player.state = 'jump'; player.t = 0;
+}
+function tryCollect(){
+  for (const c of coins){
+    if (c.dead) continue;
+    if (Math.abs(c.px - player.px) < 70 && Math.abs(c.d - player.d) < 0.16){
+      c.dead = true; score++; scoreVal.textContent = score;
+      setTimeout(() => { c.px = 120 + Math.random()*(WORLD_W-240); c.d = 0.2 + Math.random()*0.75; c.dead = false; }, 6000);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Update
+// ---------------------------------------------------------------------------
+function update(dt){
+  // --- locked ground action: just advance, no movement ---
+  if (player.locked){
+    const cfg = ANIM[player.state];
+    const count = cfg.frames || FRAME_COUNT;
+    if (Math.floor(player.t * cfg.fps) >= count - 1){
+      player.locked = false; player.state = 'idle'; player.t = 0;
+    } else {
+      player.t += dt;
+    }
+  }
+
+  // --- movement (allowed when not locked) ---
+  if (!player.locked){
+    let mx = (input.right?1:0) - (input.left?1:0);
+    let mz = (input.down?1:0) - (input.up?1:0);   // down = toward camera (d up)
+    const moving = mx || mz;
+    if (mx) player.facing = mx > 0 ? 1 : -1;
+
+    if (moving){
+      let len = Math.hypot(mx, mz) || 1;
+      const spd = input.run ? RUN : WALK;
+      player.px += (mx/len) * spd * dt;
+      player.d  += (mz/len) * DEPTH_SPD * dt;
+      player.d  = Math.max(0.12, Math.min(1, player.d));
+      player.px = Math.max(40, Math.min(WORLD_W - 40, player.px));
+    }
+
+    if (player.grounded){
+      const want = moving ? 'run' : 'idle';
+      if (player.state !== want){ player.state = want; player.t = 0; }
+      player.t += dt;
+    }
+  }
+
+  // --- jump arc (z height), movement already applied above ---
+  if (!player.grounded){
+    player.z += player.vz * dt;
+    player.vz -= GRAV * dt;
+    if (player.z <= 0){
+      player.z = 0; player.vz = 0; player.grounded = true;
+      player.state = 'idle'; player.t = 0;
+    } else {
+      player.t += dt;   // advance jump anim
+    }
+  }
+
+  // --- camera follows player ---
+  const target = player.px - W * 0.5;
+  camera.x += (target - camera.x) * Math.min(1, dt * 6);
+  camera.x = Math.max(0, Math.min(WORLD_W - W, camera.x));
+  if (WORLD_W < W) camera.x = (WORLD_W - W) / 2;
+
+  // coin bob
+  for (const c of coins) c.bob += dt * 4;
+}
+
+// ---------------------------------------------------------------------------
+// Render
+// ---------------------------------------------------------------------------
+function currentFrame(){
+  const cfg = ANIM[player.state];
+  const count = cfg.frames || FRAME_COUNT;
+  let f = Math.floor(player.t * cfg.fps);
+  f = cfg.loop ? (f % count) : Math.min(f, count - 1);
+  return { img: images[cfg.sheet], f };
+}
+
+function drawBackground(){
+  // sky
+  const sky = ctx.createLinearGradient(0, 0, 0, horizon());
+  sky.addColorStop(0, '#1a0f3a');
+  sky.addColorStop(0.55, '#3a1b5e');
+  sky.addColorStop(1, '#7a2f6b');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, horizon() + 1);
+
+  // parallax neon skyline
+  const off = (camera.x * 0.3) % 220;
+  ctx.fillStyle = 'rgba(10,6,26,.85)';
+  for (let x = -off - 220; x < W + 220; x += 220){
+    const bw = 80, bh = 60 + ((Math.floor((x+camera.x)/220) * 37) % 70);
+    ctx.fillRect(x, horizon() - bh, bw, bh);
+    ctx.fillStyle = 'rgba(57,255,139,.10)';
+    ctx.fillRect(x + 14, horizon() - bh + 14, 8, 8);
+    ctx.fillRect(x + 40, horizon() - bh + 30, 8, 8);
+    ctx.fillStyle = 'rgba(10,6,26,.85)';
+  }
+
+  // ground
+  const g = ctx.createLinearGradient(0, horizon(), 0, H);
+  g.addColorStop(0, '#16331f');
+  g.addColorStop(0.5, '#0f5a2e');
+  g.addColorStop(1, '#1c7a3f');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, horizon(), W, H - horizon());
+
+  // perspective path down the middle
+  const cx = WORLD_W * 0.5 - camera.x;
+  ctx.fillStyle = 'rgba(40,28,18,.55)';
+  ctx.beginPath();
+  ctx.moveTo(cx - 30, horizon());
+  ctx.lineTo(cx + 30, horizon());
+  ctx.lineTo(cx + 230, H);
+  ctx.lineTo(cx - 230, H);
+  ctx.closePath();
+  ctx.fill();
+
+  // faint perspective lines
+  ctx.strokeStyle = 'rgba(255,255,255,.05)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i <= 5; i++){
+    const yy = groundY(i / 6);
+    ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke();
+  }
+}
+
+function drawLamp(sx, gy, sc){
+  const h = 120 * sc, w = 7 * sc;
+  ctx.fillStyle = '#0b0b12';
+  ctx.fillRect(sx - w/2, gy - h, w, h);
+  // head glow
+  ctx.fillStyle = 'rgba(255,210,120,.95)';
+  ctx.beginPath(); ctx.arc(sx, gy - h, 11 * sc, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,210,120,.16)';
+  ctx.beginPath(); ctx.arc(sx, gy - h, 30 * sc, 0, Math.PI*2); ctx.fill();
+}
+function drawTuft(sx, gy, sc){
+  ctx.strokeStyle = 'rgba(8,40,18,.8)';
+  ctx.lineWidth = 2 * sc;
+  for (let i = -2; i <= 2; i++){
+    ctx.beginPath();
+    ctx.moveTo(sx + i*3*sc, gy);
+    ctx.lineTo(sx + i*3*sc + i*sc, gy - (10 + Math.abs(i)*-2) * sc);
+    ctx.stroke();
+  }
+}
+function drawCoin(sx, gy, sc, bob){
+  const y = gy - (26 + Math.sin(bob)*5) * sc;
+  const r = 12 * sc;
+  ctx.save();
+  ctx.translate(sx, y);
+  const sq = Math.abs(Math.cos(bob));       // fake spin
+  ctx.scale(0.25 + 0.75*sq, 1);
+  const grd = ctx.createLinearGradient(-r, 0, r, 0);
+  grd.addColorStop(0, '#b87900'); grd.addColorStop(0.5, '#ffe680'); grd.addColorStop(1, '#ffb300');
+  ctx.fillStyle = grd;
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+  // shadow on ground
+  ctx.fillStyle = 'rgba(0,0,0,.28)';
+  ctx.beginPath(); ctx.ellipse(sx, gy, 9*sc, 3.2*sc, 0, 0, Math.PI*2); ctx.fill();
+  // $ glyph
+  ctx.fillStyle = 'rgba(90,59,0,.9)';
+  ctx.font = `900 ${Math.round(13*sc)}px Trebuchet MS`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('$', sx, y);
+}
+
+function drawPlayer(sx, gy){
+  const sc = depthScale(player.d);
+  // shadow (shrinks while airborne)
+  const lift = player.z;
+  const shA = Math.max(0.08, 0.3 - lift/600);
+  ctx.fillStyle = `rgba(0,0,0,${shA})`;
+  ctx.beginPath();
+  ctx.ellipse(sx, gy, 46*sc*(1 - lift/1400), 14*sc*(1 - lift/1400), 0, 0, Math.PI*2);
+  ctx.fill();
+
+  const { img, f } = currentFrame();
+  const col = f % SHEET_COLS, row = Math.floor(f / SHEET_COLS);
+  const FOOT = 22; // transparent padding below the feet inside each frame
+  ctx.save();
+  ctx.translate(sx, gy - lift);
+  ctx.scale(player.facing * sc, sc);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(img, col*FRAME, row*FRAME, FRAME, FRAME,
+                -FRAME/2, -FRAME + FOOT, FRAME, FRAME);
+  ctx.restore();
+}
+
+function render(){
+  ctx.clearRect(0, 0, W, H);
+  drawBackground();
+
+  // Build a depth-sorted draw list (painter's algorithm) so the player and
+  // props occlude correctly. Smaller d (farther) is drawn first.
+  const list = [];
+  for (const p of props){
+    const sx = p.px - camera.x;
+    if (sx < -120 || sx > W + 120) continue;
+    list.push({ d: p.d, draw: () => {
+      const sc = depthScale(p.d), gy = groundY(p.d);
+      if (p.type === 'lamp') drawLamp(sx, gy, sc);
+      else drawTuft(sx, gy, sc * p.s);
+    }});
+  }
+  for (const c of coins){
+    if (c.dead) continue;
+    const sx = c.px - camera.x;
+    if (sx < -60 || sx > W + 60) continue;
+    list.push({ d: c.d, draw: () => drawCoin(sx, groundY(c.d), depthScale(c.d), c.bob) });
+  }
+  list.push({ d: player.d, draw: () => drawPlayer(player.px - camera.x, groundY(player.d)) });
+
+  list.sort((a, b) => a.d - b.d);
+  for (const item of list) item.draw();
+
+  // soft vignette
+  const vg = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, H*0.75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,.45)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, W, H);
+}
+
+// ---------------------------------------------------------------------------
+// Loop
+// ---------------------------------------------------------------------------
+let last = 0, running = false;
+function frame(now){
+  if (!running) return;
+  const dt = Math.min(0.05, (now - last) / 1000 || 0);
+  last = now;
+  update(dt);
+  render();
+  requestAnimationFrame(frame);
+}
+function start(){
+  document.getElementById('load').classList.add('hide');
+  running = true; last = performance.now();
+  requestAnimationFrame(frame);
+}
+// safety: if onload never fires for some reason, boot after 5s anyway
+setTimeout(() => { if (!running) start(); }, 5000);
+})();
+</script>
+</body>
+</html>
