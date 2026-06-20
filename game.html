@@ -9,12 +9,11 @@
 <link rel="icon" type="image/png" href="https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;width:100%;background:#06040d;overflow:hidden}
-/* Full-screen: the mockup fills the viewport, centered. */
-.screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:
-  radial-gradient(1200px 700px at 50% 0%,rgba(168,85,247,.12),transparent 60%),#06040d}
-.frame{position:relative;line-height:0;max-width:100vw;max-height:100vh}
-.frame img{max-width:100vw;max-height:100vh;width:auto;height:auto;display:block}
+html,body{width:100%;background:#06040d}
+/* Full-bleed: the mockup spans the FULL width of the screen (edge to edge). */
+.screen{position:relative;width:100%;background:#06040d}
+.frame{position:relative;line-height:0;width:100%}
+.frame img{width:100%;height:auto;display:block}
 
 /* Transparent clickable zones over the buttons drawn in the image.
    %-based, so they scale with the image. Faint green glow on hover so the
