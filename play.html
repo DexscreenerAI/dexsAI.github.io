@@ -414,18 +414,21 @@ const shadow = new THREE.Mesh(
 shadow.rotation.x = -Math.PI/2; shadow.position.y = 0.02; scene.add(shadow);
 
 // $BYEBOSS coins — a gold token with the logo on each face
-const coinGeo = new THREE.CylinderGeometry(0.40, 0.40, 0.09, 28);
+const coinBodyGeo = new THREE.CylinderGeometry(0.40, 0.40, 0.09, 28);     // gold rim/body
+const coinDiscGeo = new THREE.CircleGeometry(0.40, 28);                    // logo faces — upright UVs (head up)
 const coinSideMat = new THREE.MeshBasicMaterial({ color:'#caa12a' });
-const coinCapMat  = new THREE.MeshBasicMaterial({ color:'#ffd23a' });   // logo painted on once it loads
-const coinMats = [coinSideMat, coinCapMat, coinCapMat];                  // cylinder groups: [side, top, bottom]
+const coinCapMat  = new THREE.MeshBasicMaterial({ color:'#ffd23a', side:THREE.DoubleSide });   // logo painted on once it loads
 const coins = [];
 function spawnCoin(c){
   const a = Math.random()*6.28, r = 6 + Math.random()*70;
   c.position.set(Math.cos(a)*r, 0.75, Math.sin(a)*r); c.visible = true; c.userData.dead = false;
 }
 for (let i=0;i<14;i++){
-  const m = new THREE.Mesh(coinGeo, coinMats); m.rotation.x = Math.PI/2;   // stand the disc upright
-  const g = new THREE.Group(); g.add(m); spawnCoin(g); scene.add(g); coins.push(g);
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(coinBodyGeo, coinSideMat); body.rotation.x = Math.PI/2;          // standing gold disc
+  const f = new THREE.Mesh(coinDiscGeo, coinCapMat); f.position.z = 0.05;                       // front logo
+  const b = new THREE.Mesh(coinDiscGeo, coinCapMat); b.position.z = -0.05; b.rotation.y = Math.PI; // back logo
+  g.add(body, f, b); spawnCoin(g); scene.add(g); coins.push(g);
 }
 let score = 0; const scoreVal = document.getElementById('scoreVal');
 
@@ -561,12 +564,7 @@ function hitMonsters(){
     if (--m.hp <= 0){ m.state = 'dying'; m.t = 0; score++; scoreVal.textContent = score; }
   }
 }
-new GLTFLoader().load('./assets/game/monster.glb', (gltf) => {
-  monsterTemplate = gltf.scene; monsterTemplate.traverse(o => { o.frustumCulled = false; });
-  const box = new THREE.Box3().setFromObject(monsterTemplate), size = box.getSize(new THREE.Vector3());
-  monsterScale = 3.0 / (size.y || 1); monsterMinY = box.min.y;
-  makeMonsters();
-}, undefined, (err) => console.error('monster GLB failed', err));
+// monster removed (waiting for a nicer one) — drop a new monster.glb here and call makeMonsters() to bring them back.
 
 // ===== mouse / touch look (shooter-style) =====
 const LOOK_SENS = 0.0026, PITCH_MIN = 0.05, PITCH_MAX = 1.25;
