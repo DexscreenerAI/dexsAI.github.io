@@ -87,9 +87,9 @@
   .shop-foot{padding:0 18px 16px;text-align:center;color:#6f8a7c;font-size:12px}
 
   /* Minimap */
-  .minimap{position:absolute;right:14px;bottom:14px;width:122px;height:122px;z-index:6;border-radius:50%;
-    background:rgba(6,18,10,.4);box-shadow:0 6px 22px rgba(0,0,0,.5)}
-  @media (max-width:560px){ .minimap{width:96px;height:96px;bottom:150px} }
+  .minimap{position:absolute;right:16px;bottom:16px;width:206px;height:206px;z-index:6;border-radius:50%;
+    background:rgba(6,18,10,.4);box-shadow:0 8px 26px rgba(0,0,0,.55)}
+  @media (max-width:560px){ .minimap{width:140px;height:140px;bottom:150px} }
 
   /* Crosshair */
   .crosshair{position:absolute;left:50%;top:50%;width:24px;height:24px;transform:translate(-50%,-50%);z-index:6;pointer-events:none}
@@ -108,7 +108,7 @@
       <span class="tag">BETA · 3D</span>
     </div>
     <div class="hint"><b>WASD</b> bouge · <b>SOURIS</b> vise · <b>CLIC&nbsp;DROIT</b> tire · <b>SHIFT</b> run · <b>1–4</b> attaque</div>
-    <canvas id="minimap" width="170" height="170" class="minimap"></canvas>
+    <canvas id="minimap" width="300" height="300" class="minimap"></canvas>
     <div id="crosshair" class="crosshair"></div>
     <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;<b id="scoreVal">0</b></div>
 
@@ -419,7 +419,7 @@ queueMicrotask(() => selectChar(2, asset));   // default = Iso 2D (deferred so e
 // ---- iso sprite character (a 2D billboard option in the Shop) ----
 const ISO_STATES = { idle:{fps:7,loop:true}, walk:{fps:12,loop:true}, run:{fps:16,loop:true}, jump:{fps:16,loop:false}, shot:{fps:22,loop:true} };
 const ISO_DIRS = ['up','down','right'];
-const ISO = { y:1.15, scale:2.7 };   // ground offset + size (tuned via the panel)
+const ISO = { y:0.96, scale:2.7 };   // tuned
 const isoTex = {}; let isoLoaded = false, isoSprite = null, spriteActive = false, sprState = 'idle', sprT = 0;
 function loadIso(onDone){
   if (isoLoaded){ onDone && onDone(); return; }
@@ -440,7 +440,6 @@ function applyIsoChar(onDone){
     if (activeModel){ player.remove(activeModel); activeModel = null; }   // hide the GLB
     if (gunModel) gunModel.visible = false;                                // iso sprites already hold a gun
     mixer = null; spriteActive = true; isoSprite.visible = true; sprState = 'idle'; sprT = 0;
-    buildIsoPanel();
     onDone && onDone();
   });
 }
@@ -796,7 +795,7 @@ canvas.addEventListener('touchend', (e) => { for (const t of e.changedTouches){ 
 
 // ===== minimap (bottom-right): player, monsters, coins, buildings =====
 const mmCanvas = document.getElementById('minimap'), mmCtx = mmCanvas ? mmCanvas.getContext('2d') : null;
-const MM_RANGE = 85;
+const MM_RANGE = 115;
 function drawMinimap(){
   if (!mmCtx) return;
   const S = mmCanvas.width, c = S/2, rad = c-3, sc = (rad-2)/MM_RANGE;
