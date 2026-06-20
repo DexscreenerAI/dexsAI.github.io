@@ -239,16 +239,37 @@ const shadow = new THREE.Mesh(
 );
 shadow.rotation.x = -Math.PI/2; shadow.position.y = 0.02; scene.add(shadow);
 
-// coins
-const coinGeo = new THREE.CylinderGeometry(0.34, 0.34, 0.07, 18);
-const coinMat = new THREE.MeshStandardMaterial({ color:'#ffc23a', emissive:'#7a5200', emissiveIntensity:0.45, metalness:0.6, roughness:0.35 });
+// $BYEBOSS coins — a gold token with the logo on each face
+const coinGeo = new THREE.CylinderGeometry(0.40, 0.40, 0.09, 28);
+const coinSideMat = new THREE.MeshBasicMaterial({ color:'#caa12a' });
+const coinCapMat  = new THREE.MeshBasicMaterial({ color:'#ffd23a' });   // logo painted on once it loads
+const coinMats = [coinSideMat, coinCapMat, coinCapMat];                  // cylinder groups: [side, top, bottom]
 const coins = [];
 function spawnCoin(c){
   const a = Math.random()*6.28, r = 6 + Math.random()*70;
-  c.position.set(Math.cos(a)*r, 0.6, Math.sin(a)*r); c.visible = true; c.userData.dead = false;
+  c.position.set(Math.cos(a)*r, 0.75, Math.sin(a)*r); c.visible = true; c.userData.dead = false;
 }
-for (let i=0;i<14;i++){ const c = new THREE.Mesh(coinGeo, coinMat); c.rotation.x = Math.PI/2; spawnCoin(c); scene.add(c); coins.push(c); }
+for (let i=0;i<14;i++){
+  const m = new THREE.Mesh(coinGeo, coinMats); m.rotation.x = Math.PI/2;   // stand the disc upright
+  const g = new THREE.Group(); g.add(m); spawnCoin(g); scene.add(g); coins.push(g);
+}
 let score = 0; const scoreVal = document.getElementById('scoreVal');
+
+// paint the $BYEBOSS logo onto the coin faces (same-origin image -> canvas texture is safe)
+(function paintCoin(){
+  const img = new Image();
+  img.onload = () => {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 256;
+    const g = cv.getContext('2d');
+    const grd = g.createRadialGradient(128,102,16,128,128,132);
+    grd.addColorStop(0,'#ffe680'); grd.addColorStop(0.7,'#ffc23a'); grd.addColorStop(1,'#a86f00');
+    g.fillStyle = grd; g.beginPath(); g.arc(128,128,126,0,6.28); g.fill();
+    g.drawImage(img, 20, 20, 216, 216);                       // round logo, thin gold rim around it
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+    coinCapMat.map = t; coinCapMat.color.set('#ffffff'); coinCapMat.needsUpdate = true;
+  };
+  img.src = './assets/game/byeboss-logo.png';
+})();
 
 // ---------------------------------------------------------------------------
 // Input
