@@ -87,7 +87,7 @@
   .shop-foot{padding:0 18px 16px;text-align:center;color:#6f8a7c;font-size:12px}
 
   /* Minimap */
-  .minimap{position:absolute;right:16px;bottom:16px;width:206px;height:206px;z-index:6;border-radius:50%;
+  .minimap{position:absolute;inset:auto;right:16px;bottom:16px;width:206px;height:206px;z-index:6;border-radius:50%;
     background:rgba(6,18,10,.4);box-shadow:0 8px 26px rgba(0,0,0,.55)}
   @media (max-width:560px){ .minimap{width:140px;height:140px;bottom:150px} }
 
@@ -145,11 +145,13 @@
 </div>
 
 <script type="importmap">
-{ "imports": { "three": "./assets/vendor/three.module.js" } }
+{ "imports": { "three": "./assets/vendor/three.module.js", "three-mesh-bvh": "./assets/vendor/three-mesh-bvh.module.js" } }
 </script>
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from './assets/vendor/GLTFLoader.js';
+import { MeshBVH, acceleratedRaycast } from 'three-mesh-bvh';
+THREE.Mesh.prototype.raycast = acceleratedRaycast;   // BVH-accelerated raycasts (used for casino collision)
 
 // ---------------------------------------------------------------------------
 // Renderer / scene / camera
@@ -193,11 +195,11 @@ function tex(url, srgb, repeat){
 }
 
 // ground (tiled grass) + a dirt trail
-const grassTex = tex('./assets/game/ground-grass.jpg', true, [60,60]);
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(260,260), new THREE.MeshLambertMaterial({ map:grassTex }));
+const grassTex = tex('./assets/game/ground-grass.jpg', true, [125,125]);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(540,540), new THREE.MeshLambertMaterial({ map:grassTex }));
 ground.rotation.x = -Math.PI/2; scene.add(ground);
-const dirtTex = tex('./assets/game/ground-brick.jpg', true, [3,90]);
-const trail = new THREE.Mesh(new THREE.PlaneGeometry(5.5,260), new THREE.MeshLambertMaterial({ map:dirtTex }));
+const dirtTex = tex('./assets/game/ground-brick.jpg', true, [3,187]);
+const trail = new THREE.Mesh(new THREE.PlaneGeometry(5.5,540), new THREE.MeshLambertMaterial({ map:dirtTex }));
 trail.rotation.x = -Math.PI/2; trail.position.y = 0.02; scene.add(trail);
 
 // (the character is the rigged ByeBoss GLB — loaded further down)
@@ -605,7 +607,7 @@ function angleLerp(a, b, t){ let d = ((b - a + Math.PI) % (2*Math.PI)) - Math.PI
 // ---------------------------------------------------------------------------
 let camYaw = 0, camPitch = 0;                     // mouse-controlled view angle (shooter-style)
 const CAM_DIST = 10, camTarget = new THREE.Vector3();
-const BOUND = 110;
+const BOUND = 250;
 
 // ===== monsters — kill one for +1 $BYEBOSS =====
 const monsterGroup = new THREE.Group(); scene.add(monsterGroup);
@@ -659,15 +661,26 @@ function hitMonsters(){
 }
 // monster removed (waiting for a nicer one) — drop a new monster.glb here and call makeMonsters() to bring them back.
 
-// ===== casino landmark =====
+// ===== casino landmark (with solid-wall collision) =====
+const casinoColliders = [];
 new GLTFLoader().load('./assets/game/casino.glb', (gltf) => {
-  const c = gltf.scene; c.traverse(o => { o.frustumCulled = false; });
+  const c = gltf.scene;
+  c.traverse(o => { o.frustumCulled = false; if (o.isMesh && o.geometry){ o.geometry.boundsTree = new MeshBVH(o.geometry); casinoColliders.push(o); } });
   const box = new THREE.Box3().setFromObject(c), size = box.getSize(new THREE.Vector3());
-  c.scale.setScalar(28 / (size.y || 1));                       // ~28 units tall (towering landmark)
+  c.scale.setScalar(42 / (size.y || 1));                       // big enough to walk into
   const b2 = new THREE.Box3().setFromObject(c);
-  c.position.set(40, -b2.min.y, -62); c.rotation.y = -0.6;      // off the path, facing spawn
+  c.position.set(40, -b2.min.y, -62); c.rotation.y = -0.6;
   scene.add(c);
 }, undefined, (err) => console.error('casino failed to load', err));
+// player vs casino walls — BVH raycast, axis-separated so you slide along walls
+const colRay = new THREE.Raycaster(); colRay.firstHitOnly = true;
+function wallBlocked(fx, fz, tx, tz){
+  if (!casinoColliders.length) return false;
+  _v0.set(fx, pos.y + 1.0, fz);
+  _v1.set(tx - fx, 0, tz - fz); const d = _v1.length(); if (d < 1e-5) return false; _v1.divideScalar(d);
+  colRay.set(_v0, _v1); colRay.far = d + 0.7;
+  return colRay.intersectObjects(casinoColliders, false).length > 0;
+}
 
 // ===== weapon: the gun (right-click = aim + fire, infinite ammo) =====
 const GUN = { px:-0.23, py:1.28, pz:0.47, rx:0, ry:-3.2, rz:0.1, scale:2.0, tip:0.5 };   // tuned
@@ -718,7 +731,7 @@ function fireGun(){
   // aim at where the crosshair points so bullets converge there (not parallel + low)
   const aimPoint = hits.length ? hits[0].point : raycaster.ray.at(140, _v1);
   if (gunModel && gunModel.visible) gunTip.getWorldPosition(_v0);   // from the muzzle
-  else _v0.set(pos.x, pos.y + 1.3, pos.z);                          // ...or the chest (gun hidden / iso)
+  else _v0.set(pos.x, pos.y + 1.9, pos.z);                          // ...or the chest/shoulder (gun hidden / iso)
   spawnBullet(_v0, _v2.copy(aimPoint).sub(_v0).normalize());
 }
 canvas.addEventListener('contextmenu', e => e.preventDefault());
@@ -828,7 +841,9 @@ function update(dt){
       const wx = -Math.sin(camYaw)*mF + Math.cos(camYaw)*mR;   // input -> world, relative to camera
       const wz = -Math.cos(camYaw)*mF - Math.sin(camYaw)*mR;
       const len = Math.hypot(wx, wz) || 1, spd = keys.run ? RUN : WALK;
-      pos.x += (wx/len)*spd*dt; pos.z += (wz/len)*spd*dt;
+      const stepX = (wx/len)*spd*dt, stepZ = (wz/len)*spd*dt;
+      if (!wallBlocked(pos.x, pos.z, pos.x + stepX, pos.z)) pos.x += stepX;   // slide along casino walls
+      if (!wallBlocked(pos.x, pos.z, pos.x, pos.z + stepZ)) pos.z += stepZ;
       pos.x = Math.max(-BOUND, Math.min(BOUND, pos.x));
       pos.z = Math.max(-BOUND, Math.min(BOUND, pos.z));
       faceAngle = Math.atan2(wx, wz);                   // face the way we walk
