@@ -33,7 +33,7 @@
   .score .coin{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe680,#ffb300 55%,#b87900);
     box-shadow:0 0 8px rgba(255,196,0,.6);display:grid;place-items:center;color:#5a3b00;font-size:11px;font-weight:900}
   .score b{color:#ffd54a}
-  .bankprompt{position:absolute;left:50%;top:56%;transform:translateX(-50%);background:rgba(6,4,13,.85);
+  .bankprompt{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);background:rgba(6,4,13,.85);
     border:1px solid rgba(57,255,139,.55);color:#eafff2;padding:8px 15px;border-radius:10px;font-weight:700;
     font-size:14px;z-index:7;pointer-events:none;box-shadow:0 0 14px rgba(57,255,139,.25)}
   .bankprompt b{color:#39ff8b}
@@ -131,18 +131,18 @@
       <span class="title"><span class="b">$BYE</span><span class="g">BOSS</span> · WORLD</span>
       <span class="tag">BETA · 3D</span>
     </div>
-    <div class="hint"><b>WASD</b> bouge · <b>SOURIS</b> vise · <b>CLIC&nbsp;DROIT</b> tire · <b>SHIFT</b> run · <b>1–4</b> attaque</div>
+    <div class="hint"><b>WASD</b> move · <b>MOUSE</b> aim · <b>RIGHT&nbsp;CLICK</b> shoot · <b>SHIFT</b> run · <b>1–4</b> attack</div>
     <canvas id="minimap" width="480" height="480" class="minimap"></canvas>
     <div id="crosshair" class="crosshair"></div>
     <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;🔒<b id="scoreVal">0</b><small id="carryVal" style="margin-left:8px;color:#ff9d3b;font-weight:800;font-size:13px"></small><small id="capVal" style="margin-left:7px;opacity:.6;font-weight:600;font-size:11px"></small></div>
-    <div id="bankPrompt" class="bankprompt hide">🔒 <b>E</b> — déposer au coffre</div>
+    <div id="bankPrompt" class="bankprompt hide">🔒 Press <b>E</b> to deposit in vault</div>
     <div class="hpbar"><span>❤️</span><div class="hpb"><i id="hpFill"></i></div></div>
-    <div id="xpwrap" class="xpwrap" style="display:none"><span class="lvl" id="lvlVal">Niv 1</span><div class="xpb"><i id="xpFill"></i></div></div>
+    <div id="xpwrap" class="xpwrap" style="display:none"><span class="lvl" id="lvlVal">Lvl 1</span><div class="xpb"><i id="xpFill"></i></div></div>
     <button id="walletBtn" class="walletbtn">👻 Connect Phantom</button>
     <div id="mpCount" class="mpcount" style="display:none"></div>
-    <div id="respawn" class="respawn hide">💀 ÉLIMINÉ<br><span>respawn…</span></div>
+    <div id="respawn" class="respawn hide">💀 ELIMINATED<br><span>respawning…</span></div>
 
-    <button id="shopBtn" class="shopbtn" title="Changer de personnage">🛍️<span>Shop</span></button>
+    <button id="shopBtn" class="shopbtn" title="Change character">🛍️<span>Shop</span></button>
     <div id="shop" class="shop hidden">
       <div class="shop-box">
         <div class="shop-head"><span>🛍️ CHOISIS TON PERSO</span><span id="shopClose" class="shop-x">✕</span></div>
@@ -617,30 +617,49 @@ function syncServerApples(list){
 }
 function clearServerApples(){ for (const [,e] of serverApples) scene.remove(e.group); serverApples.clear(); }
 
-// Vault deposit points (the GLB), positions sent by the server on welcome.
-let vaultPoints = [];               // [{x,z}]
-let vaultTemplate = null, vaultBaseScale = 2, vaultYOffset = 0, _pendingVaults = null;
+// Landmarks: vault (bank) + shop building, positions sent by the server on
+// welcome. Both are single teleport points.
+// Sink a placed prop so its LOWEST vertex sits exactly on the ground (y=0),
+// whatever the model's pivot — fixes "floating" props.
+function groundMesh(m){ m.position.y = 0; m.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(m); m.position.y -= b.min.y; }
+function fitScale(t, targetH){ t.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(t); const h = (b.max.y - b.min.y) || 1; return targetH / h; }
+
+let vaultPoints = [];               // [{x,z}]  (single vault)
+let vaultTemplate = null, vaultScale = 2, _pendingVaults = null;
 const vaultMeshes = [];
 new GLTFLoader().load('./assets/game/vault.glb', (g) => {
-  vaultTemplate = g.scene;
-  // auto-fit to ~4.5 units tall and sit its base on the ground, whatever the model
-  const box = new THREE.Box3().setFromObject(vaultTemplate);
-  const h = (box.max.y - box.min.y) || 1;
-  vaultBaseScale = 4.5 / h; vaultYOffset = -box.min.y * vaultBaseScale;
+  vaultTemplate = g.scene; vaultScale = fitScale(vaultTemplate, 3.6);
   if (_pendingVaults){ placeVaults(_pendingVaults); _pendingVaults = null; }
-}, undefined, () => { /* missing model: vaults still work, just invisible */ });
+}, undefined, () => {});
 function placeVaults(list){
   vaultPoints = list || [];
   for (const m of vaultMeshes) scene.remove(m); vaultMeshes.length = 0;
   if (!vaultTemplate){ _pendingVaults = list; return; }
   for (const v of vaultPoints){
     const m = vaultTemplate.clone(true);
-    m.scale.setScalar(vaultBaseScale); m.position.set(v.x, vaultYOffset, v.z);
-    m.traverse(o => { o.frustumCulled = false; }); scene.add(m); vaultMeshes.push(m);
+    m.scale.setScalar(vaultScale); m.position.set(v.x, 0, v.z); m.traverse(o => { o.frustumCulled = false; });
+    scene.add(m); groundMesh(m); vaultMeshes.push(m);   // flush to the ground
   }
 }
 function clearVaults(){ for (const m of vaultMeshes) scene.remove(m); vaultMeshes.length = 0; vaultPoints = []; }
 function nearVault(){ for (const v of vaultPoints){ const dx=v.x-pos.x, dz=v.z-pos.z; if (dx*dx+dz*dz <= 16) return true; } return false; }
+
+// Shop building (single, teleport landmark — no shop UI yet).
+let shopPoint = null, shopTemplate = null, shopScale = 2, _pendingShop = null, shopMesh = null;
+new GLTFLoader().load('./assets/game/shop.glb', (g) => {
+  shopTemplate = g.scene; shopScale = fitScale(shopTemplate, 8.0);
+  if (_pendingShop !== null){ placeShop(_pendingShop); _pendingShop = null; }
+}, undefined, () => {});
+function placeShop(pt){
+  shopPoint = pt || null;
+  if (shopMesh){ scene.remove(shopMesh); shopMesh = null; }
+  if (!shopPoint) return;
+  if (!shopTemplate){ _pendingShop = pt; return; }
+  const m = shopTemplate.clone(true);
+  m.scale.setScalar(shopScale); m.position.set(shopPoint.x, 0, shopPoint.z); m.traverse(o => { o.frustumCulled = false; });
+  scene.add(m); groundMesh(m); shopMesh = m;
+}
+function clearShop(){ if (shopMesh){ scene.remove(shopMesh); shopMesh = null; } shopPoint = null; }
 let score = 0; const scoreVal = document.getElementById('scoreVal');
 scoreVal.textContent = '🔒';   // $BYEBOSS only counts once a wallet is connected
 
@@ -682,7 +701,7 @@ const bankPrompt = document.getElementById('bankPrompt');
 const xpwrapEl = document.getElementById('xpwrap'), lvlVal = document.getElementById('lvlVal'), xpFill = document.getElementById('xpFill');
 function fmtPool(n){ n=+n; if(!isFinite(n)) return ''; if(n>=1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M'; if(n>=1e3) return Math.round(n/1e3)+'k'; return ''+n; }
 function tryBank(){ if (mpConnected && walletAddr && carried > 0 && nearVault() && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'vault' })); }
-function teleportToVault(){ if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'teleport' })); }
+function doTeleport(dest){ if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'teleport', to: dest })); }
 const remotePlayers = new Map();
 const mpCountEl = document.getElementById('mpCount');
 function b58encode(bytes){
@@ -706,7 +725,7 @@ function addRemote(pl){
 }
 function removeRemote(id){ const r = remotePlayers.get(id); if (r){ if (r.group) scene.remove(r.group); remotePlayers.delete(id); } }
 function onSnap(m){
-  if (mpCountEl) mpCountEl.textContent = `👥 ${m.online} en ligne · ${m.accounts} comptes` + (Number.isFinite(m.pool) ? ` · pool ${fmtPool(m.pool)}` : '');
+  if (mpCountEl) mpCountEl.textContent = `👥 ${m.online} online · ${m.accounts} accounts` + (Number.isFinite(m.pool) ? ` · pool ${fmtPool(m.pool)}` : '');
   const seen = new Set();
   for (const pl of m.players){
     seen.add(pl.id);
@@ -714,9 +733,9 @@ function onSnap(m){
       if (Number.isFinite(pl.hp)){ hp = Math.max(0, pl.hp); updateHpBar(); }
       if (Number.isFinite(pl.vault)){ vault = pl.vault; scoreVal.textContent = vault; }          // secured (claimable)
       if (Number.isFinite(pl.carried)){ carried = pl.carried; if (carryVal) carryVal.textContent = carried > 0 ? `⚠️${carried}` : ''; }  // at risk
-      if (capVal && Number.isFinite(pl.earnedToday)) capVal.textContent = `auj. ${pl.earnedToday}/${m.dailyCap || mpDailyCap}`;
+      if (capVal && Number.isFinite(pl.earnedToday)) capVal.textContent = `today ${pl.earnedToday}/${m.dailyCap || mpDailyCap}`;
       if (Number.isFinite(pl.level)){
-        if (lvlVal) lvlVal.textContent = 'Niv ' + pl.level;
+        if (lvlVal) lvlVal.textContent = 'Lvl ' + pl.level;
         if (xpFill) xpFill.style.width = (pl.xpNeed > 0 ? Math.max(0, Math.min(100, pl.xpInto / pl.xpNeed * 100)) : 100) + '%';
       }
       const srvDead = !pl.alive || hp <= 0;
@@ -751,7 +770,8 @@ function mpConnect(){
       } catch(e){ console.warn('sign failed', e); try { mpWs.close(); } catch {} }
     } else if (m.t === 'welcome'){ mpId = m.id; mpConnected = true; mpDailyCap = m.dailyCap || 400; if (mpCountEl) mpCountEl.style.display = 'block';
       for (const c of coins) c.visible = false;   // the server owns the coins now
-      placeVaults(m.vaults || []);                // render the bank/vault points
+      placeVaults(m.vaults || []);                // render the vault (bank)
+      placeShop(m.shop || null);                  // render the shop building
       if (xpwrapEl) xpwrapEl.style.display = 'flex';
     }
     else if (m.t === 'denied'){ console.warn('multiplayer denied:', m.m); }
@@ -762,7 +782,7 @@ function mpConnect(){
     else if (m.t === 'snap'){ onSnap(m); }
     else if (m.t === 'left'){ removeRemote(m.id); }
   };
-  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearServerApples(); clearVaults(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = ''; if (bankPrompt) bankPrompt.classList.add('hide'); if (xpwrapEl) xpwrapEl.style.display = 'none'; vault = carried = 0; if (mpCountEl) mpCountEl.textContent = '🔴 hors-ligne'; };
+  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearServerApples(); clearVaults(); clearShop(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = ''; if (bankPrompt) bankPrompt.classList.add('hide'); if (xpwrapEl) xpwrapEl.style.display = 'none'; vault = carried = 0; if (mpCountEl) mpCountEl.textContent = '🔴 offline'; };
   mpWs.onerror = () => {};
 }
 async function mpJoin(){ if (!walletAddr) await connectWallet(); if (walletAddr) mpConnect(); }
@@ -1109,7 +1129,7 @@ canvas.addEventListener('touchend', (e) => { for (const t of e.changedTouches){ 
 // ===== minimap (bottom-right): player, monsters, coins, buildings =====
 const mmCanvas = document.getElementById('minimap'), mmCtx = mmCanvas ? mmCanvas.getContext('2d') : null;
 const MM_RANGE = 115;
-const _houseMM = { x:-999, y:-999 };   // current screen pos of the 🏠 teleport icon
+const _vaultMM = { x:-999, y:-999 }, _shopMM = { x:-999, y:-999 };   // screen pos of the teleport icons
 if (mmCanvas){
   mmCanvas.style.cursor = 'pointer';
   mmCanvas.addEventListener('click', (e) => {
@@ -1117,7 +1137,9 @@ if (mmCanvas){
     const rect = mmCanvas.getBoundingClientRect();
     const cx = (e.clientX - rect.left) * (mmCanvas.width / rect.width);
     const cy = (e.clientY - rect.top)  * (mmCanvas.height / rect.height);
-    if (Math.hypot(cx - _houseMM.x, cy - _houseMM.y) < mmCanvas.width * 0.07) teleportToVault();
+    const r = mmCanvas.width * 0.075;
+    if (Math.hypot(cx - _vaultMM.x, cy - _vaultMM.y) < r) doTeleport('vault');
+    else if (Math.hypot(cx - _shopMM.x, cy - _shopMM.y) < r) doTeleport('shop');
   });
 }
 function drawMinimap(){
@@ -1143,15 +1165,11 @@ function drawMinimap(){
   for (const m of monsters){ if (m.state === 'dead') continue; mmCtx.beginPath(); mmCtx.arc(c+(m.pos.x-pos.x)*sc, c+(m.pos.z-pos.z)*sc, 3.2, 0, 6.28); mmCtx.fill(); }
   mmCtx.restore();
   mmCtx.strokeStyle = 'rgba(57,255,139,.55)'; mmCtx.lineWidth = 2; mmCtx.beginPath(); mmCtx.arc(c,c,rad,0,6.28); mmCtx.stroke();
-  // 🏠 teleport icon = first vault, clamped to the minimap edge (GTA-style). Click it to teleport.
-  if (mpConnected && vaultPoints.length){
-    const v0 = vaultPoints[0]; let ox = (v0.x-pos.x)*sc, oz = (v0.z-pos.z)*sc;
-    const dlen = Math.hypot(ox,oz) || 1, lim = rad-13; if (dlen > lim){ ox = ox/dlen*lim; oz = oz/dlen*lim; }
-    const hx = c+ox, hy = c+oz;
-    mmCtx.font = Math.round(S*0.085)+'px serif'; mmCtx.textAlign='center'; mmCtx.textBaseline='middle';
-    mmCtx.fillText('🏠', hx, hy);
-    _houseMM.x = hx; _houseMM.y = hy;
-  } else { _houseMM.x = -999; _houseMM.y = -999; }
+  // Teleport icons (vault 🏦 + shop 🏪), clamped to the minimap edge (GTA-style). Click to teleport.
+  mmCtx.font = Math.round(S*0.085)+'px serif'; mmCtx.textAlign='center'; mmCtx.textBaseline='middle';
+  const _mmIcon = (wx, wz) => { let ox=(wx-pos.x)*sc, oz=(wz-pos.z)*sc; const dl=Math.hypot(ox,oz)||1, lim=rad-13; if (dl>lim){ ox=ox/dl*lim; oz=oz/dl*lim; } return { x:c+ox, y:c+oz }; };
+  if (mpConnected && vaultPoints.length){ const p = _mmIcon(vaultPoints[0].x, vaultPoints[0].z); mmCtx.fillText('🏦', p.x, p.y); _vaultMM.x = p.x; _vaultMM.y = p.y; } else { _vaultMM.x = -999; _vaultMM.y = -999; }
+  if (mpConnected && shopPoint){ const p = _mmIcon(shopPoint.x, shopPoint.z); mmCtx.fillText('🏪', p.x, p.y); _shopMM.x = p.x; _shopMM.y = p.y; } else { _shopMM.x = -999; _shopMM.y = -999; }
   const fx = Math.sin(faceAngle), fz = Math.cos(faceAngle), px = -fz, py = fx;
   mmCtx.fillStyle = '#39ff8b'; mmCtx.beginPath();
   mmCtx.moveTo(c+fx*8, c+fz*8); mmCtx.lineTo(c-fx*4+px*5, c-fz*4+py*5); mmCtx.lineTo(c-fx*4-px*5, c-fz*4-py*5);
