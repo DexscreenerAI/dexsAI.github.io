@@ -672,43 +672,111 @@ function clearServerApples(){ for (const [,e] of serverApples) scene.remove(e.gr
 // whatever the model's pivot — fixes "floating" props.
 function groundMesh(m){ m.position.y = 0; m.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(m); m.position.y -= b.min.y; }
 function fitScale(t, targetH){ t.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(t); const h = (b.max.y - b.min.y) || 1; return targetH / h; }
+// Scale, rotate, place at (x,z), then sink so the lowest vertex sits at y=0 + yNudge.
+function placeProp(m, x, z, scale, rotY, yNudge){
+  if (!m) return;
+  m.scale.setScalar(scale); m.rotation.y = rotY;
+  m.position.set(x, 0, z); m.updateMatrixWorld(true);
+  const b = new THREE.Box3().setFromObject(m); m.position.y = -b.min.y + yNudge;
+}
 
-let vaultPoints = [];               // [{x,z}]  (single vault)
+// ---- VAULT (single) — tunable via the temp panel ----
+let vaultPoints = [];               // [{x,z}]
 let vaultTemplate = null, vaultScale = 2, _pendingVaults = null;
+let vaultX = 35, vaultZ = 35, vaultYNudge = 0, vaultRotY = 0;
 const vaultMeshes = [];
 new GLTFLoader().load('./assets/game/vault.glb', (g) => {
   vaultTemplate = g.scene; vaultScale = fitScale(vaultTemplate, 3.6);
   if (_pendingVaults){ placeVaults(_pendingVaults); _pendingVaults = null; }
 }, undefined, () => {});
+function applyVault(){ vaultPoints[0] = { x: vaultX, z: vaultZ }; placeProp(vaultMeshes[0], vaultX, vaultZ, vaultScale, vaultRotY, vaultYNudge); }
 function placeVaults(list){
-  vaultPoints = list || [];
   for (const m of vaultMeshes) scene.remove(m); vaultMeshes.length = 0;
+  if (list && list.length){ vaultX = list[0].x; vaultZ = list[0].z; }   // start at the server point
   if (!vaultTemplate){ _pendingVaults = list; return; }
-  for (const v of vaultPoints){
-    const m = vaultTemplate.clone(true);
-    m.scale.setScalar(vaultScale); m.position.set(v.x, 0, v.z); m.traverse(o => { o.frustumCulled = false; });
-    scene.add(m); groundMesh(m); vaultMeshes.push(m);   // flush to the ground
-  }
+  const m = vaultTemplate.clone(true); m.traverse(o => { o.frustumCulled = false; }); scene.add(m); vaultMeshes.push(m);
+  applyVault();
 }
-function clearVaults(){ for (const m of vaultMeshes) scene.remove(m); vaultMeshes.length = 0; vaultPoints = []; }
+function clearVaults(){ for (const m of vaultMeshes) scene.remove(m); vaultMeshes.length = 0; }
 function nearVault(){ for (const v of vaultPoints){ const dx=v.x-pos.x, dz=v.z-pos.z; if (dx*dx+dz*dz <= 16) return true; } return false; }
 
-// Shop building (single, teleport landmark — no shop UI yet).
+// ---- SHOP building (single) — tunable via the temp panel ----
 let shopPoint = null, shopTemplate = null, shopScale = 2, _pendingShop = null, shopMesh = null;
+let shopX = -35, shopZ = -35, shopYNudge = 0, shopRotY = 0;
 new GLTFLoader().load('./assets/game/shop.glb', (g) => {
   shopTemplate = g.scene; shopScale = fitScale(shopTemplate, 8.0);
   if (_pendingShop !== null){ placeShop(_pendingShop); _pendingShop = null; }
 }, undefined, () => {});
+function applyShop(){ shopPoint = { x: shopX, z: shopZ }; placeProp(shopMesh, shopX, shopZ, shopScale, shopRotY, shopYNudge); }
 function placeShop(pt){
-  shopPoint = pt || null;
   if (shopMesh){ scene.remove(shopMesh); shopMesh = null; }
+  if (pt){ shopX = pt.x; shopZ = pt.z; shopPoint = pt; }   // start at the server point
   if (!shopPoint) return;
-  if (!shopTemplate){ _pendingShop = pt; return; }
-  const m = shopTemplate.clone(true);
-  m.scale.setScalar(shopScale); m.position.set(shopPoint.x, 0, shopPoint.z); m.traverse(o => { o.frustumCulled = false; });
-  scene.add(m); groundMesh(m); shopMesh = m;
+  if (!shopTemplate){ _pendingShop = shopPoint; return; }
+  const m = shopTemplate.clone(true); m.traverse(o => { o.frustumCulled = false; }); scene.add(m); shopMesh = m;
+  applyShop();
 }
-function clearShop(){ if (shopMesh){ scene.remove(shopMesh); shopMesh = null; } shopPoint = null; }
+function clearShop(){ if (shopMesh){ scene.remove(shopMesh); shopMesh = null; } }
+function applyApples(){ for (const e of serverApples.values()){ e.group.scale.setScalar(appleScale); e.group.position.y = appleY; } }
+
+// ===== TEMP draggable tuning panels (shop / apples / vault) — adjust, Copy, send me the values, then I bake + delete =====
+function makeTuner(id, title, accent, posCss, rows, prefix){
+  if (document.getElementById(id)) return;
+  const store = {};
+  const p = document.createElement('div'); p.id = id;
+  p.style.cssText = `position:fixed;${posCss};width:228px;z-index:50;background:rgba(10,8,18,.93);border:1px solid ${accent};border-radius:12px;color:#eafff2;font:12px Trebuchet MS,Verdana,sans-serif;box-shadow:0 12px 32px rgba(0,0,0,.55);backdrop-filter:blur(6px);user-select:none`;
+  const head = document.createElement('div');
+  head.style.cssText = `cursor:move;padding:8px 10px;background:${accent}33;border-radius:12px 12px 0 0;font-weight:800;display:flex;justify-content:space-between;align-items:center`;
+  head.innerHTML = `<span>${title}</span><span class="tx" style="cursor:pointer;opacity:.75">✕</span>`;
+  const body = document.createElement('div'); body.style.cssText = 'padding:10px 12px;display:flex;flex-direction:column;gap:9px';
+  p.append(head, body);
+  for (const r of rows){
+    store[r.k] = +r.val;
+    const wrap = document.createElement('div');
+    const h = document.createElement('div'); h.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:2px';
+    const nm = document.createElement('span'); nm.textContent = r.k;
+    const out = document.createElement('span'); out.style.color = accent; out.textContent = (+r.val).toFixed(2);
+    h.append(nm, out);
+    const inp = document.createElement('input'); inp.type='range'; inp.min=r.min; inp.max=r.max; inp.step=r.step; inp.value=r.val; inp.style.width='100%';
+    inp.addEventListener('input', () => { const v = parseFloat(inp.value); out.textContent = v.toFixed(2); store[r.k] = v; r.fn(v); });
+    wrap.append(h, inp); body.append(wrap);
+  }
+  const btn = document.createElement('button'); btn.textContent = '📋 Copy values';
+  btn.style.cssText = `margin-top:4px;padding:9px;border-radius:8px;border:1px solid ${accent};background:${accent}33;color:#eafff2;font-weight:800;cursor:pointer`;
+  btn.onclick = () => {
+    const txt = prefix + ' ' + Object.entries(store).map(([k,v]) => `${k}=${(+v).toFixed(3)}`).join(' | ');
+    const ok = () => { btn.textContent = '✅ Copied — send it to me'; setTimeout(() => btn.textContent = '📋 Copy values', 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok).catch(() => prompt('Copy this:', txt)); else prompt('Copy this:', txt);
+  };
+  body.append(btn);
+  p.addEventListener('keydown', e => e.stopPropagation());
+  let drag=false, ox=0, oy=0;
+  head.addEventListener('pointerdown', e => { if (e.target.classList.contains('tx')) return; drag=true; ox=e.clientX-p.offsetLeft; oy=e.clientY-p.offsetTop; e.preventDefault(); });
+  window.addEventListener('pointermove', e => { if (!drag) return; p.style.left=Math.max(0,e.clientX-ox)+'px'; p.style.top=Math.max(0,e.clientY-oy)+'px'; p.style.right='auto'; });
+  window.addEventListener('pointerup', () => drag=false);
+  head.querySelector('.tx').onclick = () => p.remove();
+  document.body.appendChild(p);
+}
+setTimeout(() => {   // wait for the GLBs so the scale sliders start at the auto-fit value
+makeTuner('tuneVault', '🏦 VAULT — drag me', '#39ff8b', 'top:64px;right:14px', [
+  { k:'x',      min:-120, max:120, step:1,    val:vaultX,      fn:v=>{ vaultX=v;      applyVault(); } },
+  { k:'z',      min:-120, max:120, step:1,    val:vaultZ,      fn:v=>{ vaultZ=v;      applyVault(); } },
+  { k:'scale',  min:0.3,  max:14,  step:0.1,  val:vaultScale,  fn:v=>{ vaultScale=v;  applyVault(); } },
+  { k:'yNudge', min:-4,   max:6,   step:0.05, val:vaultYNudge, fn:v=>{ vaultYNudge=v; applyVault(); } },
+  { k:'rotY',   min:0,    max:6.28,step:0.05, val:vaultRotY,   fn:v=>{ vaultRotY=v;   applyVault(); } },
+], 'VAULT');
+makeTuner('tuneShop', '🏪 SHOP — drag me', '#7c4dff', 'top:64px;right:256px', [
+  { k:'x',      min:-120, max:120, step:1,    val:shopX,      fn:v=>{ shopX=v;      applyShop(); } },
+  { k:'z',      min:-120, max:120, step:1,    val:shopZ,      fn:v=>{ shopZ=v;      applyShop(); } },
+  { k:'scale',  min:0.3,  max:24,  step:0.1,  val:shopScale,  fn:v=>{ shopScale=v;  applyShop(); } },
+  { k:'yNudge', min:-6,   max:8,   step:0.05, val:shopYNudge, fn:v=>{ shopYNudge=v; applyShop(); } },
+  { k:'rotY',   min:0,    max:6.28,step:0.05, val:shopRotY,   fn:v=>{ shopRotY=v;   applyShop(); } },
+], 'SHOP');
+makeTuner('tuneApple', '🍎 APPLES — drag me', '#ff77c2', 'top:330px;right:14px', [
+  { k:'scale', min:0.2, max:6, step:0.05, val:appleScale, fn:v=>{ appleScale=v; applyApples(); } },
+  { k:'y',     min:0,   max:4, step:0.05, val:appleY,     fn:v=>{ appleY=v;     applyApples(); } },
+], 'APPLE');
+}, 2500);
 let score = 0; const scoreVal = document.getElementById('scoreVal');
 scoreVal.textContent = '🔒';   // $BYEBOSS only counts once a wallet is connected
 
