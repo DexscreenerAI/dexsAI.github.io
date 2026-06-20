@@ -33,6 +33,10 @@
   .score .coin{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe680,#ffb300 55%,#b87900);
     box-shadow:0 0 8px rgba(255,196,0,.6);display:grid;place-items:center;color:#5a3b00;font-size:11px;font-weight:900}
   .score b{color:#ffd54a}
+  .bankprompt{position:absolute;left:50%;top:56%;transform:translateX(-50%);background:rgba(6,4,13,.85);
+    border:1px solid rgba(57,255,139,.55);color:#eafff2;padding:8px 15px;border-radius:10px;font-weight:700;
+    font-size:14px;z-index:7;pointer-events:none;box-shadow:0 0 14px rgba(57,255,139,.25)}
+  .bankprompt b{color:#39ff8b}
   .abilities{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:12px;z-index:6}
   .ab{position:relative;width:84px;height:88px;border-radius:14px;cursor:pointer;
     background:linear-gradient(180deg,rgba(20,14,34,.78),rgba(10,7,20,.82));border:1px solid rgba(255,255,255,.12);
@@ -125,7 +129,8 @@
     <div class="hint"><b>WASD</b> bouge · <b>SOURIS</b> vise · <b>CLIC&nbsp;DROIT</b> tire · <b>SHIFT</b> run · <b>1–4</b> attaque</div>
     <canvas id="minimap" width="300" height="300" class="minimap"></canvas>
     <div id="crosshair" class="crosshair"></div>
-    <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;<b id="scoreVal">0</b><small id="capVal" style="margin-left:7px;opacity:.6;font-weight:600;font-size:11px"></small></div>
+    <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;🔒<b id="scoreVal">0</b><small id="carryVal" style="margin-left:8px;color:#ff9d3b;font-weight:800;font-size:13px"></small><small id="capVal" style="margin-left:7px;opacity:.6;font-weight:600;font-size:11px"></small></div>
+    <div id="bankPrompt" class="bankprompt hide">🔒 <b>E</b> — déposer au coffre</div>
     <div class="hpbar"><span>❤️</span><div class="hpb"><i id="hpFill"></i></div></div>
     <button id="walletBtn" class="walletbtn">👻 Connect Phantom</button>
     <div id="mpCount" class="mpcount" style="display:none"></div>
@@ -564,6 +569,45 @@ function syncServerCoins(list){
   for (const [id,e] of [...serverCoins]) if (!seen.has(id)){ scene.remove(e.group); serverCoins.delete(id); _pendingCollect.delete(id); }
 }
 function clearServerCoins(){ for (const [,e] of serverCoins) scene.remove(e.group); serverCoins.clear(); _pendingCollect.clear(); }
+
+// Loot bags: a killed player drops their CARRIED $BYEBOSS here. Bigger gold pile.
+const serverBags = new Map();       // server bag id -> { group, x, z, amount }
+function syncServerBags(list){
+  const seen = new Set();
+  for (const b of (list||[])){
+    seen.add(b.id);
+    let e = serverBags.get(b.id);
+    if (!e){ const group = makeCoinMesh(); group.scale.setScalar(1.7); scene.add(group); e = { group }; serverBags.set(b.id, e); }
+    e.x = b.x; e.z = b.z; e.amount = b.amount; e.group.position.set(b.x, 0.85, b.z); e.group.visible = true;
+  }
+  for (const [id,e] of [...serverBags]) if (!seen.has(id)){ scene.remove(e.group); serverBags.delete(id); }
+}
+function clearServerBags(){ for (const [,e] of serverBags) scene.remove(e.group); serverBags.clear(); }
+
+// Vault deposit points (the GLB), positions sent by the server on welcome.
+let vaultPoints = [];               // [{x,z}]
+let vaultTemplate = null, vaultBaseScale = 2, vaultYOffset = 0, _pendingVaults = null;
+const vaultMeshes = [];
+new GLTFLoader().load('./assets/game/vault.glb', (g) => {
+  vaultTemplate = g.scene;
+  // auto-fit to ~4.5 units tall and sit its base on the ground, whatever the model
+  const box = new THREE.Box3().setFromObject(vaultTemplate);
+  const h = (box.max.y - box.min.y) || 1;
+  vaultBaseScale = 4.5 / h; vaultYOffset = -box.min.y * vaultBaseScale;
+  if (_pendingVaults){ placeVaults(_pendingVaults); _pendingVaults = null; }
+}, undefined, () => { /* missing model: vaults still work, just invisible */ });
+function placeVaults(list){
+  vaultPoints = list || [];
+  for (const m of vaultMeshes) scene.remove(m); vaultMeshes.length = 0;
+  if (!vaultTemplate){ _pendingVaults = list; return; }
+  for (const v of vaultPoints){
+    const m = vaultTemplate.clone(true);
+    m.scale.setScalar(vaultBaseScale); m.position.set(v.x, vaultYOffset, v.z);
+    m.traverse(o => { o.frustumCulled = false; }); scene.add(m); vaultMeshes.push(m);
+  }
+}
+function clearVaults(){ for (const m of vaultMeshes) scene.remove(m); vaultMeshes.length = 0; vaultPoints = []; }
+function nearVault(){ for (const v of vaultPoints){ const dx=v.x-pos.x, dz=v.z-pos.z; if (dx*dx+dz*dz <= 16) return true; } return false; }
 let score = 0; const scoreVal = document.getElementById('scoreVal');
 scoreVal.textContent = '🔒';   // $BYEBOSS only counts once a wallet is connected
 
@@ -598,8 +642,12 @@ async function connectWallet(){
 // ===== multiplayer client (authoritative game server on Railway) =====
 const MP_URL = 'wss://dexscreener-telegram-bot-production.up.railway.app/game';
 let mpWs = null, mpConnected = false, mpId = null, byebossTemplate = null, mpDailyCap = 400;
+let vault = 0, carried = 0;   // secured (claimable) vs on-hand (at risk) balances
 const capVal = document.getElementById('capVal');
+const carryVal = document.getElementById('carryVal');
+const bankPrompt = document.getElementById('bankPrompt');
 function fmtPool(n){ n=+n; if(!isFinite(n)) return ''; if(n>=1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M'; if(n>=1e3) return Math.round(n/1e3)+'k'; return ''+n; }
+function tryBank(){ if (mpConnected && walletAddr && carried > 0 && nearVault() && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'vault' })); }
 const remotePlayers = new Map();
 const mpCountEl = document.getElementById('mpCount');
 function b58encode(bytes){
@@ -629,7 +677,8 @@ function onSnap(m){
     seen.add(pl.id);
     if (pl.id === mpId){                              // my authoritative state from the server
       if (Number.isFinite(pl.hp)){ hp = Math.max(0, pl.hp); updateHpBar(); }
-      if (Number.isFinite(pl.score)){ score = pl.score; scoreVal.textContent = score; }
+      if (Number.isFinite(pl.vault)){ vault = pl.vault; scoreVal.textContent = vault; }          // secured (claimable)
+      if (Number.isFinite(pl.carried)){ carried = pl.carried; if (carryVal) carryVal.textContent = carried > 0 ? `⚠️${carried}` : ''; }  // at risk
       if (capVal && Number.isFinite(pl.earnedToday)) capVal.textContent = `auj. ${pl.earnedToday}/${m.dailyCap || mpDailyCap}`;
       const srvDead = !pl.alive || hp <= 0;
       if (srvDead && !dead){ dead = true; aiming = false; if (respawnEl) respawnEl.classList.remove('hide'); }
@@ -663,13 +712,15 @@ function mpConnect(){
       } catch(e){ console.warn('sign failed', e); try { mpWs.close(); } catch {} }
     } else if (m.t === 'welcome'){ mpId = m.id; mpConnected = true; mpDailyCap = m.dailyCap || 400; if (mpCountEl) mpCountEl.style.display = 'block';
       for (const c of coins) c.visible = false;   // the server owns the coins now
+      placeVaults(m.vaults || []);                // render the bank/vault points
     }
     else if (m.t === 'denied'){ console.warn('multiplayer denied:', m.m); }
     else if (m.t === 'coins'){ syncServerCoins(m.coins); }
+    else if (m.t === 'bags'){ syncServerBags(m.bags); }
     else if (m.t === 'snap'){ onSnap(m); }
     else if (m.t === 'left'){ removeRemote(m.id); }
   };
-  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (mpCountEl) mpCountEl.textContent = '🔴 hors-ligne'; };
+  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearVaults(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = ''; if (bankPrompt) bankPrompt.classList.add('hide'); vault = carried = 0; if (mpCountEl) mpCountEl.textContent = '🔴 hors-ligne'; };
   mpWs.onerror = () => {};
 }
 async function mpJoin(){ if (!walletAddr) await connectWallet(); if (walletAddr) mpConnect(); }
@@ -705,6 +756,7 @@ addEventListener('keydown', e=>{
   else if (e.code==='Digit2') doAction('kick');
   else if (e.code==='Digit3') doAction('pickup');
   else if (e.code==='Digit4') doAction('attack');
+  else if (e.code==='KeyE'){ tryBank(); e.preventDefault(); }   // déposer au coffre
 });
 addEventListener('keyup', e=>{
   if (KEYMAP[e.code]) keys[KEYMAP[e.code]] = false;
@@ -754,6 +806,15 @@ function tryCollect(){
         e.group.visible = false;           // instant feedback; server confirms via next coins broadcast
         _pendingCollect.add(id);
         if (mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'collect', id }));
+      }
+    }
+    // Grab loot bags (dropped by killed players) we walk over.
+    for (const [id,e] of serverBags){
+      if (!e.group.visible) continue;
+      const dx = e.x - pos.x, dz = e.z - pos.z;
+      if (dx*dx + dz*dz < 2.6){
+        e.group.visible = false;
+        if (mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'grab', id }));
       }
     }
     return;
@@ -1007,6 +1068,11 @@ function drawMinimap(){
   mmCtx.fillStyle = '#ffd23a';
   for (const co of coins){ if (!co.visible) continue; mmCtx.beginPath(); mmCtx.arc(c+(co.position.x-pos.x)*sc, c+(co.position.z-pos.z)*sc, 2.4, 0, 6.28); mmCtx.fill(); }
   for (const e of serverCoins.values()){ if (!e.group.visible) continue; mmCtx.beginPath(); mmCtx.arc(c+(e.x-pos.x)*sc, c+(e.z-pos.z)*sc, 2.4, 0, 6.28); mmCtx.fill(); }
+  // vault points (green squares) + loot bags (big bright-gold pips)
+  mmCtx.fillStyle = '#39ff8b';
+  for (const v of vaultPoints){ mmCtx.fillRect(c+(v.x-pos.x)*sc-3, c+(v.z-pos.z)*sc-3, 6, 6); }
+  mmCtx.fillStyle = '#ffe680';
+  for (const e of serverBags.values()){ if (!e.group.visible) continue; mmCtx.beginPath(); mmCtx.arc(c+(e.x-pos.x)*sc, c+(e.z-pos.z)*sc, 3.4, 0, 6.28); mmCtx.fill(); }
   mmCtx.fillStyle = '#ff4d4d';
   for (const m of monsters){ if (m.state === 'dead') continue; mmCtx.beginPath(); mmCtx.arc(c+(m.pos.x-pos.x)*sc, c+(m.pos.z-pos.z)*sc, 3.2, 0, 6.28); mmCtx.fill(); }
   mmCtx.restore();
@@ -1086,6 +1152,9 @@ function update(dt){
   tryCollect();
   for (const c of coins){ if (c.visible) c.rotation.y += dt*3; }
   for (const e of serverCoins.values()){ if (e.group.visible) e.group.rotation.y += dt*3; }
+  for (const e of serverBags.values()){ if (e.group.visible) e.group.rotation.y += dt*2.2; }
+  // "E — déposer" prompt when standing on a vault with coins on you
+  if (bankPrompt) bankPrompt.classList.toggle('hide', !(mpConnected && carried > 0 && nearVault()));
 }
 
 let last = 0, running = false;
