@@ -155,8 +155,12 @@ const KIT = [
   'wall-stone','wall-timber-structure','wall-wood-trimsheet',
   'roof-clay-red-top','roof-clay-red-bottom','roof-clay-grey-top','roof-clay-grey-bottom',
   'roof-thatch-top','roof-thatch-bottom',
-  'door-wood','door-wood-window-lit','door-metal-gate',
+  'door-wood','door-wood-window-lit','door-metal-gate','door-wood-window','door-metal-gate-lock',
   'window-square-divided-lit','window-square-divided','window-round-pane-lit',
+  'window-tall-divided-lit','window-round-divided-lit',
+  'wall-brick-small-stone','wall-brick-small-sand','wall-rock','wall-timber',
+  'wall-brick-stone-center-banner','wall-brick-sand-center-banner',
+  'floor-ground-water','timber-square-planks','timber-square-planks-boarded','timber-square-planks-cross','timber-square-frame',
 ];
 
 const ANIM = {
@@ -192,7 +196,7 @@ addEventListener('resize', resize); resize();
 // ===========================================================================
 // WORLD
 // ===========================================================================
-const WORLD_W = 2800;
+const WORLD_W = 4200;
 const horizon   = () => H*0.46;
 const frontY    = () => H*0.90;
 const buildBase = () => horizon()+8;                         // where houses stand
@@ -206,7 +210,7 @@ const player = { px: 360, d:0.7, z:0, vz:0, facing:1, grounded:true, state:'idle
 const WALK=150, RUN=285, DEPTH_SPD=0.62, JUMP_V=560, GRAV=1700, MIN_D=0.2;
 
 // Lamp posts (drawn) between the houses, behind the player.
-const lamps = [180,560,940,1320,1700,2080,2460];
+const lamps = [180,560,940,1340,1740,2200,2370,2560,2980,3360,3760,4060];
 
 // Houses — assembled from kit tiles into offscreen canvases at load time.
 // cols: each entry is wall | win:<key> | door:<key>
@@ -216,6 +220,9 @@ const WALLS = {
   stone:     {left:'wall-stone',center:'wall-stone',right:'wall-stone',both:'wall-stone'},
   timber:    {left:'wall-timber-structure',center:'wall-timber-structure',right:'wall-timber-structure',both:'wall-timber-structure'},
   wood:      {left:'wall-wood-trimsheet',center:'wall-wood-trimsheet',right:'wall-wood-trimsheet',both:'wall-wood-trimsheet'},
+  rock:      {left:'wall-rock',center:'wall-rock',right:'wall-rock',both:'wall-rock'},
+  brickSmallStone:{left:'wall-brick-small-stone',center:'wall-brick-small-stone',right:'wall-brick-small-stone',both:'wall-brick-small-stone'},
+  brickSmallSand: {left:'wall-brick-small-sand', center:'wall-brick-small-sand', right:'wall-brick-small-sand', both:'wall-brick-small-sand'},
 };
 const ROOFS = {
   red:{top:'roof-clay-red-top',bottom:'roof-clay-red-bottom'},
@@ -223,12 +230,20 @@ const ROOFS = {
   thatch:{top:'roof-thatch-top',bottom:'roof-thatch-bottom'},
 };
 const houses = [
-  {x:260,  wall:'brickStone', roof:'red',    cols:['win:window-square-divided-lit','door:door-wood','win:window-square-divided-lit']},
-  {x:660,  wall:'brickSand',  roof:'grey',   cols:['win:window-square-divided','win:window-round-pane-lit','door:door-wood-window-lit','win:window-square-divided']},
-  {x:1100, wall:'timber',     roof:'thatch', cols:['win:window-square-divided-lit','door:door-wood','win:window-square-divided-lit']},
-  {x:1520, wall:'stone',      roof:'grey',   cols:['win:window-square-divided','door:door-metal-gate','win:window-square-divided']},
-  {x:1940, wall:'brickStone', roof:'red',    cols:['win:window-round-pane-lit','door:door-wood','win:window-round-pane-lit']},
-  {x:2400, wall:'brickSand',  roof:'thatch', cols:['win:window-square-divided-lit','win:window-square-divided-lit','door:door-wood','win:window-square-divided-lit']},
+  // --- cluster 1 ---
+  {x:240,  wall:'brickStone',      roof:'red',    cols:['win:window-square-divided-lit','door:door-wood','win:window-square-divided-lit']},
+  {x:620,  wall:'brickSand',       roof:'grey',   cols:['win:window-square-divided','win:window-round-pane-lit','door:door-wood-window-lit','win:window-square-divided']},
+  {x:1020, wall:'timber',          roof:'thatch', cols:['win:window-square-divided-lit','door:door-wood','win:window-square-divided-lit']},
+  {x:1380, wall:'brickSmallStone', roof:'red',    cols:['win:window-tall-divided-lit','door:door-wood','win:window-tall-divided-lit']},
+  {x:1740, wall:'rock',            roof:'grey',   cols:['win:window-round-divided-lit','door:door-metal-gate-lock','win:window-round-divided-lit']},
+  // --- the village square (plaza) sits here, with a fountain ---
+  {x:1990, wall:'brickStone',      roof:'red',    cols:['wallk:wall-brick-stone-center-banner','door:door-wood-window-lit','wallk:wall-brick-stone-center-banner']},
+  // --- cluster 2 ---
+  {x:2800, wall:'brickSand',       roof:'thatch', cols:['win:window-square-divided-lit','win:window-square-divided-lit','door:door-wood','win:window-square-divided-lit']},
+  {x:3160, wall:'brickSmallSand',  roof:'grey',   cols:['win:window-square-divided','door:door-wood-window','win:window-square-divided']},
+  {x:3520, wall:'timber',          roof:'thatch', cols:['win:window-square-divided-lit','door:door-wood','win:window-square-divided-lit']},
+  {x:3860, wall:'stone',           roof:'grey',   cols:['win:window-square-divided','door:door-metal-gate','win:window-square-divided']},
+  {x:4120, wall:'brickStone',      roof:'red',    cols:['win:window-round-pane-lit','door:door-wood','win:window-round-pane-lit']},
 ];
 function buildHouse(spec){
   const w = spec.cols.length;
@@ -243,19 +258,35 @@ function buildHouse(spec){
     const wk = w===1?wall.both : i===0?wall.left : i===w-1?wall.right : wall.center;
     const [type,key] = cell.split(':');
     if (type==='door'){ g.drawImage(tile[key], i*TILE, wy, TILE, 128); }
+    else if (type==='wallk'){ g.drawImage(tile[key], i*TILE, wy, TILE, 128); }   // specific wall tile (e.g. banner)
     else {
       g.drawImage(tile[wk], i*TILE, wy, TILE, 128);
-      if (type==='win') g.drawImage(tile[key], i*TILE, wy+18, TILE, TILE);
+      if (type==='win'){
+        if (key.indexOf('window-tall')===0) g.drawImage(tile[key], i*TILE, wy, TILE, 128);   // tall windows fill the wall
+        else g.drawImage(tile[key], i*TILE, wy+18, TILE, TILE);
+      }
     }
   }
   return c;
 }
 function buildHouses(){ for (const h of houses) h.cv = buildHouse(h); }
 
+// Paved village square + tiled fountains (drawn flat on the ground).
+const PLAZA = [1980, 2760];
+const fountains = [{x:2370, d:0.33}];
+
+// Street props (crates / barrels) — depth-sorted with the player.
+const CRATES = ['timber-square-planks','timber-square-planks-boarded','timber-square-planks-cross','timber-square-frame'];
+const props = [
+  {x:470,d:0.72},{x:512,d:0.65},{x:1180,d:0.80},{x:1600,d:0.55},
+  {x:2210,d:0.50},{x:2520,d:0.46},{x:2300,d:0.62},
+  {x:2980,d:0.76},{x:3300,d:0.58},{x:3680,d:0.66},{x:3716,d:0.60},
+].map((p,i)=>({...p, key:CRATES[i%CRATES.length]}));
+
 // Collectible $BYEBOSS coins
 const coins = [];
 function spawnCoin(){ coins.push({px:120+Math.random()*(WORLD_W-240), d:0.25+Math.random()*0.7, bob:Math.random()*6.28, dead:false}); }
-for (let i=0;i<9;i++) spawnCoin();
+for (let i=0;i<14;i++) spawnCoin();
 let score=0; const scoreVal=document.getElementById('scoreVal');
 
 // ===========================================================================
@@ -371,12 +402,15 @@ function drawSky(){
 }
 
 function drawGround(){
-  const hz=horizon(), grass=tile['floor-ground-grass'], dirt=tile['floor-ground-dirt'];
+  const hz=horizon(), grass=tile['floor-ground-grass'], dirt=tile['floor-ground-dirt'], stone=tile['floor-stone-pattern'];
   const off=((camera.x)%TILE+TILE)%TILE;
   for(let y=hz; y<H; y+=TILE){
-    const useDirt = (y+TILE) > roadTopY();
-    const t = useDirt ? dirt : grass;
-    for(let x=-off; x<W; x+=TILE) ctx.drawImage(t, x, y, TILE, TILE);
+    const road = (y+TILE) > roadTopY();
+    for(let x=-off; x<W; x+=TILE){
+      let t = grass;
+      if(road){ const wx=x+camera.x; t = (wx>PLAZA[0] && wx<PLAZA[1]) ? stone : dirt; }   // pave the square
+      ctx.drawImage(t, x, y, TILE, TILE);
+    }
   }
   // darken toward the back for depth
   const g=ctx.createLinearGradient(0,hz,0,frontY());
@@ -407,6 +441,30 @@ function drawLamps(){
   for(const lx of lamps){ const sx=lx-camera.x; if(sx<-60||sx>W+60)continue; drawLamp(sx, base+6, 0.85); }
 }
 
+function drawFountains(){
+  const base=tile['floor-stone'], water=tile['floor-ground-water'];
+  for(const f of fountains){ const sx=f.x-camera.x; if(sx<-160||sx>W+160)continue;
+    const sc=depthScale(f.d), ts=TILE*sc, gy=groundY(f.d);
+    // raised stone platform 3x3 with a water pool in a plus shape
+    for(let r=-1;r<=1;r++)for(let c=-1;c<=1;c++){
+      const isWater=(Math.abs(r)+Math.abs(c))<=1;
+      ctx.drawImage(isWater?water:base, sx+c*ts-ts/2, gy+r*ts-ts/2, ts, ts);
+    }
+    // margelle (rim)
+    ctx.strokeStyle='rgba(55,60,68,.9)'; ctx.lineWidth=4*sc; ctx.strokeRect(sx-1.5*ts, gy-1.5*ts, 3*ts, 3*ts);
+    ctx.strokeStyle='rgba(205,215,225,.5)'; ctx.lineWidth=1.5*sc; ctx.strokeRect(sx-1.5*ts, gy-1.5*ts, 3*ts, 3*ts);
+    // central spout + splash
+    ctx.fillStyle='rgba(120,130,140,.95)'; ctx.fillRect(sx-3*sc, gy-24*sc, 6*sc, 24*sc);
+    ctx.fillStyle='rgba(150,210,255,.55)'; ctx.beginPath(); ctx.ellipse(sx, gy-24*sc, 8*sc, 4*sc, 0, 0, 6.28); ctx.fill();
+  }
+}
+function drawCrate(p){
+  const sx=p.x-camera.x; if(sx<-80||sx>W+80)return;
+  const sc=depthScale(p.d), sz=TILE*sc*0.85, gy=groundY(p.d);
+  ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(sx,gy,sz*0.5,sz*0.18,0,0,6.28); ctx.fill();
+  ctx.drawImage(tile[p.key], sx-sz/2, gy-sz, sz, sz);
+}
+
 function drawCoin(sx, gy, sc, bob){
   const y=gy-(26+Math.sin(bob)*5)*sc, r=12*sc;
   ctx.save(); ctx.translate(sx,y); ctx.scale(0.25+0.75*Math.abs(Math.cos(bob)),1);
@@ -431,11 +489,13 @@ function render(){
   ctx.clearRect(0,0,W,H);
   drawSky();
   drawGround();
-  drawHouses();   // back wall of the street
-  drawLamps();    // behind the player
+  drawHouses();    // back wall of the street
+  drawLamps();     // behind the player
+  drawFountains(); // plaza pools, flat on the ground
 
-  // foreground: depth-sort coins + player
+  // foreground: depth-sort crates + coins + player
   const list=[{d:player.d, draw:()=>drawPlayer(player.px-camera.x, groundY(player.d))}];
+  for(const p of props){ list.push({d:p.d, draw:()=>drawCrate(p)}); }
   for(const c of coins){ if(c.dead)continue; const sx=c.px-camera.x; if(sx<-60||sx>W+60)continue;
     list.push({d:c.d, draw:()=>drawCoin(sx, groundY(c.d), depthScale(c.d), c.bob)}); }
   list.sort((a,b)=>a.d-b.d); for(const it of list) it.draw();
