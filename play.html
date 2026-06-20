@@ -224,6 +224,90 @@ new GLTFLoader().load('./assets/game/tree.glb', (gltf) => {
   scatterTrees();
   asset();
 }, undefined, (err) => { console.error('tree GLB failed to load', err); asset(); });
+
+// ---- abandoned buildings (decor) — loaded after start, popped in when ready ----
+const BUILDINGS = ['./assets/game/building1.glb', './assets/game/building2.glb', './assets/game/building3.glb'];
+const buildingGroup = new THREE.Group(); scene.add(buildingGroup);
+const buildTemplates = [];
+const BUILD = { count:6, scale:1.0, area:140, yOffset:0 };   // tuned via the panel
+const B_TARGET = 16, B_PATTERN = [2,0,1,0,1,0,1];            // template per slot (building3 sparse — it's the heavy one)
+function scatterBuildings(){
+  buildingGroup.clear();
+  if (!buildTemplates.some(Boolean)) return;
+  const rng = makeRng(91135);
+  let placed = 0, guard = 0;
+  while (placed < BUILD.count && guard < BUILD.count*14 + 80){
+    guard++;
+    const x = (rng()-0.5)*2*BUILD.area, z = (rng()-0.5)*2*BUILD.area;
+    const rot = rng()*6.28;
+    const tpl = buildTemplates[B_PATTERN[placed % B_PATTERN.length]];
+    if (Math.abs(x) < 9 && Math.abs(z) < 82) continue;   // keep the trail clear
+    if (Math.abs(x) < 13 && Math.abs(z) < 13) continue;   // keep spawn clear
+    if (!tpl) continue;
+    const s = tpl.unitScale * BUILD.scale;
+    const m = tpl.scene.clone(true);
+    m.scale.setScalar(s);
+    m.userData.baseY = -tpl.minY * s;
+    m.position.set(x, m.userData.baseY + BUILD.yOffset, z);
+    m.rotation.y = rot;
+    buildingGroup.add(m); placed++;
+  }
+}
+let bLoaded = 0;
+BUILDINGS.forEach((url, i) => {
+  const done = () => { if (++bLoaded === BUILDINGS.length){ scatterBuildings(); buildBuildingPanel(); } };
+  new GLTFLoader().load(url, (gltf) => {
+    const sc = gltf.scene; sc.traverse(o => { o.frustumCulled = false; });
+    const box = new THREE.Box3().setFromObject(sc), size = box.getSize(new THREE.Vector3());
+    buildTemplates[i] = { scene:sc, unitScale: B_TARGET / Math.max(size.x, size.y, size.z, 0.001), minY: box.min.y };
+    done();
+  }, undefined, (err) => { console.error('building failed:', url, err); done(); });
+});
+// TEMP building-tuning panel — drag, Copier, send me the values, then I bake + delete it.
+function buildBuildingPanel(){
+  if (document.getElementById('blddbg')) return;
+  const store = {};
+  const p = document.createElement('div'); p.id = 'blddbg';
+  p.style.cssText = 'position:fixed;top:64px;right:14px;width:248px;z-index:50;background:rgba(10,8,18,.93);border:1px solid rgba(255,150,60,.55);border-radius:12px;color:#eafff2;font:12px Trebuchet MS,Verdana,sans-serif;box-shadow:0 12px 32px rgba(0,0,0,.55);backdrop-filter:blur(6px);user-select:none';
+  const head = document.createElement('div');
+  head.style.cssText = 'cursor:move;padding:8px 10px;background:rgba(255,150,60,.22);border-radius:12px 12px 0 0;font-weight:800;display:flex;justify-content:space-between;align-items:center';
+  head.innerHTML = '<span>🏚️ BÂTIMENTS — glisse-moi</span><span id="bldX" style="cursor:pointer;opacity:.75">✕</span>';
+  const body = document.createElement('div');
+  body.style.cssText = 'padding:10px 12px;display:flex;flex-direction:column;gap:9px;max-height:62vh;overflow:auto';
+  p.append(head, body);
+  function row(label, min, max, step, val, fn){
+    store[label] = +val;
+    const wrap = document.createElement('div');
+    const h = document.createElement('div'); h.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:2px';
+    const nm = document.createElement('span'); nm.textContent = label;
+    const out = document.createElement('span'); out.style.color = '#ffb066'; out.textContent = (+val).toFixed(2);
+    h.append(nm, out);
+    const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = val; inp.style.width = '100%';
+    inp.addEventListener('input', () => { const v = parseFloat(inp.value); out.textContent = v.toFixed(2); store[label] = v; fn(v); });
+    wrap.append(h, inp); body.append(wrap);
+  }
+  row('count',   0, 20, 1,    BUILD.count,   v => { BUILD.count = Math.round(v); scatterBuildings(); });
+  row('scale',   0.2, 4, 0.05, BUILD.scale,  v => { BUILD.scale = v; scatterBuildings(); });
+  row('area',    40, 320, 5,  BUILD.area,    v => { BUILD.area = v; scatterBuildings(); });
+  row('yOffset', -6, 6, 0.1,  BUILD.yOffset, v => { BUILD.yOffset = v; buildingGroup.children.forEach(m => m.position.y = (m.userData.baseY || 0) + v); });
+  const btn = document.createElement('button');
+  btn.textContent = '📋 Copier les valeurs';
+  btn.style.cssText = 'margin-top:4px;padding:9px;border-radius:8px;border:1px solid #ff963c;background:rgba(255,150,60,.22);color:#eafff2;font-weight:800;cursor:pointer';
+  btn.onclick = () => {
+    const txt = 'BUILD ' + Object.entries(store).map(([k,v]) => `${k}=${(+v).toFixed(3)}`).join(' | ');
+    const ok = () => { btn.textContent = '✅ Copié — colle-le-moi'; setTimeout(() => btn.textContent = '📋 Copier les valeurs', 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok).catch(() => prompt('Copie ça :', txt));
+    else prompt('Copie ça :', txt);
+  };
+  body.append(btn);
+  p.addEventListener('keydown', e => e.stopPropagation());
+  let dragging = false, ox = 0, oy = 0;
+  head.addEventListener('pointerdown', e => { if (e.target.id === 'bldX') return; dragging = true; ox = e.clientX - p.offsetLeft; oy = e.clientY - p.offsetTop; e.preventDefault(); });
+  window.addEventListener('pointermove', e => { if (!dragging) return; p.style.left = Math.max(0, e.clientX - ox) + 'px'; p.style.top = Math.max(0, e.clientY - oy) + 'px'; p.style.right = 'auto'; });
+  window.addEventListener('pointerup', () => dragging = false);
+  head.querySelector('#bldX').onclick = () => p.remove();
+  document.body.appendChild(p);
+}
 // bushes (ground detail)
 const bushGeo = new THREE.IcosahedronGeometry(0.5, 0);
 const bushMat = new THREE.MeshLambertMaterial({ color:'#2c6e34', flatShading:true });
