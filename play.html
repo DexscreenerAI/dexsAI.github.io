@@ -268,7 +268,7 @@ function scatterBuildings(){
 }
 let bLoaded = 0;
 BUILDINGS.forEach((url, i) => {
-  const done = () => { if (++bLoaded === BUILDINGS.length){ scatterBuildings(); buildBuildingPanel(); } };
+  const done = () => { if (++bLoaded === BUILDINGS.length){ scatterBuildings(); } };
   new GLTFLoader().load(url, (gltf) => {
     const sc = gltf.scene; sc.traverse(o => { o.frustumCulled = false; });
     const box = new THREE.Box3().setFromObject(sc), size = box.getSize(new THREE.Vector3());
@@ -574,7 +574,7 @@ function hitMonsters(){
 // monster removed (waiting for a nicer one) — drop a new monster.glb here and call makeMonsters() to bring them back.
 
 // ===== weapon: the gun (right-click = aim + fire, infinite ammo) =====
-const GUN = { px:0.42, py:1.25, pz:0.30, rx:0, ry:0, rz:0, scale:1.4, tip:0.5 };
+const GUN = { px:-0.23, py:1.28, pz:0.47, rx:0, ry:-3.2, rz:0.1, scale:2.0, tip:0.5 };   // tuned
 let gunModel = null, muzzle = null;
 const gunTip = new THREE.Object3D();
 function applyGunTransform(){
@@ -590,12 +590,26 @@ new GLTFLoader().load('./assets/game/gun.glb', (gltf) => {
   muzzle = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.35),
     new THREE.MeshBasicMaterial({ color:0xffdd66, transparent:true, opacity:0.95, blending:THREE.AdditiveBlending, depthWrite:false }));
   muzzle.visible = false; gunTip.add(muzzle);
-  applyGunTransform(); player.add(gunModel); buildGunPanel();
+  applyGunTransform(); player.add(gunModel);
 }, undefined, (err) => console.error('gun load failed', err));
 
 let aiming = false, aimT = 0, fireTimer = 0, muzzleTimer = 0;
 const FIRE_INTERVAL = 0.12;
 const raycaster = new THREE.Raycaster(), screenCenter = new THREE.Vector2(0, 0);
+// visible tracer bullets
+const _v0 = new THREE.Vector3();
+const bulletGeo = new THREE.SphereGeometry(0.11, 8, 6);
+const bulletMat = new THREE.MeshBasicMaterial({ color:0xfff0a0 });
+const bullets = [];
+for (let i = 0; i < 28; i++){ const mesh = new THREE.Mesh(bulletGeo, bulletMat); mesh.visible = false; scene.add(mesh); bullets.push({ mesh, vel:new THREE.Vector3(), life:0 }); }
+const BULLET_SPEED = 70, BULLET_LIFE = 0.7;
+function spawnBullet(origin, dir){
+  const b = bullets.find(x => x.life <= 0); if (!b) return;
+  b.mesh.position.copy(origin); b.vel.copy(dir).multiplyScalar(BULLET_SPEED); b.life = BULLET_LIFE; b.mesh.visible = true;
+}
+function updateBullets(dt){
+  for (const b of bullets){ if (b.life <= 0) continue; b.life -= dt; b.mesh.position.addScaledVector(b.vel, dt); if (b.life <= 0) b.mesh.visible = false; }
+}
 function ownerMonster(obj){ for (const m of monsters){ let o = obj; while (o){ if (o === m.model) return m; o = o.parent; } } return null; }
 function fireGun(){
   if (muzzle){ muzzle.visible = true; muzzle.scale.setScalar(0.7 + Math.random()*0.7); muzzle.rotation.z = Math.random()*6.28; muzzleTimer = 0.05; }
@@ -605,6 +619,8 @@ function fireGun(){
     const m = ownerMonster(hits[0].object);
     if (m && m.state === 'alive' && --m.hp <= 0){ m.state = 'dying'; m.t = 0; score++; scoreVal.textContent = score; }
   }
+  if (gunModel) gunTip.getWorldPosition(_v0); else _v0.copy(camera.position);   // tracer from the muzzle
+  spawnBullet(_v0, raycaster.ray.direction);
 }
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 canvas.addEventListener('mousedown', e => { if (e.button === 2) aiming = true; });
@@ -758,6 +774,7 @@ function update(dt){
   camera.position.lerp(camTarget, 1 - Math.pow(0.0008, dt));
   camera.lookAt(pos.x + rx, pos.y + camLookY + 0.3*aimT, pos.z + rz);
   updateMonsters(dt);
+  updateBullets(dt);
 
   // auto-collect coins just by walking over them, then spin the rest
   tryCollect();
