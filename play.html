@@ -85,6 +85,11 @@
   .shopcard.active{border-color:#39ff8b;box-shadow:0 0 0 2px rgba(57,255,139,.3) inset}
   .sc-ic{font-size:40px;line-height:1}.sc-nm{font-weight:800;font-size:14px}
   .shop-foot{padding:0 18px 16px;text-align:center;color:#6f8a7c;font-size:12px}
+
+  /* Minimap */
+  .minimap{position:absolute;right:14px;bottom:14px;width:122px;height:122px;z-index:6;border-radius:50%;
+    background:rgba(6,18,10,.4);box-shadow:0 6px 22px rgba(0,0,0,.5)}
+  @media (max-width:560px){ .minimap{width:96px;height:96px;bottom:150px} }
 </style>
 </head>
 <body>
@@ -96,7 +101,8 @@
       <span class="title"><span class="b">$BYE</span><span class="g">BOSS</span> · WORLD</span>
       <span class="tag">BETA · 3D</span>
     </div>
-    <div class="hint"><b>WASD</b> move · <b>SHIFT</b> run · <b>SPACE</b> jump · <b>1–4</b> actions</div>
+    <div class="hint"><b>WASD</b> bouge · <b>SOURIS</b> vise · <b>SHIFT</b> run · <b>SPACE</b> saut · <b>1–4</b> attaque</div>
+    <canvas id="minimap" width="170" height="170" class="minimap"></canvas>
     <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;<b id="scoreVal">0</b></div>
 
     <button id="shopBtn" class="shopbtn" title="Changer de personnage">🛍️<span>Shop</span></button>
@@ -483,6 +489,7 @@ function doAction(name){
   locked = true; lockTimer = durations[clip] || 0.5;
   playClip(clip, true); flashAbility(name);
   if (name === 'pickup') tryCollect();
+  else hitMonsters();                 // punch / kick / attack damage nearby monsters
 }
 function triggerJump(){
   if (!grounded || locked) return;
@@ -500,22 +507,122 @@ function angleLerp(a, b, t){ let d = ((b - a + Math.PI) % (2*Math.PI)) - Math.PI
 // ---------------------------------------------------------------------------
 // Update + render
 // ---------------------------------------------------------------------------
-const camOff = new THREE.Vector3(0, 4.8, 9.5), camTarget = new THREE.Vector3();
+let camYaw = 0, camPitch = 0.42;                 // mouse-controlled view angle (shooter-style)
+const CAM_DIST = 10, camTarget = new THREE.Vector3();
 const BOUND = 110;
+
+// ===== monsters — kill one for +1 $BYEBOSS =====
+const monsterGroup = new THREE.Group(); scene.add(monsterGroup);
+let monsterTemplate = null, monsterMinY = 0, monsterScale = 1;
+const monsters = [];
+const MON_COUNT = 8, MON_SPEED = 2.6, MON_DETECT = 28, MON_HP = 2, MON_HIT_RANGE = 4.4;
+function spawnMonsterAt(m){
+  const a = Math.random()*6.28, r = 24 + Math.random()*80;
+  m.pos.set(Math.cos(a)*r, 0, Math.sin(a)*r);
+  m.hp = MON_HP; m.state = 'alive'; m.t = Math.random()*2; m.wander = Math.random()*6.28;
+  m.model.visible = true; m.model.scale.setScalar(monsterScale); m.model.rotation.set(0, m.wander, 0);
+  m.model.position.set(m.pos.x, -monsterMinY*monsterScale, m.pos.z);
+}
+function makeMonsters(){
+  for (let i = 0; i < MON_COUNT; i++){
+    const model = monsterTemplate.clone(true); monsterGroup.add(model);
+    const m = { model, pos:new THREE.Vector3(), hp:MON_HP, state:'alive', t:0, wander:0 };
+    spawnMonsterAt(m); monsters.push(m);
+  }
+}
+function updateMonsters(dt){
+  for (const m of monsters){
+    if (m.state === 'dead') continue;
+    if (m.state === 'dying'){
+      m.t += dt; const k = Math.min(1, m.t/0.8);
+      m.model.scale.setScalar(monsterScale*(1-k));
+      m.model.rotation.x = k*1.4;
+      m.model.position.y = (-monsterMinY*monsterScale)*(1-k) - k*0.4;
+      if (m.t > 0.85){ m.state = 'dead'; m.model.visible = false; m.model.rotation.x = 0; setTimeout(()=>spawnMonsterAt(m), 4000 + Math.random()*5000); }
+      continue;
+    }
+    const dx = pos.x - m.pos.x, dz = pos.z - m.pos.z, d = Math.hypot(dx, dz);
+    let dirx, dirz;
+    if (d < MON_DETECT && d > 1.4){ dirx = dx/d; dirz = dz/d; }
+    else { m.t += dt; if (m.t > 2.5){ m.t = 0; m.wander = Math.random()*6.28; } dirx = Math.sin(m.wander); dirz = Math.cos(m.wander); }
+    m.pos.x = Math.max(-BOUND, Math.min(BOUND, m.pos.x + dirx*MON_SPEED*dt));
+    m.pos.z = Math.max(-BOUND, Math.min(BOUND, m.pos.z + dirz*MON_SPEED*dt));
+    m.model.position.set(m.pos.x, -monsterMinY*monsterScale, m.pos.z);
+    m.model.rotation.y = angleLerp(m.model.rotation.y, Math.atan2(dirx, dirz), 1 - Math.pow(0.0015, dt));
+  }
+}
+function hitMonsters(){
+  const fx = Math.sin(faceAngle + faceOffset), fz = Math.cos(faceAngle + faceOffset);
+  for (const m of monsters){
+    if (m.state !== 'alive') continue;
+    const dx = m.pos.x - pos.x, dz = m.pos.z - pos.z, d = Math.hypot(dx, dz);
+    if (d > MON_HIT_RANGE) continue;
+    if (d > 0.2 && (dx/d*fx + dz/d*fz) < 0.1) continue;   // must be roughly in front of the player
+    if (--m.hp <= 0){ m.state = 'dying'; m.t = 0; score++; scoreVal.textContent = score; }
+  }
+}
+new GLTFLoader().load('./assets/game/monster.glb', (gltf) => {
+  monsterTemplate = gltf.scene; monsterTemplate.traverse(o => { o.frustumCulled = false; });
+  const box = new THREE.Box3().setFromObject(monsterTemplate), size = box.getSize(new THREE.Vector3());
+  monsterScale = 3.0 / (size.y || 1); monsterMinY = box.min.y;
+  makeMonsters();
+}, undefined, (err) => console.error('monster GLB failed', err));
+
+// ===== mouse / touch look (shooter-style) =====
+const LOOK_SENS = 0.0026, PITCH_MIN = 0.05, PITCH_MAX = 1.25;
+canvas.addEventListener('click', () => {
+  const shopOpen = !document.getElementById('shop').classList.contains('hidden');
+  if (!shopOpen && document.pointerLockElement !== canvas){ try { canvas.requestPointerLock(); } catch(e){} }
+});
+document.addEventListener('mousemove', (e) => {
+  if (document.pointerLockElement !== canvas) return;
+  camYaw -= e.movementX*LOOK_SENS;
+  camPitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, camPitch + e.movementY*LOOK_SENS));
+});
+let lookId = null, lastTX = 0, lastTY = 0;
+canvas.addEventListener('touchstart', (e) => { for (const t of e.changedTouches){ if (lookId === null && t.clientX > window.innerWidth*0.42){ lookId = t.identifier; lastTX = t.clientX; lastTY = t.clientY; } } }, {passive:true});
+canvas.addEventListener('touchmove', (e) => { for (const t of e.changedTouches){ if (t.identifier === lookId){ camYaw -= (t.clientX-lastTX)*0.005; camPitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, camPitch + (t.clientY-lastTY)*0.005)); lastTX = t.clientX; lastTY = t.clientY; } } }, {passive:true});
+canvas.addEventListener('touchend', (e) => { for (const t of e.changedTouches){ if (t.identifier === lookId) lookId = null; } }, {passive:true});
+
+// ===== minimap (bottom-right): player, monsters, coins, buildings =====
+const mmCanvas = document.getElementById('minimap'), mmCtx = mmCanvas ? mmCanvas.getContext('2d') : null;
+const MM_RANGE = 85;
+function drawMinimap(){
+  if (!mmCtx) return;
+  const S = mmCanvas.width, c = S/2, rad = c-3, sc = (rad-2)/MM_RANGE;
+  mmCtx.clearRect(0,0,S,S);
+  mmCtx.save(); mmCtx.beginPath(); mmCtx.arc(c,c,rad,0,6.28); mmCtx.clip();
+  mmCtx.fillStyle = 'rgba(6,18,10,.82)'; mmCtx.fillRect(0,0,S,S);
+  mmCtx.strokeStyle = 'rgba(57,255,139,.14)'; mmCtx.lineWidth = 1.5; mmCtx.beginPath(); mmCtx.arc(c,c,rad*0.55,0,6.28); mmCtx.stroke();
+  mmCtx.fillStyle = 'rgba(185,185,200,.7)';
+  for (const m of buildingGroup.children){ mmCtx.fillRect(c+(m.position.x-pos.x)*sc-3, c+(m.position.z-pos.z)*sc-3, 6, 6); }
+  mmCtx.fillStyle = '#ffd23a';
+  for (const co of coins){ if (!co.visible) continue; mmCtx.beginPath(); mmCtx.arc(c+(co.position.x-pos.x)*sc, c+(co.position.z-pos.z)*sc, 2.4, 0, 6.28); mmCtx.fill(); }
+  mmCtx.fillStyle = '#ff4d4d';
+  for (const m of monsters){ if (m.state === 'dead') continue; mmCtx.beginPath(); mmCtx.arc(c+(m.pos.x-pos.x)*sc, c+(m.pos.z-pos.z)*sc, 3.2, 0, 6.28); mmCtx.fill(); }
+  mmCtx.restore();
+  mmCtx.strokeStyle = 'rgba(57,255,139,.55)'; mmCtx.lineWidth = 2; mmCtx.beginPath(); mmCtx.arc(c,c,rad,0,6.28); mmCtx.stroke();
+  const fx = Math.sin(faceAngle), fz = Math.cos(faceAngle), px = -fz, py = fx;
+  mmCtx.fillStyle = '#39ff8b'; mmCtx.beginPath();
+  mmCtx.moveTo(c+fx*8, c+fz*8); mmCtx.lineTo(c-fx*4+px*5, c-fz*4+py*5); mmCtx.lineTo(c-fx*4-px*5, c-fz*4-py*5);
+  mmCtx.closePath(); mmCtx.fill();
+}
 function update(dt){
   if (locked){ lockTimer -= dt; if (lockTimer <= 0) locked = false; }
 
-  let mx = 0, mz = 0, moving = false;
+  let moving = false;
   if (!locked){
-    mx = (keys.r?1:0) - (keys.l?1:0);     // world X
-    mz = (keys.b?1:0) - (keys.f?1:0);     // world Z (forward = -Z)
-    moving = !!(mx || mz);
+    const mF = (keys.f?1:0) - (keys.b?1:0);   // W/S forward-back (camera-relative)
+    const mR = (keys.r?1:0) - (keys.l?1:0);   // A/D strafe
+    moving = !!(mF || mR);
     if (moving){
-      const len = Math.hypot(mx, mz) || 1, spd = keys.run ? RUN : WALK;
-      pos.x += (mx/len)*spd*dt; pos.z += (mz/len)*spd*dt;
+      const wx = -Math.sin(camYaw)*mF + Math.cos(camYaw)*mR;   // input -> world, relative to camera
+      const wz = -Math.cos(camYaw)*mF - Math.sin(camYaw)*mR;
+      const len = Math.hypot(wx, wz) || 1, spd = keys.run ? RUN : WALK;
+      pos.x += (wx/len)*spd*dt; pos.z += (wz/len)*spd*dt;
       pos.x = Math.max(-BOUND, Math.min(BOUND, pos.x));
       pos.z = Math.max(-BOUND, Math.min(BOUND, pos.z));
-      faceAngle = Math.atan2(mx, mz);                   // face the way we walk
+      faceAngle = Math.atan2(wx, wz);                   // face the way we walk
     }
   }
 
@@ -539,10 +646,16 @@ function update(dt){
   shadow.position.set(pos.x, 0.02, pos.z);
   const ss = Math.max(0.4, 1 - pos.y*0.12); shadow.scale.set(ss, ss, ss); shadow.material.opacity = 0.3*ss;
 
-  // camera follow
-  camTarget.copy(pos).add(camOff);
-  camera.position.lerp(camTarget, 1 - Math.pow(0.0016, dt));
+  // orbit camera (mouse-look, shooter-style)
+  const cp = Math.cos(camPitch);
+  camTarget.set(
+    pos.x + Math.sin(camYaw)*CAM_DIST*cp,
+    pos.y + camLookY + Math.sin(camPitch)*CAM_DIST,
+    pos.z + Math.cos(camYaw)*CAM_DIST*cp
+  );
+  camera.position.lerp(camTarget, 1 - Math.pow(0.0008, dt));
   camera.lookAt(pos.x, pos.y + camLookY, pos.z);
+  updateMonsters(dt);
 
   // auto-collect coins just by walking over them, then spin the rest
   tryCollect();
@@ -555,6 +668,7 @@ function frame(now){
   const dt = Math.min(0.05, (now - last)/1000 || 0); last = now;
   update(dt);
   renderer.render(scene, camera);
+  drawMinimap();
   requestAnimationFrame(frame);
 }
 function start(){
