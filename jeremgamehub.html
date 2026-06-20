@@ -1353,8 +1353,6 @@
 <audio id="snd-punch" src="https://files.catbox.moe/7p2sgf.mp3" preload="auto"></audio>
 <audio id="snd-sword" src="https://files.catbox.moe/nmx5ua.mp3" preload="auto"></audio>
 <audio id="snd-shoot" src="https://files.catbox.moe/zej06i.mp3" preload="auto"></audio>
-<!-- Pas des ennemis : meme bruit de pas, en loop, volume pilote par la distance -->
-<audio id="snd-enemy-run" src="https://files.catbox.moe/vdvwod.mp3" preload="auto" loop></audio>
 
 <script src="stars-system.js?v=48"></script>
 <script>
@@ -2566,14 +2564,10 @@ const sndJump  = document.getElementById('snd-jump');
 const sndPunch = document.getElementById('snd-punch');
 const sndSword = document.getElementById('snd-sword');
 const sndShoot = document.getElementById('snd-shoot');       // son de tire (balle)
-const sndEnemyRun = document.getElementById('snd-enemy-run'); // pas des ennemis (loop, vol distance)
 const ONE_SHOTS = { jump: sndJump, punch: sndPunch, sword: sndSword, shoot: sndShoot };
 const ONE_SHOT_VOL = 0.7;
+const SHOOT_VOL = 0.95;   // tir un peu plus fort pour bien l'entendre
 const RUN_VOL = 0.55;
-// Pas des ennemis : volume max au contact, fondu lineaire jusqu a 0 a distance.
-const ENEMY_FOOT_VOL = 0.5;        // volume plein quand l ennemi est colle au joueur
-const ENEMY_FOOT_MIN_DIST = 70;    // px : en deca -> volume plein
-const ENEMY_FOOT_MAX_DIST = 720;   // px : au dela -> inaudible (pause)
 // Volume general (0..1), persiste dans localStorage. Multiplie chaque base.
 const VOLUME_KEY = 'jerem_master_volume';
 let MASTER_VOLUME = (function(){
@@ -2585,10 +2579,10 @@ let MASTER_VOLUME = (function(){
 })();
 function _baseVol(audio) {
   if (audio === sndRun) return RUN_VOL;
+  if (audio === sndShoot) return SHOOT_VOL;
   return ONE_SHOT_VOL;
 }
 function _applyMasterVolume() {
-  // sndEnemyRun est exclu : son volume est recalcule chaque frame selon la distance.
   [sndRun, sndJump, sndPunch, sndSword, sndShoot].forEach(a => {
     if (a) { try { a.volume = _baseVol(a) * MASTER_VOLUME; } catch (e) {} }
   });
@@ -2617,7 +2611,6 @@ function _unlockAudio() {
   _warm(sndPunch, ONE_SHOT_VOL);
   _warm(sndSword, ONE_SHOT_VOL);
   _warm(sndShoot, ONE_SHOT_VOL);
-  _warm(sndEnemyRun, 0); // volume reel pilote chaque frame par _syncEnemyFootsteps
   // Pre-warm aussi les sons custom des ennemis ET des heros (attackSoundUrl)
   // pour qu ils jouent immediatement au 1er coup, sans delai chargement/autoplay.
   // attackSoundUrl peut etre un string OU un Array : on warm chaque URL.
@@ -2666,41 +2659,6 @@ function setRunSound(on) {
     if (!sndRun.paused) { try { sndRun.pause(); } catch (e) {} }
   }
 }
-// ====================================================================
-// PAS DES ENNEMIS (loop, volume pilote par la distance au joueur)
-// On entend le plus proche ennemi EN COURSE : plein volume colle au joueur,
-// fondu lineaire jusqu a 0, silence (pause) au dela de ENEMY_FOOT_MAX_DIST.
-// ====================================================================
-function setEnemyFootSound(on, vol) {
-  if (!_audioUnlocked) return;
-  if (on) {
-    try {
-      sndEnemyRun.volume = Math.max(0, Math.min(1, vol)) * MASTER_VOLUME;
-      if (sndEnemyRun.paused) { sndEnemyRun.currentTime = 0; sndEnemyRun.play().catch(() => {}); }
-    } catch (e) {}
-  } else {
-    if (!sndEnemyRun.paused) { try { sndEnemyRun.pause(); } catch (e) {} }
-  }
-}
-function _syncEnemyFootsteps() {
-  // Pas de pas ennemis hors overworld/arene (combat & topdown ont leur propre flow).
-  if (typeof gameMode !== 'undefined' && (gameMode === 'combat' || gameMode === 'topdown')) { setEnemyFootSound(false); return; }
-  if (typeof enemies === 'undefined' || !enemies.length || typeof player === 'undefined') { setEnemyFootSound(false); return; }
-  // Distance du plus proche ennemi vivant qui MARCHE/COURT vers une cible.
-  let nearest = Infinity;
-  for (const en of enemies) {
-    if (!en || en.dying || en.state !== 'run') continue;
-    const d = Math.abs(en.x - player.x);
-    if (d < nearest) nearest = d;
-  }
-  if (nearest === Infinity || nearest > ENEMY_FOOT_MAX_DIST) { setEnemyFootSound(false); return; }
-  // t=1 colle au joueur, t=0 a la distance max. Courbe ^1.8 : loin = quasi muet,
-  // monte vite quand l ennemi se rapproche (= "on entend de plus en plus fort").
-  const t = (ENEMY_FOOT_MAX_DIST - nearest) / (ENEMY_FOOT_MAX_DIST - ENEMY_FOOT_MIN_DIST);
-  const vol = ENEMY_FOOT_VOL * Math.pow(Math.max(0, Math.min(1, t)), 1.8);
-  if (vol <= 0.002) { setEnemyFootSound(false); return; }
-  setEnemyFootSound(true, vol);
-}
 // Son de tire (balle) : joue le gunshot a chaque projectile lance par le joueur
 // ou un allie. One-shot 'shoot' = element <audio> pre-warme (latence mini).
 function playShootSound() {
@@ -2713,7 +2671,7 @@ function playOneShot(name, opts) {
   if (!a) return;
   if (!_audioUnlocked) _unlockAudio();
   if (opts && opts.nocut && !a.paused && !a.ended) return;
-  try { a.volume = ONE_SHOT_VOL * MASTER_VOLUME; a.currentTime = 0; a.play().catch(() => {}); } catch (e) {}
+  try { a.volume = _baseVol(a) * MASTER_VOLUME; a.currentTime = 0; a.play().catch(() => {}); } catch (e) {}
 }
 // One-shot par URL (pour les sons specifiques aux ennemis/heros). Cache un
 // Audio par URL et NE COUPE PAS le son en cours : si deja en lecture, on
@@ -2871,7 +2829,7 @@ window.addEventListener('keydown', (e) => {
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
 });
 window.addEventListener('keyup', (e) => bindKey(e.code, false));
-window.addEventListener('blur', () => { keys.left = keys.right = keys.up = keys.down = keys.jump = keys.sword = keys.punch = false; setRunSound(false); setEnemyFootSound(false); });
+window.addEventListener('blur', () => { keys.left = keys.right = keys.up = keys.down = keys.jump = keys.sword = keys.punch = false; setRunSound(false); });
 // Premier clic n'importe ou : debloque l audio (au cas ou le user utilise uniquement la souris/touch)
 window.addEventListener('pointerdown', _unlockAudio, { once: false });
 
@@ -3073,8 +3031,6 @@ function update(dt) {
   // de state) : evite que le son persiste sur un etat 'run' bloque pendant
   // un lock d attaque, ou que des allies fantomes en arene laissent le son.
   _syncRunSound();
-  // Pas des ennemis : volume selon la distance du plus proche qui avance.
-  _syncEnemyFootsteps();
 
   // Frame anim - avance MULTI-FRAMES par tick : si fps > framerate browser
   // (ex sword 48 fps a 60 fps browser : 16.6ms entre updates vs 20.8ms par
@@ -5126,7 +5082,6 @@ function _restoreCombat() {
 // derniere anim (run en place, lock sword non termine, jump dans le vide...).
 function _resetPlayerOverworldState() {
   setRunSound(false);
-  setEnemyFootSound(false);
   keys.left = keys.right = keys.jump = keys.sword = keys.punch = false;
   player.vx = 0;
   player.vy = 0;
@@ -5698,13 +5653,11 @@ function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
   if (gameMode === 'combat') {
-    setEnemyFootSound(false); // pas d ennemis overworld audibles en combat
     _combatHandleQuitKey();
     updateCombat(dt);
     ctx.clearRect(0, 0, W, H);
     drawCombat();
   } else if (gameMode === 'topdown') {
-    setEnemyFootSound(false); // topdown a ses propres ennemis
     // E sort du mode topdown
     if (_enterKeyJustPressed) { _enterKeyJustPressed = false; exitTopdown(); }
     updateTopdown(dt);
