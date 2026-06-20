@@ -193,11 +193,11 @@ function tex(url, srgb, repeat){
 }
 
 // ground (tiled grass) + a dirt trail
-const grassTex = tex('./assets/game/kit/floor-ground-grass.png', true, [90,90]);
+const grassTex = tex('./assets/game/ground-grass.jpg', true, [60,60]);
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(260,260), new THREE.MeshLambertMaterial({ map:grassTex }));
 ground.rotation.x = -Math.PI/2; scene.add(ground);
-const dirtTex = tex('./assets/game/kit/floor-ground-dirt.png', true, [2,90]);
-const trail = new THREE.Mesh(new THREE.PlaneGeometry(4.5,260), new THREE.MeshLambertMaterial({ map:dirtTex }));
+const dirtTex = tex('./assets/game/ground-brick.jpg', true, [3,90]);
+const trail = new THREE.Mesh(new THREE.PlaneGeometry(5.5,260), new THREE.MeshLambertMaterial({ map:dirtTex }));
 trail.rotation.x = -Math.PI/2; trail.position.y = 0.02; scene.add(trail);
 
 // (the character is the rigged ByeBoss GLB — loaded further down)
@@ -399,7 +399,7 @@ function selectChar(i, onDone){
   }, undefined, (err) => { console.error('character failed:', CHARACTERS[i].url, err); onDone && onDone(); });
 }
 total++;
-selectChar(0, asset);   // first character is part of the loading sequence
+selectChar(2, asset);   // Iso 2D is the default character
 
 // ---- shop UI (change character) ----
 (function shopUI(){
@@ -407,7 +407,7 @@ selectChar(0, asset);   // first character is part of the loading sequence
         list = document.getElementById('shopList'), closeX = document.getElementById('shopClose');
   CHARACTERS.forEach((c, i) => {
     const card = document.createElement('button');
-    card.className = 'shopcard' + (i === 0 ? ' active' : ''); card.dataset.i = i;
+    card.className = 'shopcard' + (i === 2 ? ' active' : ''); card.dataset.i = i;
     card.innerHTML = `<span class="sc-ic">🎮</span><span class="sc-nm">${c.name}</span>`;
     card.onclick = () => { selectChar(i); document.querySelectorAll('.shopcard').forEach(el => el.classList.toggle('active', +el.dataset.i === i)); };
     list.appendChild(card);
@@ -419,6 +419,7 @@ selectChar(0, asset);   // first character is part of the loading sequence
 // ---- iso sprite character (a 2D billboard option in the Shop) ----
 const ISO_STATES = { idle:{fps:7,loop:true}, walk:{fps:12,loop:true}, run:{fps:16,loop:true}, jump:{fps:16,loop:false}, shot:{fps:22,loop:true} };
 const ISO_DIRS = ['up','down','right'];
+const ISO = { y:1.15, scale:2.7 };   // ground offset + size (tuned via the panel)
 const isoTex = {}; let isoLoaded = false, isoSprite = null, spriteActive = false, sprState = 'idle', sprT = 0;
 function loadIso(onDone){
   if (isoLoaded){ onDone && onDone(); return; }
@@ -430,7 +431,7 @@ function loadIso(onDone){
     t.generateMipmaps = false; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1/5, 1/5);
     isoTex[s+'_'+d] = t;
   }
-  isoSprite = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 2.7),
+  isoSprite = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
     new THREE.MeshBasicMaterial({ transparent:true, alphaTest:0.3, side:THREE.DoubleSide }));
   isoSprite.visible = false; scene.add(isoSprite);
 }
@@ -439,6 +440,7 @@ function applyIsoChar(onDone){
     if (activeModel){ player.remove(activeModel); activeModel = null; }   // hide the GLB
     if (gunModel) gunModel.visible = false;                                // iso sprites already hold a gun
     mixer = null; spriteActive = true; isoSprite.visible = true; sprState = 'idle'; sprT = 0;
+    buildIsoPanel();
     onDone && onDone();
   });
 }
@@ -460,9 +462,42 @@ function updateSpriteChar(dt, moving){
   let f = Math.floor(sprT*cfg.fps); f = cfg.loop ? f % 25 : Math.min(f, 24);
   const tex = isoTex[st + '_' + (flip ? 'right' : dir)];
   if (tex){ const col = f % 5, row = (f/5)|0; tex.offset.set(col/5, 1 - (row+1)/5); isoSprite.material.map = tex; isoSprite.material.needsUpdate = true; }
-  isoSprite.scale.x = flip ? -1 : 1;
-  isoSprite.position.set(pos.x, pos.y + 1.15, pos.z);
+  isoSprite.scale.set(flip ? -ISO.scale : ISO.scale, ISO.scale, 1);
+  isoSprite.position.set(pos.x, pos.y + ISO.y, pos.z);
   isoSprite.rotation.set(0, Math.atan2(camera.position.x - pos.x, camera.position.z - pos.z), 0);
+}
+// TEMP iso ground/size panel — drag, place on the ground, Copier, send me, then I bake + delete.
+function buildIsoPanel(){
+  if (document.getElementById('isodbg')) return;
+  const store = {};
+  const p = document.createElement('div'); p.id = 'isodbg';
+  p.style.cssText = 'position:fixed;top:120px;left:14px;width:218px;z-index:50;background:rgba(10,8,18,.93);border:1px solid rgba(57,255,139,.5);border-radius:12px;color:#eafff2;font:12px Trebuchet MS,Verdana,sans-serif;box-shadow:0 12px 32px rgba(0,0,0,.55);backdrop-filter:blur(6px);user-select:none';
+  const head = document.createElement('div'); head.style.cssText = 'cursor:move;padding:8px 10px;background:rgba(57,255,139,.16);border-radius:12px 12px 0 0;font-weight:800;display:flex;justify-content:space-between;align-items:center';
+  head.innerHTML = '<span>🕹️ ISO — glisse-moi</span><span id="isoX" style="cursor:pointer;opacity:.75">✕</span>';
+  const body = document.createElement('div'); body.style.cssText = 'padding:10px 12px;display:flex;flex-direction:column;gap:9px';
+  p.append(head, body);
+  function row(label, min, max, step, val, fn){
+    store[label] = +val;
+    const w = document.createElement('div'); const h = document.createElement('div'); h.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:2px';
+    const nm = document.createElement('span'); nm.textContent = label; const out = document.createElement('span'); out.style.color = '#39ff8b'; out.textContent = (+val).toFixed(2); h.append(nm, out);
+    const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = val; inp.style.width = '100%';
+    inp.addEventListener('input', () => { const v = parseFloat(inp.value); out.textContent = v.toFixed(2); store[label] = v; fn(v); }); w.append(h, inp); body.append(w);
+  }
+  row('y', -1, 4, 0.02, ISO.y, v => ISO.y = v);
+  row('scale', 1, 6, 0.05, ISO.scale, v => ISO.scale = v);
+  const btn = document.createElement('button'); btn.textContent = '📋 Copier les valeurs';
+  btn.style.cssText = 'margin-top:4px;padding:9px;border-radius:8px;border:1px solid #39ff8b;background:rgba(57,255,139,.2);color:#eafff2;font-weight:800;cursor:pointer';
+  btn.onclick = () => { const txt = 'ISO ' + Object.entries(store).map(([k,v]) => `${k}=${(+v).toFixed(3)}`).join(' | ');
+    const ok = () => { btn.textContent = '✅ Copié — colle-le-moi'; setTimeout(() => btn.textContent = '📋 Copier les valeurs', 1400); };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok).catch(() => prompt('Copie :', txt)); else prompt('Copie :', txt); };
+  body.append(btn);
+  p.addEventListener('keydown', e => e.stopPropagation());
+  let dr = false, ox = 0, oy = 0;
+  head.addEventListener('pointerdown', e => { if (e.target.id === 'isoX') return; dr = true; ox = e.clientX - p.offsetLeft; oy = e.clientY - p.offsetTop; e.preventDefault(); });
+  window.addEventListener('pointermove', e => { if (!dr) return; p.style.left = Math.max(0, e.clientX - ox) + 'px'; p.style.top = Math.max(0, e.clientY - oy) + 'px'; });
+  window.addEventListener('pointerup', () => dr = false);
+  head.querySelector('#isoX').onclick = () => p.remove();
+  document.body.appendChild(p);
 }
 
 // soft blob shadow under the character
@@ -642,7 +677,7 @@ new GLTFLoader().load('./assets/game/gun.glb', (gltf) => {
   muzzle = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.35),
     new THREE.MeshBasicMaterial({ color:0xffdd66, transparent:true, opacity:0.95, blending:THREE.AdditiveBlending, depthWrite:false }));
   muzzle.visible = false; gunTip.add(muzzle);
-  applyGunTransform(); player.add(gunModel);
+  applyGunTransform(); player.add(gunModel); gunModel.visible = !spriteActive;
 }, undefined, (err) => console.error('gun load failed', err));
 
 let aiming = false, aimT = 0, fireTimer = 0, muzzleTimer = 0;
