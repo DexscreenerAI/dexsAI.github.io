@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>$BYEBOSS — STREETS (beta)</title>
+<meta name="description" content="$BYEBOSS: STREETS — a 2.5D meme brawler. Move, run, jump, fight, collect $BYEBOSS. Built for degens.">
+<meta name="theme-color" content="#06040d">
+<link rel="icon" type="image/png" href="https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;overflow:hidden;background:#06040d;
+    font-family:'Trebuchet MS',Verdana,system-ui,sans-serif;color:#eafff2;user-select:none;touch-action:none}
+  #game{position:fixed;inset:0;display:block}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  .hud{position:absolute;inset:0;pointer-events:none;z-index:5}
+  .hud > *{pointer-events:auto}
+
+  .hint{position:absolute;top:14px;left:50%;transform:translateX(-50%);
+    background:rgba(6,4,13,.72);border:1px solid rgba(57,255,139,.25);
+    padding:9px 18px;border-radius:999px;font-size:13px;letter-spacing:.3px;
+    color:#cdebd9;white-space:nowrap;backdrop-filter:blur(6px);box-shadow:0 6px 22px rgba(0,0,0,.45)}
+  .hint b{color:#39ff8b;font-weight:700}
+
+  .brand{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:10px}
+  .brand a.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+    background:rgba(6,4,13,.72);border:1px solid rgba(255,255,255,.14);color:#eafff2;
+    padding:8px 12px;border-radius:10px;font-size:13px;font-weight:700;backdrop-filter:blur(6px)}
+  .brand a.back:hover{border-color:rgba(57,255,139,.6);color:#39ff8b}
+  .brand .title{font-weight:800;font-size:15px;letter-spacing:.4px;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+  .brand .title .b{color:#ff3b3b}.brand .title .g{color:#39ff8b}
+  .brand .tag{font-size:10px;background:rgba(57,255,139,.16);color:#39ff8b;
+    border:1px solid rgba(57,255,139,.4);padding:2px 7px;border-radius:999px;font-weight:700;letter-spacing:.5px}
+
+  .score{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:8px;
+    background:rgba(6,4,13,.72);border:1px solid rgba(255,196,0,.35);
+    padding:8px 14px;border-radius:12px;font-weight:800;font-size:15px;backdrop-filter:blur(6px)}
+  .score .coin{width:18px;height:18px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#ffe680,#ffb300 55%,#b87900);
+    box-shadow:0 0 8px rgba(255,196,0,.6);display:grid;place-items:center;color:#5a3b00;font-size:11px;font-weight:900}
+  .score b{color:#ffd54a}
+
+  .abilities{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:12px;z-index:6}
+  .ab{position:relative;width:88px;height:90px;border-radius:14px;cursor:pointer;
+    background:linear-gradient(180deg,rgba(20,14,34,.78),rgba(10,7,20,.82));
+    border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(6px);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    transition:transform .08s,border-color .12s,box-shadow .12s}
+  .ab:hover{border-color:rgba(57,255,139,.55)}
+  .ab:active,.ab.pressed{transform:translateY(2px) scale(.97);
+    border-color:#39ff8b;box-shadow:0 0 0 2px rgba(57,255,139,.35) inset,0 0 18px rgba(57,255,139,.35)}
+  .ab .num{position:absolute;top:-9px;left:-9px;width:24px;height:24px;border-radius:8px;
+    background:#0c0a17;border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;
+    font-size:12px;font-weight:800;color:#eafff2}
+  .ab .ico{font-size:24px;line-height:1;color:#ffb300;filter:drop-shadow(0 0 6px rgba(255,179,0,.5))}
+  .ab .lbl{font-size:13px;font-weight:700;letter-spacing:.3px;color:#e7fff3}
+
+  .touch{display:none}
+  body.touch .touch{display:block}
+  .dpad{position:absolute;left:18px;bottom:120px;width:150px;height:150px;z-index:6}
+  .dpad button{position:absolute;width:50px;height:50px;border-radius:12px;
+    background:rgba(20,14,34,.8);border:1px solid rgba(255,255,255,.14);color:#cdebd9;
+    font-size:18px;display:grid;place-items:center}
+  .dpad button:active{background:rgba(57,255,139,.25);border-color:#39ff8b;color:#fff}
+  .dpad .up{left:50px;top:0}.dpad .down{left:50px;top:100px}
+  .dpad .left{left:0;top:50px}.dpad .right{left:100px;top:50px}
+  .rbtns{position:absolute;right:18px;bottom:120px;display:flex;flex-direction:column;gap:12px;z-index:6}
+  .rbtns button{width:78px;height:54px;border-radius:14px;border:1px solid rgba(255,255,255,.14);
+    background:rgba(20,14,34,.8);color:#eafff2;font-weight:800;font-size:13px;letter-spacing:.4px}
+  .rbtns button:active{background:rgba(57,255,139,.25);border-color:#39ff8b}
+
+  #load{position:absolute;inset:0;z-index:20;background:#06040d;display:grid;place-items:center;transition:opacity .4s}
+  #load.hide{opacity:0;pointer-events:none}
+  #load .box{text-align:center}
+  #load .logo{font-size:34px;font-weight:900;letter-spacing:1px;margin-bottom:6px}
+  #load .logo .b{color:#ff3b3b}#load .logo .g{color:#39ff8b}
+  #load .sub{color:#9fb6a8;font-size:13px;margin-bottom:22px;letter-spacing:.5px}
+  #load .bar{width:240px;height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin:0 auto}
+  #load .bar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#39ff8b,#7c4dff);transition:width .2s}
+  #load .pct{margin-top:10px;font-size:12px;color:#6f8a7c}
+
+  @media (max-width:560px){
+    .hint{font-size:11px;padding:7px 12px}
+    .ab{width:70px;height:78px}.ab .ico{font-size:20px}.ab .lbl{font-size:11px}
+    .brand .title{font-size:13px}
+  }
+</style>
+</head>
+<body>
+
+<div id="game">
+  <canvas id="cv"></canvas>
+
+  <div class="hud">
+    <div class="brand">
+      <a class="back" href="./game.html" title="Back">‹ Back</a>
+      <span class="title"><span class="b">$BYE</span><span class="g">BOSS</span> · STREETS</span>
+      <span class="tag">BETA</span>
+    </div>
+
+    <div class="hint"><b>WASD</b> move · <b>SHIFT</b> run · <b>SPACE</b> jump · <b>1–4</b> actions</div>
+
+    <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;<b id="scoreVal">0</b></div>
+
+    <div class="touch">
+      <div class="dpad">
+        <button class="up"    data-dir="up">▲</button>
+        <button class="down"  data-dir="down">▼</button>
+        <button class="left"  data-dir="left">◀</button>
+        <button class="right" data-dir="right">▶</button>
+      </div>
+      <div class="rbtns">
+        <button data-btn="run">RUN</button>
+        <button data-btn="jump">JUMP</button>
+      </div>
+    </div>
+
+    <div class="abilities">
+      <div class="ab" data-act="punch"><span class="num">1</span><span class="ico">★</span><span class="lbl">Punch</span></div>
+      <div class="ab" data-act="kick"><span class="num">2</span><span class="ico">★</span><span class="lbl">Kick</span></div>
+      <div class="ab" data-act="pickup"><span class="num">3</span><span class="ico">★</span><span class="lbl">Pickup</span></div>
+      <div class="ab" data-act="attack"><span class="num">4</span><span class="ico">★</span><span class="lbl">Attack</span></div>
+    </div>
+  </div>
+
+  <div id="load">
+    <div class="box">
+      <div class="logo"><span class="b">$BYE</span><span class="g">BOSS</span></div>
+      <div class="sub">STREETS · building the block…</div>
+      <div class="bar"><i id="loadBar"></i></div>
+      <div class="pct" id="loadPct">0%</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// ===========================================================================
+// ASSETS
+// ===========================================================================
+const SHEET_COLS = 5, FRAME = 256, FRAME_COUNT = 25;
+const SHEETS = {
+  idle:'./assets/game/idle.png', run:'./assets/game/run.png', jump:'./assets/game/jump.png',
+  kick:'./assets/game/kick.png', attack:'./assets/game/attack.png', pickup:'./assets/game/pickup.png',
+};
+// Kenney Building Kit tiles (CC0). 64px grid. Front-facing walls/doors are 64x128.
+const TILE = 64;
+const KIT = [
+  'floor-ground-grass','floor-ground-dirt','floor-stone','floor-stone-pattern','floor-ground-grass-overlay',
+  'wall-brick-stone-left','wall-brick-stone-center','wall-brick-stone-right','wall-brick-stone-both',
+  'wall-brick-sand-left','wall-brick-sand-center','wall-brick-sand-right','wall-brick-sand-both',
+  'wall-stone','wall-timber-structure','wall-wood-trimsheet',
+  'roof-clay-red-top','roof-clay-red-bottom','roof-clay-grey-top','roof-clay-grey-bottom',
+  'roof-thatch-top','roof-thatch-bottom',
+  'door-wood','door-wood-window-lit','door-metal-gate','door-wood-window','door-metal-gate-lock',
+  'window-square-divided-lit','window-square-divided','window-round-pane-lit',
+  'window-tall-divided-lit','window-round-divided-lit',
+  'wall-brick-small-stone','wall-brick-small-sand','wall-rock','wall-timber',
+  'wall-brick-stone-center-banner','wall-brick-sand-center-banner',
+  'floor-ground-water','timber-square-planks','timber-square-planks-boarded','timber-square-planks-cross','timber-square-frame',
+  'floor-ground-sand','floor-wood-planks','floor-wood-planks-damaged','floor-tiles-blue-small-damaged',
+  'window-square-divided-boarded','window-tall-divided-damaged',
+];
+
+const ANIM = {
+  idle:{sheet:'idle',fps:7,loop:true}, run:{sheet:'run',fps:16,loop:true}, jump:{sheet:'jump',fps:18,loop:false},
+  punch:{sheet:'attack',fps:22,loop:false,frames:14}, attack:{sheet:'attack',fps:18,loop:false},
+  kick:{sheet:'kick',fps:16,loop:false}, pickup:{sheet:'pickup',fps:14,loop:false},
+};
+
+const img = {};        // character sheets
+const tile = {};       // kit tiles
+let loaded = 0;
+const total = Object.keys(SHEETS).length + KIT.length;
+const loadBar = document.getElementById('loadBar'), loadPct = document.getElementById('loadPct');
+function tick(){ loaded++; const p = Math.round(loaded/total*100); loadBar.style.width=p+'%'; loadPct.textContent=p+'%';
+  if (loaded===total) start(); }
+function load(map, store, prefix){
+  for (const k in map){ const i=new Image(); i.onload=i.onerror=tick; i.src=map[k]; store[k]=i; }
+}
+load(SHEETS, img, '');
+{ const m={}; KIT.forEach(n => m[n]='./assets/game/kit/'+n+'.png'); load(m, tile, ''); }
+
+// ===========================================================================
+// CANVAS
+// ===========================================================================
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2); W=innerWidth; H=innerHeight;
+  cv.width=Math.floor(W*DPR); cv.height=Math.floor(H*DPR); ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+addEventListener('resize', resize); resize();
+
+// ===========================================================================
+// WORLD
+// ===========================================================================
+const WORLD_W = 5200;
+const horizon   = () => H*0.46;
+const frontY    = () => H*0.90;
+const buildBase = () => horizon()+8;                         // where houses stand
+const roadTopY  = () => horizon() + (frontY()-horizon())*0.34;
+const groundY   = d => horizon() + (frontY()-horizon())*d;   // player depth -> screen Y
+const depthScale= d => 0.42 + 0.58*d;
+const houseScale= () => Math.max(0.42, Math.min(0.8, (H*0.30)/256));
+const camera = { x: 0 };
+
+const player = { px: 360, d:0.7, z:0, vz:0, facing:1, grounded:true, state:'idle', t:0, locked:false };
+const WALK=150, RUN=285, DEPTH_SPD=0.62, JUMP_V=560, GRAV=1700, MIN_D=0.2;
+
+// Lamp posts (drawn) between the houses, behind the player.
+const lamps = [180,560,940,1340,1740,2200,2370,2560,2980,3360,3760,4060,4400,4760,5040];
+
+// Houses — assembled from kit tiles into offscreen canvases at load time.
+// cols: each entry is wall | win:<key> | door:<key>
+const WALLS = {
+  brickStone:{left:'wall-brick-stone-left',center:'wall-brick-stone-center',right:'wall-brick-stone-right',both:'wall-brick-stone-both'},
+  brickSand: {left:'wall-brick-sand-left', center:'wall-brick-sand-center', right:'wall-brick-sand-right', both:'wall-brick-sand-both'},
+  stone:     {left:'wall-stone',center:'wall-stone',right:'wall-stone',both:'wall-stone'},
+  timber:    {left:'wall-timber-structure',center:'wall-timber-structure',right:'wall-timber-structure',both:'wall-timber-structure'},
+  wood:      {left:'wall-wood-trimsheet',center:'wall-wood-trimsheet',right:'wall-wood-trimsheet',both:'wall-wood-trimsheet'},
+  rock:      {left:'wall-rock',center:'wall-rock',right:'wall-rock',both:'wall-rock'},
+  brickSmallStone:{left:'wall-brick-small-stone',center:'wall-brick-small-stone',right:'wall-brick-small-stone',both:'wall-brick-small-stone'},
+  brickSmallSand: {left:'wall-brick-small-sand', center:'wall-brick-small-sand', right:'wall-brick-small-sand', both:'wall-brick-small-sand'},
+};
+const ROOFS = {
+  red:{top:'roof-clay-red-top',bottom:'roof-clay-red-bottom'},
+  grey:{top:'roof-clay-grey-top',bottom:'roof-clay-grey-bottom'},
+  thatch:{top:'roof-thatch-top',bottom:'roof-thatch-bottom'},
+};
+const houses = [
+  // --- cluster 1 ---
+  {x:240,  wall:'brickStone',      roof:'red',    cols:['win:window-square-divided-lit','door:door-wood','win:window-square-divided-lit']},
+  {x:620,  wall:'brickSand',       roof:'grey',   cols:['win:window-square-divided','win:window-round-pane-lit','door:door-wood-window-lit','win:window-square-divided']},
+  {x:1020, wall:'timber',          roof:'thatch', cols:['win:window-square-divided-lit','door:door-wood','win:window-square-divided-lit']},
+  {x:1380, wall:'brickSmallStone', roof:'red',    cols:['win:window-tall-divided-lit','door:door-wood','win:window-tall-divided-lit']},
+  {x:1740, wall:'rock',            roof:'grey',   cols:['win:window-round-divided-lit','door:door-metal-gate-lock','win:window-round-divided-lit']},
+  // --- the village square (plaza) sits here, with a fountain ---
+  {x:1990, wall:'brickStone',      roof:'red',    cols:['wallk:wall-brick-stone-center-banner','door:door-wood-window-lit','wallk:wall-brick-stone-center-banner']},
+  // --- cluster 2 ---
+  {x:2800, wall:'brickSand',       roof:'thatch', cols:['win:window-square-divided-lit','win:window-square-divided-lit','door:door-wood','win:window-square-divided-lit']},
+  {x:3160, wall:'brickSmallSand',  roof:'grey',   cols:['win:window-square-divided','door:door-wood-window','win:window-square-divided']},
+  {x:3520, wall:'timber',          roof:'thatch', cols:['win:window-square-divided-lit','door:door-wood','win:window-square-divided-lit']},
+  {x:3860, wall:'stone',           roof:'grey',   cols:['win:window-square-divided','door:door-metal-gate','win:window-square-divided']},
+  {x:4120, wall:'brickStone',      roof:'red',    cols:['win:window-round-pane-lit','door:door-wood','win:window-round-pane-lit']},
+  // --- ruined district (no roof, boarded/damaged windows, a collapsed gap) ---
+  {x:4440, wall:'brickStone',      roof:'none',   cols:['win:window-square-divided-boarded','gap','win:window-tall-divided-damaged']},
+  {x:4780, wall:'rock',            roof:'none',   cols:['win:window-square-divided-boarded','door:door-metal-gate','gap']},
+];
+function buildHouse(spec){
+  const w = spec.cols.length;
+  const c = document.createElement('canvas'); c.width=w*TILE; c.height=256;
+  const g = c.getContext('2d');
+  const wall = WALLS[spec.wall], roof = spec.roof!=='none' ? ROOFS[spec.roof] : null;
+  // roof: ridge row (top) then eave row (bottom), sitting on the wall top (y=128)
+  if (roof) for (let i=0;i<w;i++){ g.drawImage(tile[roof.top], i*TILE,0,TILE,TILE); g.drawImage(tile[roof.bottom], i*TILE,TILE,TILE,TILE); }
+  // walls + content
+  for (let i=0;i<w;i++){
+    const cell = spec.cols[i], wy=128;
+    const [type,key] = cell.split(':');
+    if (type==='gap') continue;   // collapsed section — a hole in the facade
+    const wk = w===1?wall.both : i===0?wall.left : i===w-1?wall.right : wall.center;
+    if (type==='door'){ g.drawImage(tile[key], i*TILE, wy, TILE, 128); }
+    else if (type==='wallk'){ g.drawImage(tile[key], i*TILE, wy, TILE, 128); }   // specific wall tile (e.g. banner)
+    else {
+      g.drawImage(tile[wk], i*TILE, wy, TILE, 128);
+      if (type==='win'){
+        if (key.indexOf('window-tall')===0) g.drawImage(tile[key], i*TILE, wy, TILE, 128);   // tall windows fill the wall
+        else g.drawImage(tile[key], i*TILE, wy+18, TILE, TILE);
+      }
+    }
+  }
+  return c;
+}
+function buildHouses(){ for (const h of houses) h.cv = buildHouse(h); }
+
+// Ground zones — the road band uses a different tile per world-x range.
+const ZONES = [
+  {x0:1980,x1:2760,key:'floor-stone-pattern'},     // village square (paved)
+  {x0:3380,x1:3760,key:'floor-ground-sand'},        // sandy patch
+  {x0:3760,x1:4200,key:'floor-wood-planks'},         // wooden boardwalk
+  {x0:4200,x1:5200,key:'floor-wood-planks-damaged'}, // ruined district
+];
+const fountains = [{x:2370, d:0.33}];
+
+// Street props — typed, depth-sorted with the player.
+const CRATES = ['timber-square-planks','timber-square-planks-boarded','timber-square-planks-cross','timber-square-frame'];
+const props = [];
+const P = o => props.push(o);
+[[470,.72],[512,.65],[1180,.80],[1600,.55],[2980,.76],[3300,.58],[3680,.66],[3716,.60]]
+  .forEach((s,i)=>P({type:'crate',x:s[0],d:s[1],key:CRATES[i%CRATES.length]}));
+// village well + market stalls on the square
+P({type:'well', x:2640,d:0.50});
+P({type:'stall',x:2120,d:0.54,awn:'#c0392b'});
+P({type:'stall',x:2270,d:0.62,awn:'#2980b9'});
+P({type:'stall',x:2440,d:0.50,awn:'#27ae60'});
+P({type:'crate',x:2200,d:0.68,key:'timber-square-planks'});
+P({type:'crate',x:2520,d:0.66,key:'timber-square-planks-boarded'});
+// a wooden fence by the boardwalk
+P({type:'fence',x:3880,d:0.42,len:4});
+// --- ruined district (far end) ---
+P({type:'rubble',x:4360,d:0.70});
+P({type:'rubble',x:4480,d:0.84});
+P({type:'rubble',x:4520,d:0.55});
+P({type:'fence', x:4640,d:0.50,len:3,broken:true});
+P({type:'rubble',x:4820,d:0.66});
+P({type:'crate', x:4900,d:0.60,key:'timber-square-planks-boarded'});
+
+// ===========================================================================
+// FOREST backdrop (AutoSprite-style 2.5D forest). THEME='forest' uses this;
+// THEME='village' falls back to the Kenney street built above.
+// ===========================================================================
+const THEME = 'forest';
+function makeRng(seed){ let s=seed>>>0; return ()=>{ s=(Math.imul(s,1103515245)+12345)>>>0; return s/4294967296; }; }
+const farTrees=[], midTrees=[], frontTrees=[], tufts=[], dapples=[];
+(function buildForest(){
+  const r=makeRng(1337);
+  for(let i=0;i<70;i++)  farTrees.push({x:r()*WORLD_W, s:0.55+r()*0.35});
+  for(let i=0;i<42;i++)  midTrees.push({x:r()*WORLD_W, s:0.85+r()*0.55});
+  for(let i=0;i<11;i++)  frontTrees.push({x:r()*WORLD_W, s:1.7+r()*0.9});
+  for(let i=0;i<175;i++) tufts.push({x:r()*WORLD_W, d:0.12+r()*0.9, s:0.6+r()*0.9});
+  for(let i=0;i<14;i++)  dapples.push({x:r()*WORLD_W, d:0.3+r()*0.6, s:0.6+r()*1.0});
+})();
+
+// Collectible $BYEBOSS coins
+const coins = [];
+function spawnCoin(){ coins.push({px:120+Math.random()*(WORLD_W-240), d:0.25+Math.random()*0.7, bob:Math.random()*6.28, dead:false}); }
+for (let i=0;i<18;i++) spawnCoin();
+let score=0; const scoreVal=document.getElementById('scoreVal');
+
+// ===========================================================================
+// INPUT
+// ===========================================================================
+const input={up:false,down:false,left:false,right:false,run:false};
+const KEYMAP={KeyW:'up',ArrowUp:'up',KeyS:'down',ArrowDown:'down',KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right'};
+addEventListener('keydown',e=>{
+  if(KEYMAP[e.code]){input[KEYMAP[e.code]]=true;e.preventDefault();}
+  else if(e.code==='ShiftLeft'||e.code==='ShiftRight')input.run=true;
+  else if(e.code==='Space'){triggerJump();e.preventDefault();}
+  else if(e.code==='Digit1')doAction('punch');
+  else if(e.code==='Digit2')doAction('kick');
+  else if(e.code==='Digit3')doAction('pickup');
+  else if(e.code==='Digit4')doAction('attack');
+});
+addEventListener('keyup',e=>{ if(KEYMAP[e.code])input[KEYMAP[e.code]]=false;
+  else if(e.code==='ShiftLeft'||e.code==='ShiftRight')input.run=false; });
+
+const abEls={};
+document.querySelectorAll('.ab').forEach(el=>{ const a=el.dataset.act; abEls[a]=el;
+  el.addEventListener('pointerdown',ev=>{ev.preventDefault();doAction(a);}); });
+function flashAbility(a){ const el=abEls[a]; if(!el)return; el.classList.add('pressed'); setTimeout(()=>el.classList.remove('pressed'),160); }
+
+if(('ontouchstart'in window)||navigator.maxTouchPoints>0) document.body.classList.add('touch');
+document.querySelectorAll('.dpad button').forEach(b=>{ const d=b.dataset.dir;
+  const on=e=>{e.preventDefault();input[d]=true;}, off=e=>{e.preventDefault();input[d]=false;};
+  b.addEventListener('pointerdown',on); b.addEventListener('pointerup',off);
+  b.addEventListener('pointerleave',off); b.addEventListener('pointercancel',off); });
+document.querySelectorAll('.rbtns button').forEach(b=>{ const w=b.dataset.btn;
+  if(w==='run'){ b.addEventListener('pointerdown',e=>{e.preventDefault();input.run=true;});
+    b.addEventListener('pointerup',e=>{e.preventDefault();input.run=false;}); b.addEventListener('pointerleave',()=>input.run=false); }
+  else b.addEventListener('pointerdown',e=>{e.preventDefault();triggerJump();}); });
+
+// ===========================================================================
+// ACTIONS
+// ===========================================================================
+function doAction(name){
+  if(!player.grounded||player.locked)return;
+  player.state=name; player.t=0; player.locked=true; flashAbility(name);
+  if(name==='pickup')tryCollect();
+}
+function triggerJump(){ if(!player.grounded||player.locked)return;
+  player.vz=JUMP_V; player.grounded=false; player.state='jump'; player.t=0; }
+function tryCollect(){
+  for(const c of coins){ if(c.dead)continue;
+    if(Math.abs(c.px-player.px)<72 && Math.abs(c.d-player.d)<0.16){
+      c.dead=true; score++; scoreVal.textContent=score;
+      setTimeout(()=>{c.px=120+Math.random()*(WORLD_W-240); c.d=0.25+Math.random()*0.7; c.dead=false;},6000);
+    } }
+}
+
+// ===========================================================================
+// UPDATE
+// ===========================================================================
+function update(dt){
+  if(player.locked){
+    const cfg=ANIM[player.state], count=cfg.frames||FRAME_COUNT;
+    if(Math.floor(player.t*cfg.fps)>=count-1){ player.locked=false; player.state='idle'; player.t=0; }
+    else player.t+=dt;
+  }
+  if(!player.locked){
+    let mx=(input.right?1:0)-(input.left?1:0);
+    let mz=(input.down?1:0)-(input.up?1:0);
+    const moving=mx||mz; if(mx)player.facing=mx>0?1:-1;
+    if(moving){ const len=Math.hypot(mx,mz)||1; const spd=input.run?RUN:WALK;
+      player.px+=(mx/len)*spd*dt; player.d+=(mz/len)*DEPTH_SPD*dt;
+      player.d=Math.max(MIN_D,Math.min(1,player.d)); player.px=Math.max(40,Math.min(WORLD_W-40,player.px)); }
+    if(player.grounded){ const want=moving?'run':'idle'; if(player.state!==want){player.state=want;player.t=0;} player.t+=dt; }
+  }
+  if(!player.grounded){ player.z+=player.vz*dt; player.vz-=GRAV*dt;
+    if(player.z<=0){player.z=0;player.vz=0;player.grounded=true;player.state='idle';player.t=0;} else player.t+=dt; }
+
+  const target=player.px-W*0.5;
+  camera.x+=(target-camera.x)*Math.min(1,dt*6);
+  camera.x=Math.max(0,Math.min(WORLD_W-W,camera.x));
+  if(WORLD_W<W)camera.x=(WORLD_W-W)/2;
+  for(const c of coins)c.bob+=dt*4;
+}
+
+// ===========================================================================
+// RENDER
+// ===========================================================================
+function currentFrame(){
+  const cfg=ANIM[player.state], count=cfg.frames||FRAME_COUNT;
+  let f=Math.floor(player.t*cfg.fps); f=cfg.loop?(f%count):Math.min(f,count-1);
+  return {sheet:img[cfg.sheet], f};
+}
+
+function drawSky(){
+  const hz=horizon();
+  const sky=ctx.createLinearGradient(0,0,0,hz);
+  sky.addColorStop(0,'#241544'); sky.addColorStop(0.55,'#5a2a63'); sky.addColorStop(1,'#c4623c');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,W,hz+1);
+  // moon
+  ctx.fillStyle='rgba(255,240,210,.95)';
+  ctx.beginPath(); ctx.arc(W*0.8, hz*0.42, 26, 0, 6.28); ctx.fill();
+  ctx.fillStyle='rgba(255,240,210,.12)';
+  ctx.beginPath(); ctx.arc(W*0.8, hz*0.42, 50, 0, 6.28); ctx.fill();
+  // stars (upper area)
+  ctx.fillStyle='rgba(255,255,255,.7)';
+  for(let i=0;i<40;i++){ const sx=((i*131+((camera.x*0.15)|0))%(W+40))-20; const sy=(i*53)%(hz*0.6);
+    ctx.fillRect(sx, sy, 1.5, 1.5); }
+  // distant hills (parallax)
+  const ox=(camera.x*0.4)%260;
+  ctx.fillStyle='#2c1c3e';
+  for(let x=-ox-260;x<W+260;x+=260){ ctx.beginPath();
+    ctx.ellipse(x+130, hz, 170, 70, 0, Math.PI, 0); ctx.fill(); }
+  ctx.fillStyle='#23142f';
+  const ox2=(camera.x*0.6)%200;
+  for(let x=-ox2-200;x<W+200;x+=200){ ctx.beginPath();
+    ctx.ellipse(x+100, hz+6, 130, 46, 0, Math.PI, 0); ctx.fill(); }
+}
+
+function drawGround(){
+  const hz=horizon(), grass=tile['floor-ground-grass'], dirt=tile['floor-ground-dirt'];
+  const off=((camera.x)%TILE+TILE)%TILE;
+  for(let y=hz; y<H; y+=TILE){
+    const road = (y+TILE) > roadTopY();
+    for(let x=-off; x<W; x+=TILE){
+      let t = grass;
+      if(road){ const wx=x+camera.x; t = dirt;
+        for(const z of ZONES){ if(wx>z.x0 && wx<z.x1){ t = tile[z.key]; break; } } }   // zone-paved road
+      ctx.drawImage(t, x, y, TILE, TILE);
+    }
+  }
+  // darken toward the back for depth
+  const g=ctx.createLinearGradient(0,hz,0,frontY());
+  g.addColorStop(0,'rgba(10,6,20,.55)'); g.addColorStop(1,'rgba(10,6,20,0)');
+  ctx.fillStyle=g; ctx.fillRect(0,hz,W,frontY()-hz);
+}
+
+function drawHouses(){
+  const sc=houseScale(), base=buildBase();
+  for(const h of houses){ if(!h.cv)continue;
+    const w=h.cv.width*sc, ht=h.cv.height*sc, sx=h.x-camera.x;
+    if(sx+w<-40||sx-w>W+40)continue;
+    // soft ground shadow
+    ctx.fillStyle='rgba(0,0,0,.25)';
+    ctx.beginPath(); ctx.ellipse(sx, base+4, w*0.55, 10, 0, 0, 6.28); ctx.fill();
+    ctx.drawImage(h.cv, sx-w/2, base-ht, w, ht);
+  }
+}
+
+function drawLamp(sx, gy, sc){
+  const h=120*sc,w=7*sc;
+  ctx.fillStyle='#0b0b12'; ctx.fillRect(sx-w/2, gy-h, w, h);
+  ctx.fillStyle='rgba(255,210,120,.95)'; ctx.beginPath(); ctx.arc(sx, gy-h, 11*sc, 0, 6.28); ctx.fill();
+  ctx.fillStyle='rgba(255,210,120,.18)'; ctx.beginPath(); ctx.arc(sx, gy-h, 30*sc, 0, 6.28); ctx.fill();
+}
+function drawLamps(){
+  const base=buildBase();
+  for(const lx of lamps){ const sx=lx-camera.x; if(sx<-60||sx>W+60)continue; drawLamp(sx, base+6, 0.85); }
+}
+
+function drawFountains(){
+  const base=tile['floor-stone'], water=tile['floor-ground-water'];
+  for(const f of fountains){ const sx=f.x-camera.x; if(sx<-160||sx>W+160)continue;
+    const sc=depthScale(f.d), ts=TILE*sc, gy=groundY(f.d);
+    // raised stone platform 3x3 with a water pool in a plus shape
+    for(let r=-1;r<=1;r++)for(let c=-1;c<=1;c++){
+      const isWater=(Math.abs(r)+Math.abs(c))<=1;
+      ctx.drawImage(isWater?water:base, sx+c*ts-ts/2, gy+r*ts-ts/2, ts, ts);
+    }
+    // margelle (rim)
+    ctx.strokeStyle='rgba(55,60,68,.9)'; ctx.lineWidth=4*sc; ctx.strokeRect(sx-1.5*ts, gy-1.5*ts, 3*ts, 3*ts);
+    ctx.strokeStyle='rgba(205,215,225,.5)'; ctx.lineWidth=1.5*sc; ctx.strokeRect(sx-1.5*ts, gy-1.5*ts, 3*ts, 3*ts);
+    // central spout + splash
+    ctx.fillStyle='rgba(120,130,140,.95)'; ctx.fillRect(sx-3*sc, gy-24*sc, 6*sc, 24*sc);
+    ctx.fillStyle='rgba(150,210,255,.55)'; ctx.beginPath(); ctx.ellipse(sx, gy-24*sc, 8*sc, 4*sc, 0, 0, 6.28); ctx.fill();
+  }
+}
+function drawCrate(p){
+  const sx=p.x-camera.x; if(sx<-80||sx>W+80)return;
+  const sc=depthScale(p.d), sz=TILE*sc*0.85, gy=groundY(p.d);
+  ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(sx,gy,sz*0.5,sz*0.18,0,0,6.28); ctx.fill();
+  ctx.drawImage(tile[p.key], sx-sz/2, gy-sz, sz, sz);
+}
+function drawWell(p){
+  const sx=p.x-camera.x; if(sx<-90||sx>W+90)return;
+  const sc=depthScale(p.d), gy=groundY(p.d);
+  ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(sx,gy,40*sc,13*sc,0,0,6.28); ctx.fill();
+  // stone cylinder + joints
+  ctx.fillStyle='#5f646d'; ctx.fillRect(sx-30*sc, gy-40*sc, 60*sc, 40*sc);
+  ctx.strokeStyle='rgba(28,30,36,.65)'; ctx.lineWidth=2*sc;
+  for(let i=0;i<5;i++) ctx.strokeRect(sx-30*sc+i*12*sc, gy-40*sc, 12*sc, 40*sc);
+  // rim + water
+  ctx.fillStyle='#7e848d'; ctx.beginPath(); ctx.ellipse(sx,gy-40*sc,30*sc,10*sc,0,0,6.28); ctx.fill();
+  ctx.fillStyle='#1f5f9e'; ctx.beginPath(); ctx.ellipse(sx,gy-40*sc,22*sc,7*sc,0,0,6.28); ctx.fill();
+  // posts + gable roof
+  ctx.fillStyle='#5a3a1c'; ctx.fillRect(sx-30*sc, gy-96*sc, 6*sc, 56*sc); ctx.fillRect(sx+24*sc, gy-96*sc, 6*sc, 56*sc);
+  ctx.fillStyle='#7a4a22'; ctx.beginPath(); ctx.moveTo(sx-42*sc, gy-90*sc); ctx.lineTo(sx+42*sc, gy-90*sc); ctx.lineTo(sx, gy-120*sc); ctx.closePath(); ctx.fill();
+}
+function drawStall(p){
+  const sx=p.x-camera.x; if(sx<-90||sx>W+90)return;
+  const sc=depthScale(p.d), gy=groundY(p.d), aw=p.awn||'#c0392b';
+  ctx.fillStyle='rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(sx,gy,38*sc,12*sc,0,0,6.28); ctx.fill();
+  ctx.fillStyle='#5a3a1c'; ctx.fillRect(sx-34*sc, gy-74*sc, 5*sc, 74*sc); ctx.fillRect(sx+29*sc, gy-74*sc, 5*sc, 74*sc);
+  ctx.drawImage(tile['timber-square-planks'], sx-34*sc, gy-34*sc, 68*sc, 34*sc);  // counter
+  const ay=gy-74*sc;                                                              // striped awning
+  for(let i=-3;i<3;i++){ ctx.fillStyle=(((i%2)+2)%2? '#f2f2f2':aw);
+    ctx.beginPath(); ctx.moveTo(sx+i*14*sc, ay); ctx.lineTo(sx+(i+1)*14*sc, ay);
+    ctx.lineTo(sx+(i+1)*12*sc, ay+18*sc); ctx.lineTo(sx+i*12*sc, ay+18*sc); ctx.closePath(); ctx.fill(); }
+}
+function drawFence(p){
+  const sx=p.x-camera.x; const sc=depthScale(p.d), gy=groundY(p.d), seg=26*sc, n=p.len||3;
+  if(sx<-80||sx-n*seg>W+80)return;
+  ctx.strokeStyle='#6b4a28'; ctx.lineCap='round';
+  for(let i=0;i<n;i++){ const x=sx+i*seg;
+    if(p.broken && i===((n/2)|0)) continue;                       // missing panel
+    const lean=(p.broken && i%2)?4*sc:0;
+    ctx.lineWidth=4*sc; ctx.beginPath(); ctx.moveTo(x+lean, gy); ctx.lineTo(x, gy-30*sc); ctx.stroke();
+    ctx.lineWidth=3*sc;
+    ctx.beginPath(); ctx.moveTo(x, gy-23*sc); ctx.lineTo(x+seg, gy-23*sc); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, gy-11*sc); ctx.lineTo(x+seg, gy-11*sc); ctx.stroke();
+  }
+  ctx.lineCap='butt';
+}
+function drawRubble(p){
+  const sx=p.x-camera.x; if(sx<-60||sx>W+60)return;
+  const sc=depthScale(p.d), gy=groundY(p.d);
+  ctx.fillStyle='rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(sx,gy,30*sc,9*sc,0,0,6.28); ctx.fill();
+  ctx.fillStyle='#4a4036'; ctx.beginPath(); ctx.moveTo(sx-28*sc,gy); ctx.quadraticCurveTo(sx,gy-24*sc,sx+28*sc,gy); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#8a8f98';
+  for(const s of [[-14,4,7],[2,11,8],[15,3,6],[-4,15,5]]){
+    ctx.beginPath(); ctx.ellipse(sx+s[0]*sc, gy-s[1]*sc, s[2]*sc, s[2]*0.7*sc,0,0,6.28); ctx.fill(); }
+  ctx.save(); ctx.translate(sx+6*sc, gy-9*sc); ctx.rotate(-0.5);
+  ctx.drawImage(tile['timber-square-planks-boarded'], -16*sc, -8*sc, 32*sc, 16*sc); ctx.restore();
+}
+function drawProp(p){ ({crate:drawCrate,well:drawWell,stall:drawStall,fence:drawFence,rubble:drawRubble}[p.type]||drawCrate)(p); }
+
+// ---- FOREST drawing ----
+function drawTree(sx, baseY, sc, tr, f1, f2){
+  const h=130*sc;
+  ctx.fillStyle=tr; ctx.fillRect(sx-5*sc, baseY-h*0.46, 10*sc, h*0.46);
+  ctx.fillStyle=f1;
+  ctx.beginPath(); ctx.ellipse(sx-20*sc, baseY-h*0.50, 26*sc, 24*sc,0,0,6.28); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(sx+20*sc, baseY-h*0.50, 26*sc, 24*sc,0,0,6.28); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(sx,       baseY-h*0.66, 34*sc, 30*sc,0,0,6.28); ctx.fill();
+  ctx.fillStyle=f2;
+  ctx.beginPath(); ctx.ellipse(sx-8*sc,  baseY-h*0.74, 22*sc, 17*sc,0,0,6.28); ctx.fill();
+}
+function drawForestSky(){
+  const hz=horizon();
+  const g=ctx.createLinearGradient(0,0,0,hz);
+  g.addColorStop(0,'#0f2a16'); g.addColorStop(0.5,'#1f4a27'); g.addColorStop(1,'#557e3c');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,hz+1);
+  // canopy hanging from the top
+  ctx.fillStyle='#0a2010'; const off=(camera.x*0.3)%80;
+  for(let x=-off-80;x<W+80;x+=80){ ctx.beginPath(); ctx.ellipse(x+40,0,60,48,0,0,Math.PI); ctx.fill(); }
+  // light shafts
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  for(let i=0;i<4;i++){ const x=(((i*340 - camera.x*0.2)%(W+340))+(W+340))%(W+340)-120;
+    ctx.fillStyle='rgba(225,240,180,.055)';
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x+60,0); ctx.lineTo(x+170,hz); ctx.lineTo(x+30,hz); ctx.closePath(); ctx.fill(); }
+  ctx.restore();
+}
+function drawForestBack(){
+  const hz=horizon();
+  for(const t of farTrees){ const sx=t.x-camera.x*0.6;  if(sx<-90||sx>W+90)continue;
+    drawTree(sx, hz+12, t.s*0.62, '#2e3a2a', '#3f5f3f', '#4f7048'); }
+  const mg=ctx.createLinearGradient(0,hz*0.5,0,hz+6);                            // soft ground mist near horizon
+  mg.addColorStop(0,'rgba(150,170,140,0)'); mg.addColorStop(1,'rgba(150,170,140,.40)');
+  ctx.fillStyle=mg; ctx.fillRect(0, hz*0.5, W, (hz+6)-hz*0.5);
+  for(const t of midTrees){ const sx=t.x-camera.x*0.82; if(sx<-110||sx>W+110)continue;
+    drawTree(sx, hz+26, t.s*0.70, '#241a10', '#16401f', '#27602f'); }
+}
+function drawForestFront(){
+  for(const t of frontTrees){ const sx=t.x-camera.x*1.12; if(sx<-170||sx>W+170)continue;
+    ctx.globalAlpha=0.82; drawTree(sx, H+44, t.s, '#0e0a06', '#08160c', '#0c1f10'); ctx.globalAlpha=1; }
+}
+function drawForestGround(){
+  const hz=horizon(), grass=tile['floor-ground-grass'];
+  const off=((camera.x)%TILE+TILE)%TILE;
+  for(let y=hz;y<H;y+=TILE) for(let x=-off;x<W;x+=TILE) ctx.drawImage(grass,x,y,TILE,TILE);
+  // forest trail (perspective dirt path down the middle of the world)
+  const cx = WORLD_W*0.5 - camera.x;
+  ctx.fillStyle='rgba(74,54,32,.85)';
+  ctx.beginPath(); ctx.moveTo(cx-26,hz); ctx.lineTo(cx+26,hz); ctx.lineTo(cx+210,H); ctx.lineTo(cx-210,H); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(40,28,16,.30)';
+  ctx.beginPath(); ctx.moveTo(cx-26,hz); ctx.lineTo(cx-6,hz); ctx.lineTo(cx-150,H); ctx.lineTo(cx-210,H); ctx.closePath(); ctx.fill();
+  // back-to-front darkening
+  const g=ctx.createLinearGradient(0,hz,0,frontY()); g.addColorStop(0,'rgba(6,20,10,.55)'); g.addColorStop(1,'rgba(6,20,10,0)');
+  ctx.fillStyle=g; ctx.fillRect(0,hz,W,frontY()-hz);
+  // grass tufts
+  for(const tf of tufts){ const sx=tf.x-camera.x; if(sx<-16||sx>W+16)continue;
+    const gy=groundY(tf.d), s=depthScale(tf.d)*tf.s;
+    ctx.strokeStyle='rgba(22,74,32,.85)'; ctx.lineWidth=2*s;
+    for(let k=-2;k<=2;k++){ ctx.beginPath(); ctx.moveTo(sx+k*3*s, gy); ctx.lineTo(sx+k*3.4*s, gy-(9+(k===0?5:0))*s); ctx.stroke(); } }
+  // sun dapples on the ground
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  for(const dp of dapples){ const sx=dp.x-camera.x; if(sx<-40||sx>W+40)continue;
+    const gy=groundY(dp.d), s=depthScale(dp.d)*dp.s;
+    ctx.fillStyle='rgba(230,240,160,.10)'; ctx.beginPath(); ctx.ellipse(sx,gy-6*s,26*s,9*s,0,0,6.28); ctx.fill(); }
+  ctx.restore();
+}
+
+function drawCoin(sx, gy, sc, bob){
+  const y=gy-(26+Math.sin(bob)*5)*sc, r=12*sc;
+  ctx.save(); ctx.translate(sx,y); ctx.scale(0.25+0.75*Math.abs(Math.cos(bob)),1);
+  const grd=ctx.createLinearGradient(-r,0,r,0); grd.addColorStop(0,'#b87900'); grd.addColorStop(0.5,'#ffe680'); grd.addColorStop(1,'#ffb300');
+  ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(0,0,r,0,6.28); ctx.fill(); ctx.restore();
+  ctx.fillStyle='rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(sx,gy,9*sc,3.2*sc,0,0,6.28); ctx.fill();
+  ctx.fillStyle='rgba(90,59,0,.9)'; ctx.font=`900 ${Math.round(13*sc)}px Trebuchet MS`;
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('$',sx,y);
+}
+
+function drawPlayer(sx, gy){
+  const sc=depthScale(player.d), lift=player.z;
+  ctx.fillStyle=`rgba(0,0,0,${Math.max(0.08,0.3-lift/600)})`;
+  ctx.beginPath(); ctx.ellipse(sx,gy,46*sc*(1-lift/1400),14*sc*(1-lift/1400),0,0,6.28); ctx.fill();
+  const {sheet,f}=currentFrame(); const col=f%SHEET_COLS,row=(f/SHEET_COLS)|0, FOOT=22;
+  ctx.save(); ctx.translate(sx,gy-lift); ctx.scale(player.facing*sc,sc);
+  ctx.drawImage(sheet, col*FRAME,row*FRAME,FRAME,FRAME, -FRAME/2,-FRAME+FOOT,FRAME,FRAME);
+  ctx.restore();
+}
+
+function render(){
+  ctx.clearRect(0,0,W,H);
+  const forest = THEME==='forest';
+  if(forest){ drawForestSky(); drawForestBack(); drawForestGround(); drawLamps(); }
+  else      { drawSky(); drawGround(); drawHouses(); drawLamps(); drawFountains(); }
+
+  // foreground: depth-sort props + coins + player
+  const list=[{d:player.d, draw:()=>drawPlayer(player.px-camera.x, groundY(player.d))}];
+  if(!forest) for(const p of props){ list.push({d:p.d, draw:()=>drawProp(p)}); }
+  for(const c of coins){ if(c.dead)continue; const sx=c.px-camera.x; if(sx<-60||sx>W+60)continue;
+    list.push({d:c.d, draw:()=>drawCoin(sx, groundY(c.d), depthScale(c.d), c.bob)}); }
+  list.sort((a,b)=>a.d-b.d); for(const it of list) it.draw();
+
+  if(forest) drawForestFront();   // blurred dark trees framing the very front
+
+  const vg=ctx.createRadialGradient(W/2,H/2,H*0.32,W/2,H/2,H*0.78);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.45)');
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+}
+
+// ===========================================================================
+// LOOP
+// ===========================================================================
+let last=0, running=false;
+function frame(now){ if(!running)return; const dt=Math.min(0.05,(now-last)/1000||0); last=now; update(dt); render(); requestAnimationFrame(frame); }
+function start(){
+  if(running)return;
+  try{ buildHouses(); }catch(e){ /* if a tile failed, houses just skip */ }
+  document.getElementById('load').classList.add('hide');
+  running=true; last=performance.now(); requestAnimationFrame(frame);
+}
+setTimeout(()=>{ if(!running) start(); }, 6000);
+})();
+</script>
+</body>
+</html>
