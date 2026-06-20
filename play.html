@@ -65,6 +65,26 @@
   #load .bar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#39ff8b,#7c4dff);transition:width .2s}
   #load .pct{margin-top:10px;font-size:12px;color:#6f8a7c}
   @media (max-width:560px){ .hint{font-size:11px;padding:7px 12px} .ab{width:66px;height:76px}.ab .ico{font-size:19px}.ab .lbl{font-size:11px} .brand .title{font-size:13px} }
+
+  /* Shop */
+  .shopbtn{position:absolute;left:12px;top:56px;z-index:7;display:flex;align-items:center;gap:7px;
+    background:rgba(6,4,13,.74);border:1px solid rgba(124,77,255,.55);color:#eafff2;padding:9px 14px;
+    border-radius:11px;font-weight:800;font-size:16px;cursor:pointer;backdrop-filter:blur(6px)}
+  .shopbtn span{font-size:13px}
+  .shopbtn:hover{border-color:#7c4dff;color:#b69bff}
+  .shop{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:rgba(4,3,10,.62);backdrop-filter:blur(3px)}
+  .shop.hidden{display:none}
+  .shop-box{width:min(92vw,520px);background:#0c0a17;border:1px solid rgba(124,77,255,.5);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  .shop-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:800;letter-spacing:.5px;color:#fff;
+    background:linear-gradient(90deg,rgba(124,77,255,.28),rgba(57,255,139,.12))}
+  .shop-x{cursor:pointer;opacity:.8}.shop-x:hover{opacity:1;color:#ff6b6b}
+  .shop-list{display:flex;flex-wrap:wrap;gap:12px;padding:18px;justify-content:center}
+  .shopcard{width:128px;height:128px;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    background:linear-gradient(180deg,rgba(28,20,46,.92),rgba(14,10,24,.92));border:2px solid rgba(255,255,255,.12);color:#eafff2;transition:transform .1s,border-color .12s,box-shadow .12s}
+  .shopcard:hover{transform:translateY(-2px);border-color:rgba(124,77,255,.75)}
+  .shopcard.active{border-color:#39ff8b;box-shadow:0 0 0 2px rgba(57,255,139,.3) inset}
+  .sc-ic{font-size:40px;line-height:1}.sc-nm{font-weight:800;font-size:14px}
+  .shop-foot{padding:0 18px 16px;text-align:center;color:#6f8a7c;font-size:12px}
 </style>
 </head>
 <body>
@@ -78,6 +98,15 @@
     </div>
     <div class="hint"><b>WASD</b> move · <b>SHIFT</b> run · <b>SPACE</b> jump · <b>1–4</b> actions</div>
     <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;<b id="scoreVal">0</b></div>
+
+    <button id="shopBtn" class="shopbtn" title="Changer de personnage">🛍️<span>Shop</span></button>
+    <div id="shop" class="shop hidden">
+      <div class="shop-box">
+        <div class="shop-head"><span>🛍️ CHOISIS TON PERSO</span><span id="shopClose" class="shop-x">✕</span></div>
+        <div id="shopList" class="shop-list"></div>
+        <div class="shop-foot">Plus de skins bientôt — envoie-moi des .glb 🤘</div>
+      </div>
+    </div>
     <div class="touch">
       <div class="dpad">
         <button class="up"    data-dir="f">▲</button>
@@ -225,10 +254,7 @@ for (let i=0;i<9;i++){
 const player = new THREE.Group(); scene.add(player);
 const pos = player.position;                 // we move this group around
 player.rotation.y = Math.PI;                  // spawn facing away from the camera
-let mixer = null, curAction = null;
-const actions = {}, durations = {};
-const CLIP = { idle:'idle', walk:'walk_loop', run:'sprint_loop', jump:'jump_loop',
-               punch:'punch_jab', kick:'kick', attack:'sword_attack', pickup:'jump_start' };
+let mixer = null, curAction = null, actions = {}, durations = {}, CLIP = {};
 const faceOffset = 0;      // facing offset (radians)
 const camLookY = 1.2;      // camera look-at height
 function playClip(name, once){
@@ -238,18 +264,57 @@ function playClip(name, once){
   a.reset(); a.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity); a.clampWhenFinished = once;
   a.fadeIn(0.18).play(); curAction = a;
 }
-total++;   // the GLB counts as one loadable asset
-new GLTFLoader().load('./assets/game/byeboss.glb', (gltf) => {
-  const model = gltf.scene;
-  model.traverse(o => { o.frustumCulled = false; });
-  model.scale.setScalar(2.25);     // tuned size
-  model.position.y = 1.052;        // tuned so the feet sit on the ground
-  player.add(model);
-  mixer = new THREE.AnimationMixer(model);
-  for (const clip of gltf.animations){ actions[clip.name] = mixer.clipAction(clip); durations[clip.name] = clip.duration; }
+
+// ---- characters (the Shop) ----
+const CHARACTERS = [
+  { name:'ByeBoss', url:'./assets/game/byeboss.glb' },
+  { name:'Skin #2', url:'./assets/game/char2.glb' },
+];
+const CHAR_SCALE = 2.25, CHAR_Y = 1.052;
+// logical action -> first available clip name (each GLB may name them differently)
+const CLIP_CAND = {
+  idle:['idle'], walk:['walk_loop','walk'], run:['sprint_loop','run'], jump:['jump_loop','jump'],
+  punch:['punch_jab','punch'], kick:['kick'],
+  attack:['sword_attack','sword_regular_combo','sword_regular_a','attack','punch_jab'],
+  pickup:['jump_start','pickup'],
+};
+const charCache = {};
+let activeModel = null;
+function applyChar(c){
+  if (activeModel) player.remove(activeModel);
+  activeModel = c.model; player.add(activeModel);
+  mixer = c.mixer; actions = c.actions; durations = c.durations; CLIP = c.CLIP; curAction = null;
   playClip(CLIP.idle, false);
-  asset();
-}, undefined, (err) => { console.error('ByeBoss GLB failed to load', err); asset(); });
+}
+function selectChar(i, onDone){
+  if (charCache[i]){ applyChar(charCache[i]); onDone && onDone(); return; }
+  new GLTFLoader().load(CHARACTERS[i].url, (gltf) => {
+    const model = gltf.scene; model.traverse(o => { o.frustumCulled = false; });
+    model.scale.setScalar(CHAR_SCALE); model.position.y = CHAR_Y;
+    const mx = new THREE.AnimationMixer(model), acts = {}, durs = {}, have = new Set();
+    for (const clip of gltf.animations){ acts[clip.name] = mx.clipAction(clip); durs[clip.name] = clip.duration; have.add(clip.name); }
+    const cmap = {}; for (const k in CLIP_CAND){ cmap[k] = CLIP_CAND[k].find(n => have.has(n)) || CLIP_CAND[k][0]; }
+    const c = { model, mixer:mx, actions:acts, durations:durs, CLIP:cmap };
+    charCache[i] = c; applyChar(c); onDone && onDone();
+  }, undefined, (err) => { console.error('character failed:', CHARACTERS[i].url, err); onDone && onDone(); });
+}
+total++;
+selectChar(0, asset);   // first character is part of the loading sequence
+
+// ---- shop UI (change character) ----
+(function shopUI(){
+  const btn = document.getElementById('shopBtn'), panel = document.getElementById('shop'),
+        list = document.getElementById('shopList'), closeX = document.getElementById('shopClose');
+  CHARACTERS.forEach((c, i) => {
+    const card = document.createElement('button');
+    card.className = 'shopcard' + (i === 0 ? ' active' : ''); card.dataset.i = i;
+    card.innerHTML = `<span class="sc-ic">🎮</span><span class="sc-nm">${c.name}</span>`;
+    card.onclick = () => { selectChar(i); document.querySelectorAll('.shopcard').forEach(el => el.classList.toggle('active', +el.dataset.i === i)); };
+    list.appendChild(card);
+  });
+  btn.onclick = () => panel.classList.toggle('hidden');
+  closeX.onclick = () => panel.classList.add('hidden');
+})();
 
 // soft blob shadow under the character
 const shadow = new THREE.Mesh(
