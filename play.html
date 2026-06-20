@@ -90,6 +90,12 @@
   .minimap{position:absolute;right:14px;bottom:14px;width:122px;height:122px;z-index:6;border-radius:50%;
     background:rgba(6,18,10,.4);box-shadow:0 6px 22px rgba(0,0,0,.5)}
   @media (max-width:560px){ .minimap{width:96px;height:96px;bottom:150px} }
+
+  /* Crosshair */
+  .crosshair{position:absolute;left:50%;top:50%;width:24px;height:24px;transform:translate(-50%,-50%);z-index:6;pointer-events:none}
+  .crosshair::before,.crosshair::after{content:'';position:absolute;background:rgba(57,255,139,.9);box-shadow:0 0 4px rgba(0,0,0,.7)}
+  .crosshair::before{left:50%;top:0;width:2px;height:100%;transform:translateX(-50%)}
+  .crosshair::after{top:50%;left:0;height:2px;width:100%;transform:translateY(-50%)}
 </style>
 </head>
 <body>
@@ -101,8 +107,9 @@
       <span class="title"><span class="b">$BYE</span><span class="g">BOSS</span> · WORLD</span>
       <span class="tag">BETA · 3D</span>
     </div>
-    <div class="hint"><b>WASD</b> bouge · <b>SOURIS</b> vise · <b>SHIFT</b> run · <b>SPACE</b> saut · <b>1–4</b> attaque</div>
+    <div class="hint"><b>WASD</b> bouge · <b>SOURIS</b> vise · <b>CLIC&nbsp;DROIT</b> tire · <b>SHIFT</b> run · <b>1–4</b> attaque</div>
     <canvas id="minimap" width="170" height="170" class="minimap"></canvas>
+    <div id="crosshair" class="crosshair"></div>
     <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;<b id="scoreVal">0</b></div>
 
     <button id="shopBtn" class="shopbtn" title="Changer de personnage">🛍️<span>Shop</span></button>
@@ -120,7 +127,7 @@
         <button class="left"  data-dir="l">◀</button>
         <button class="right" data-dir="r">▶</button>
       </div>
-      <div class="rbtns"><button data-btn="run">RUN</button><button data-btn="jump">JUMP</button></div>
+      <div class="rbtns"><button data-btn="run">RUN</button><button data-btn="jump">JUMP</button><button id="fireBtn">🔫 FIRE</button></div>
     </div>
     <div class="abilities">
       <div class="ab" data-act="punch"><span class="num">1</span><span class="ico">★</span><span class="lbl">Punch</span></div>
@@ -566,6 +573,95 @@ function hitMonsters(){
 }
 // monster removed (waiting for a nicer one) — drop a new monster.glb here and call makeMonsters() to bring them back.
 
+// ===== weapon: the gun (right-click = aim + fire, infinite ammo) =====
+const GUN = { px:0.42, py:1.25, pz:0.30, rx:0, ry:0, rz:0, scale:1.4, tip:0.5 };
+let gunModel = null, muzzle = null;
+const gunTip = new THREE.Object3D();
+function applyGunTransform(){
+  if (!gunModel) return;
+  gunModel.position.set(GUN.px, GUN.py, GUN.pz);
+  gunModel.rotation.set(GUN.rx, GUN.ry, GUN.rz);
+  gunModel.scale.setScalar(GUN.scale);
+  gunTip.position.set(0, 0, GUN.tip);
+}
+new GLTFLoader().load('./assets/game/gun.glb', (gltf) => {
+  gunModel = gltf.scene; gunModel.traverse(o => { o.frustumCulled = false; });
+  gunModel.add(gunTip);
+  muzzle = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.35),
+    new THREE.MeshBasicMaterial({ color:0xffdd66, transparent:true, opacity:0.95, blending:THREE.AdditiveBlending, depthWrite:false }));
+  muzzle.visible = false; gunTip.add(muzzle);
+  applyGunTransform(); player.add(gunModel); buildGunPanel();
+}, undefined, (err) => console.error('gun load failed', err));
+
+let aiming = false, aimT = 0, fireTimer = 0, muzzleTimer = 0;
+const FIRE_INTERVAL = 0.12;
+const raycaster = new THREE.Raycaster(), screenCenter = new THREE.Vector2(0, 0);
+function ownerMonster(obj){ for (const m of monsters){ let o = obj; while (o){ if (o === m.model) return m; o = o.parent; } } return null; }
+function fireGun(){
+  if (muzzle){ muzzle.visible = true; muzzle.scale.setScalar(0.7 + Math.random()*0.7); muzzle.rotation.z = Math.random()*6.28; muzzleTimer = 0.05; }
+  raycaster.setFromCamera(screenCenter, camera);
+  const hits = raycaster.intersectObjects(monsterGroup.children, true);
+  if (hits.length){
+    const m = ownerMonster(hits[0].object);
+    if (m && m.state === 'alive' && --m.hp <= 0){ m.state = 'dying'; m.t = 0; score++; scoreVal.textContent = score; }
+  }
+}
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('mousedown', e => { if (e.button === 2) aiming = true; });
+window.addEventListener('mouseup', e => { if (e.button === 2) aiming = false; });
+const fireBtn = document.getElementById('fireBtn');
+if (fireBtn){
+  fireBtn.addEventListener('pointerdown', e => { e.preventDefault(); aiming = true; });
+  fireBtn.addEventListener('pointerup', e => { e.preventDefault(); aiming = false; });
+  fireBtn.addEventListener('pointerleave', () => { aiming = false; });
+}
+// TEMP gun-placement panel — drag, place it in the hand, Copier, send me the values, then I bake + delete.
+function buildGunPanel(){
+  if (document.getElementById('gundbg')) return;
+  const store = {};
+  const p = document.createElement('div'); p.id = 'gundbg';
+  p.style.cssText = 'position:fixed;top:120px;left:14px;width:228px;z-index:50;background:rgba(10,8,18,.93);border:1px solid rgba(90,170,255,.55);border-radius:12px;color:#eafff2;font:12px Trebuchet MS,Verdana,sans-serif;box-shadow:0 12px 32px rgba(0,0,0,.55);backdrop-filter:blur(6px);user-select:none';
+  const head = document.createElement('div');
+  head.style.cssText = 'cursor:move;padding:8px 10px;background:rgba(90,170,255,.22);border-radius:12px 12px 0 0;font-weight:800;display:flex;justify-content:space-between;align-items:center';
+  head.innerHTML = '<span>🔫 ARME — glisse-moi</span><span id="gunX" style="cursor:pointer;opacity:.75">✕</span>';
+  const body = document.createElement('div'); body.style.cssText = 'padding:10px 12px;display:flex;flex-direction:column;gap:8px;max-height:64vh;overflow:auto';
+  p.append(head, body);
+  function row(label, min, max, step, val, fn){
+    store[label] = +val;
+    const w = document.createElement('div');
+    const h = document.createElement('div'); h.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:2px';
+    const nm = document.createElement('span'); nm.textContent = label;
+    const out = document.createElement('span'); out.style.color = '#7cb8ff'; out.textContent = (+val).toFixed(2);
+    h.append(nm, out);
+    const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = val; inp.style.width = '100%';
+    inp.addEventListener('input', () => { const v = parseFloat(inp.value); out.textContent = v.toFixed(2); store[label] = v; fn(v); });
+    w.append(h, inp); body.append(w);
+  }
+  row('px', -2, 2, 0.01, GUN.px, v => { GUN.px = v; applyGunTransform(); });
+  row('py', 0, 3, 0.01, GUN.py, v => { GUN.py = v; applyGunTransform(); });
+  row('pz', -2, 2, 0.01, GUN.pz, v => { GUN.pz = v; applyGunTransform(); });
+  row('rotX', -3.2, 3.2, 0.05, GUN.rx, v => { GUN.rx = v; applyGunTransform(); });
+  row('rotY', -3.2, 3.2, 0.05, GUN.ry, v => { GUN.ry = v; applyGunTransform(); });
+  row('rotZ', -3.2, 3.2, 0.05, GUN.rz, v => { GUN.rz = v; applyGunTransform(); });
+  row('scale', 0.2, 4, 0.05, GUN.scale, v => { GUN.scale = v; applyGunTransform(); });
+  row('tip', -1, 2, 0.05, GUN.tip, v => { GUN.tip = v; applyGunTransform(); });
+  const btn = document.createElement('button'); btn.textContent = '📋 Copier les valeurs';
+  btn.style.cssText = 'margin-top:4px;padding:9px;border-radius:8px;border:1px solid #5aaaff;background:rgba(90,170,255,.22);color:#eafff2;font-weight:800;cursor:pointer';
+  btn.onclick = () => {
+    const txt = 'GUN ' + Object.entries(store).map(([k,v]) => `${k}=${(+v).toFixed(3)}`).join(' | ');
+    const ok = () => { btn.textContent = '✅ Copié — colle-le-moi'; setTimeout(() => btn.textContent = '📋 Copier les valeurs', 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok).catch(() => prompt('Copie ça :', txt)); else prompt('Copie ça :', txt);
+  };
+  body.append(btn);
+  p.addEventListener('keydown', e => e.stopPropagation());
+  let dr = false, ox = 0, oy = 0;
+  head.addEventListener('pointerdown', e => { if (e.target.id === 'gunX') return; dr = true; ox = e.clientX - p.offsetLeft; oy = e.clientY - p.offsetTop; e.preventDefault(); });
+  window.addEventListener('pointermove', e => { if (!dr) return; p.style.left = Math.max(0, e.clientX - ox) + 'px'; p.style.top = Math.max(0, e.clientY - oy) + 'px'; });
+  window.addEventListener('pointerup', () => dr = false);
+  head.querySelector('#gunX').onclick = () => p.remove();
+  document.body.appendChild(p);
+}
+
 // ===== mouse / touch look (shooter-style) =====
 const LOOK_SENS = 0.0026, PITCH_MIN = 0.05, PITCH_MAX = 1.25;
 canvas.addEventListener('click', () => {
@@ -623,6 +719,7 @@ function update(dt){
       faceAngle = Math.atan2(wx, wz);                   // face the way we walk
     }
   }
+  if (aiming) faceAngle = camYaw + Math.PI;             // face where the camera looks while aiming
 
   // jump arc
   if (!grounded){ vy -= GRAV*dt; pos.y += vy*dt; if (pos.y <= 0){ pos.y = 0; vy = 0; grounded = true; } }
@@ -644,15 +741,22 @@ function update(dt){
   shadow.position.set(pos.x, 0.02, pos.z);
   const ss = Math.max(0.4, 1 - pos.y*0.12); shadow.scale.set(ss, ss, ss); shadow.material.opacity = 0.3*ss;
 
-  // orbit camera (mouse-look, shooter-style)
-  const cp = Math.cos(camPitch);
+  // aim / fire blend
+  aimT += ((aiming?1:0) - aimT) * Math.min(1, dt*12);
+  if (aiming){ fireTimer -= dt; if (fireTimer <= 0){ fireTimer = FIRE_INTERVAL; fireGun(); } } else fireTimer = 0;
+  if (muzzle && muzzle.visible){ muzzleTimer -= dt; if (muzzleTimer <= 0) muzzle.visible = false; }
+
+  // orbit camera (mouse-look; pulls in + zooms + over-shoulder while aiming)
+  const cp = Math.cos(camPitch), dist = CAM_DIST * (1 - 0.42*aimT), fov = 55 - 16*aimT;
+  if (Math.abs(camera.fov - fov) > 0.05){ camera.fov = fov; camera.updateProjectionMatrix(); }
+  const rx = Math.cos(camYaw)*aimT, rz = -Math.sin(camYaw)*aimT;
   camTarget.set(
-    pos.x + Math.sin(camYaw)*CAM_DIST*cp,
-    pos.y + camLookY + Math.sin(camPitch)*CAM_DIST,
-    pos.z + Math.cos(camYaw)*CAM_DIST*cp
+    pos.x + Math.sin(camYaw)*dist*cp + rx,
+    pos.y + camLookY + Math.sin(camPitch)*dist + 0.3*aimT,
+    pos.z + Math.cos(camYaw)*dist*cp + rz
   );
   camera.position.lerp(camTarget, 1 - Math.pow(0.0008, dt));
-  camera.lookAt(pos.x, pos.y + camLookY, pos.z);
+  camera.lookAt(pos.x + rx, pos.y + camLookY + 0.3*aimT, pos.z + rz);
   updateMonsters(dt);
 
   // auto-collect coins just by walking over them, then spin the rest
