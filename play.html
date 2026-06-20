@@ -83,17 +83,19 @@
   @media (max-width:560px){ .cfgbtn{bottom:auto;top:56px;right:12px} }
   .shop{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:rgba(4,3,10,.62);backdrop-filter:blur(3px)}
   .shop.hidden{display:none}
-  .shop-box{width:min(92vw,520px);background:#0c0a17;border:1px solid rgba(124,77,255,.5);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-  .shop-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-weight:800;letter-spacing:.5px;color:#fff;
-    background:linear-gradient(90deg,rgba(124,77,255,.28),rgba(57,255,139,.12))}
-  .shop-x{cursor:pointer;opacity:.8}.shop-x:hover{opacity:1;color:#ff6b6b}
-  .shop-list{display:flex;flex-wrap:wrap;gap:12px;padding:18px;justify-content:center}
-  .shopcard{width:128px;height:128px;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
-    background:linear-gradient(180deg,rgba(28,20,46,.92),rgba(14,10,24,.92));border:2px solid rgba(255,255,255,.12);color:#eafff2;transition:transform .1s,border-color .12s,box-shadow .12s}
+  .shop-box{width:min(94vw,640px);background:linear-gradient(180deg,#100d20,#0a0813);border:1px solid rgba(124,77,255,.5);border-radius:22px;overflow:hidden;box-shadow:0 28px 80px rgba(0,0,0,.65)}
+  .shop-head{display:flex;justify-content:space-between;align-items:center;padding:18px 24px;font-weight:800;letter-spacing:.6px;font-size:18px;color:#fff;
+    background:linear-gradient(90deg,rgba(124,77,255,.3),rgba(57,255,139,.1))}
+  .shop-x{cursor:pointer;opacity:.8;font-size:18px}.shop-x:hover{opacity:1;color:#ff6b6b}
+  .shop-list{display:flex;flex-wrap:wrap;gap:16px;padding:24px;justify-content:center}
+  .shopcard{width:170px;height:180px;border-radius:18px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    background:#15122a;border:2px solid rgba(255,255,255,.12);color:#eafff2;transition:transform .1s,border-color .12s,box-shadow .12s;font-family:inherit}
   .shopcard:hover{transform:translateY(-2px);border-color:rgba(124,77,255,.75)}
   .shopcard.active{border-color:#39ff8b;box-shadow:0 0 0 2px rgba(57,255,139,.3) inset}
-  .sc-ic{font-size:40px;line-height:1}.sc-nm{font-weight:800;font-size:14px}
-  .shop-foot{padding:0 18px 16px;text-align:center;color:#6f8a7c;font-size:12px}
+  .sc-ic{font-size:52px;line-height:1}.sc-nm{font-weight:800;font-size:16px}
+  .sc-act{font-size:13px;font-weight:800;color:#39ff8b;background:rgba(57,255,139,.14);padding:5px 12px;border-radius:999px}
+  .sc-act.buy{color:#ffd54a;background:rgba(255,196,0,.16)}
+  .shop-foot{padding:0 24px 18px;text-align:center;color:#6f8a7c;font-size:12px}
   /* vault panel */
   .vault{position:absolute;inset:0;z-index:31;display:grid;place-items:center;background:rgba(4,3,10,.66);backdrop-filter:blur(4px)}
   .vault.hidden{display:none}
@@ -168,6 +170,7 @@
     <div id="crosshair" class="crosshair"></div>
     <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;🔒<b id="scoreVal">0</b><small id="carryVal" style="margin-left:8px;color:#ff9d3b;font-weight:800;font-size:13px"></small><small id="capVal" style="margin-left:7px;opacity:.6;font-weight:600;font-size:11px"></small></div>
     <div id="bankPrompt" class="bankprompt hide">🏦 Press <b>E</b> to open the vault</div>
+    <div id="shopPrompt" class="bankprompt hide">🛍️ Press <b>E</b> to open the shop</div>
     <div class="hpbar"><span>❤️</span><div class="hpb"><i id="hpFill"></i></div></div>
     <div id="xpwrap" class="xpwrap" style="display:none"><span class="lvl" id="lvlVal">Lvl 1</span><div class="xpb"><i id="xpFill"></i></div></div>
     <button id="walletBtn" class="walletbtn">👻 Connect Phantom</button>
@@ -177,9 +180,9 @@
     <button id="cfgBtn" class="cfgbtn" title="Settings — key bindings">⚙</button>
     <div id="shop" class="shop hidden">
       <div class="shop-box">
-        <div class="shop-head"><span>🛍️ CHOOSE YOUR CHARACTER</span><span id="shopClose" class="shop-x">✕</span></div>
+        <div class="shop-head"><span>🛍️ SKINS SHOP</span><span id="shopClose" class="shop-x">✕</span></div>
         <div id="shopList" class="shop-list"></div>
-        <div class="shop-foot">More skins soon 🤘</div>
+        <div class="shop-foot">Buy skins with your 🔒 vault balance · equip anytime · more soon 🤘</div>
       </div>
     </div>
     <div id="vault" class="vault hidden">
@@ -470,6 +473,11 @@ const CHARACTERS = [
   { name:'Skin #2', url:'./assets/game/char2.glb' },
   { name:'Iso 2D', type:'sprite' },
 ];
+// Skins: ownership is server-side (bought with vault $BYEBOSS); which one you
+// equip is local (cosmetic — other players always see you as ByeBoss anyway).
+let ownedSkins = new Set([2]);     // index 2 is free; rest synced from server on welcome
+let skinPrice = 50;
+let selectedSkin = (() => { try { const s = +localStorage.getItem('bb_skin'); if (CHARACTERS[s]) return s; } catch(e){} return 2; })();
 const CHAR_SCALE = 2.25, CHAR_Y = 1.052;
 // logical action -> first available clip name (each GLB may name them differently)
 const CLIP_CAND = {
@@ -501,22 +509,32 @@ function selectChar(i, onDone){
   }, undefined, (err) => { console.error('character failed:', CHARACTERS[i].url, err); onDone && onDone(); });
 }
 total++;
-queueMicrotask(() => selectChar(2, asset));   // default = Iso 2D (deferred so every definition below exists)
+queueMicrotask(() => selectChar(selectedSkin, asset));   // last-equipped skin (deferred so every definition below exists)
 
-// ---- shop UI (change character) ----
-(function shopUI(){
-  const btn = document.getElementById('shopBtn'), panel = document.getElementById('shop'),
-        list = document.getElementById('shopList'), closeX = document.getElementById('shopClose');
-  CHARACTERS.forEach((c, i) => {
+// ---- skins shop (opened by the shop building; buy with vault $BYEBOSS) ----
+const shopPanel = document.getElementById('shop'), shopListEl = document.getElementById('shopList');
+function shopBldOpen(){ return shopPanel && !shopPanel.classList.contains('hidden'); }
+function renderShop(){
+  if (!shopListEl) return; shopListEl.innerHTML = '';
+  CHARACTERS.forEach((ch, i) => {
+    const owned = ownedSkins.has(i), sel = (i === selectedSkin);
     const card = document.createElement('button');
-    card.className = 'shopcard' + (i === 2 ? ' active' : ''); card.dataset.i = i;
-    card.innerHTML = `<span class="sc-ic">🎮</span><span class="sc-nm">${c.name}</span>`;
-    card.onclick = () => { selectChar(i); document.querySelectorAll('.shopcard').forEach(el => el.classList.toggle('active', +el.dataset.i === i)); };
-    list.appendChild(card);
+    card.className = 'shopcard' + (sel ? ' active' : '');
+    const label = sel ? '✓ Equipped' : owned ? 'Select' : ('Buy ' + skinPrice + ' 🔒');
+    card.innerHTML = `<span class="sc-ic">${owned ? '🎮' : '🔒'}</span><span class="sc-nm">${ch.name}</span><span class="sc-act${owned?'':' buy'}">${label}</span>`;
+    card.onclick = () => {
+      if (sel) return;
+      if (owned){ selectedSkin = i; try { localStorage.setItem('bb_skin', i); } catch(e){} selectChar(i); renderShop(); }
+      else if (mpConnected){ mpSend({ t: 'buyskin', skin: i }); }   // server pays from the vault
+    };
+    shopListEl.appendChild(card);
   });
-  if (btn) btn.onclick = () => panel.classList.toggle('hidden');   // shop button removed from HUD; panel kept
-  if (closeX) closeX.onclick = () => panel.classList.add('hidden');
-})();
+}
+function openShopBld(){ if (!shopPanel) return; renderShop(); shopPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
+function closeShopBld(){ if (shopPanel) shopPanel.classList.add('hidden'); }
+function nearShop(){ return !!shopPoint && ((shopPoint.x-pos.x)*(shopPoint.x-pos.x) + (shopPoint.z-pos.z)*(shopPoint.z-pos.z) <= 49); }
+{ const x = document.getElementById('shopClose'); if (x) x.onclick = closeShopBld; }
+renderShop();
 
 // ---- iso sprite character (a 2D billboard option in the Shop) ----
 const ISO_STATES = { idle:{fps:7,loop:true}, walk:{fps:12,loop:true}, run:{fps:16,loop:true}, jump:{fps:16,loop:false}, shot:{fps:22,loop:true} };
@@ -774,6 +792,7 @@ let vault = 0, carried = 0;   // secured (claimable) vs on-hand (at risk) balanc
 const capVal = document.getElementById('capVal');
 const carryVal = document.getElementById('carryVal');
 const bankPrompt = document.getElementById('bankPrompt');
+const shopPrompt = document.getElementById('shopPrompt');
 const xpwrapEl = document.getElementById('xpwrap'), lvlVal = document.getElementById('lvlVal'), xpFill = document.getElementById('xpFill');
 function fmtPool(n){ n=+n; if(!isFinite(n)) return ''; if(n>=1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M'; if(n>=1e3) return Math.round(n/1e3)+'k'; return ''+n; }
 function doTeleport(dest){ if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'teleport', to: dest })); }
@@ -888,6 +907,9 @@ function mpConnect(){
       for (const c of coins) c.visible = false;   // the server owns the coins now
       placeVaults(m.vaults || []);                // render the vault (bank)
       placeShop(m.shop || null);                  // render the shop building
+      if (Array.isArray(m.skins)) ownedSkins = new Set(m.skins);   // owned skins from the server
+      if (Number.isFinite(m.skinPrice)) skinPrice = m.skinPrice;
+      renderShop();
       if (xpwrapEl) xpwrapEl.style.display = 'flex';
     }
     else if (m.t === 'denied'){ console.warn('multiplayer denied:', m.m); }
@@ -896,6 +918,7 @@ function mpConnect(){
     else if (m.t === 'apples'){ syncServerApples(m.apples); }
     else if (m.t === 'tp'){ if (typeof pos !== 'undefined'){ pos.x = m.x; pos.z = m.z; } }   // server teleported us
     else if (m.t === 'claim'){ if (m.ok){ claimedToday = true; if (Number.isFinite(m.vault)) vault = m.vault; if (Number.isFinite(m.claims)) claims = m.claims; } if (vaultOpen()) refreshVaultUI(); }
+    else if (m.t === 'skin'){ if (m.ok){ ownedSkins = new Set(m.skins); if (Number.isFinite(m.vault)) vault = m.vault; selectedSkin = m.skin; try { localStorage.setItem('bb_skin', m.skin); } catch(e){} selectChar(m.skin); } renderShop(); }
     else if (m.t === 'vaulted'){ if (Number.isFinite(m.vault)) vault = m.vault; if (Number.isFinite(m.carried)) carried = m.carried; if (vaultOpen()) refreshVaultUI(); }
     else if (m.t === 'snap'){ onSnap(m); }
     else if (m.t === 'left'){ removeRemote(m.id); }
@@ -939,7 +962,13 @@ addEventListener('keydown', e=>{
   if (_capturingBind){ e.preventDefault(); if (e.code !== 'Escape'){ binds[_capturingBind] = e.code; saveBinds(); } _capturingBind = null; renderBinds(); return; }
   for (const a in binds){ if (binds[a] === e.code){ if (a === 'jump') triggerJump(); else keys[a] = true; e.preventDefault(); return; } }
   if (ARROWS[e.code]){ keys[ARROWS[e.code]] = true; e.preventDefault(); return; }
-  if (e.code === 'KeyE'){ if (vaultOpen()) closeVault(); else if (mpConnected && nearVault()) openVault(); e.preventDefault(); }   // open vault panel
+  if (e.code === 'KeyE'){                                   // open the nearest landmark panel
+    if (vaultOpen()) closeVault();
+    else if (shopBldOpen()) closeShopBld();
+    else if (mpConnected && nearVault()) openVault();
+    else if (mpConnected && nearShop()) openShopBld();
+    e.preventDefault();
+  }
 });
 addEventListener('keyup', e=>{
   for (const a in binds){ if (binds[a] === e.code && a !== 'jump'){ keys[a] = false; return; } }
@@ -1365,7 +1394,7 @@ function update(dt){
   if (locked){ lockTimer -= dt; if (lockTimer <= 0) locked = false; }
 
   let moving = false;
-  if (!locked && !dead && !vaultOpen()){
+  if (!locked && !dead && !vaultOpen() && !shopBldOpen() && !cfgOpen()){
     const mF = (keys.f?1:0) - (keys.b?1:0);   // W/S forward-back (camera-relative)
     const mR = (keys.r?1:0) - (keys.l?1:0);   // A/D strafe
     moving = !!(mF || mR);
@@ -1435,8 +1464,10 @@ function update(dt){
   for (const e of serverCoins.values()){ if (e.group.visible) e.group.rotation.y += dt*3; }
   for (const e of serverBags.values()){ if (e.group.visible) e.group.rotation.y += dt*2.2; }
   for (const e of serverApples.values()){ if (e.group.visible) e.group.rotation.y += dt*1.6; }
-  // "E — déposer" prompt when standing on a vault with coins on you
-  if (bankPrompt) bankPrompt.classList.toggle('hide', !(mpConnected && !vaultOpen() && nearVault()));
+  // "Press E" prompts when standing on the vault / shop (and no panel is open)
+  const anyPanel = vaultOpen() || shopBldOpen() || cfgOpen();
+  if (bankPrompt) bankPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && nearVault()));
+  if (shopPrompt) shopPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && !nearVault() && nearShop()));
 }
 
 let last = 0, running = false;
