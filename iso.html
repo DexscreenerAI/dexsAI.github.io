@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>$BYEBOSS — ISO TEST</title>
+<meta name="theme-color" content="#06040d">
+<link rel="icon" type="image/png" href="https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0b1f12;
+    font-family:'Trebuchet MS',Verdana,system-ui,sans-serif;color:#eafff2;user-select:none;cursor:crosshair}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+  .hud{position:fixed;inset:0;pointer-events:none;z-index:5}
+  .hud>*{pointer-events:auto}
+  .hint{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(6,4,13,.72);
+    border:1px solid rgba(57,255,139,.25);padding:9px 18px;border-radius:999px;font-size:13px;color:#cdebd9;white-space:nowrap;backdrop-filter:blur(6px)}
+  .hint b{color:#39ff8b}
+  .brand{position:absolute;top:12px;left:12px;display:flex;gap:10px;align-items:center}
+  .brand a{background:rgba(6,4,13,.72);border:1px solid rgba(255,255,255,.14);color:#eafff2;text-decoration:none;
+    padding:8px 12px;border-radius:10px;font-size:13px;font-weight:700;backdrop-filter:blur(6px)}
+  .brand a:hover{border-color:#39ff8b;color:#39ff8b}
+  .brand .t{font-weight:800;font-size:15px}.brand .t .b{color:#ff3b3b}.brand .t .g{color:#39ff8b}
+  .score{position:absolute;top:12px;right:12px;background:rgba(6,4,13,.72);border:1px solid rgba(255,196,0,.35);
+    padding:8px 14px;border-radius:12px;font-weight:800;font-size:15px;backdrop-filter:blur(6px)}
+  .score b{color:#ffd54a}
+  #load{position:fixed;inset:0;z-index:20;background:#0b1f12;display:grid;place-items:center;transition:opacity .4s}
+  #load.hide{opacity:0;pointer-events:none}
+  #load .l{font-size:30px;font-weight:900}.l .b{color:#ff3b3b}.l .g{color:#39ff8b}
+  #load .p{margin-top:10px;color:#7da890;font-size:13px}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud">
+  <div class="brand"><a href="./game.html">‹ Back</a><span class="t"><span class="b">$BYE</span><span class="g">BOSS</span> · ISO</span></div>
+  <div class="hint"><b>WASD</b> bouge · <b>SHIFT</b> run · <b>SPACE</b> saut · <b>CLIC</b> tire (vise à la souris)</div>
+  <div class="score">🎯 <b id="sc">0</b></div>
+</div>
+<div id="load"><div style="text-align:center"><div class="l"><span class="b">$BYE</span><span class="g">BOSS</span> · ISO</div><div class="p" id="pp">chargement… 0%</div></div></div>
+
+<script>
+(() => {
+'use strict';
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){ DPR=Math.min(devicePixelRatio||1,2); W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); }
+addEventListener('resize', resize); resize();
+
+// ---- assets: 25-frame (5x5) sheets per state+direction; left = mirror of right ----
+const STATES = { idle:{fps:7,loop:true}, walk:{fps:12,loop:true}, run:{fps:16,loop:true}, jump:{fps:16,loop:false}, shot:{fps:22,loop:true} };
+const DIRS = ['up','down','right'];
+const FRAME = 256, COLS = 5, NF = 25;
+const sheets = {}; let toLoad = 0, loaded = 0;
+const pp = document.getElementById('pp');
+function load(url){ toLoad++; const i = new Image(); i.onload=i.onerror=()=>{ loaded++; pp.textContent='chargement… '+Math.round(loaded/toLoad*100)+'%'; if(loaded>=toLoad) start(); }; i.src=url; return i; }
+for (const s in STATES) for (const d of DIRS) sheets[s+'_'+d] = load('./assets/game/iso/'+s+'_'+d+'.png');
+const grass = load('./assets/game/kit/floor-ground-grass.png');
+
+// ---- input ----
+const keys = {};
+addEventListener('keydown', e=>{ keys[e.code]=true; if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault(); });
+addEventListener('keyup', e=>{ keys[e.code]=false; });
+let mx = innerWidth/2, my = innerHeight/2, firing = false;
+addEventListener('mousemove', e=>{ mx=e.clientX; my=e.clientY; });
+addEventListener('mousedown', e=>{ if(e.button===0) firing=true; });
+addEventListener('mouseup', e=>{ if(e.button===0) firing=false; });
+addEventListener('contextmenu', e=>e.preventDefault());
+// touch: drag to aim, tap to fire
+addEventListener('touchstart', e=>{ const t=e.touches[0]; mx=t.clientX; my=t.clientY; firing=true; }, {passive:true});
+addEventListener('touchmove',  e=>{ const t=e.touches[0]; mx=t.clientX; my=t.clientY; }, {passive:true});
+addEventListener('touchend',   ()=>{ firing=false; }, {passive:true});
+
+// ---- world ----
+const player = { px:0, py:0, z:0, vz:0, grounded:true, dir:'down', state:'idle', t:0 };
+const WALK=160, RUN=300, JUMP_V=420, GRAV=1400;
+const cam = { x:0, y:0 };
+const bullets = [];
+const targets = [];
+function spawnTarget(){ const a=Math.random()*6.28, r=240+Math.random()*420; targets.push({ x:player.px+Math.cos(a)*r, y:player.py+Math.sin(a)*r, alive:true, bob:Math.random()*6.28 }); }
+for (let i=0;i<7;i++) spawnTarget();
+let score=0; const scEl=document.getElementById('sc');
+
+function dirFromAngle(ang){ // screen angle -> cardinal
+  const a = ((ang%(2*Math.PI))+2*Math.PI)%(2*Math.PI);
+  if (a < Math.PI*0.25 || a >= Math.PI*1.75) return 'right';
+  if (a < Math.PI*0.75) return 'down';
+  if (a < Math.PI*1.25) return 'left';
+  return 'up';
+}
+
+let fireTimer = 0;
+function update(dt){
+  // movement (screen-aligned)
+  let ix = (keys.KeyD||keys.ArrowRight?1:0) - (keys.KeyA||keys.ArrowLeft?1:0);
+  let iy = (keys.KeyS||keys.ArrowDown?1:0) - (keys.KeyW||keys.ArrowUp?1:0);
+  const moving = ix||iy;
+  if (moving){ const len=Math.hypot(ix,iy)||1, spd=keys.ShiftLeft||keys.ShiftRight?RUN:WALK;
+    player.px += ix/len*spd*dt; player.py += iy/len*spd*dt; }
+  // jump
+  if ((keys.Space) && player.grounded){ player.vz=JUMP_V; player.grounded=false; }
+  if (!player.grounded){ player.z += player.vz*dt; player.vz -= GRAV*dt; if(player.z<=0){player.z=0;player.vz=0;player.grounded=true;} }
+
+  // aim direction (mouse relative to screen centre = the player)
+  const aimAng = Math.atan2(my - H/2, mx - W/2);
+  const aimDir = dirFromAngle(aimAng);
+
+  // state + facing
+  let st;
+  if (firing){ st='shot'; player.dir=aimDir; }
+  else if (!player.grounded){ st='jump'; if(moving) player.dir=dirFromAngle(Math.atan2(iy,ix)); }
+  else if (moving){ st=(keys.ShiftLeft||keys.ShiftRight)?'run':'walk'; player.dir=dirFromAngle(Math.atan2(iy,ix)); }
+  else st='idle';
+  if (st!==player.state){ player.state=st; player.t=0; } else player.t+=dt;
+
+  // shooting
+  if (firing){ fireTimer-=dt; if(fireTimer<=0){ fireTimer=0.11; const ang=aimAng; bullets.push({ x:player.px, y:player.py-40, vx:Math.cos(ang)*620, vy:Math.sin(ang)*620, life:1.1 }); } }
+  else fireTimer=0;
+
+  // bullets
+  for (const b of bullets){ b.life-=dt; b.x+=b.vx*dt; b.y+=b.vy*dt;
+    for (const tg of targets){ if(!tg.alive) continue; if(Math.hypot(tg.x-b.x, tg.y-b.y)<34){ tg.alive=false; b.life=0; score++; scEl.textContent=score; setTimeout(spawnTarget, 1500); } } }
+  for (let i=bullets.length-1;i>=0;i--) if(bullets[i].life<=0) bullets.splice(i,1);
+
+  for (const tg of targets) tg.bob+=dt*3;
+  cam.x += (player.px - cam.x)*Math.min(1,dt*8);
+  cam.y += (player.py - cam.y)*Math.min(1,dt*8);
+}
+
+function sx(wx){ return W/2 + (wx - cam.x); }
+function sy(wy){ return H/2 + (wy - cam.y); }
+
+function render(){
+  ctx.clearRect(0,0,W,H);
+  // ground (tiled grass)
+  const T=64, ox=((cam.x%T)+T)%T, oy=((cam.y%T)+T)%T;
+  for (let y=-oy-T; y<H+T; y+=T) for (let x=-ox-T; x<W+T; x+=T) ctx.drawImage(grass, x, y, T, T);
+  ctx.fillStyle='rgba(0,0,0,.12)'; ctx.fillRect(0,0,W,H);
+
+  // depth-sort targets + player by world Y
+  const items = [];
+  for (const tg of targets){ if(!tg.alive) continue; items.push({ y:tg.y, draw:()=>drawTarget(tg) }); }
+  items.push({ y:player.py, draw:drawPlayer });
+  items.sort((a,b)=>a.y-b.y); for (const it of items) it.draw();
+
+  // bullets (on top)
+  ctx.fillStyle='#fff0a0';
+  for (const b of bullets){ ctx.beginPath(); ctx.arc(sx(b.x), sy(b.y), 4, 0, 6.28); ctx.fill(); }
+
+  // crosshair at mouse
+  ctx.strokeStyle='rgba(57,255,139,.9)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(mx-11,my); ctx.lineTo(mx-3,my); ctx.moveTo(mx+3,my); ctx.lineTo(mx+11,my);
+  ctx.moveTo(mx,my-11); ctx.lineTo(mx,my-3); ctx.moveTo(mx,my+3); ctx.lineTo(mx,my+11); ctx.stroke();
+}
+function drawTarget(tg){
+  const x=sx(tg.x), y=sy(tg.y), b=Math.sin(tg.bob)*3;
+  ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(x,y,18,7,0,0,6.28); ctx.fill();
+  ctx.fillStyle='#ff4d4d'; ctx.strokeStyle='#fff'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(x,y-20+b,15,0,6.28); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x,y-20+b,6,0,6.28); ctx.fill();
+  ctx.fillStyle='#ff4d4d'; ctx.beginPath(); ctx.arc(x,y-20+b,3,0,6.28); ctx.fill();
+}
+function drawPlayer(){
+  const cfg = STATES[player.state], count=NF;
+  let f = Math.floor(player.t*cfg.fps); f = cfg.loop ? f%count : Math.min(f,count-1);
+  const flip = player.dir==='left';
+  const sheet = sheets[player.state+'_'+(flip?'right':player.dir)];
+  const col=f%COLS, row=(f/COLS)|0;
+  const x=sx(player.px), y=sy(player.py)-player.z;
+  // shadow
+  ctx.fillStyle=`rgba(0,0,0,${Math.max(0.1,0.32-player.z/400)})`;
+  ctx.beginPath(); ctx.ellipse(sx(player.px), sy(player.py), 40, 14, 0, 0, 6.28); ctx.fill();
+  const S=230;
+  ctx.save(); ctx.translate(x, y); ctx.scale(flip?-1:1, 1);
+  ctx.drawImage(sheet, col*FRAME, row*FRAME, FRAME, FRAME, -S/2, -S+30, S, S);
+  ctx.restore();
+}
+
+let last=0, running=false;
+function frame(now){ if(!running) return; const dt=Math.min(0.05,(now-last)/1000||0); last=now; update(dt); render(); requestAnimationFrame(frame); }
+function start(){ if(running) return; document.getElementById('load').classList.add('hide'); running=true; last=performance.now(); requestAnimationFrame(frame); }
+setTimeout(()=>{ if(!running) start(); }, 6000);
+})();
+</script>
+</body>
+</html>
