@@ -399,7 +399,7 @@ function selectChar(i, onDone){
   }, undefined, (err) => { console.error('character failed:', CHARACTERS[i].url, err); onDone && onDone(); });
 }
 total++;
-selectChar(2, asset);   // Iso 2D is the default character
+queueMicrotask(() => selectChar(2, asset));   // default = Iso 2D (deferred so every definition below exists)
 
 // ---- shop UI (change character) ----
 (function shopUI(){
