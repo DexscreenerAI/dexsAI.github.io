@@ -107,6 +107,7 @@
 </script>
 <script type="module">
 import * as THREE from 'three';
+import { GLTFLoader } from './assets/vendor/GLTFLoader.js';
 
 // ---------------------------------------------------------------------------
 // Renderer / scene / camera
@@ -157,19 +158,7 @@ const dirtTex = tex('./assets/game/kit/floor-ground-dirt.png', true, [2,90]);
 const trail = new THREE.Mesh(new THREE.PlaneGeometry(4.5,260), new THREE.MeshLambertMaterial({ map:dirtTex }));
 trail.rotation.x = -Math.PI/2; trail.position.y = 0.02; scene.add(trail);
 
-// character spritesheets (6 sheets, 5x5 = 25 frames)
-const STATES = {
-  idle:{sheet:'idle',fps:7,loop:true}, run:{sheet:'run',fps:16,loop:true}, jump:{sheet:'jump',fps:18,loop:false},
-  punch:{sheet:'attack',fps:22,loop:false,frames:14}, attack:{sheet:'attack',fps:18,loop:false},
-  kick:{sheet:'kick',fps:16,loop:false}, pickup:{sheet:'pickup',fps:14,loop:false},
-};
-const sheetTex = {};
-for (const name of ['idle','run','jump','attack','kick','pickup']){
-  const t = tex('./assets/game/'+name+'.png', true);
-  t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false;
-  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1/5, 1/5);
-  sheetTex[name] = t;
-}
+// (the character is the rigged ByeBoss GLB — loaded further down)
 
 // ---------------------------------------------------------------------------
 // World props — low-poly trees, lamp posts, bushes
@@ -224,13 +213,36 @@ for (let i=0;i<9;i++){
 }
 
 // ---------------------------------------------------------------------------
-// Character (2D sprite as a camera-facing billboard)
+// Character — the rigged ByeBoss GLB (replaces the old 2D billboard)
 // ---------------------------------------------------------------------------
-const CHAR_H = 2.6, FOOT = 0.18;
-const charMat = new THREE.MeshBasicMaterial({ transparent:true, alphaTest:0.35, side:THREE.DoubleSide, map:sheetTex.idle });
-const charMesh = new THREE.Mesh(new THREE.PlaneGeometry(CHAR_H, CHAR_H), charMat);
-const BASE_Y = CHAR_H*0.5 - FOOT;
-charMesh.position.set(0, BASE_Y, 0); scene.add(charMesh);
+const player = new THREE.Group(); scene.add(player);
+const pos = player.position;                 // we move this group around
+player.rotation.y = Math.PI;                  // spawn facing away from the camera
+let mixer = null, curAction = null;
+const actions = {}, durations = {};
+const CLIP = { idle:'idle', walk:'walk_loop', run:'sprint_loop', jump:'jump_loop',
+               punch:'punch_jab', kick:'kick', attack:'sword_attack', pickup:'jump_start' };
+const FACE_OFFSET = 0;                         // tweak if the model faces the wrong way
+function playClip(name, once){
+  const a = actions[name]; if (!a) return;
+  if (a === curAction && a.isRunning() && !once) return;
+  if (curAction && curAction !== a) curAction.fadeOut(0.18);
+  a.reset(); a.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity); a.clampWhenFinished = once;
+  a.fadeIn(0.18).play(); curAction = a;
+}
+total++;   // the GLB counts as one loadable asset
+new GLTFLoader().load('./assets/game/byeboss.glb', (gltf) => {
+  const model = gltf.scene;
+  model.traverse(o => { o.frustumCulled = false; });
+  let box = new THREE.Box3().setFromObject(model), size = box.getSize(new THREE.Vector3());
+  model.scale.setScalar(2.4 / (size.y || 1));                          // auto-fit to ~2.4 units tall
+  box = new THREE.Box3().setFromObject(model); model.position.y = -box.min.y;   // feet on the ground
+  player.add(model);
+  mixer = new THREE.AnimationMixer(model);
+  for (const clip of gltf.animations){ actions[clip.name] = mixer.clipAction(clip); durations[clip.name] = clip.duration; }
+  playClip(CLIP.idle, false);
+  asset();
+}, undefined, (err) => { console.error('ByeBoss GLB failed to load', err); asset(); });
 
 // soft blob shadow under the character
 const shadow = new THREE.Mesh(
@@ -306,35 +318,28 @@ document.querySelectorAll('.rbtns button').forEach(b=>{ const w = b.dataset.btn;
 // ---------------------------------------------------------------------------
 // Character state / actions
 // ---------------------------------------------------------------------------
-let state = 'idle', stateT = 0, locked = false, grounded = true, faceFlip = false;
-let vy = 0;
+let locked = false, lockTimer = 0, grounded = true, vy = 0, faceAngle = Math.PI;
 const WALK = 3.4, RUN = 6.4, JUMP_V = 7.2, GRAV = 20;
 
 function doAction(name){
   if (!grounded || locked) return;
-  state = name; stateT = 0; locked = true; charMat.map = sheetTex[STATES[name].sheet]; charMat.needsUpdate = true;
-  flashAbility(name);
-  if (name==='pickup') tryCollect();
+  const clip = CLIP[name] || CLIP.punch;
+  locked = true; lockTimer = durations[clip] || 0.5;
+  playClip(clip, true); flashAbility(name);
+  if (name === 'pickup') tryCollect();
 }
 function triggerJump(){
   if (!grounded || locked) return;
-  vy = JUMP_V; grounded = false; state = 'jump'; stateT = 0;
-  charMat.map = sheetTex.jump; charMat.needsUpdate = true;
+  vy = JUMP_V; grounded = false;
 }
 function tryCollect(){
   for (const c of coins){ if (c.userData.dead) continue;
-    const dx = c.position.x - charMesh.position.x, dz = c.position.z - charMesh.position.z;
-    if (dx*dx + dz*dz < 2.6){ c.userData.dead = true; c.visible = false; score++; scoreVal.textContent = score;
+    const dx = c.position.x - pos.x, dz = c.position.z - pos.z;
+    if (dx*dx + dz*dz < 3.0){ c.userData.dead = true; c.visible = false; score++; scoreVal.textContent = score;
       setTimeout(()=>spawnCoin(c), 6000); }
   }
 }
-function setStateFrame(){
-  const cfg = STATES[state], count = cfg.frames || 25;
-  let f = Math.floor(stateT*cfg.fps); f = cfg.loop ? (f % count) : Math.min(f, count-1);
-  const t = sheetTex[cfg.sheet], col = f % 5, row = (f/5)|0;
-  t.offset.set(col/5, 1 - (row+1)/5);
-  return (!cfg.loop && Math.floor(stateT*cfg.fps) >= count-1);
-}
+function angleLerp(a, b, t){ let d = ((b - a + Math.PI) % (2*Math.PI)) - Math.PI; if (d < -Math.PI) d += 2*Math.PI; return a + d*t; }
 
 // ---------------------------------------------------------------------------
 // Update + render
@@ -342,51 +347,46 @@ function setStateFrame(){
 const camOff = new THREE.Vector3(0, 4.8, 9.5), camTarget = new THREE.Vector3();
 const BOUND = 110;
 function update(dt){
-  // locked one-shot action
-  if (locked){ if (setStateFrame()){ locked = false; state = 'idle'; stateT = 0; charMat.map = sheetTex.idle; charMat.needsUpdate = true; }
-               else stateT += dt; }
+  if (locked){ lockTimer -= dt; if (lockTimer <= 0) locked = false; }
 
+  let mx = 0, mz = 0, moving = false;
   if (!locked){
-    let mx = (keys.r?1:0) - (keys.l?1:0);     // world X (screen left/right)
-    let mz = (keys.b?1:0) - (keys.f?1:0);     // world Z (forward = -Z)
-    const moving = mx || mz;
-    if (mx) faceFlip = mx < 0;                 // sprites face right by default
+    mx = (keys.r?1:0) - (keys.l?1:0);     // world X
+    mz = (keys.b?1:0) - (keys.f?1:0);     // world Z (forward = -Z)
+    moving = !!(mx || mz);
     if (moving){
       const len = Math.hypot(mx, mz) || 1, spd = keys.run ? RUN : WALK;
-      charMesh.position.x += (mx/len)*spd*dt;
-      charMesh.position.z += (mz/len)*spd*dt;
-      charMesh.position.x = Math.max(-BOUND, Math.min(BOUND, charMesh.position.x));
-      charMesh.position.z = Math.max(-BOUND, Math.min(BOUND, charMesh.position.z));
+      pos.x += (mx/len)*spd*dt; pos.z += (mz/len)*spd*dt;
+      pos.x = Math.max(-BOUND, Math.min(BOUND, pos.x));
+      pos.z = Math.max(-BOUND, Math.min(BOUND, pos.z));
+      faceAngle = Math.atan2(mx, mz) + FACE_OFFSET;     // face the way we walk
     }
-    if (grounded){ const want = moving ? 'run' : 'idle';
-      if (state !== want){ state = want; stateT = 0; charMat.map = sheetTex[STATES[want].sheet]; charMat.needsUpdate = true; }
-      setStateFrame(); stateT += dt; }
   }
 
   // jump arc
-  if (!grounded){
-    vy -= GRAV*dt; charMesh.position.y += vy*dt;
-    if (charMesh.position.y <= BASE_Y){ charMesh.position.y = BASE_Y; vy = 0; grounded = true; state='idle'; stateT=0;
-      charMat.map = sheetTex.idle; charMat.needsUpdate = true; }
-    else { setStateFrame(); stateT += dt; }
+  if (!grounded){ vy -= GRAV*dt; pos.y += vy*dt; if (pos.y <= 0){ pos.y = 0; vy = 0; grounded = true; } }
+
+  // drive the animation
+  if (mixer){
+    if (!locked){
+      if (!grounded) playClip(CLIP.jump, false);
+      else if (moving) playClip(keys.run ? CLIP.run : CLIP.walk, false);
+      else playClip(CLIP.idle, false);
+    }
+    mixer.update(dt);
   }
 
-  // billboard: face the camera around Y, mirror for facing
-  const dx = camera.position.x - charMesh.position.x, dz = camera.position.z - charMesh.position.z;
-  charMesh.rotation.set(0, Math.atan2(dx, dz), 0);
-  charMesh.scale.x = faceFlip ? -1 : 1;
+  // smoothly turn toward the movement direction
+  player.rotation.y = angleLerp(player.rotation.y, faceAngle, 1 - Math.pow(0.0001, dt));
 
-  // shadow follows feet, shrinks while airborne
-  const lift = charMesh.position.y - BASE_Y;
-  shadow.position.set(charMesh.position.x, 0.02, charMesh.position.z);
-  const ss = Math.max(0.4, 1 - lift*0.12); shadow.scale.set(ss, ss, ss);
-  shadow.material.opacity = 0.28 * ss;
+  // shadow under the feet, shrinks while airborne
+  shadow.position.set(pos.x, 0.02, pos.z);
+  const ss = Math.max(0.4, 1 - pos.y*0.12); shadow.scale.set(ss, ss, ss); shadow.material.opacity = 0.3*ss;
 
   // camera follow
-  camTarget.copy(charMesh.position).add(camOff);
-  const k = 1 - Math.pow(0.0016, dt);
-  camera.position.lerp(camTarget, k);
-  camera.lookAt(charMesh.position.x, charMesh.position.y + 0.3, charMesh.position.z);
+  camTarget.copy(pos).add(camOff);
+  camera.position.lerp(camTarget, 1 - Math.pow(0.0016, dt));
+  camera.lookAt(pos.x, pos.y + 1.2, pos.z);
 
   // spin coins
   for (const c of coins){ if (c.visible) c.rotation.y += dt*3; }
@@ -405,8 +405,8 @@ function start(){
   document.getElementById('load').classList.add('hide');
   running = true; last = performance.now(); requestAnimationFrame(frame);
 }
-// fallback boot in case a texture never resolves
-setTimeout(()=>{ if (!running) start(); }, 8000);
+// fallback boot in case an asset never resolves (GLB is ~7MB)
+setTimeout(()=>{ if (!running) start(); }, 20000);
 </script>
 </body>
 </html>
