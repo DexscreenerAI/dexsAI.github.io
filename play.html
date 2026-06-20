@@ -96,6 +96,19 @@
   .crosshair::before,.crosshair::after{content:'';position:absolute;background:rgba(57,255,139,.9);box-shadow:0 0 4px rgba(0,0,0,.7)}
   .crosshair::before{left:50%;top:0;width:2px;height:100%;transform:translateX(-50%)}
   .crosshair::after{top:50%;left:0;height:2px;width:100%;transform:translateY(-50%)}
+
+  /* health, wallet, respawn */
+  .hpbar{position:absolute;top:54px;left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:8px;
+    background:rgba(6,4,13,.6);padding:6px 12px;border-radius:999px;border:1px solid rgba(255,80,80,.4);backdrop-filter:blur(6px)}
+  .hpb{width:220px;height:12px;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden}
+  .hpb i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff4d4d,#ff9a42);transition:width .15s}
+  .walletbtn{position:absolute;top:52px;right:12px;z-index:7;background:rgba(124,77,255,.22);border:1px solid rgba(124,77,255,.6);
+    color:#eafff2;padding:8px 13px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;backdrop-filter:blur(6px)}
+  .walletbtn:hover{border-color:#9b6dff}
+  .respawn{position:absolute;inset:0;z-index:8;display:grid;place-items:center;background:rgba(40,0,0,.45);
+    color:#fff;font-size:44px;font-weight:900;text-align:center;text-shadow:0 3px 12px #000}
+  .respawn span{font-size:18px;color:#ffcaca}
+  .respawn.hide{display:none}
 </style>
 </head>
 <body>
@@ -111,6 +124,9 @@
     <canvas id="minimap" width="300" height="300" class="minimap"></canvas>
     <div id="crosshair" class="crosshair"></div>
     <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;<b id="scoreVal">0</b></div>
+    <div class="hpbar"><span>❤️</span><div class="hpb"><i id="hpFill"></i></div></div>
+    <button id="walletBtn" class="walletbtn">👻 Connect Phantom</button>
+    <div id="respawn" class="respawn hide">💀 ÉLIMINÉ<br><span>respawn…</span></div>
 
     <button id="shopBtn" class="shopbtn" title="Changer de personnage">🛍️<span>Shop</span></button>
     <div id="shop" class="shop hidden">
@@ -527,6 +543,34 @@ for (let i=0;i<14;i++){
 }
 let score = 0; const scoreVal = document.getElementById('scoreVal');
 
+// ---- player health / PvP loop ----
+const MAX_HP = 20;
+let hp = MAX_HP, sinceHit = 99, regenAcc = 0, dead = false;
+const hpFill = document.getElementById('hpFill'), respawnEl = document.getElementById('respawn');
+function updateHpBar(){ if (hpFill) hpFill.style.width = Math.max(0, hp/MAX_HP*100) + '%'; }
+function damagePlayer(d){
+  if (dead) return;
+  hp -= d; sinceHit = 0; updateHpBar();
+  if (hp <= 0){ hp = 0; dead = true; aiming = false; if (respawnEl) respawnEl.classList.remove('hide');
+    setTimeout(() => { hp = MAX_HP; dead = false; sinceHit = 99; if (typeof pos !== 'undefined') pos.set(0,0,0); updateHpBar(); if (respawnEl) respawnEl.classList.add('hide'); }, 2000); }
+}
+function regen(dt){
+  if (dead || hp >= MAX_HP) return;
+  sinceHit += dt;
+  if (sinceHit > 5){ regenAcc += dt; while (regenAcc >= 1){ regenAcc -= 1; hp = Math.min(MAX_HP, hp + 1); updateHpBar(); } }
+}
+// ---- Phantom wallet (identity) ----
+let walletAddr = null;
+const walletBtn = document.getElementById('walletBtn');
+async function connectWallet(){
+  const prov = (window.phantom && window.phantom.solana) || window.solana;
+  if (!prov || !prov.isPhantom){ window.open('https://phantom.app/', '_blank'); return; }
+  try { const r = await prov.connect(); walletAddr = r.publicKey.toString();
+    walletBtn.textContent = '👻 ' + walletAddr.slice(0,4) + '…' + walletAddr.slice(-4); walletBtn.style.borderColor = '#39ff8b'; }
+  catch(e){ console.warn('wallet connect cancelled', e); }
+}
+if (walletBtn) walletBtn.addEventListener('click', connectWallet);
+
 // paint the $BYEBOSS logo onto the coin faces (same-origin image -> canvas texture is safe)
 (function paintCoin(){
   const img = new Image();
@@ -582,7 +626,7 @@ let locked = false, lockTimer = 0, grounded = true, vy = 0, faceAngle = Math.PI;
 let WALK = 7.0, RUN = 13.0, JUMP_V = 8.0; const GRAV = 22;
 
 function doAction(name){
-  if (!grounded || locked) return;
+  if (dead || !grounded || locked) return;
   const clip = CLIP[name] || CLIP.punch;
   locked = true; lockTimer = durations[clip] || 0.5;
   playClip(clip, true); flashAbility(name);
@@ -590,7 +634,7 @@ function doAction(name){
   else hitMonsters();                 // punch / kick / attack damage nearby monsters
 }
 function triggerJump(){
-  if (!grounded || locked) return;
+  if (dead || !grounded || locked) return;
   vy = JUMP_V; grounded = false;
 }
 function tryCollect(){
@@ -613,11 +657,11 @@ const BOUND = 250;
 const monsterGroup = new THREE.Group(); scene.add(monsterGroup);
 let monsterTemplate = null, monsterMinY = 0, monsterScale = 1;
 const monsters = [];
-const MON_COUNT = 8, MON_SPEED = 2.6, MON_DETECT = 28, MON_HP = 2, MON_HIT_RANGE = 4.4;
+const MON_COUNT = 6, MON_SPEED = 2.6, MON_DETECT = 30, MON_HP = 14, MON_HIT_RANGE = 4.4;
 function spawnMonsterAt(m){
   const a = Math.random()*6.28, r = 24 + Math.random()*80;
   m.pos.set(Math.cos(a)*r, 0, Math.sin(a)*r);
-  m.hp = MON_HP; m.state = 'alive'; m.t = Math.random()*2; m.wander = Math.random()*6.28;
+  m.hp = MON_HP; m.byeboss = 5 + Math.floor(Math.random()*20); m.atkT = 0; m.state = 'alive'; m.t = Math.random()*2; m.wander = Math.random()*6.28;
   m.model.visible = true; m.model.scale.setScalar(monsterScale); m.model.rotation.set(0, m.wander, 0);
   m.model.position.set(m.pos.x, -monsterMinY*monsterScale, m.pos.z);
 }
@@ -647,6 +691,8 @@ function updateMonsters(dt){
     m.pos.z = Math.max(-BOUND, Math.min(BOUND, m.pos.z + dirz*MON_SPEED*dt));
     m.model.position.set(m.pos.x, -monsterMinY*monsterScale, m.pos.z);
     m.model.rotation.y = angleLerp(m.model.rotation.y, Math.atan2(dirx, dirz), 1 - Math.pow(0.0015, dt));
+    m.atkT -= dt;
+    if (d < 2.6 && m.atkT <= 0){ m.atkT = 0.7; damagePlayer(1); }   // bots hurt you on contact
   }
 }
 function hitMonsters(){
@@ -656,10 +702,18 @@ function hitMonsters(){
     const dx = m.pos.x - pos.x, dz = m.pos.z - pos.z, d = Math.hypot(dx, dz);
     if (d > MON_HIT_RANGE) continue;
     if (d > 0.2 && (dx/d*fx + dz/d*fz) < 0.1) continue;   // must be roughly in front of the player
-    if (--m.hp <= 0){ m.state = 'dying'; m.t = 0; score++; scoreVal.textContent = score; }
+    if (--m.hp <= 0){ m.state = 'dying'; m.t = 0; score += m.byeboss; scoreVal.textContent = score; }   // loot their $BYEBOSS
   }
 }
-// monster removed (waiting for a nicer one) — drop a new monster.glb here and call makeMonsters() to bring them back.
+// ===== bots — placeholder enemies you shoot to loot their $BYEBOSS (they hurt you on contact) =====
+(function makeBotTemplate(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.55, 1.3, 4, 10), new THREE.MeshLambertMaterial({ color:'#b13bd6' })); body.position.y = 1.25; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 12), new THREE.MeshLambertMaterial({ color:'#7d1fa0' })); head.position.y = 2.35; g.add(head);
+  for (const ex of [-0.18, 0.18]){ const e = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color:0xffee55 })); e.position.set(ex, 2.42, 0.42); g.add(e); }
+  monsterTemplate = g; monsterMinY = 0; monsterScale = 1;
+})();
+makeMonsters();
 
 // ===== casino landmark (with solid-wall collision) =====
 const casinoColliders = [];
@@ -726,7 +780,7 @@ function fireGun(){
   const hits = raycaster.intersectObjects(monsterGroup.children, true);
   if (hits.length){
     const m = ownerMonster(hits[0].object);
-    if (m && m.state === 'alive' && --m.hp <= 0){ m.state = 'dying'; m.t = 0; score++; scoreVal.textContent = score; }
+    if (m && m.state === 'alive' && --m.hp <= 0){ m.state = 'dying'; m.t = 0; score += m.byeboss; scoreVal.textContent = score; }
   }
   // aim at where the crosshair points so bullets converge there (not parallel + low)
   const aimPoint = hits.length ? hits[0].point : raycaster.ray.at(140, _v1);
@@ -830,10 +884,11 @@ function drawMinimap(){
   mmCtx.closePath(); mmCtx.fill();
 }
 function update(dt){
+  regen(dt);
   if (locked){ lockTimer -= dt; if (lockTimer <= 0) locked = false; }
 
   let moving = false;
-  if (!locked){
+  if (!locked && !dead){
     const mF = (keys.f?1:0) - (keys.b?1:0);   // W/S forward-back (camera-relative)
     const mR = (keys.r?1:0) - (keys.l?1:0);   // A/D strafe
     moving = !!(mF || mR);
@@ -874,7 +929,7 @@ function update(dt){
 
   // aim / fire blend
   aimT += ((aiming?1:0) - aimT) * Math.min(1, dt*12);
-  if (aiming){ fireTimer -= dt; if (fireTimer <= 0){ fireTimer = FIRE_INTERVAL; fireGun(); } } else fireTimer = 0;
+  if (aiming && !dead){ fireTimer -= dt; if (fireTimer <= 0){ fireTimer = FIRE_INTERVAL; fireGun(); } } else fireTimer = 0;
   if (muzzle && muzzle.visible){ muzzleTimer -= dt; if (muzzleTimer <= 0) muzzle.visible = false; }
 
   // camera: stays behind+above; camPitch tilts the AIM up/down (so you can look at the sky)
