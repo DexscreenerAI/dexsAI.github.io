@@ -96,6 +96,12 @@
   .sc-act{font-size:13px;font-weight:800;color:#39ff8b;background:rgba(57,255,139,.14);padding:5px 12px;border-radius:999px}
   .sc-act.buy{color:#ffd54a;background:rgba(255,196,0,.16)}
   .shop-foot{padding:0 24px 18px;text-align:center;color:#6f8a7c;font-size:12px}
+  .name-row{display:flex;align-items:center;gap:10px;padding:16px 24px 4px}
+  .name-row .name-lbl{font-weight:800;color:#c9a6ff;font-size:14px;white-space:nowrap}
+  .name-row .vinput{flex:1;padding:10px;font-size:15px;text-align:left}
+  .name-row .vact{padding:10px 18px}
+  .name-msg{padding:2px 24px 0;text-align:center;font-size:13px;font-weight:700;min-height:18px}
+  .name-msg.ok{color:#39ff8b}.name-msg.err{color:#ff6b6b}
   /* vault panel */
   .vault{position:absolute;inset:0;z-index:31;display:grid;place-items:center;background:rgba(4,3,10,.66);backdrop-filter:blur(4px)}
   .vault.hidden{display:none}
@@ -181,6 +187,12 @@
     <div id="shop" class="shop hidden">
       <div class="shop-box">
         <div class="shop-head"><span>🛍️ SKINS SHOP</span><span id="shopClose" class="shop-x">✕</span></div>
+        <div class="name-row">
+          <span class="name-lbl">Username</span>
+          <input id="nameInput" class="vinput" maxlength="16" placeholder="3–16 chars" autocomplete="off" spellcheck="false">
+          <button class="vact" id="nameSave">Save</button>
+        </div>
+        <div id="nameMsg" class="name-msg"></div>
         <div id="shopList" class="shop-list"></div>
         <div class="shop-foot">Buy skins with your 🔒 vault balance · equip anytime · more soon 🤘</div>
       </div>
@@ -537,6 +549,20 @@ function nearShop(){ return !!shopPoint && ((shopPoint.x-pos.x)*(shopPoint.x-pos
 { const x = document.getElementById('shopClose'); if (x) x.onclick = closeShopBld; }
 renderShop();
 
+// ---- username (display name; the WALLET stays the identity, so renaming keeps the vault) ----
+let myName = '';
+const nameInput = document.getElementById('nameInput'), nameSave = document.getElementById('nameSave'), nameMsg = document.getElementById('nameMsg');
+function setNameMsg(text, ok){ if (!nameMsg) return; nameMsg.textContent = text || ''; nameMsg.className = 'name-msg' + (text ? (ok ? ' ok' : ' err') : ''); }
+function saveName(){
+  if (!mpConnected){ setNameMsg('Connect your wallet first', false); return; }
+  const v = (nameInput.value || '').trim();
+  if (v.length < 3 || v.length > 16){ setNameMsg('3–16 characters', false); return; }
+  if (v === myName){ setNameMsg('That is already your name', false); return; }
+  setNameMsg('Saving…', true); mpSend({ t: 'setname', name: v });
+}
+if (nameSave) nameSave.onclick = saveName;
+if (nameInput) nameInput.addEventListener('keydown', e => { e.stopPropagation(); if (e.code === 'Enter') saveName(); });
+
 // ---- iso sprite character (a 2D billboard option in the Shop) ----
 const ISO_STATES = { idle:{fps:7,loop:true}, walk:{fps:12,loop:true}, run:{fps:16,loop:true}, jump:{fps:16,loop:false}, shot:{fps:22,loop:true} };
 const ISO_DIRS = ['up','down','right'];
@@ -845,6 +871,19 @@ function b58encode(bytes){
   for (let q = digits.length - 1; q >= 0; q--) s += A[digits[q]]; return s;
 }
 function loadByeboss(cb){ if (byebossTemplate){ cb(); return; } new GLTFLoader().load('./assets/game/byeboss.glb', g => { byebossTemplate = g; cb(); }, undefined, () => cb()); }
+// floating name label (canvas-sprite) shown above each remote player
+function makeLabel(text){
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64;
+  const ctx = cv.getContext('2d');
+  const draw = (t) => { ctx.clearRect(0,0,256,64); ctx.font = 'bold 30px Trebuchet MS, Verdana, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.strokeText(t, 128, 36); ctx.fillStyle = '#eafff2'; ctx.fillText(t, 128, 36); };
+  draw(text || '');
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  spr.scale.set(1.9, 0.48, 1); spr.center.set(0.5, 0); spr.position.set(0, 2.05, 0);   // above the head (group is scaled 2.25)
+  spr.userData.set = (t) => { draw(t || ''); tex.needsUpdate = true; };
+  return spr;
+}
 function addRemote(pl){
   if (!byebossTemplate) return null;
   const group = SkeletonUtils.clone(byebossTemplate.scene); group.scale.setScalar(2.25); group.traverse(o => { o.frustumCulled = false; }); scene.add(group);
@@ -852,6 +891,7 @@ function addRemote(pl){
   const walk = byebossTemplate.animations.find(a => a.name === 'walk_loop') || byebossTemplate.animations.find(a => a.name === 'idle') || byebossTemplate.animations[0];
   if (walk) mixer.clipAction(walk).play();
   const r = { group, mixer, x: pl.x, z: pl.z, tx: pl.x, ty: pl.y, tz: pl.z, tr: pl.ry };
+  r.label = makeLabel(pl.name || ''); r.labelText = pl.name || ''; group.add(r.label);   // nametag
   remotePlayers.set(pl.id, r); return r;
 }
 function removeRemote(id){ const r = remotePlayers.get(id); if (r){ if (r.group) scene.remove(r.group); remotePlayers.delete(id); } }
@@ -881,6 +921,7 @@ function onSnap(m){
     let r = remotePlayers.get(pl.id); if (!r){ r = addRemote(pl); if (!r){ loadByeboss(() => {}); continue; } }
     r.moving = (Math.hypot(pl.x - r.tx, pl.z - r.tz) > 0.05);   // did this player move since last snapshot?
     r.tx = pl.x; r.ty = pl.y; r.tz = pl.z; r.tr = pl.ry; if (r.group) r.group.visible = pl.alive;
+    if (r.label && pl.name !== r.labelText){ r.labelText = pl.name; r.label.userData.set(pl.name || ''); }   // update nametag
   }
   for (const id of [...remotePlayers.keys()]) if (!seen.has(id)) removeRemote(id);
 }
@@ -910,6 +951,8 @@ function mpConnect(){
       placeShop(m.shop || null);                  // render the shop building
       if (Array.isArray(m.skins)) ownedSkins = new Set(m.skins);   // owned skins from the server
       if (Number.isFinite(m.skinPrice)) skinPrice = m.skinPrice;
+      myName = m.username || '';
+      if (nameInput){ nameInput.value = myName; nameInput.placeholder = myName ? '' : (m.name || '3–16 chars'); }
       renderShop();
       if (xpwrapEl) xpwrapEl.style.display = 'flex';
     }
@@ -920,6 +963,7 @@ function mpConnect(){
     else if (m.t === 'tp'){ if (typeof pos !== 'undefined'){ pos.x = m.x; pos.z = m.z; } }   // server teleported us
     else if (m.t === 'claim'){ if (m.ok){ claimedToday = true; if (Number.isFinite(m.vault)) vault = m.vault; if (Number.isFinite(m.claims)) claims = m.claims; } if (vaultOpen()) refreshVaultUI(); }
     else if (m.t === 'skin'){ if (m.ok){ ownedSkins = new Set(m.skins); if (Number.isFinite(m.vault)) vault = m.vault; selectedSkin = m.skin; try { localStorage.setItem('bb_skin', m.skin); } catch(e){} selectChar(m.skin); } renderShop(); }
+    else if (m.t === 'name'){ if (m.ok){ myName = m.name; if (nameInput) nameInput.value = m.name; setNameMsg('✓ Saved as ' + m.name, true); } else { setNameMsg(m.reason === 'taken' ? 'That name is already taken' : 'Invalid name (3–16: letters, numbers, _ -)', false); } }
     else if (m.t === 'vaulted'){ if (Number.isFinite(m.vault)) vault = m.vault; if (Number.isFinite(m.carried)) carried = m.carried; if (vaultOpen()) refreshVaultUI(); }
     else if (m.t === 'snap'){ onSnap(m); }
     else if (m.t === 'left'){ removeRemote(m.id); }
