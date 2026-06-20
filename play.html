@@ -477,7 +477,8 @@ const CHARACTERS = [
 // equip is local (cosmetic — other players always see you as ByeBoss anyway).
 let ownedSkins = new Set([2]);     // index 2 is free; rest synced from server on welcome
 let skinPrice = 50;
-let selectedSkin = (() => { try { const s = +localStorage.getItem('bb_skin'); if (CHARACTERS[s]) return s; } catch(e){} return 2; })();
+const DEFAULT_SKIN = 2;            // main character for everyone (Iso 2D), until they equip another
+let selectedSkin = (() => { try { const raw = localStorage.getItem('bb_skin'); if (raw != null){ const s = +raw; if (Number.isInteger(s) && CHARACTERS[s]) return s; } } catch(e){} return DEFAULT_SKIN; })();
 const CHAR_SCALE = 2.25, CHAR_Y = 1.052;
 // logical action -> first available clip name (each GLB may name them differently)
 const CLIP_CAND = {
