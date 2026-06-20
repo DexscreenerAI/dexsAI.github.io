@@ -105,6 +105,8 @@
   .walletbtn{position:absolute;top:52px;right:12px;z-index:7;background:rgba(124,77,255,.22);border:1px solid rgba(124,77,255,.6);
     color:#eafff2;padding:8px 13px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;backdrop-filter:blur(6px)}
   .walletbtn:hover{border-color:#9b6dff}
+  .mpcount{position:absolute;top:90px;right:12px;z-index:6;background:rgba(6,4,13,.62);border:1px solid rgba(57,255,139,.4);
+    color:#cdebd9;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:700;backdrop-filter:blur(6px)}
   .respawn{position:absolute;inset:0;z-index:8;display:grid;place-items:center;background:rgba(40,0,0,.45);
     color:#fff;font-size:44px;font-weight:900;text-align:center;text-shadow:0 3px 12px #000}
   .respawn span{font-size:18px;color:#ffcaca}
@@ -126,6 +128,7 @@
     <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;<b id="scoreVal">0</b></div>
     <div class="hpbar"><span>❤️</span><div class="hpb"><i id="hpFill"></i></div></div>
     <button id="walletBtn" class="walletbtn">👻 Connect Phantom</button>
+    <div id="mpCount" class="mpcount" style="display:none"></div>
     <div id="respawn" class="respawn hide">💀 ÉLIMINÉ<br><span>respawn…</span></div>
 
     <button id="shopBtn" class="shopbtn" title="Changer de personnage">🛍️<span>Shop</span></button>
@@ -556,6 +559,7 @@ function damagePlayer(d){
     setTimeout(() => { hp = MAX_HP; dead = false; sinceHit = 99; if (typeof pos !== 'undefined') pos.set(0,0,0); updateHpBar(); if (respawnEl) respawnEl.classList.add('hide'); }, 2000); }
 }
 function regen(dt){
+  if (mpConnected) return;          // the server owns HP in multiplayer
   if (dead || hp >= MAX_HP) return;
   sinceHit += dt;
   if (sinceHit > 5){ regenAcc += dt; while (regenAcc >= 1){ regenAcc -= 1; hp = Math.min(MAX_HP, hp + 1); updateHpBar(); } }
@@ -570,7 +574,80 @@ async function connectWallet(){
     walletBtn.textContent = '👻 ' + walletAddr.slice(0,4) + '…' + walletAddr.slice(-4); walletBtn.style.borderColor = '#39ff8b'; }
   catch(e){ console.warn('wallet connect cancelled', e); }
 }
-if (walletBtn) walletBtn.addEventListener('click', connectWallet);
+// ===== multiplayer client (authoritative game server on Railway) =====
+const MP_URL = 'wss://dexscreener-telegram-bot-production.up.railway.app/game';
+let mpWs = null, mpConnected = false, mpId = null, byebossTemplate = null;
+const remotePlayers = new Map();
+const mpCountEl = document.getElementById('mpCount');
+function b58encode(bytes){
+  const A = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  const digits = [0];
+  for (let i = 0; i < bytes.length; i++){ let carry = bytes[i];
+    for (let j = 0; j < digits.length; j++){ carry += digits[j] << 8; digits[j] = carry % 58; carry = (carry / 58) | 0; }
+    while (carry){ digits.push(carry % 58); carry = (carry / 58) | 0; } }
+  let s = ''; for (let k = 0; k < bytes.length && bytes[k] === 0; k++) s += '1';
+  for (let q = digits.length - 1; q >= 0; q--) s += A[digits[q]]; return s;
+}
+function loadByeboss(cb){ if (byebossTemplate){ cb(); return; } new GLTFLoader().load('./assets/game/byeboss.glb', g => { byebossTemplate = g; cb(); }, undefined, () => cb()); }
+function addRemote(pl){
+  if (!byebossTemplate) return null;
+  const group = SkeletonUtils.clone(byebossTemplate.scene); group.scale.setScalar(2.25); group.traverse(o => { o.frustumCulled = false; }); scene.add(group);
+  const mixer = new THREE.AnimationMixer(group);
+  const walk = byebossTemplate.animations.find(a => a.name === 'walk_loop') || byebossTemplate.animations.find(a => a.name === 'idle') || byebossTemplate.animations[0];
+  if (walk) mixer.clipAction(walk).play();
+  const r = { group, mixer, x: pl.x, z: pl.z, tx: pl.x, ty: pl.y, tz: pl.z, tr: pl.ry };
+  remotePlayers.set(pl.id, r); return r;
+}
+function removeRemote(id){ const r = remotePlayers.get(id); if (r){ if (r.group) scene.remove(r.group); remotePlayers.delete(id); } }
+function onSnap(m){
+  if (mpCountEl) mpCountEl.textContent = `👥 ${m.online} en ligne · ${m.accounts} comptes`;
+  const seen = new Set();
+  for (const pl of m.players){
+    seen.add(pl.id);
+    if (pl.id === mpId){                              // my authoritative state from the server
+      if (Number.isFinite(pl.hp)){ hp = Math.max(0, pl.hp); updateHpBar(); }
+      if (Number.isFinite(pl.score)){ score = pl.score; scoreVal.textContent = score; }
+      const srvDead = !pl.alive || hp <= 0;
+      if (srvDead && !dead){ dead = true; aiming = false; if (respawnEl) respawnEl.classList.remove('hide'); }
+      else if (!srvDead && dead){ dead = false; if (respawnEl) respawnEl.classList.add('hide'); }
+      continue;
+    }
+    let r = remotePlayers.get(pl.id); if (!r){ r = addRemote(pl); if (!r){ loadByeboss(() => {}); continue; } }
+    r.tx = pl.x; r.ty = pl.y; r.tz = pl.z; r.tr = pl.ry; if (r.group) r.group.visible = pl.alive;
+  }
+  for (const id of [...remotePlayers.keys()]) if (!seen.has(id)) removeRemote(id);
+}
+function updateRemotePlayers(dt){
+  for (const r of remotePlayers.values()){ if (!r.group) continue;
+    r.x += (r.tx - r.x) * Math.min(1, dt*10); r.z += (r.tz - r.z) * Math.min(1, dt*10);
+    r.group.position.set(r.x, 1.052 + (r.ty || 0), r.z);
+    r.group.rotation.y = angleLerp(r.group.rotation.y, r.tr, Math.min(1, dt*10));
+    r.mixer.update(dt);
+  }
+}
+function mpConnect(){
+  if (mpWs && (mpWs.readyState === 0 || mpWs.readyState === 1)) return;
+  loadByeboss(() => {});
+  try { mpWs = new WebSocket(MP_URL); } catch(e){ return; }
+  mpWs.onmessage = async (ev) => {
+    let m; try { m = JSON.parse(ev.data); } catch { return; }
+    if (m.t === 'nonce'){
+      try {
+        const prov = (window.phantom && window.phantom.solana) || window.solana;
+        const res = await prov.signMessage(new TextEncoder().encode(m.nonce), 'utf8');
+        mpWs.send(JSON.stringify({ t: 'auth', wallet: walletAddr, sig: b58encode(res.signature || res) }));
+      } catch(e){ console.warn('sign failed', e); try { mpWs.close(); } catch {} }
+    } else if (m.t === 'welcome'){ mpId = m.id; mpConnected = true; if (mpCountEl) mpCountEl.style.display = 'block'; }
+    else if (m.t === 'denied'){ console.warn('multiplayer denied:', m.m); }
+    else if (m.t === 'snap'){ onSnap(m); }
+    else if (m.t === 'left'){ removeRemote(m.id); }
+  };
+  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); if (mpCountEl) mpCountEl.textContent = '🔴 hors-ligne'; };
+  mpWs.onerror = () => {};
+}
+async function mpJoin(){ if (!walletAddr) await connectWallet(); if (walletAddr) mpConnect(); }
+if (walletBtn) walletBtn.addEventListener('click', mpJoin);
+setInterval(() => { if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'state', x: +pos.x.toFixed(2), y: +pos.y.toFixed(2), z: +pos.z.toFixed(2), ry: +faceAngle.toFixed(2) })); }, 100);
 
 // paint the $BYEBOSS logo onto the coin faces (same-origin image -> canvas texture is safe)
 (function paintCoin(){
@@ -698,7 +775,7 @@ function updateMonsters(dt){
     m.model.rotation.y = angleLerp(m.model.rotation.y, Math.atan2(dirx, dirz), 1 - Math.pow(0.0015, dt));
     m.mixer.update(dt);
     m.atkT -= dt;
-    if (d < 2.6 && m.atkT <= 0){ m.atkT = 0.7; damagePlayer(1); }   // bots hurt you on contact
+    if (d < 2.6 && m.atkT <= 0 && !mpConnected){ m.atkT = 0.7; damagePlayer(1); }   // bots hurt you on contact (solo only)
   }
 }
 function hitMonsters(){
@@ -708,7 +785,7 @@ function hitMonsters(){
     const dx = m.pos.x - pos.x, dz = m.pos.z - pos.z, d = Math.hypot(dx, dz);
     if (d > MON_HIT_RANGE) continue;
     if (d > 0.2 && (dx/d*fx + dz/d*fz) < 0.1) continue;   // must be roughly in front of the player
-    if (--m.hp <= 0){ m.state = 'dying'; m.t = 0; score += m.byeboss; scoreVal.textContent = score; }   // loot their $BYEBOSS
+    if (--m.hp <= 0){ m.state = 'dying'; m.t = 0; if (!mpConnected){ score += m.byeboss; scoreVal.textContent = score; } }   // loot (solo; MP score is server-side)
   }
 }
 // ===== bots — Skin #2 (char2) enemies you shoot to loot their $BYEBOSS =====
@@ -784,13 +861,14 @@ function fireGun(){
   const hits = raycaster.intersectObjects(monsterGroup.children, true);
   if (hits.length){
     const m = ownerMonster(hits[0].object);
-    if (m && m.state === 'alive' && --m.hp <= 0){ m.state = 'dying'; m.t = 0; score += m.byeboss; scoreVal.textContent = score; }
+    if (m && m.state === 'alive' && --m.hp <= 0){ m.state = 'dying'; m.t = 0; if (!mpConnected){ score += m.byeboss; scoreVal.textContent = score; } }
   }
   // aim at where the crosshair points so bullets converge there (not parallel + low)
   const aimPoint = hits.length ? hits[0].point : raycaster.ray.at(140, _v1);
   if (gunModel && gunModel.visible) gunTip.getWorldPosition(_v0);   // from the muzzle
   else _v0.set(pos.x, pos.y + 1.9, pos.z);                          // ...or the chest/shoulder (gun hidden / iso)
   spawnBullet(_v0, _v2.copy(aimPoint).sub(_v0).normalize());
+  if (mpConnected && mpWs && mpWs.readyState === 1){ const d = raycaster.ray.direction; mpWs.send(JSON.stringify({ t: 'shoot', dx: +d.x.toFixed(3), dy: +d.y.toFixed(3), dz: +d.z.toFixed(3) })); }
 }
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 canvas.addEventListener('mousedown', e => { if (e.button === 2) aiming = true; });
@@ -951,6 +1029,7 @@ function update(dt){
   );
   updateMonsters(dt);
   updateBullets(dt);
+  updateRemotePlayers(dt);
 
   // auto-collect coins just by walking over them, then spin the rest
   tryCollect();
