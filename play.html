@@ -319,7 +319,7 @@ document.querySelectorAll('.rbtns button').forEach(b=>{ const w = b.dataset.btn;
 // Character state / actions
 // ---------------------------------------------------------------------------
 let locked = false, lockTimer = 0, grounded = true, vy = 0, faceAngle = Math.PI;
-const WALK = 3.4, RUN = 6.4, JUMP_V = 7.2, GRAV = 20;
+const WALK = 7.0, RUN = 13.0, JUMP_V = 8.0, GRAV = 22;
 
 function doAction(name){
   if (!grounded || locked) return;
@@ -335,7 +335,7 @@ function triggerJump(){
 function tryCollect(){
   for (const c of coins){ if (c.userData.dead) continue;
     const dx = c.position.x - pos.x, dz = c.position.z - pos.z;
-    if (dx*dx + dz*dz < 3.0){ c.userData.dead = true; c.visible = false; score++; scoreVal.textContent = score;
+    if (dx*dx + dz*dz < 2.2){ c.userData.dead = true; c.visible = false; score++; scoreVal.textContent = score;
       setTimeout(()=>spawnCoin(c), 6000); }
   }
 }
@@ -388,7 +388,8 @@ function update(dt){
   camera.position.lerp(camTarget, 1 - Math.pow(0.0016, dt));
   camera.lookAt(pos.x, pos.y + 1.2, pos.z);
 
-  // spin coins
+  // auto-collect coins just by walking over them, then spin the rest
+  tryCollect();
   for (const c of coins){ if (c.visible) c.rotation.y += dt*3; }
 }
 
