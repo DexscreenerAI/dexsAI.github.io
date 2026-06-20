@@ -665,7 +665,7 @@ function hitMonsters(){
 const casinoColliders = [];
 new GLTFLoader().load('./assets/game/casino.glb', (gltf) => {
   const c = gltf.scene;
-  c.traverse(o => { o.frustumCulled = false; if (o.isMesh && o.geometry){ o.geometry.boundsTree = new MeshBVH(o.geometry); casinoColliders.push(o); } });
+  c.traverse(o => { o.frustumCulled = false; });   // collision off — walk freely in/out of the casino
   const box = new THREE.Box3().setFromObject(c), size = box.getSize(new THREE.Vector3());
   c.scale.setScalar(42 / (size.y || 1));                       // big enough to walk into
   const b2 = new THREE.Box3().setFromObject(c);
