@@ -222,7 +222,9 @@ let mixer = null, curAction = null;
 const actions = {}, durations = {};
 const CLIP = { idle:'idle', walk:'walk_loop', run:'sprint_loop', jump:'jump_loop',
                punch:'punch_jab', kick:'kick', attack:'sword_attack', pickup:'jump_start' };
-const FACE_OFFSET = 0;                         // tweak if the model faces the wrong way
+let faceOffset = 0;        // facing tweak (radians), set by the tuning panel
+let camLookY = 1.2;        // camera look-at height
+let charModel = null;      // the loaded GLB, exposed for the tuning panel
 function playClip(name, once){
   const a = actions[name]; if (!a) return;
   if (a === curAction && a.isRunning() && !once) return;
@@ -240,7 +242,9 @@ new GLTFLoader().load('./assets/game/byeboss.glb', (gltf) => {
   player.add(model);
   mixer = new THREE.AnimationMixer(model);
   for (const clip of gltf.animations){ actions[clip.name] = mixer.clipAction(clip); durations[clip.name] = clip.duration; }
+  charModel = model;
   playClip(CLIP.idle, false);
+  buildTunePanel();
   asset();
 }, undefined, (err) => { console.error('ByeBoss GLB failed to load', err); asset(); });
 
@@ -319,7 +323,7 @@ document.querySelectorAll('.rbtns button').forEach(b=>{ const w = b.dataset.btn;
 // Character state / actions
 // ---------------------------------------------------------------------------
 let locked = false, lockTimer = 0, grounded = true, vy = 0, faceAngle = Math.PI;
-const WALK = 7.0, RUN = 13.0, JUMP_V = 8.0, GRAV = 22;
+let WALK = 7.0, RUN = 13.0, JUMP_V = 8.0; const GRAV = 22;
 
 function doAction(name){
   if (!grounded || locked) return;
@@ -342,6 +346,62 @@ function tryCollect(){
 function angleLerp(a, b, t){ let d = ((b - a + Math.PI) % (2*Math.PI)) - Math.PI; if (d < -Math.PI) d += 2*Math.PI; return a + d*t; }
 
 // ---------------------------------------------------------------------------
+// TEMP tuning panel — drag the sliders, hit "Copier", send me the values,
+// then I bake them in and delete this panel.
+// ---------------------------------------------------------------------------
+function buildTunePanel(){
+  if (document.getElementById('dbg')) return;
+  const baseScale = charModel.scale.x, baseY = charModel.position.y;
+  const store = {};
+  const p = document.createElement('div'); p.id = 'dbg';
+  p.style.cssText = 'position:fixed;top:64px;left:14px;width:250px;z-index:50;background:rgba(10,8,18,.93);border:1px solid rgba(57,255,139,.45);border-radius:12px;color:#eafff2;font:12px Trebuchet MS,Verdana,sans-serif;box-shadow:0 12px 32px rgba(0,0,0,.55);backdrop-filter:blur(6px);user-select:none';
+  const head = document.createElement('div');
+  head.style.cssText = 'cursor:move;padding:8px 10px;background:rgba(57,255,139,.16);border-radius:12px 12px 0 0;font-weight:800;display:flex;justify-content:space-between;align-items:center';
+  head.innerHTML = '<span>🛠️ TUNE — glisse-moi</span><span id="dbgX" style="cursor:pointer;opacity:.75">✕</span>';
+  const body = document.createElement('div');
+  body.style.cssText = 'padding:10px 12px;display:flex;flex-direction:column;gap:9px;max-height:62vh;overflow:auto';
+  p.append(head, body);
+  function row(label, min, max, step, val, fn){
+    store[label] = +val;
+    const wrap = document.createElement('div');
+    const h = document.createElement('div'); h.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:2px';
+    const nm = document.createElement('span'); nm.textContent = label;
+    const out = document.createElement('span'); out.style.color = '#39ff8b'; out.textContent = (+val).toFixed(2);
+    h.append(nm, out);
+    const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = val; inp.style.width = '100%';
+    inp.addEventListener('input', () => { const v = parseFloat(inp.value); out.textContent = v.toFixed(2); store[label] = v; fn(v); });
+    wrap.append(h, inp); body.append(wrap);
+  }
+  row('modelY',  baseY-3, baseY+3, 0.01, baseY,     v => charModel.position.y = v);   // monte/descend (sol)
+  row('scale',   0.2, baseScale*3, 0.01, baseScale, v => charModel.scale.setScalar(v)); // taille
+  row('walk',    1, 25,  0.5, WALK,    v => WALK = v);
+  row('run',     1, 32,  0.5, RUN,     v => RUN = v);
+  row('jump',    3, 16,  0.5, JUMP_V,  v => JUMP_V = v);
+  row('camHeight', 1, 14, 0.1, camOff.y, v => camOff.y = v);
+  row('camDist',   3, 28, 0.1, camOff.z, v => camOff.z = v);
+  row('camLook',  -1, 4, 0.05, camLookY, v => camLookY = v);
+  row('faceDeg', -180, 180, 5, 0, v => faceOffset = v * Math.PI/180);                 // orientation
+  row('fov', 35, 85, 1, camera.fov, v => { camera.fov = v; camera.updateProjectionMatrix(); });
+  const btn = document.createElement('button');
+  btn.textContent = '📋 Copier les valeurs';
+  btn.style.cssText = 'margin-top:4px;padding:9px;border-radius:8px;border:1px solid #39ff8b;background:rgba(57,255,139,.2);color:#eafff2;font-weight:800;cursor:pointer';
+  btn.onclick = () => {
+    const txt = 'TUNE ' + Object.entries(store).map(([k,v]) => `${k}=${(+v).toFixed(3)}`).join(' | ');
+    const done = () => { btn.textContent = '✅ Copié — colle-le-moi'; setTimeout(() => btn.textContent = '📋 Copier les valeurs', 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done).catch(() => prompt('Copie ça :', txt));
+    else prompt('Copie ça :', txt);
+  };
+  body.append(btn);
+  p.addEventListener('keydown', e => e.stopPropagation());   // sliders' arrow keys don't move the player
+  let dragging = false, ox = 0, oy = 0;
+  head.addEventListener('pointerdown', e => { if (e.target.id === 'dbgX') return; dragging = true; ox = e.clientX - p.offsetLeft; oy = e.clientY - p.offsetTop; e.preventDefault(); });
+  window.addEventListener('pointermove', e => { if (!dragging) return; p.style.left = Math.max(0, e.clientX - ox) + 'px'; p.style.top = Math.max(0, e.clientY - oy) + 'px'; });
+  window.addEventListener('pointerup', () => dragging = false);
+  head.querySelector('#dbgX').onclick = () => p.remove();
+  document.body.appendChild(p);
+}
+
+// ---------------------------------------------------------------------------
 // Update + render
 // ---------------------------------------------------------------------------
 const camOff = new THREE.Vector3(0, 4.8, 9.5), camTarget = new THREE.Vector3();
@@ -359,7 +419,7 @@ function update(dt){
       pos.x += (mx/len)*spd*dt; pos.z += (mz/len)*spd*dt;
       pos.x = Math.max(-BOUND, Math.min(BOUND, pos.x));
       pos.z = Math.max(-BOUND, Math.min(BOUND, pos.z));
-      faceAngle = Math.atan2(mx, mz) + FACE_OFFSET;     // face the way we walk
+      faceAngle = Math.atan2(mx, mz);                   // face the way we walk
     }
   }
 
@@ -377,7 +437,7 @@ function update(dt){
   }
 
   // smoothly turn toward the movement direction
-  player.rotation.y = angleLerp(player.rotation.y, faceAngle, 1 - Math.pow(0.0001, dt));
+  player.rotation.y = angleLerp(player.rotation.y, faceAngle + faceOffset, 1 - Math.pow(0.0001, dt));
 
   // shadow under the feet, shrinks while airborne
   shadow.position.set(pos.x, 0.02, pos.z);
@@ -386,7 +446,7 @@ function update(dt){
   // camera follow
   camTarget.copy(pos).add(camOff);
   camera.position.lerp(camTarget, 1 - Math.pow(0.0016, dt));
-  camera.lookAt(pos.x, pos.y + 1.2, pos.z);
+  camera.lookAt(pos.x, pos.y + camLookY, pos.z);
 
   // auto-collect coins just by walking over them, then spin the rest
   tryCollect();
