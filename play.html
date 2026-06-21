@@ -270,13 +270,29 @@
         </div>
       </div>
     </div>
+    <style>
+      .slot-reel{ font-size:46px; width:66px; height:66px; line-height:66px; text-align:center; background:#120a1e; border:2px solid #ff5ad0; border-radius:12px; box-shadow:inset 0 0 12px rgba(255,90,208,.3) }
+      .slot-bbtn{ padding:7px 11px; font-size:15px; font-weight:800; border:1px solid #ff5ad0; border-radius:8px; background:#160d22; color:#ff9be0; cursor:pointer }
+      .slot-bbtn:active{ transform:scale(.94) }
+      #spinBtn:disabled{ opacity:.5; cursor:default }
+    </style>
     <div id="casinoP" class="vault hidden">
       <div class="vault-box">
-        <div class="vault-head"><span>🎰 $BYEBOSS CASINO</span><span id="casinoClose" class="vault-x">✕</span></div>
+        <div class="vault-head"><span>🎰 $BYEBOSS SLOTS</span><span id="casinoClose" class="vault-x">✕</span></div>
         <div class="vault-body" style="text-align:center">
-          <div style="font-size:54px;margin:14px 0 4px">🎰</div>
-          <h3 style="margin:0 0 8px;color:#ff5ad0">Mini-games coming soon</h3>
-          <p class="vault-note">The casino is being built. Soon you'll spin, bet and win $BYEBOSS in on-chain mini-games — straight from your vault. Stay tuned!</p>
+          <div style="display:flex;gap:10px;justify-content:center;margin:8px 0 12px">
+            <span id="sr0" class="slot-reel">🎰</span><span id="sr1" class="slot-reel">🎰</span><span id="sr2" class="slot-reel">🎰</span>
+          </div>
+          <div id="slotMsg" style="min-height:22px;font-weight:700;color:#cfc2e8;margin-bottom:10px">Spin to win — RTP 80%</div>
+          <div style="display:flex;gap:6px;justify-content:center;align-items:center;margin-bottom:8px">
+            <button id="betMinus" class="slot-bbtn">−</button>
+            <input id="slotBet" type="number" min="1" step="1" value="10" style="width:92px;text-align:center;font-size:16px;font-weight:700;padding:7px;border-radius:8px;border:1px solid #ff5ad0;background:#160d22;color:#fff" />
+            <button id="betPlus" class="slot-bbtn">+</button>
+            <button id="betMax" class="slot-bbtn">MAX</button>
+          </div>
+          <div style="font-size:12px;opacity:.75;margin-bottom:10px">Vault: <b id="slotVault">0</b> $BYEBOSS</div>
+          <button id="spinBtn" style="width:100%;padding:12px;font-size:17px;font-weight:800;border:none;border-radius:10px;background:linear-gradient(#ff5ad0,#b23ea0);color:#fff;cursor:pointer">🎰 SPIN</button>
+          <p class="vault-note">Bet any amount from your vault. Lost bets feed the allocation; wins are paid from it. RTP 80%.</p>
         </div>
       </div>
     </div>
@@ -677,12 +693,56 @@ function openStats(){ if (!statsPanel) return; refreshStats(); statsPanel.classL
 function closeStats(){ if (statsPanel) statsPanel.classList.add('hidden'); }
 { const x = document.getElementById('statsClose'); if (x) x.onclick = closeStats; }
 
-// ---- CASINO panel (placeholder — mini-games coming soon) ----
+// ---- CASINO panel: slot machine (vault-funded, 80% RTP, authoritative) ----
 const casinoPanel = document.getElementById('casinoP');
 function casinoOpen(){ return casinoPanel && !casinoPanel.classList.contains('hidden'); }
-function openCasino(){ if (!casinoPanel) return; casinoPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
+function openCasino(){ if (!casinoPanel) return; refreshSlot(); casinoPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
 function closeCasino(){ if (casinoPanel) casinoPanel.classList.add('hidden'); }
 { const x = document.getElementById('casinoClose'); if (x) x.onclick = closeCasino; }
+
+const SLOT_DISPLAY = ['🍒','🍋','🔔','💎','7️⃣'];
+const srEls = ['sr0','sr1','sr2'].map(id => document.getElementById(id));
+const slotBet = document.getElementById('slotBet'), slotMsgEl = document.getElementById('slotMsg'), slotVaultEl = document.getElementById('slotVault'), spinBtn = document.getElementById('spinBtn');
+let _slotSpinning = false, _slotAnim = null;
+function refreshSlot(){ if (slotVaultEl) slotVaultEl.textContent = vault; if (slotBet){ slotBet.max = Math.max(1, vault); if ((+slotBet.value||0) > vault) slotBet.value = Math.max(1, vault); } }
+function setBet(v){ if (!slotBet) return; slotBet.value = Math.max(1, Math.min(Math.max(1, vault), Math.floor(v||1))); }
+if (slotBet){
+  const step = () => Math.max(1, Math.round((+slotBet.value||1) * 0.2));
+  const bm = document.getElementById('betMinus'), bp = document.getElementById('betPlus'), bx = document.getElementById('betMax');
+  if (bm) bm.onclick = () => setBet((+slotBet.value||1) - step());
+  if (bp) bp.onclick = () => setBet((+slotBet.value||1) + step());
+  if (bx) bx.onclick = () => setBet(vault);
+}
+function doSpin(){
+  if (_slotSpinning || !mpConnected) return;
+  const bet = Math.floor(+slotBet.value || 0);
+  if (!(bet >= 1)){ if (slotMsgEl){ slotMsgEl.textContent = 'Enter a bet'; slotMsgEl.style.color = '#ff8a8a'; } return; }
+  if (bet > vault){ if (slotMsgEl){ slotMsgEl.textContent = 'Not enough $BYEBOSS in your vault'; slotMsgEl.style.color = '#ff8a8a'; } return; }
+  _slotSpinning = true; if (spinBtn) spinBtn.disabled = true;
+  if (slotMsgEl){ slotMsgEl.textContent = 'Spinning…'; slotMsgEl.style.color = '#cfc2e8'; }
+  _slotAnim = setInterval(() => { for (const el of srEls) if (el) el.textContent = SLOT_DISPLAY[(Math.random()*SLOT_DISPLAY.length)|0]; }, 70);
+  mpSend({ t: 'slot', bet });
+}
+if (spinBtn) spinBtn.onclick = doSpin;
+function onSlotResult(m){
+  if (_slotAnim){ clearInterval(_slotAnim); _slotAnim = null; }
+  if (!m.ok){
+    _slotSpinning = false; if (spinBtn) spinBtn.disabled = false;
+    const why = m.reason==='funds'?'Not enough $BYEBOSS':m.reason==='far'?'Stand by the casino to play':m.reason==='pool'?'Bet too large right now':'Invalid bet';
+    if (slotMsgEl){ slotMsgEl.textContent = why; slotMsgEl.style.color = '#ff8a8a'; }
+    return;
+  }
+  (m.reels||[]).forEach((s, i) => setTimeout(() => { if (srEls[i]) srEls[i].textContent = s; }, i*220));   // reveal left-to-right
+  setTimeout(() => {
+    if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }   // sync — no world popup for gambling
+    refreshSlot();
+    if (slotMsgEl){
+      if (m.payout > 0){ slotMsgEl.textContent = `🎉 WIN ×${m.mult}  +${m.payout} $BYEBOSS!`; slotMsgEl.style.color = '#39ff8b'; }
+      else { slotMsgEl.textContent = `No win — ${m.bet} to the allocation. Spin again!`; slotMsgEl.style.color = '#ff9d6b'; }
+    }
+    _slotSpinning = false; if (spinBtn) spinBtn.disabled = false;
+  }, 2*220 + 120);
+}
 
 // ---- iso sprite character (a 2D billboard option in the Shop) ----
 const ISO_STATES = { idle:{fps:7,loop:true}, walk:{fps:12,loop:true}, run:{fps:16,loop:true}, jump:{fps:16,loop:false}, shot:{fps:22,loop:true} };
@@ -979,7 +1039,30 @@ let mpWs = null, mpConnected = false, mpId = null, byebossTemplate = null, mpDai
 let mpWantConnected = false, mpRetry = 0, mpReconnectT = null, mpLastSnap = 0;   // auto-reconnect + keepalive state
 let vault = 0, carried = 0;   // secured (claimable) vs on-hand (at risk) balances
 let _vaultSeen = null;        // for the "+N" pickup popup (vault gains)
-function flashGain(n){ if (!(n > 0)) return; const host = document.getElementById('game') || document.body; const el = document.createElement('div'); el.className = 'gain'; el.textContent = '+' + n + ' $BYEBOSS'; host.appendChild(el); setTimeout(() => el.remove(), 950); }
+// "+N $BYEBOSS" floating combat-text, spawned in the 3D world just above the
+// player's head (coins picked up / enemies killed), drifting up as it fades.
+const _floaters = [];
+function floatText(text, color){
+  if (typeof pos === 'undefined') return;
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64;
+  const ctx = cv.getContext('2d');
+  ctx.font = 'bold 40px Trebuchet MS, Verdana, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.lineWidth = 7; ctx.strokeStyle = 'rgba(0,0,0,.9)'; ctx.strokeText(text, 128, 36);
+  ctx.fillStyle = color || '#ffd23a'; ctx.fillText(text, 128, 36);
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
+  spr.scale.set(3.2, 0.8, 1); spr.position.set(pos.x, pos.y + 5.0, pos.z);
+  scene.add(spr); _floaters.push({ spr, tex, t: 0 });
+}
+function updateFloaters(dt){
+  for (let i = _floaters.length - 1; i >= 0; i--){
+    const f = _floaters[i]; f.t += dt;
+    f.spr.position.y += dt * 1.7;                          // drift upward
+    f.spr.material.opacity = Math.max(0, 1 - f.t / 1.2);   // fade over 1.2s
+    if (f.t >= 1.2){ scene.remove(f.spr); f.spr.material.dispose(); f.tex.dispose(); _floaters.splice(i, 1); }
+  }
+}
+function flashGain(n){ if (!(n > 0)) return; floatText('+' + n + ' $BYEBOSS', '#ffd23a'); }
 const capVal = document.getElementById('capVal');
 const carryVal = document.getElementById('carryVal');
 const bankPrompt = document.getElementById('bankPrompt');
@@ -1073,7 +1156,7 @@ function onSnap(m){
     seen.add(pl.id);
     if (pl.id === mpId){                              // my authoritative state from the server
       if (Number.isFinite(pl.hp)){ hp = Math.max(0, pl.hp); updateHpBar(); }
-      if (Number.isFinite(pl.vault)){ if (_vaultSeen !== null && pl.vault > _vaultSeen) flashGain(pl.vault - _vaultSeen); _vaultSeen = pl.vault; vault = pl.vault; scoreVal.textContent = vault; }   // everything goes straight to the vault now
+      if (Number.isFinite(pl.vault)){ if (_slotSpinning){ vault = pl.vault; } else { if (_vaultSeen !== null && pl.vault > _vaultSeen) flashGain(pl.vault - _vaultSeen); _vaultSeen = pl.vault; vault = pl.vault; scoreVal.textContent = vault; } }   // everything goes straight to the vault; slot results reveal in the panel, not here
       if (Number.isFinite(pl.carried)) carried = pl.carried;
       if (capVal && Number.isFinite(pl.earnedToday)) capVal.textContent = `today ${pl.earnedToday}/${m.dailyCap || mpDailyCap}`;
       if (Number.isFinite(pl.level)){
@@ -1142,6 +1225,7 @@ function mpConnect(){
     else if (m.t === 'name'){ if (m.ok){ myName = m.name; if (nameInput) nameInput.value = m.name; setNameMsg('✓ Saved as ' + m.name, true); } else { setNameMsg(m.reason === 'taken' ? 'That name is already taken' : 'Invalid name (3–16: letters, numbers, _ -)', false); } }
     else if (m.t === 'burn'){ if (Number.isFinite(m.totalBurned)) statBurned = m.totalBurned; statPending = 0; if (statsOpen()) refreshStats(); if (mpCountEl){ mpCountEl.textContent = `🔥 ${fmtN(m.amount)} $BYEBOSS burned!`; } }
     else if (m.t === 'vaulted'){ if (Number.isFinite(m.vault)) vault = m.vault; if (Number.isFinite(m.carried)) carried = m.carried; if (vaultOpen()) refreshVaultUI(); }
+    else if (m.t === 'slot'){ onSlotResult(m); }
     else if (m.t === 'snap'){ mpLastSnap = Date.now(); onSnap(m); }
     else if (m.t === 'left'){ removeRemote(m.id); }
   };
@@ -1761,6 +1845,7 @@ function frame(now){
   if (!running) return;
   const dt = Math.min(0.05, (now - last)/1000 || 0); last = now;
   update(dt);
+  updateFloaters(dt);
   renderer.render(scene, camera);
   drawMinimap();
   requestAnimationFrame(frame);
