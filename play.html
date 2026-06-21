@@ -277,6 +277,9 @@
       .slot-bbtn{ padding:7px 11px; font-size:15px; font-weight:800; border:1px solid #ff5ad0; border-radius:8px; background:#160d22; color:#ff9be0; cursor:pointer }
       .slot-bbtn:active{ transform:scale(.94) }
       #spinBtn:disabled{ opacity:.5; cursor:default }
+      /* casino-themed background behind the slot machine (darkened so the UI stays readable) */
+      #casinoP .vault-box{ background-image: linear-gradient(rgba(8,3,16,.82), rgba(8,3,16,.9)), url('./assets/game/slots/casino-bg.png'); background-size: cover; background-position: center; border:1.5px solid #ff5ad0; box-shadow:0 0 28px rgba(255,90,208,.35) }
+      #casinoP .vault-note{ display:none }   /* hide the explanatory line */
     </style>
     <div id="casinoP" class="vault hidden">
       <div class="vault-box">
