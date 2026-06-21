@@ -957,6 +957,7 @@ async function connectWallet(){
 // ===== multiplayer client (authoritative game server on Railway) =====
 const MP_URL = 'wss://dexscreener-telegram-bot-production.up.railway.app/game';
 let mpWs = null, mpConnected = false, mpId = null, byebossTemplate = null, mpDailyCap = 400;
+let mpWantConnected = false, mpRetry = 0, mpReconnectT = null, mpLastSnap = 0;   // auto-reconnect + keepalive state
 let vault = 0, carried = 0;   // secured (claimable) vs on-hand (at risk) balances
 let _vaultSeen = null;        // for the "+N" pickup popup (vault gains)
 function flashGain(n){ if (!(n > 0)) return; const host = document.getElementById('game') || document.body; const el = document.createElement('div'); el.className = 'gain'; el.textContent = '+' + n + ' $BYEBOSS'; host.appendChild(el); setTimeout(() => el.remove(), 950); }
@@ -1096,7 +1097,7 @@ function mpConnect(){
         const res = await prov.signMessage(new TextEncoder().encode(m.nonce), 'utf8');
         mpWs.send(JSON.stringify({ t: 'auth', wallet: walletAddr, sig: b58encode(res.signature || res) }));
       } catch(e){ console.warn('sign failed', e); if (mpCountEl) mpCountEl.textContent = '🔴 Signature needed — click 👻 Connect again'; try { mpWs.close(); } catch {} }
-    } else if (m.t === 'welcome'){ mpId = m.id; mpConnected = true; mpDailyCap = m.dailyCap || 400; if (mpCountEl) mpCountEl.style.display = 'block';
+    } else if (m.t === 'welcome'){ mpId = m.id; mpConnected = true; mpRetry = 0; mpLastSnap = Date.now(); mpDailyCap = m.dailyCap || 400; if (mpCountEl) mpCountEl.style.display = 'block';
       for (const c of coins) c.visible = false;   // the server owns the coins now
       placeVaults(m.vaults || []);                // render the vault (bank)
       placeShop(m.shop || null);                  // render the shop building
@@ -1120,15 +1121,45 @@ function mpConnect(){
     else if (m.t === 'name'){ if (m.ok){ myName = m.name; if (nameInput) nameInput.value = m.name; setNameMsg('✓ Saved as ' + m.name, true); } else { setNameMsg(m.reason === 'taken' ? 'That name is already taken' : 'Invalid name (3–16: letters, numbers, _ -)', false); } }
     else if (m.t === 'burn'){ if (Number.isFinite(m.totalBurned)) statBurned = m.totalBurned; statPending = 0; if (statsOpen()) refreshStats(); if (mpCountEl){ mpCountEl.textContent = `🔥 ${fmtN(m.amount)} $BYEBOSS burned!`; } }
     else if (m.t === 'vaulted'){ if (Number.isFinite(m.vault)) vault = m.vault; if (Number.isFinite(m.carried)) carried = m.carried; if (vaultOpen()) refreshVaultUI(); }
-    else if (m.t === 'snap'){ onSnap(m); }
+    else if (m.t === 'snap'){ mpLastSnap = Date.now(); onSnap(m); }
     else if (m.t === 'left'){ removeRemote(m.id); }
   };
-  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearServerApples(); clearVaults(); clearShop(); clearStats(); closeVault(); closeShopBld(); closeStats(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = '0'; if (scoreVal) scoreVal.textContent = '—'; if (bankPrompt) bankPrompt.classList.add('hide'); if (xpwrapEl) xpwrapEl.style.display = 'none'; vault = carried = 0; _vaultSeen = null; if (mpCountEl) mpCountEl.textContent = '🔴 offline'; };
+  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearServerApples(); clearVaults(); clearShop(); clearStats(); closeVault(); closeShopBld(); closeStats(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = '0'; if (scoreVal) scoreVal.textContent = '—'; if (bankPrompt) bankPrompt.classList.add('hide'); if (xpwrapEl) xpwrapEl.style.display = 'none'; vault = carried = 0; _vaultSeen = null; if (mpCountEl) mpCountEl.textContent = '🔴 offline'; if (mpWantConnected && walletAddr) scheduleReconnect(); };
   mpWs.onerror = () => {};
 }
-async function mpJoin(){ if (!walletAddr) await connectWallet(); if (walletAddr) mpConnect(); }
+function scheduleReconnect(){
+  if (!mpWantConnected || !walletAddr || mpReconnectT) return;
+  const delay = mpRetry === 0 ? 400 : Math.min(8000, 600 * Math.pow(2, mpRetry));
+  mpRetry++;
+  if (mpCountEl){ mpCountEl.style.display = 'block'; mpCountEl.textContent = '🟡 Reconnecting…'; }
+  mpReconnectT = setTimeout(() => { mpReconnectT = null; mpConnect(); }, delay);
+}
+async function mpJoin(){
+  if (!walletAddr){ await connectWallet(); if (!walletAddr) return; }
+  mpWantConnected = true; mpRetry = 0;
+  if (mpReconnectT){ clearTimeout(mpReconnectT); mpReconnectT = null; }
+  // already truly live (connected and hearing from the server recently) — nothing to do
+  if (mpConnected && mpWs && mpWs.readyState === 1 && (Date.now() - mpLastSnap < 8000)) return;
+  // a stale/zombie or still-opening socket: drop it; its onclose schedules a fresh connect
+  if (mpWs && (mpWs.readyState === 0 || mpWs.readyState === 1)){ try { mpWs.close(); } catch(e){} return; }
+  mpConnect();   // closed or none: connect right away
+}
 if (walletBtn) walletBtn.addEventListener('click', mpJoin);
 setInterval(() => { if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'state', x: +pos.x.toFixed(2), y: +pos.y.toFixed(2), z: +pos.z.toFixed(2), ry: +faceAngle.toFixed(2) })); }, 100);
+// stale-socket watchdog: if we're "connected" but the server has gone quiet (network
+// blip, tab was backgrounded, laptop sleep), the socket is a zombie — drop it so the
+// onclose handler auto-reconnects instead of leaving us stuck looking connected.
+setInterval(() => {
+  if (mpConnected && mpWs && mpWs.readyState === 1 && mpLastSnap && (Date.now() - mpLastSnap > 12000)){
+    try { mpWs.close(); } catch(e){}
+  }
+}, 4000);
+// when the tab/app comes back to the foreground, make sure we're still connected
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && mpWantConnected && walletAddr && (!mpConnected || !mpWs || mpWs.readyState !== 1)){
+    mpRetry = 0; if (mpReconnectT){ clearTimeout(mpReconnectT); mpReconnectT = null; } mpConnect();
+  }
+});
 
 // paint the $BYEBOSS logo onto the coin faces (same-origin image -> canvas texture is safe)
 (function paintCoin(){
