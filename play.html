@@ -77,10 +77,11 @@
 
   /* Shop */
   /* settings / key-bindings button, just above the bottom-right minimap */
-  .cfgbtn{position:absolute;right:18px;bottom:234px;z-index:8;width:44px;height:44px;display:grid;place-items:center;
-    background:rgba(6,4,13,.74);border:1px solid rgba(124,77,255,.55);color:#eafff2;border-radius:11px;font-size:22px;cursor:pointer;backdrop-filter:blur(6px)}
-  .cfgbtn:hover{border-color:#7c4dff;color:#b69bff}
-  @media (max-width:560px){ .cfgbtn{bottom:auto;top:56px;right:12px} }
+  .menubar{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:8;display:flex;gap:8px}
+  .menu-btn{background:rgba(6,4,13,.74);border:1px solid rgba(124,77,255,.55);color:#eafff2;padding:9px 16px;
+    border-radius:11px;font-weight:800;font-size:14px;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap}
+  .menu-btn:hover{border-color:#7c4dff;color:#b69bff}
+  @media (max-width:560px){ .menubar{top:8px} .menu-btn{padding:7px 12px;font-size:12px} }
   .shop{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:rgba(4,3,10,.62);backdrop-filter:blur(3px)}
   .shop.hidden{display:none}
   .shop-box{width:min(94vw,640px);background:linear-gradient(180deg,#100d20,#0a0813);border:1px solid rgba(124,77,255,.5);border-radius:22px;overflow:hidden;box-shadow:0 28px 80px rgba(0,0,0,.65)}
@@ -178,7 +179,7 @@
       <a class="back" href="./game.html" title="Back">‹ Back</a>
       <span class="title"><span class="b">$BYE</span><span class="g">BOSS</span> · WORLD</span>
     </div>
-    <div class="hint"><b>WASD</b> move · <b>MOUSE</b> aim · <b>RIGHT&nbsp;CLICK</b> shoot · <b>SHIFT</b> run · <b>SPACE</b> jump · <b>E</b> vault</div>
+    <div class="menubar"><button id="cfgBtn" class="menu-btn" title="Movement keys & settings">⚙ Settings</button></div>
     <canvas id="minimap" width="480" height="480" class="minimap"></canvas>
     <div id="crosshair" class="crosshair"></div>
     <div class="score"><span class="coin">$</span><span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">🔒<b id="scoreVal">—</b><small style="opacity:.55;font-weight:600;font-size:11px">vault</small></span><span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">⚠️<b id="carryVal" style="color:#ff9d3b">0</b><small style="opacity:.7;font-weight:600;font-size:11px">on you</small></span><small id="capVal" style="opacity:.6;font-weight:600;font-size:11px"></small></div>
@@ -190,7 +191,6 @@
     <div id="mpCount" class="mpcount" style="display:none"></div>
     <div id="respawn" class="respawn hide">💀 ELIMINATED<br><span>respawning…</span></div>
 
-    <button id="cfgBtn" class="cfgbtn" title="Settings — key bindings">⚙</button>
     <div id="shop" class="shop hidden">
       <div class="shop-box">
         <div class="shop-head"><span>🛍️ SKINS SHOP</span><span id="shopClose" class="shop-x">✕</span></div>
