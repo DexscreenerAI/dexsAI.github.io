@@ -257,8 +257,9 @@
       <div class="vault-box">
         <div class="vault-head"><span>📊 $BYEBOSS STATS</span><span id="statsClose" class="vault-x">✕</span></div>
         <div class="vault-body">
-          <div class="st-row"><span>Game allocation <small>(10% of supply)</small></span><b id="stAlloc">—</b></div>
-          <div class="st-row"><span>Pool remaining</span><b id="stPool">—</b></div>
+          <div class="st-row"><span>Allocation total <small>(10% supply)</small></span><b id="stAlloc">—</b></div>
+          <div class="st-row"><span>Allocation left <small>(live)</small></span><b id="stPool" style="color:#39ff8b">—</b></div>
+          <div class="st-row"><span>Earned by players</span><b id="stEmitted">—</b></div>
           <div class="st-row"><span>Bought in shop (all-time)</span><b id="stBought">—</b></div>
           <div class="st-row"><span>Casino → allocation 🎰</span><b id="stCasino">—</b></div>
           <div class="st-row"><span>Total burned 🔥</span><b id="stBurned">—</b></div>
@@ -267,7 +268,7 @@
             <div class="st-bar"><i id="stFill"></i></div>
             <div class="st-burnsub"><b id="stPending">0</b> / <span id="stTarget2">—</span> pending 🔥</div>
           </div>
-          <p class="vault-note">Every skin bought is added to the burn pile. When it reaches the target, those $BYEBOSS are burned forever.</p>
+          <p class="vault-note">Allocation drops as players earn $BYEBOSS (coins, kills, casino wins) and rises when players lose at the casino. Skin spends feed the burn pile — burned forever at the target.</p>
         </div>
       </div>
     </div>
@@ -692,7 +693,8 @@ function statsOpen(){ return statsPanel && !statsPanel.classList.contains('hidde
 function refreshStats(){
   const $ = id => document.getElementById(id);
   if ($('stAlloc'))  $('stAlloc').textContent  = fmtN(allocation);
-  if ($('stPool'))   $('stPool').textContent   = fmtN(statPool);
+  if ($('stPool'))   $('stPool').textContent   = Math.round(statPool).toLocaleString();          // full precision so every emit/refund is visible
+  if ($('stEmitted'))$('stEmitted').textContent= Math.max(0, Math.round(allocation - statPool)).toLocaleString();
   if ($('stBought')) $('stBought').textContent = fmtN(statBurned + statPending);
   if ($('stCasino')) $('stCasino').textContent = fmtN(statCasino);
   if ($('stBurned')) $('stBurned').textContent = fmtN(statBurned);
