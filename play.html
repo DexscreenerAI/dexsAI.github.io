@@ -260,6 +260,7 @@
           <div class="st-row"><span>Game allocation <small>(10% of supply)</small></span><b id="stAlloc">—</b></div>
           <div class="st-row"><span>Pool remaining</span><b id="stPool">—</b></div>
           <div class="st-row"><span>Bought in shop (all-time)</span><b id="stBought">—</b></div>
+          <div class="st-row"><span>Casino → allocation 🎰</span><b id="stCasino">—</b></div>
           <div class="st-row"><span>Total burned 🔥</span><b id="stBurned">—</b></div>
           <div class="st-burnbox">
             <div class="st-burnhead">Next burn <small>auto at <b id="stTarget">—</b></small></div>
@@ -675,7 +676,7 @@ if (nameSave) nameSave.onclick = saveName;
 if (nameInput) nameInput.addEventListener('keydown', e => { e.stopPropagation(); if (e.code === 'Enter') saveName(); });
 
 // ---- stats building panel (allocation + burn tracker) ----
-let allocation = 100000000, burnTarget = 1000, statPool = 0, statPending = 0, statBurned = 0;
+let allocation = 100000000, burnTarget = 1000, statPool = 0, statPending = 0, statBurned = 0, statCasino = 0;
 const statsPanel = document.getElementById('statsP');
 const fmtN = (n) => { n = Math.round(+n||0); if (n >= 1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'') + 'M'; if (n >= 1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'') + 'k'; return '' + n; };
 function statsOpen(){ return statsPanel && !statsPanel.classList.contains('hidden'); }
@@ -684,6 +685,7 @@ function refreshStats(){
   if ($('stAlloc'))  $('stAlloc').textContent  = fmtN(allocation);
   if ($('stPool'))   $('stPool').textContent   = fmtN(statPool);
   if ($('stBought')) $('stBought').textContent = fmtN(statBurned + statPending);
+  if ($('stCasino')) $('stCasino').textContent = fmtN(statCasino);
   if ($('stBurned')) $('stBurned').textContent = fmtN(statBurned);
   if ($('stTarget')) $('stTarget').textContent = fmtN(burnTarget);
   if ($('stTarget2'))$('stTarget2').textContent= fmtN(burnTarget);
@@ -942,7 +944,8 @@ function buildingSign(key, mesh, text, color, scl){
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
   const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
   const sw = scl ? scl[0] : 9, sh = scl ? scl[1] : 2.25;
-  spr.scale.set(sw, sh, 1); spr.position.set(mesh.position.x, b.max.y + 1.4, mesh.position.z);
+  spr.scale.set(sw, sh, 1);
+  spr.position.set((b.min.x + b.max.x) / 2, b.max.y + 1.4, (b.min.z + b.max.z) / 2);   // bbox center, so it sits over the building even if the model is off-origin
   scene.add(spr); _signs[key] = spr;
 }
 function clearSign(key){ if (_signs[key]){ scene.remove(_signs[key]); _signs[key] = null; } }
@@ -1142,7 +1145,7 @@ function makeLabel(text){
 }
 // ---- remote players: render each in the skin THEY equipped (3D GLB or 2D iso
 // sprite), with snapshot interpolation so movement is smooth enough for PvP ----
-const INTERP_DELAY = 0.09;          // render remotes ~90ms in the past (between 20Hz snaps)
+const INTERP_DELAY = 0.08;          // render remotes ~80ms in the past (≈2 server ticks @25Hz)
 const remoteTemplates = {};         // skin index -> loaded gltf (3D skins)
 function getRemoteTemplate(skin, cb){
   if (skin === 0 && byebossTemplate){ cb(byebossTemplate); return; }
@@ -1215,6 +1218,7 @@ function onSnap(m){
   if (Number.isFinite(m.pool)) statPool = m.pool;
   if (Number.isFinite(m.pending)) statPending = m.pending;
   if (Number.isFinite(m.burned)) statBurned = m.burned;
+  if (Number.isFinite(m.casinoNet)) statCasino = m.casinoNet;
   if (statsOpen()) refreshStats();
   const seen = new Set();
   for (const pl of m.players){
@@ -1306,6 +1310,8 @@ function mpConnect(){
     else if (m.t === 'burn'){ if (Number.isFinite(m.totalBurned)) statBurned = m.totalBurned; statPending = 0; if (statsOpen()) refreshStats(); if (mpCountEl){ mpCountEl.textContent = `🔥 ${fmtN(m.amount)} $BYEBOSS burned!`; } }
     else if (m.t === 'vaulted'){ if (Number.isFinite(m.vault)) vault = m.vault; if (Number.isFinite(m.carried)) carried = m.carried; if (vaultOpen()) refreshVaultUI(); }
     else if (m.t === 'slot'){ onSlotResult(m); }
+    else if (m.t === 'shot'){ if (m.id !== mpId) spawnRemoteShot(m); }   // render another player's tracer
+    else if (m.t === 'bigwin'){ onBigWin(m); }                            // someone hit a x10/x50/x100
     else if (m.t === 'snap'){ mpLastSnap = Date.now(); onSnap(m); }
     else if (m.t === 'left'){ removeRemote(m.id); }
   };
@@ -1330,7 +1336,7 @@ async function mpJoin(){
   mpConnect();   // closed or none: connect right away
 }
 if (walletBtn) walletBtn.addEventListener('click', mpJoin);
-setInterval(() => { if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'state', x: +pos.x.toFixed(2), y: +pos.y.toFixed(2), z: +pos.z.toFixed(2), ry: +faceAngle.toFixed(2) })); }, 100);
+setInterval(() => { if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'state', x: +pos.x.toFixed(2), y: +pos.y.toFixed(2), z: +pos.z.toFixed(2), ry: +faceAngle.toFixed(2) })); }, 50);   // 20Hz position updates (snappier PvP)
 // stale-socket watchdog: if we're "connected" but the server has gone quiet (network
 // blip, tab was backgrounded, laptop sleep), the socket is a zombie — drop it so the
 // onclose handler auto-reconnects instead of leaving us stuck looking connected.
@@ -1578,10 +1584,14 @@ function placeCasino(pt){
   if (!casinoPoint) return;
   if (!casinoTemplate){ _pendingCasino = casinoPoint; return; }
   const c = casinoTemplate.clone(true); c.traverse(o => { o.frustumCulled = false; });
-  const size = new THREE.Box3().setFromObject(c).getSize(new THREE.Vector3());
-  c.scale.setScalar(42 / (size.y || 1));                       // big enough to walk into
-  c.position.set(casinoX, 0, casinoZ); c.rotation.y = -0.6; c.updateMatrixWorld(true);
-  const b2 = new THREE.Box3().setFromObject(c); c.position.y = -b2.min.y;   // feet on the ground
+  // The model's geometry is offset far from its local origin, so we can't just set
+  // position — we measure the scaled+rotated bounds and recenter the footprint on
+  // the teleport point (and drop it onto the ground).
+  c.position.set(0, 0, 0); c.rotation.y = -0.6; c.scale.setScalar(1); c.updateMatrixWorld(true);
+  const sy = (new THREE.Box3().setFromObject(c).getSize(new THREE.Vector3()).y) || 1;
+  c.scale.setScalar(42 / sy); c.updateMatrixWorld(true);                    // ~42u tall, big enough to walk into
+  const box = new THREE.Box3().setFromObject(c);
+  c.position.set(casinoX - (box.min.x + box.max.x) / 2, -box.min.y, casinoZ - (box.min.z + box.max.z) / 2);
   scene.add(c); casinoMesh = c;
   buildingSign('casino', casinoMesh, 'CASINO', '#ff5ad0', [22, 5.5]);       // big sign over the tall roof
 }
@@ -1677,6 +1687,22 @@ function spawnBullet(origin, dir){
 }
 function updateBullets(dt){
   for (const b of bullets){ if (b.life <= 0) continue; b.life -= dt; b.mesh.position.addScaledVector(b.vel, dt); if (b.life <= 0) b.mesh.visible = false; }
+}
+// another player fired: draw their tracer from their gun in the aim direction
+function spawnRemoteShot(m){
+  _v0.set(m.x, (m.y || 0) + 1.9, m.z);
+  _v2.set(m.dx, m.dy, m.dz); const len = _v2.length() || 1; _v2.multiplyScalar(1 / len);
+  spawnBullet(_v0, _v2);
+  const dx = m.x - pos.x, dz = m.z - pos.z;
+  if (dx*dx + dz*dz < 1600){ try { playShoot(); } catch(e){} }   // gunshot sound only if within ~40u
+}
+// someone hit a big slot win — quick banner for everyone in the game
+function onBigWin(m){
+  const host = document.getElementById('game') || document.body;
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:16%;left:50%;transform:translateX(-50%);z-index:60;background:linear-gradient(#ff5ad0,#b23ea0);color:#fff;font-weight:800;padding:10px 18px;border-radius:12px;box-shadow:0 6px 26px rgba(0,0,0,.55);font-size:15px;pointer-events:none;text-align:center;white-space:nowrap';
+  el.textContent = `🎰 ${m.name || 'A player'} won ×${m.mult} — +${(+m.payout||0).toLocaleString()} $BYEBOSS!`;
+  host.appendChild(el); setTimeout(() => el.remove(), 4200);
 }
 function ownerMonster(obj){ for (const m of monsters){ let o = obj; while (o){ if (o === m.model) return m; o = o.parent; } } return null; }
 function fireGun(){
