@@ -635,7 +635,7 @@ function renderShop(){
     card.innerHTML = `${ic}<span class="sc-nm">${ch.name}</span><span class="sc-act${owned?'':' buy'}">${label}</span>`;
     card.onclick = () => {
       if (sel) return;
-      if (owned){ selectedSkin = i; try { localStorage.setItem('bb_skin', i); } catch(e){} selectChar(i); renderShop(); }
+      if (owned){ selectedSkin = i; try { localStorage.setItem('bb_skin', i); } catch(e){} selectChar(i); sendSkin(); renderShop(); }
       else if (mpConnected){ mpSend({ t: 'buyskin', skin: i }); }   // server pays from the vault
     };
     shopListEl.appendChild(card);
@@ -1074,6 +1074,7 @@ const xpwrapEl = document.getElementById('xpwrap'), lvlVal = document.getElement
 function fmtPool(n){ n=+n; if(!isFinite(n)) return ''; if(n>=1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M'; if(n>=1e3) return Math.round(n/1e3)+'k'; return ''+n; }
 function doTeleport(dest){ if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'teleport', to: dest })); }
 function mpSend(o){ if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify(o)); }
+function sendSkin(){ mpSend({ t: 'setskin', skin: selectedSkin }); }   // tell the server which skin we equipped (so others see it)
 
 // ===== vault panel (daily quest + deposit a chosen amount) =====
 let claimedToday = false, dailyReward = 20, claims = 0;
@@ -1134,17 +1135,76 @@ function makeLabel(text){
   spr.userData.set = (t) => { draw(t || ''); tex.needsUpdate = true; };
   return spr;
 }
+// ---- remote players: render each in the skin THEY equipped (3D GLB or 2D iso
+// sprite), with snapshot interpolation so movement is smooth enough for PvP ----
+const INTERP_DELAY = 0.09;          // render remotes ~90ms in the past (between 20Hz snaps)
+const remoteTemplates = {};         // skin index -> loaded gltf (3D skins)
+function getRemoteTemplate(skin, cb){
+  if (skin === 0 && byebossTemplate){ cb(byebossTemplate); return; }
+  if (remoteTemplates[skin]){ cb(remoteTemplates[skin]); return; }
+  const url = (skin === 1) ? './assets/game/char2.glb' : './assets/game/byeboss.glb';
+  new GLTFLoader().load(url, g => { remoteTemplates[skin] = g; if (skin === 0 && !byebossTemplate) byebossTemplate = g; cb(g); }, undefined, () => cb(null));
+}
+function clearRemoteVisual(r){
+  if (r.group){ scene.remove(r.group); r.group = null; r.mixer = null; r.aWalk = r.aIdle = null; }
+  if (r.sprite){ scene.remove(r.sprite); r.sprite = null; }
+  if (r.sprTexCache){ for (const k in r.sprTexCache){ try { r.sprTexCache[k].dispose(); } catch(e){} } r.sprTexCache = null; }
+}
+function buildRemoteVisual(r, skin){
+  clearRemoteVisual(r); r.skin = skin; r.curAnim = null;
+  if (skin === 2){                                   // 2D iso billboard
+    loadIso(() => {});
+    r.sprite = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ transparent:true, alphaTest:0.3, side:THREE.DoubleSide }));
+    scene.add(r.sprite); r.sprTexCache = {}; r.sprState = 'idle'; r.sprT = 0; r.labelY = 3.1;
+  } else {                                            // 3D GLB skin
+    r.labelY = 4.7;
+    getRemoteTemplate(skin, (g) => {
+      if (!g || r.skin !== skin) return;
+      const group = SkeletonUtils.clone(g.scene); group.scale.setScalar(CHAR_SCALE); group.traverse(o => { o.frustumCulled = false; }); scene.add(group);
+      const mixer = new THREE.AnimationMixer(group);
+      const find = names => g.animations.find(a => names.includes(a.name));
+      const walkClip = find(['walk_loop','walk']) || g.animations[0], idleClip = find(['idle']) || walkClip;
+      r.group = group; r.mixer = mixer;
+      r.aWalk = walkClip ? mixer.clipAction(walkClip) : null;
+      r.aIdle = idleClip ? mixer.clipAction(idleClip) : null;
+      if (r.aIdle){ r.aIdle.play(); } r.curAnim = 'idle';
+    });
+  }
+}
+function setRemoteAnim(r, moving){
+  if (!r.mixer) return;
+  const want = moving ? 'walk' : 'idle';
+  if (want === r.curAnim) return;
+  r.curAnim = want;
+  const to = want === 'walk' ? r.aWalk : r.aIdle, from = want === 'walk' ? r.aIdle : r.aWalk;
+  if (to && to === from){ to.play(); return; }
+  if (from) from.fadeOut(0.15);
+  if (to){ to.reset(); to.fadeIn(0.15); to.play(); }
+}
+function updateRemoteSprite(r, dt, moving, x, y, z){
+  if (!isoLoaded || !r.sprite) return;
+  const st = moving ? 'walk' : 'idle';
+  if (st !== r.sprState){ r.sprState = st; r.sprT = 0; } else r.sprT += dt;
+  const fx = Math.sin(r.ry), fz = Math.cos(r.ry);                 // remote facing -> screen direction
+  const fdot = fx*(-Math.sin(camYaw)) + fz*(-Math.cos(camYaw)), rdot = fx*(Math.cos(camYaw)) + fz*(-Math.sin(camYaw));
+  const dir = Math.abs(fdot) >= Math.abs(rdot) ? (fdot > 0 ? 'up' : 'down') : (rdot > 0 ? 'right' : 'left');
+  const flip = dir === 'left', cfg = ISO_STATES[st];
+  let f = Math.floor(r.sprT * cfg.fps); f = cfg.loop ? f % 25 : Math.min(f, 24);
+  const key = st + '_' + (flip ? 'right' : dir);
+  let tex = r.sprTexCache[key];
+  if (!tex && isoTex[key]){ tex = isoTex[key].clone(); tex.needsUpdate = true; r.sprTexCache[key] = tex; }   // own texture so it can't fight the local sprite
+  if (tex){ const col = f % 5, row = (f/5)|0; tex.offset.set(col/5, 1 - (row+1)/5); r.sprite.material.map = tex; r.sprite.material.needsUpdate = true; }
+  r.sprite.scale.set(flip ? -ISO.scale : ISO.scale, ISO.scale, 1);
+  r.sprite.position.set(x, (y||0) + ISO.y, z);
+  r.sprite.rotation.set(0, Math.atan2(camera.position.x - x, camera.position.z - z), 0);   // billboard to camera
+}
 function addRemote(pl){
-  if (!byebossTemplate) return null;
-  const group = SkeletonUtils.clone(byebossTemplate.scene); group.scale.setScalar(2.25); group.traverse(o => { o.frustumCulled = false; }); scene.add(group);
-  const mixer = new THREE.AnimationMixer(group);
-  const walk = byebossTemplate.animations.find(a => a.name === 'walk_loop') || byebossTemplate.animations.find(a => a.name === 'idle') || byebossTemplate.animations[0];
-  if (walk) mixer.clipAction(walk).play();
-  const r = { group, mixer, x: pl.x, z: pl.z, tx: pl.x, ty: pl.y, tz: pl.z, tr: pl.ry };
-  r.label = makeLabel(pl.name || ''); r.labelText = pl.name || ''; group.add(r.label);   // nametag
+  const r = { id: pl.id, x: pl.x, y: pl.y || 0, z: pl.z, ry: pl.ry, buf: [], skin: -1, alive: pl.alive !== false, labelText: pl.name || '', labelY: 4.7 };
+  r.label = makeLabel(pl.name || ''); scene.add(r.label);
+  buildRemoteVisual(r, Number.isInteger(pl.skin) ? pl.skin : DEFAULT_SKIN);
   remotePlayers.set(pl.id, r); return r;
 }
-function removeRemote(id){ const r = remotePlayers.get(id); if (r){ if (r.group) scene.remove(r.group); remotePlayers.delete(id); } }
+function removeRemote(id){ const r = remotePlayers.get(id); if (r){ clearRemoteVisual(r); if (r.label) scene.remove(r.label); remotePlayers.delete(id); } }
 function onSnap(m){
   if (mpCountEl) mpCountEl.textContent = `👥 ${m.online} online · ${m.accounts} accounts` + (Number.isFinite(m.pool) ? ` · pool ${fmtPool(m.pool)}` : '');
   if (Number.isFinite(m.pool)) statPool = m.pool;
@@ -1172,19 +1232,33 @@ function onSnap(m){
       else if (!srvDead && dead){ dead = false; if (respawnEl) respawnEl.classList.add('hide'); }
       continue;
     }
-    let r = remotePlayers.get(pl.id); if (!r){ r = addRemote(pl); if (!r){ loadByeboss(() => {}); continue; } }
-    r.moving = (Math.hypot(pl.x - r.tx, pl.z - r.tz) > 0.05);   // did this player move since last snapshot?
-    r.tx = pl.x; r.ty = pl.y; r.tz = pl.z; r.tr = pl.ry; if (r.group) r.group.visible = pl.alive;
+    let r = remotePlayers.get(pl.id); if (!r){ r = addRemote(pl); }
+    const sk = Number.isInteger(pl.skin) ? pl.skin : DEFAULT_SKIN;
+    if (sk !== r.skin) buildRemoteVisual(r, sk);                 // they changed/equipped a skin -> swap the model
+    r.buf.push({ t: performance.now()/1000, x: pl.x, y: pl.y || 0, z: pl.z, ry: pl.ry });   // interpolation buffer
+    if (r.buf.length > 16) r.buf.shift();
+    r.alive = pl.alive !== false;
     if (r.label && pl.name !== r.labelText){ r.labelText = pl.name; r.label.userData.set(pl.name || ''); }   // update nametag
   }
   for (const id of [...remotePlayers.keys()]) if (!seen.has(id)) removeRemote(id);
 }
 function updateRemotePlayers(dt){
-  for (const r of remotePlayers.values()){ if (!r.group) continue;
-    r.x += (r.tx - r.x) * Math.min(1, dt*10); r.z += (r.tz - r.z) * Math.min(1, dt*10);
-    r.group.position.set(r.x, 1.052 + (r.ty || 0), r.z);
-    r.group.rotation.y = angleLerp(r.group.rotation.y, r.tr, Math.min(1, dt*10));
-    r.mixer.update(dt);
+  const renderT = performance.now()/1000 - INTERP_DELAY;
+  for (const r of remotePlayers.values()){
+    const buf = r.buf; let x = r.x, y = r.y, z = r.z, ry = r.ry, moving = false;
+    if (buf && buf.length >= 2){
+      let i = buf.length - 1; while (i > 0 && buf[i].t > renderT) i--;     // newest snapshot at/under renderT
+      const a = buf[i], b = buf[Math.min(buf.length - 1, i + 1)];
+      const span = (b.t - a.t) || 1e-3, f = Math.max(0, Math.min(1, (renderT - a.t) / span));
+      x = a.x + (b.x - a.x) * f; y = a.y + (b.y - a.y) * f; z = a.z + (b.z - a.z) * f;
+      ry = angleLerp(a.ry, b.ry, f);
+      moving = Math.hypot(b.x - a.x, b.z - a.z) > 0.02;
+    } else if (buf && buf.length === 1){ x = buf[0].x; y = buf[0].y; z = buf[0].z; ry = buf[0].ry; }
+    r.x = x; r.y = y; r.z = z; r.ry = ry;
+    const vis = r.alive !== false;
+    if (r.group){ r.group.visible = vis; r.group.position.set(x, CHAR_Y + (y||0), z); r.group.rotation.y = ry; setRemoteAnim(r, moving); if (r.mixer) r.mixer.update(dt); }
+    if (r.sprite){ r.sprite.visible = vis; updateRemoteSprite(r, dt, moving, x, y, z); }
+    if (r.label){ r.label.visible = vis; r.label.position.set(x, CHAR_Y + (y||0) + (r.labelY || 4.7), z); }
   }
 }
 function mpConnect(){
@@ -1214,6 +1288,7 @@ function mpConnect(){
       if (nameInput){ nameInput.value = myName; nameInput.placeholder = myName ? '' : (m.name || '3–16 chars'); }
       renderShop();
       if (xpwrapEl) xpwrapEl.style.display = 'flex';
+      sendSkin();                                  // let the server (and other players) know our equipped skin
     }
     else if (m.t === 'denied'){ console.warn('multiplayer denied:', m.m); }
     else if (m.t === 'coins'){ syncServerCoins(m.coins); }
