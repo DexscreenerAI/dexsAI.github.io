@@ -77,7 +77,7 @@
 
   /* Shop */
   /* settings / key-bindings button, just above the bottom-right minimap */
-  .cfgbtn{position:absolute;right:18px;bottom:440px;z-index:8;width:44px;height:44px;display:grid;place-items:center;
+  .cfgbtn{position:absolute;right:18px;bottom:234px;z-index:8;width:44px;height:44px;display:grid;place-items:center;
     background:rgba(6,4,13,.74);border:1px solid rgba(124,77,255,.55);color:#eafff2;border-radius:11px;font-size:22px;cursor:pointer;backdrop-filter:blur(6px)}
   .cfgbtn:hover{border-color:#7c4dff;color:#b69bff}
   @media (max-width:560px){ .cfgbtn{bottom:auto;top:56px;right:12px} }
@@ -93,6 +93,7 @@
   .shopcard:hover{transform:translateY(-2px);border-color:rgba(124,77,255,.75)}
   .shopcard.active{border-color:#39ff8b;box-shadow:0 0 0 2px rgba(57,255,139,.3) inset}
   .sc-ic{font-size:52px;line-height:1}.sc-nm{font-weight:800;font-size:16px}
+  .sc-img{width:104px;height:104px;object-fit:contain;border-radius:10px;background:rgba(0,0,0,.18)}
   .sc-act{font-size:13px;font-weight:800;color:#39ff8b;background:rgba(57,255,139,.14);padding:5px 12px;border-radius:999px}
   .sc-act.buy{color:#ffd54a;background:rgba(255,196,0,.16)}
   .shop-foot{padding:0 24px 18px;text-align:center;color:#6f8a7c;font-size:12px}
@@ -139,9 +140,9 @@
   .st-burnsub{text-align:center;color:#ffb37a;font-weight:700;font-size:13px}.st-burnsub b{color:#fff}
 
   /* Minimap */
-  .minimap{position:absolute;inset:auto;right:16px;bottom:16px;width:412px;height:412px;z-index:6;border-radius:50%;
+  .minimap{position:absolute;inset:auto;right:16px;bottom:16px;width:206px;height:206px;z-index:6;border-radius:50%;
     background:rgba(6,18,10,.4);box-shadow:0 8px 26px rgba(0,0,0,.55)}
-  @media (max-width:560px){ .minimap{width:240px;height:240px;bottom:120px} }
+  @media (max-width:560px){ .minimap{width:140px;height:140px;bottom:96px} }
 
   /* Crosshair */
   .crosshair{position:absolute;left:50%;top:50%;width:24px;height:24px;transform:translate(-50%,-50%);z-index:6;pointer-events:none}
@@ -176,7 +177,6 @@
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
       <span class="title"><span class="b">$BYE</span><span class="g">BOSS</span> · WORLD</span>
-      <span class="tag">BETA · 3D</span>
     </div>
     <div class="hint"><b>WASD</b> move · <b>MOUSE</b> aim · <b>RIGHT&nbsp;CLICK</b> shoot · <b>SHIFT</b> run · <b>SPACE</b> jump · <b>E</b> vault</div>
     <canvas id="minimap" width="480" height="480" class="minimap"></canvas>
@@ -551,6 +551,45 @@ queueMicrotask(() => selectChar(selectedSkin, asset));   // last-equipped skin (
 // ---- skins shop (opened by the shop building; buy with vault $BYEBOSS) ----
 const shopPanel = document.getElementById('shop'), shopListEl = document.getElementById('shopList');
 function shopBldOpen(){ return shopPanel && !shopPanel.classList.contains('hidden'); }
+// Real avatar previews for the skin cards (rendered once, cached).
+const thumbCache = {};
+let _thumbR = null;
+function _thumbRenderer(){
+  if (!_thumbR){ _thumbR = new THREE.WebGLRenderer({ alpha:true, antialias:true, preserveDrawingBuffer:true }); _thumbR.setSize(180, 180); _thumbR.outputColorSpace = THREE.SRGBColorSpace; }
+  return _thumbR;
+}
+function _glbThumb(gltf){
+  const r = _thumbRenderer(), sc = new THREE.Scene();
+  sc.add(new THREE.AmbientLight(0xffffff, 1.25));
+  const dl = new THREE.DirectionalLight(0xffffff, 1.4); dl.position.set(2, 5, 3); sc.add(dl);
+  const m = SkeletonUtils.clone(gltf.scene); sc.add(m);
+  const idle = (gltf.animations || []).find(a => /idle/i.test(a.name)) || (gltf.animations || [])[0];   // pose in idle
+  if (idle){ const mx = new THREE.AnimationMixer(m); mx.clipAction(idle).play(); mx.update(0.4); }
+  m.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(m), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const cam = new THREE.PerspectiveCamera(32, 1, 0.05, 100);
+  const maxd = Math.max(size.x, size.y, size.z) || 1, dist = (maxd * 0.5) / Math.tan(16 * Math.PI / 180) * 1.2;
+  cam.position.set(c.x, c.y + size.y * 0.06, c.z + dist); cam.lookAt(c.x, c.y, c.z);
+  r.render(sc, cam);
+  return r.domElement.toDataURL('image/png');
+}
+function ensureThumb(i){
+  if (thumbCache[i] !== undefined) return;   // null = in progress, string = ready
+  thumbCache[i] = null;
+  const ch = CHARACTERS[i];
+  if (ch.type === 'sprite'){
+    const img = new Image();
+    img.onload = () => { try {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 160; const ctx = cv.getContext('2d');
+      const fw = img.width / 5, fh = img.height / 5;            // 5×5 sheet, frame 0 = top-left (front idle)
+      ctx.drawImage(img, 0, 0, fw, fh, 6, 6, 148, 148);
+      thumbCache[i] = cv.toDataURL('image/png'); if (shopBldOpen()) renderShop();
+    } catch(e){} };
+    img.src = './assets/game/iso/idle_down.png';
+  } else {
+    new GLTFLoader().load(ch.url, (g) => { try { thumbCache[i] = _glbThumb(g); if (shopBldOpen()) renderShop(); } catch(e){} }, undefined, () => {});
+  }
+}
 function renderShop(){
   if (!shopListEl) return; shopListEl.innerHTML = '';
   CHARACTERS.forEach((ch, i) => {
@@ -558,7 +597,9 @@ function renderShop(){
     const card = document.createElement('button');
     card.className = 'shopcard' + (sel ? ' active' : '');
     const label = sel ? '✓ Equipped' : owned ? 'Select' : ('Buy ' + skinPrice + ' 🔒');
-    card.innerHTML = `<span class="sc-ic">${owned ? '🎮' : '🔒'}</span><span class="sc-nm">${ch.name}</span><span class="sc-act${owned?'':' buy'}">${label}</span>`;
+    ensureThumb(i);
+    const ic = thumbCache[i] ? `<img class="sc-img" src="${thumbCache[i]}" alt="">` : `<span class="sc-ic">${owned ? '🎮' : '🔒'}</span>`;
+    card.innerHTML = `${ic}<span class="sc-nm">${ch.name}</span><span class="sc-act${owned?'':' buy'}">${label}</span>`;
     card.onclick = () => {
       if (sel) return;
       if (owned){ selectedSkin = i; try { localStorage.setItem('bb_skin', i); } catch(e){} selectChar(i); renderShop(); }
