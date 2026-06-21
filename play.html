@@ -33,6 +33,9 @@
   .score .coin{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe680,#ffb300 55%,#b87900);
     box-shadow:0 0 8px rgba(255,196,0,.6);display:grid;place-items:center;color:#5a3b00;font-size:11px;font-weight:900}
   .score b{color:#ffd54a}
+  .gain{position:absolute;top:50px;right:18px;z-index:9;color:#39ff8b;font-weight:900;font-size:18px;
+    text-shadow:0 2px 7px rgba(0,0,0,.85);animation:gainpop .95s ease-out forwards;pointer-events:none}
+  @keyframes gainpop{0%{opacity:0;transform:translateY(8px)}18%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
   .bankprompt{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);background:rgba(6,4,13,.85);
     border:1px solid rgba(57,255,139,.55);color:#eafff2;padding:8px 15px;border-radius:10px;font-weight:700;
     font-size:14px;z-index:7;pointer-events:none;box-shadow:0 0 14px rgba(57,255,139,.25)}
@@ -506,8 +509,8 @@ function playClip(name, once){
 // ---- characters (the Shop) ----
 const CHARACTERS = [
   { name:'ByeBoss', url:'./assets/game/byeboss.glb' },
-  { name:'Skin #2', url:'./assets/game/char2.glb' },
-  { name:'Iso 2D', type:'sprite' },
+  { name:'PEPE', url:'./assets/game/char2.glb' },
+  { name:'ByeBoss 2D', type:'sprite' },
 ];
 // Skins: ownership is server-side (bought with vault $BYEBOSS); which one you
 // equip is local (cosmetic — other players always see you as ByeBoss anyway).
@@ -940,6 +943,8 @@ async function connectWallet(){
 const MP_URL = 'wss://dexscreener-telegram-bot-production.up.railway.app/game';
 let mpWs = null, mpConnected = false, mpId = null, byebossTemplate = null, mpDailyCap = 400;
 let vault = 0, carried = 0;   // secured (claimable) vs on-hand (at risk) balances
+let _carriedSeen = null;      // for the "+N" pickup popup
+function flashGain(n){ if (!(n > 0)) return; const host = document.getElementById('game') || document.body; const el = document.createElement('div'); el.className = 'gain'; el.textContent = '+' + n + ' $BYEBOSS'; host.appendChild(el); setTimeout(() => el.remove(), 950); }
 const capVal = document.getElementById('capVal');
 const carryVal = document.getElementById('carryVal');
 const bankPrompt = document.getElementById('bankPrompt');
@@ -1032,7 +1037,7 @@ function onSnap(m){
     if (pl.id === mpId){                              // my authoritative state from the server
       if (Number.isFinite(pl.hp)){ hp = Math.max(0, pl.hp); updateHpBar(); }
       if (Number.isFinite(pl.vault)){ vault = pl.vault; scoreVal.textContent = vault; }          // secured (claimable)
-      if (Number.isFinite(pl.carried)){ carried = pl.carried; if (carryVal) carryVal.textContent = carried; }  // at risk (on you)
+      if (Number.isFinite(pl.carried)){ if (_carriedSeen !== null && pl.carried > _carriedSeen) flashGain(pl.carried - _carriedSeen); _carriedSeen = pl.carried; carried = pl.carried; if (carryVal) carryVal.textContent = carried; }  // at risk (on you)
       if (capVal && Number.isFinite(pl.earnedToday)) capVal.textContent = `today ${pl.earnedToday}/${m.dailyCap || mpDailyCap}`;
       if (Number.isFinite(pl.level)){
         if (lvlVal) lvlVal.textContent = 'Lvl ' + pl.level;
@@ -1101,7 +1106,7 @@ function mpConnect(){
     else if (m.t === 'snap'){ onSnap(m); }
     else if (m.t === 'left'){ removeRemote(m.id); }
   };
-  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearServerApples(); clearVaults(); clearShop(); clearStats(); closeVault(); closeShopBld(); closeStats(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = '0'; if (scoreVal) scoreVal.textContent = '—'; if (bankPrompt) bankPrompt.classList.add('hide'); if (xpwrapEl) xpwrapEl.style.display = 'none'; vault = carried = 0; if (mpCountEl) mpCountEl.textContent = '🔴 offline'; };
+  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearServerApples(); clearVaults(); clearShop(); clearStats(); closeVault(); closeShopBld(); closeStats(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = '0'; if (scoreVal) scoreVal.textContent = '—'; if (bankPrompt) bankPrompt.classList.add('hide'); if (xpwrapEl) xpwrapEl.style.display = 'none'; vault = carried = 0; _carriedSeen = null; if (mpCountEl) mpCountEl.textContent = '🔴 offline'; };
   mpWs.onerror = () => {};
 }
 async function mpJoin(){ if (!walletAddr) await connectWallet(); if (walletAddr) mpConnect(); }
