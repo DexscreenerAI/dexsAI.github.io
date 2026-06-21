@@ -1577,6 +1577,7 @@ new GLTFLoader().load('./assets/game/char2.glb', (gltf) => {
 const casinoColliders = [];
 let casinoPoint = null, casinoTemplate = null, _pendingCasino = null, casinoMesh = null;
 let casinoX = 40, casinoZ = -62;
+const CASINO_H = 12;   // building height in world units (others are ~7.5)
 new GLTFLoader().load('./assets/game/casino.glb', (gltf) => {
   casinoTemplate = gltf.scene;
   if (_pendingCasino !== null){ placeCasino(_pendingCasino); _pendingCasino = null; }
@@ -1592,11 +1593,11 @@ function placeCasino(pt){
   // the teleport point (and drop it onto the ground).
   c.position.set(0, 0, 0); c.rotation.y = -0.6; c.scale.setScalar(1); c.updateMatrixWorld(true);
   const sy = (new THREE.Box3().setFromObject(c).getSize(new THREE.Vector3()).y) || 1;
-  c.scale.setScalar(42 / sy); c.updateMatrixWorld(true);                    // ~42u tall, big enough to walk into
+  c.scale.setScalar(CASINO_H / sy); c.updateMatrixWorld(true);              // modest building, not map-sized
   const box = new THREE.Box3().setFromObject(c);
   c.position.set(casinoX - (box.min.x + box.max.x) / 2, -box.min.y, casinoZ - (box.min.z + box.max.z) / 2);
   scene.add(c); casinoMesh = c;
-  buildingSign('casino', casinoMesh, 'CASINO', '#ff5ad0', [22, 5.5]);       // big sign over the tall roof
+  buildingSign('casino', casinoMesh, 'CASINO', '#ff5ad0', [11, 2.75]);      // sign sized for the smaller roof
 }
 function clearCasino(){ if (casinoMesh){ scene.remove(casinoMesh); casinoMesh = null; } clearSign('casino'); }
 function nearCasino(){ return !!casinoPoint && lookingAt(casinoPoint.x, casinoPoint.z); }
