@@ -616,7 +616,19 @@ function renderShop(){
 }
 function openShopBld(){ if (!shopPanel) return; renderShop(); shopPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
 function closeShopBld(){ if (shopPanel) shopPanel.classList.add('hidden'); }
-function nearShop(){ return !!shopPoint && ((shopPoint.x-pos.x)*(shopPoint.x-pos.x) + (shopPoint.z-pos.z)*(shopPoint.z-pos.z) <= 49); }
+// Interact reach for buildings: open it if you're right next to it (within ~10u,
+// any direction) OR a bit further out (up to ~16u) as long as the camera is aimed
+// at it — so "being around it" or "looking at it" both let you press E.
+function lookingAt(px, pz){
+  const dx = px - pos.x, dz = pz - pos.z, d2 = dx*dx + dz*dz;
+  if (d2 <= 100) return true;                                    // ~10u: just being near works
+  if (d2 <= 256){                                                // 10–16u: must be facing it
+    const d = Math.sqrt(d2) || 1;
+    return (dx/d)*(-Math.sin(camYaw)) + (dz/d)*(-Math.cos(camYaw)) > 0.5;
+  }
+  return false;
+}
+function nearShop(){ return !!shopPoint && lookingAt(shopPoint.x, shopPoint.z); }
 { const x = document.getElementById('shopClose'); if (x) x.onclick = closeShopBld; }
 renderShop();
 
@@ -870,7 +882,7 @@ function placeVaults(list){
   buildingSign('vault', vaultMeshes[0], 'VAULT', '#39ff8b');
 }
 function clearVaults(){ for (const m of vaultMeshes) scene.remove(m); vaultMeshes.length = 0; clearSign('vault'); }
-function nearVault(){ for (const v of vaultPoints){ const dx=v.x-pos.x, dz=v.z-pos.z; if (dx*dx+dz*dz <= 16) return true; } return false; }
+function nearVault(){ for (const v of vaultPoints){ if (lookingAt(v.x, v.z)) return true; } return false; }
 
 // ---- SHOP building (single) — tunable via the temp panel ----
 let shopPoint = null, shopTemplate = null, shopScale = 1.3, _pendingShop = null, shopMesh = null;   // baked
@@ -909,7 +921,7 @@ function placeStats(pt){
   buildingSign('stats', statsMesh, 'STATS', '#ffd54a');
 }
 function clearStats(){ if (statsMesh){ scene.remove(statsMesh); statsMesh = null; } clearSign('stats'); }
-function nearStats(){ return !!statsPoint && ((statsPoint.x-pos.x)*(statsPoint.x-pos.x) + (statsPoint.z-pos.z)*(statsPoint.z-pos.z) <= 49); }
+function nearStats(){ return !!statsPoint && lookingAt(statsPoint.x, statsPoint.z); }
 
 let score = 0; const scoreVal = document.getElementById('scoreVal');
 scoreVal.textContent = '—';   // $BYEBOSS vault only counts once a wallet is connected
@@ -1103,7 +1115,7 @@ function mpConnect(){
     else if (m.t === 'bags'){ syncServerBags(m.bags); }
     else if (m.t === 'apples'){ syncServerApples(m.apples); }
     else if (m.t === 'tp'){ if (typeof pos !== 'undefined'){ pos.x = m.x; pos.z = m.z; } }   // server teleported us
-    else if (m.t === 'claim'){ if (m.ok){ claimedToday = true; if (Number.isFinite(m.vault)) vault = m.vault; if (Number.isFinite(m.claims)) claims = m.claims; } if (vaultOpen()) refreshVaultUI(); }
+    else if (m.t === 'claim'){ if (m.ok){ claimedToday = true; if (Number.isFinite(m.vault)){ flashGain(m.vault - vault); vault = m.vault; scoreVal.textContent = vault; _vaultSeen = vault; } if (Number.isFinite(m.claims)) claims = m.claims; } if (vaultOpen()) refreshVaultUI(); }
     else if (m.t === 'skin'){ if (m.ok){ ownedSkins = new Set(m.skins); if (Number.isFinite(m.vault)) vault = m.vault; selectedSkin = m.skin; try { localStorage.setItem('bb_skin', m.skin); } catch(e){} selectChar(m.skin); } renderShop(); }
     else if (m.t === 'name'){ if (m.ok){ myName = m.name; if (nameInput) nameInput.value = m.name; setNameMsg('✓ Saved as ' + m.name, true); } else { setNameMsg(m.reason === 'taken' ? 'That name is already taken' : 'Invalid name (3–16: letters, numbers, _ -)', false); } }
     else if (m.t === 'burn'){ if (Number.isFinite(m.totalBurned)) statBurned = m.totalBurned; statPending = 0; if (statsOpen()) refreshStats(); if (mpCountEl){ mpCountEl.textContent = `🔥 ${fmtN(m.amount)} $BYEBOSS burned!`; } }
