@@ -181,10 +181,9 @@
     <div class="hint"><b>WASD</b> move · <b>MOUSE</b> aim · <b>RIGHT&nbsp;CLICK</b> shoot · <b>SHIFT</b> run · <b>SPACE</b> jump · <b>E</b> vault</div>
     <canvas id="minimap" width="480" height="480" class="minimap"></canvas>
     <div id="crosshair" class="crosshair"></div>
-    <div class="score"><span class="coin">$</span>$BYEBOSS&nbsp;🔒<b id="scoreVal">0</b><small id="carryVal" style="margin-left:8px;color:#ff9d3b;font-weight:800;font-size:13px"></small><small id="capVal" style="margin-left:7px;opacity:.6;font-weight:600;font-size:11px"></small></div>
+    <div class="score"><span class="coin">$</span><span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">🔒<b id="scoreVal">—</b><small style="opacity:.55;font-weight:600;font-size:11px">vault</small></span><span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">⚠️<b id="carryVal" style="color:#ff9d3b">0</b><small style="opacity:.7;font-weight:600;font-size:11px">on you</small></span><small id="capVal" style="opacity:.6;font-weight:600;font-size:11px"></small></div>
     <div id="bankPrompt" class="bankprompt hide">🏦 Press <b>E</b> to open the vault</div>
     <div id="shopPrompt" class="bankprompt hide">🛍️ Press <b>E</b> to open the shop</div>
-    <div id="statsPrompt" class="bankprompt hide">📊 Press <b>E</b> to open stats</div>
     <div class="hpbar"><span>❤️</span><div class="hpb"><i id="hpFill"></i></div></div>
     <div id="xpwrap" class="xpwrap" style="display:none"><span class="lvl" id="lvlVal">Lvl 1</span><div class="xpb"><i id="xpFill"></i></div></div>
     <button id="walletBtn" class="walletbtn">👻 Connect Phantom</button>
@@ -866,7 +865,7 @@ function clearStats(){ if (statsMesh){ scene.remove(statsMesh); statsMesh = null
 function nearStats(){ return !!statsPoint && ((statsPoint.x-pos.x)*(statsPoint.x-pos.x) + (statsPoint.z-pos.z)*(statsPoint.z-pos.z) <= 49); }
 
 let score = 0; const scoreVal = document.getElementById('scoreVal');
-scoreVal.textContent = '🔒';   // $BYEBOSS only counts once a wallet is connected
+scoreVal.textContent = '—';   // $BYEBOSS vault only counts once a wallet is connected
 
 // ---- player health / PvP loop ----
 const MAX_HP = 20;
@@ -992,7 +991,7 @@ function onSnap(m){
     if (pl.id === mpId){                              // my authoritative state from the server
       if (Number.isFinite(pl.hp)){ hp = Math.max(0, pl.hp); updateHpBar(); }
       if (Number.isFinite(pl.vault)){ vault = pl.vault; scoreVal.textContent = vault; }          // secured (claimable)
-      if (Number.isFinite(pl.carried)){ carried = pl.carried; if (carryVal) carryVal.textContent = carried > 0 ? `⚠️${carried}` : ''; }  // at risk
+      if (Number.isFinite(pl.carried)){ carried = pl.carried; if (carryVal) carryVal.textContent = carried; }  // at risk (on you)
       if (capVal && Number.isFinite(pl.earnedToday)) capVal.textContent = `today ${pl.earnedToday}/${m.dailyCap || mpDailyCap}`;
       if (Number.isFinite(pl.level)){
         if (lvlVal) lvlVal.textContent = 'Lvl ' + pl.level;
@@ -1061,7 +1060,7 @@ function mpConnect(){
     else if (m.t === 'snap'){ onSnap(m); }
     else if (m.t === 'left'){ removeRemote(m.id); }
   };
-  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearServerApples(); clearVaults(); clearShop(); clearStats(); closeVault(); closeShopBld(); closeStats(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = ''; if (bankPrompt) bankPrompt.classList.add('hide'); if (xpwrapEl) xpwrapEl.style.display = 'none'; vault = carried = 0; if (mpCountEl) mpCountEl.textContent = '🔴 offline'; };
+  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearServerApples(); clearVaults(); clearShop(); clearStats(); closeVault(); closeShopBld(); closeStats(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = '0'; if (scoreVal) scoreVal.textContent = '—'; if (bankPrompt) bankPrompt.classList.add('hide'); if (xpwrapEl) xpwrapEl.style.display = 'none'; vault = carried = 0; if (mpCountEl) mpCountEl.textContent = '🔴 offline'; };
   mpWs.onerror = () => {};
 }
 async function mpJoin(){ if (!walletAddr) await connectWallet(); if (walletAddr) mpConnect(); }
