@@ -164,6 +164,8 @@
   .walletbtn:hover{border-color:#9b6dff}
   .mpcount{position:absolute;top:90px;right:12px;z-index:6;background:rgba(6,4,13,.62);border:1px solid rgba(57,255,139,.4);
     color:#cdebd9;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:700;backdrop-filter:blur(6px)}
+  .dbg{position:absolute;left:12px;top:64px;z-index:20;background:rgba(0,0,0,.8);color:#39ff8b;font:12px ui-monospace,Menlo,monospace;
+    padding:9px 11px;border-radius:8px;white-space:pre;pointer-events:none;border:1px solid rgba(57,255,139,.3)}
   .respawn{position:absolute;inset:0;z-index:8;display:grid;place-items:center;background:rgba(40,0,0,.45);
     color:#fff;font-size:44px;font-weight:900;text-align:center;text-shadow:0 3px 12px #000}
   .respawn span{font-size:18px;color:#ffcaca}
@@ -192,6 +194,7 @@
     <div id="xpwrap" class="xpwrap" style="display:none"><span class="lvl" id="lvlVal">Lvl 1</span><div class="xpb"><i id="xpFill"></i></div></div>
     <button id="walletBtn" class="walletbtn">👻 Connect Phantom</button>
     <div id="mpCount" class="mpcount" style="display:none"></div>
+    <div id="dbg" class="dbg" style="display:none"></div>
     <div id="respawn" class="respawn hide">💀 ELIMINATED<br><span>respawning…</span></div>
 
     <div id="shop" class="shop hidden">
@@ -949,6 +952,7 @@ const capVal = document.getElementById('capVal');
 const carryVal = document.getElementById('carryVal');
 const bankPrompt = document.getElementById('bankPrompt');
 const shopPrompt = document.getElementById('shopPrompt');
+const dbgEl = document.getElementById('dbg'); let _dbgOn = false;
 const statsPrompt = document.getElementById('statsPrompt');
 const xpwrapEl = document.getElementById('xpwrap'), lvlVal = document.getElementById('lvlVal'), xpFill = document.getElementById('xpFill');
 function fmtPool(n){ n=+n; if(!isFinite(n)) return ''; if(n>=1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M'; if(n>=1e3) return Math.round(n/1e3)+'k'; return ''+n; }
@@ -1070,7 +1074,8 @@ function updateRemotePlayers(dt){
 function mpConnect(){
   if (mpWs && (mpWs.readyState === 0 || mpWs.readyState === 1)) return;
   loadByeboss(() => {});
-  try { mpWs = new WebSocket(MP_URL); } catch(e){ return; }
+  if (mpCountEl){ mpCountEl.style.display = 'block'; mpCountEl.textContent = '🟡 Connecting…'; }
+  try { mpWs = new WebSocket(MP_URL); } catch(e){ if (mpCountEl) mpCountEl.textContent = '🔴 Connection failed'; return; }
   mpWs.onmessage = async (ev) => {
     let m; try { m = JSON.parse(ev.data); } catch { return; }
     if (m.t === 'nonce'){
@@ -1078,7 +1083,7 @@ function mpConnect(){
         const prov = (window.phantom && window.phantom.solana) || window.solana;
         const res = await prov.signMessage(new TextEncoder().encode(m.nonce), 'utf8');
         mpWs.send(JSON.stringify({ t: 'auth', wallet: walletAddr, sig: b58encode(res.signature || res) }));
-      } catch(e){ console.warn('sign failed', e); try { mpWs.close(); } catch {} }
+      } catch(e){ console.warn('sign failed', e); if (mpCountEl) mpCountEl.textContent = '🔴 Signature needed — click 👻 Connect again'; try { mpWs.close(); } catch {} }
     } else if (m.t === 'welcome'){ mpId = m.id; mpConnected = true; mpDailyCap = m.dailyCap || 400; if (mpCountEl) mpCountEl.style.display = 'block';
       for (const c of coins) c.visible = false;   // the server owns the coins now
       placeVaults(m.vaults || []);                // render the vault (bank)
@@ -1143,6 +1148,7 @@ function keyLabel(code){ if (!code) return '—'; if (code.startsWith('Key')) re
   return ({ Space:'SPACE', ShiftLeft:'L-SHIFT', ShiftRight:'R-SHIFT', ControlLeft:'L-CTRL', ControlRight:'R-CTRL', AltLeft:'L-ALT', ArrowUp:'↑', ArrowDown:'↓', ArrowLeft:'←', ArrowRight:'→' })[code] || code; }
 addEventListener('keydown', e=>{
   if (_capturingBind){ e.preventDefault(); if (e.code !== 'Escape'){ binds[_capturingBind] = e.code; saveBinds(); } _capturingBind = null; renderBinds(); return; }
+  if (e.code === 'Backquote'){ _dbgOn = !_dbgOn; if (dbgEl) dbgEl.style.display = _dbgOn ? 'block' : 'none'; e.preventDefault(); return; }   // ` toggles debug overlay
   for (const a in binds){ if (binds[a] === e.code){ if (a === 'jump') triggerJump(); else keys[a] = true; e.preventDefault(); return; } }
   if (ARROWS[e.code]){ keys[ARROWS[e.code]] = true; e.preventDefault(); return; }
   if (e.code === 'KeyE'){                                   // open the nearest landmark panel
@@ -1647,6 +1653,16 @@ function update(dt){
 
   // auto-collect coins just by walking over them, then spin the rest
   tryCollect();
+  if (_dbgOn && dbgEl){
+    let coinN = 0; try { for (const e of serverCoins.values()) if (e.group.visible) coinN++; } catch(_){}
+    dbgEl.textContent =
+      'MP: ' + (mpConnected ? '✅ CONNECTED' : '❌ NOT connected (solo)') +
+      '\nwallet: ' + (walletAddr ? (walletAddr.slice(0,6) + '…') : 'none') +
+      '\nvault: ' + vault + '   on you: ' + carried +
+      '\ntoday: ' + (capVal && capVal.textContent ? capVal.textContent : '—') +
+      '\nserver coins near: ' + coinN +
+      '\npos: ' + pos.x.toFixed(0) + ', ' + pos.z.toFixed(0);
+  }
   for (const c of coins){ if (c.visible) c.rotation.y += dt*3; }
   for (const e of serverCoins.values()){ if (e.group.visible) e.group.rotation.y += dt*3; }
   for (const e of serverBags.values()){ if (e.group.visible) e.group.rotation.y += dt*2.2; }
