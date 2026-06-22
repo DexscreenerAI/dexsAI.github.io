@@ -179,8 +179,8 @@
 <audio id="snd-shoot"      src="https://files.catbox.moe/zej06i.mp3" preload="auto"></audio>
 <audio id="snd-step"       src="https://files.catbox.moe/vdvwod.mp3" preload="auto" loop></audio>
 <audio id="snd-enemy-step" src="https://files.catbox.moe/vdvwod.mp3" preload="auto" loop></audio>
-<audio id="snd-slot"       src="https://files.catbox.moe/goq31j.mp3" preload="auto"></audio>
-<audio id="snd-slot-win"   src="https://files.catbox.moe/goq31j.mp3" preload="auto"></audio>
+<audio id="snd-slot"       src="./assets/game/sfx/slot-spin.mp3" preload="auto"></audio>
+<audio id="snd-slot-win"   src="./assets/game/sfx/slot-spin.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
   <div class="hud">
@@ -281,6 +281,7 @@
       .slot-reel{ background:#0c0617; border:2px solid #ff5ad0; border-radius:10px; box-shadow:inset 0 0 12px rgba(255,90,208,.4); overflow:hidden; display:block }
       .slot-reel img{ width:100%; height:100%; object-fit:cover; display:block }
       .slot-bbtn{ padding:5px 9px; font-size:14px; font-weight:800; border:1px solid #ff5ad0; border-radius:7px; background:#160d22; color:#ff9be0; cursor:pointer }
+      .slot-bbtn.on{ background:linear-gradient(#39ff8b,#16c46a); color:#04220f; border-color:#39ff8b; box-shadow:0 0 12px rgba(57,255,139,.7) }   /* AUTO active */
       .slot-bbtn:active{ transform:scale(.94) }
       /* casino panel = the bright $BYEBOSS Casino image (no darkening) with controls laid over it */
       .casino-wrap{ display:flex; flex-direction:column; align-items:center; gap:10px; width:min(94vw,460px) }
@@ -318,6 +319,7 @@
           <input id="slotBet" type="number" min="1" step="1" value="1" />
           <button id="betPlus" class="slot-bbtn">+</button>
           <button id="betMax" class="slot-bbtn">MAX</button>
+          <button id="betAuto" class="slot-bbtn" title="Auto-spin">AUTO</button>
         </div>
       </div>
     </div>
@@ -747,7 +749,7 @@ function closeStats(){ if (statsPanel) statsPanel.classList.add('hidden'); }
 const casinoPanel = document.getElementById('casinoP');
 function casinoOpen(){ return casinoPanel && !casinoPanel.classList.contains('hidden'); }
 function openCasino(){ if (!casinoPanel) return; refreshSlot(); casinoPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
-function closeCasino(){ if (casinoPanel) casinoPanel.classList.add('hidden'); }
+function closeCasino(){ if (casinoPanel) casinoPanel.classList.add('hidden'); setAuto(false); }   // stop auto-spin when leaving
 { const x = document.getElementById('casinoClose'); if (x) x.onclick = closeCasino; }
 
 const SLOT_KEYS = ['s0','s1','s2','s3','s4'];   // server sends these ids; map each to its image
@@ -757,15 +759,17 @@ const srImgs = ['sri0','sri1','sri2'].map(id => document.getElementById(id));
 function setReel(i, key){ const im = srImgs[i], url = SLOT_IMG[key]; if (im && url) im.src = url; }
 srImgs.forEach((im, i) => { if (im) im.src = SLOT_IMG[SLOT_KEYS[i]]; });   // show three faces initially
 const slotBet = document.getElementById('slotBet'), slotMsgEl = document.getElementById('slotMsg'), slotVaultEl = document.getElementById('slotVault'), spinBtn = document.getElementById('spinBtn');
-let _slotSpinning = false, _slotAnim = null;
+let _slotSpinning = false, _slotAnim = null, _slotAuto = false;
+function setAuto(on){ _slotAuto = !!on; const ba = document.getElementById('betAuto'); if (ba) ba.classList.toggle('on', _slotAuto); }
 function refreshSlot(){ if (slotVaultEl) slotVaultEl.textContent = vault; if (slotBet){ slotBet.max = Math.max(1, vault); if ((+slotBet.value||0) > vault) slotBet.value = Math.max(1, vault); } }
 function setBet(v){ if (!slotBet) return; slotBet.value = Math.max(1, Math.min(Math.max(1, vault), Math.floor(v||1))); }
 if (slotBet){
   const step = () => Math.max(1, Math.round((+slotBet.value||1) * 0.2));
-  const bm = document.getElementById('betMinus'), bp = document.getElementById('betPlus'), bx = document.getElementById('betMax');
+  const bm = document.getElementById('betMinus'), bp = document.getElementById('betPlus'), bx = document.getElementById('betMax'), ba = document.getElementById('betAuto');
   if (bm) bm.onclick = () => setBet((+slotBet.value||1) - step());
   if (bp) bp.onclick = () => setBet((+slotBet.value||1) + step());
   if (bx) bx.onclick = () => setBet(vault);
+  if (ba) ba.onclick = () => { setAuto(!_slotAuto); if (_slotAuto && !_slotSpinning) doSpin(); };   // toggle auto-spin
 }
 function doSpin(){
   if (_slotSpinning || !mpConnected) return;
@@ -782,7 +786,7 @@ if (spinBtn) spinBtn.onclick = doSpin;
 function onSlotResult(m){
   if (_slotAnim){ clearInterval(_slotAnim); _slotAnim = null; }
   if (!m.ok){
-    _slotSpinning = false; if (spinBtn) spinBtn.disabled = false;
+    _slotSpinning = false; if (spinBtn) spinBtn.disabled = false; setAuto(false);   // any rejection stops auto-spin
     const why = m.reason==='funds'?'Not enough $BYEBOSS':m.reason==='far'?'Stand by the casino to play':m.reason==='pool'?'Bet too large right now':'Invalid bet';
     if (slotMsgEl){ slotMsgEl.textContent = why; slotMsgEl.style.color = '#ff8a8a'; }
     return;
@@ -796,6 +800,11 @@ function onSlotResult(m){
       else { slotMsgEl.textContent = `No win — ${m.bet} to the allocation. Spin again!`; slotMsgEl.style.color = '#ff9d6b'; }
     }
     _slotSpinning = false; if (spinBtn) spinBtn.disabled = false;
+    if (_slotAuto){                                   // keep going if auto-spin is on and you can still afford it
+      const nb = Math.floor(+slotBet.value || 0);
+      if (mpConnected && nb >= 1 && nb <= vault) setTimeout(() => { if (_slotAuto) doSpin(); }, 750);
+      else setAuto(false);
+    }
   }, 2*220 + 120);
 }
 
