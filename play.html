@@ -260,17 +260,16 @@
             <div class="vault-back" id="depBack">← Back</div>
           </div>
           <div id="vaultStake" class="vault-page" style="display:none">
-            <div id="stakePos" style="display:none">
+            <div id="stakeSummary" style="display:none">
               <div class="vault-hero">
-                <div class="vault-reward"><span id="stakeAmount">0</span> <small>🔒 locked · <b id="stakeApr">0</b>% APR</small></div>
-                <div class="vault-streak">💰 <b id="stakePending">0</b> $BYEBOSS pending · <span id="stakeEnds"></span></div>
+                <div class="vault-reward"><span id="stakeTotal">0</span> <small>🔒 locked · max <span id="stakeMax">10M</span></small></div>
+                <div class="vault-streak">💰 <b id="stakeTotalPending">0</b> $BYEBOSS pending total</div>
               </div>
-              <div class="vault-grid">
-                <button class="vact vact-big" id="stakeClaimBtn">Claim yield</button>
-                <button class="vact vact-big" id="unstakeBtn">Unstake</button>
-              </div>
+              <button class="vact" id="stakeClaimAllBtn" style="margin:2px 0 9px">💰 Claim all yield</button>
+              <div id="stakeList" style="display:flex;flex-direction:column;gap:7px;max-height:208px;overflow-y:auto;margin-bottom:11px"></div>
             </div>
-            <p class="vault-note">Lock $BYEBOSS for daily yield. 🔥 1% is burned on stake · unstaking early burns 10% of the principal.</p>
+            <div style="font-size:12px;color:#ffd27f;font-weight:800;border-top:1px solid rgba(255,210,127,.25);padding-top:9px;margin-bottom:5px">➕ New lock <small style="color:#9a8a6a;font-weight:600">— each one is independent</small></div>
+            <p class="vault-note" style="margin:0 0 7px">🔥 1% burned on stake · early unstake burns 10% · max 1% of supply locked.</p>
             <input id="stakeAmt" class="vinput" type="number" min="1000" value="1000">
             <div class="vault-grid" id="stakeTermRow" style="grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0">
               <button type="button" class="slot-bbtn stake-term" data-term="0">Flex<br>5%</button>
@@ -1429,27 +1428,50 @@ const vAmt = document.getElementById('vaultAmt'), vSlider = document.getElementB
 const dailyClaimBtn = document.getElementById('dailyClaimBtn'), dailyInfo = document.getElementById('dailyInfo');
 const dailyClaimsEl = document.getElementById('dailyClaims'), vaultBalHead = document.getElementById('vaultBalHead');
 function vaultView(which){ vMenu.style.display = which==='menu'?'grid':'none'; vDailyView.style.display = which==='daily'?'flex':'none'; vDepView.style.display = which==='deposit'?'flex':'none'; if (vStakeView) vStakeView.style.display = which==='stake'?'block':'none'; if (which==='stake'){ if (mpConnected) mpSend({ t: 'stakeinfo' }); refreshStakeUI(); } }
-// ---- Staking state + UI ----
-let stakeState = { amount:0, term:0, apr:0, pending:0, endsAt:0, serverNow:0, min:1000, terms:{} }, selectedStakeTerm = 0, _stakeRecvAt = 0;
+// ---- Staking state + UI (independent positions) ----
+let stakeState = { positions:[], total:0, totalPending:0, serverNow:0, min:1000, max:10000000, terms:{} }, selectedStakeTerm = 0, _stakeRecvAt = 0;
 function setStakeMsg(t, ok){ const e = document.getElementById('stakeMsg'); if (!e) return; e.textContent = t || ''; e.style.color = ok===true?'#39ff8b':ok===false?'#ff8a8a':'#bfe9ff'; }
 function refreshStakeTermBtns(){ for (const b of document.querySelectorAll('.stake-term')){ const on = +b.dataset.term === selectedStakeTerm; b.style.background = on?'#2a1c04':'#160d22'; b.style.borderColor = on?'#ffd27f':'#ff5ad0'; b.style.color = on?'#ffd27f':'#ff9be0'; } }
-function stakeLivePending(){ if (!(stakeState.amount > 0)) return 0; const extra = stakeState.amount * (stakeState.apr||0) * Math.max(0, Date.now() - _stakeRecvAt) / (365*24*3600*1000); return Math.floor((stakeState.pending||0) + extra); }
 function fmtDur(ms){ const s=Math.max(0,Math.floor(ms/1000)); const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),mn=Math.floor(s%3600/60); if (d>0) return d+'d '+h+'h'; if (h>0) return h+'h '+mn+'m'; return mn+'m'; }
-function refreshStakeUI(){
-  const pos = document.getElementById('stakePos'), staking = stakeState.amount > 0;
-  if (pos) pos.style.display = staking ? 'block' : 'none';
-  const setT = (id,v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-  if (staking){
-    setT('stakeAmount', Math.round(stakeState.amount).toLocaleString());
-    setT('stakeApr', Math.round((stakeState.apr||0)*100));
-    setT('stakePending', stakeLivePending().toLocaleString());
-    const ends = document.getElementById('stakeEnds');
-    if (ends){ if (stakeState.endsAt && stakeState.term>0){ const left = stakeState.endsAt - Date.now(); ends.textContent = left>0 ? ('unlocks in '+fmtDur(left)) : 'unlocked ✓'; } else ends.textContent = 'flexible (no lock)'; }
-  }
-  const sa = document.getElementById('stakeAmt'); if (sa && stakeState.min) sa.min = stakeState.min;
-  const sb = document.getElementById('stakeBtn'); if (sb) sb.textContent = staking ? '🔒 Lock more' : '🔒 Lock';
+function posLivePending(pos){ const extra = (pos.amount||0) * (pos.apr||0) * Math.max(0, Date.now() - _stakeRecvAt) / (365*24*3600*1000); return Math.floor((pos.pending||0) + extra); }
+function renderStakeList(){
+  const list = document.getElementById('stakeList'); if (!list) return;
+  const ps = stakeState.positions || [], now = Date.now();
+  list.innerHTML = ps.map(pos => {
+    const termLbl = pos.term>0 ? (pos.term+'d') : 'Flex', aprLbl = Math.round((pos.apr||0)*100);
+    const lockLbl = (pos.endsAt && pos.term>0) ? (pos.endsAt>now ? ('🔒 unlocks in '+fmtDur(pos.endsAt-now)) : '🔓 unlocked') : '🔓 flexible';
+    const pend = posLivePending(pos);
+    return '<div style="background:rgba(11,22,34,.7);border:1px solid rgba(255,210,127,.25);border-radius:9px;padding:8px 9px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800"><span>'+Math.round(pos.amount).toLocaleString()+' <small style="color:#9a8a6a">'+termLbl+' · '+aprLbl+'% APR</small></span><span style="color:#39ff8b" data-pend="'+pos.id+'">+'+pend.toLocaleString()+'</span></div>'
+      + '<div style="font-size:11px;color:#7fb8d8;margin:3px 0 6px">'+lockLbl+'</div>'
+      + '<div style="display:flex;gap:6px"><button type="button" class="slot-bbtn stake-claim1" data-id="'+pos.id+'" style="flex:1;border-color:#39ff8b;color:#39ff8b">Claim</button>'
+      + '<button type="button" class="slot-bbtn stake-unstake1" data-id="'+pos.id+'" style="flex:1">Unstake</button></div></div>';
+  }).join('');
+  for (const b of list.querySelectorAll('.stake-claim1')) b.onclick = () => { setStakeMsg('Claiming…', null); mpSend({ t:'stakeclaim', id: b.dataset.id }); };
+  for (const b of list.querySelectorAll('.stake-unstake1')) b.onclick = () => {
+    const pos = (stakeState.positions||[]).find(x => x.id === b.dataset.id);
+    const early = pos && pos.endsAt && Date.now() < pos.endsAt;
+    if (early && !confirm('Unstake this lock early? 10% of its principal will be burned 🔥')) return;
+    setStakeMsg('Unstaking…', null); mpSend({ t:'unstake', id: b.dataset.id });
+  };
 }
-setInterval(() => { if (vaultOpen() && vStakeView && vStakeView.style.display !== 'none' && stakeState.amount > 0){ const e = document.getElementById('stakePending'); if (e) e.textContent = stakeLivePending().toLocaleString(); } }, 1000);
+function refreshStakeUI(){
+  const sum = document.getElementById('stakeSummary'), has = (stakeState.positions||[]).length > 0;
+  if (sum) sum.style.display = has ? 'block' : 'none';
+  const setT = (id,v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  setT('stakeTotal', Math.round(stakeState.total||0).toLocaleString());
+  setT('stakeMax', fmtN(stakeState.max||10000000));
+  setT('stakeTotalPending', (stakeState.positions||[]).reduce((s,p)=>s+posLivePending(p),0).toLocaleString());
+  const sa = document.getElementById('stakeAmt'); if (sa && stakeState.min) sa.min = stakeState.min;
+  renderStakeList();
+}
+setInterval(() => {
+  if (!(vaultOpen() && vStakeView && vStakeView.style.display !== 'none')) return;
+  if (!((stakeState.positions||[]).length)) return;
+  let tot = 0;
+  for (const pos of stakeState.positions){ const pend = posLivePending(pos); tot += pend; const e = document.querySelector('[data-pend="'+pos.id+'"]'); if (e) e.textContent = '+' + pend.toLocaleString(); }
+  const t = document.getElementById('stakeTotalPending'); if (t) t.textContent = tot.toLocaleString();
+}, 1000);
 function vaultOpen(){ return vaultPanel && !vaultPanel.classList.contains('hidden'); }
 function refreshVaultUI(){
   if (vaultBalHead) vaultBalHead.textContent = '🔒 ' + vault + ' $BYEBOSS';
@@ -1484,12 +1506,7 @@ if (vaultPanel){
     if (amt > Math.floor(vault)){ setStakeMsg('Not enough in your vault', false); return; }
     setStakeMsg('Locking…', null); mpSend({ t: 'stake', amount: amt, term: selectedStakeTerm });
   };
-  const stakeClaimBtn = document.getElementById('stakeClaimBtn'); if (stakeClaimBtn) stakeClaimBtn.onclick = () => { setStakeMsg('Claiming…', null); mpSend({ t: 'stakeclaim' }); };
-  const unstakeBtn = document.getElementById('unstakeBtn'); if (unstakeBtn) unstakeBtn.onclick = () => {
-    const early = stakeState.endsAt && Date.now() < stakeState.endsAt;
-    if (early && !confirm('Unstake early? 10% of your principal will be burned 🔥')) return;
-    setStakeMsg('Unstaking…', null); mpSend({ t: 'unstake' });
-  };
+  const stakeClaimAllBtn = document.getElementById('stakeClaimAllBtn'); if (stakeClaimAllBtn) stakeClaimAllBtn.onclick = () => { setStakeMsg('Claiming all…', null); mpSend({ t: 'stakeclaim' }); };
   refreshStakeTermBtns();
 }
 const remotePlayers = new Map();
@@ -1690,17 +1707,19 @@ function mpConnect(){
       if (m.stake){ stakeState = Object.assign(stakeState, m.stake); _stakeRecvAt = Date.now(); }
       if (Number.isFinite(m.vault)){ const g = m.vault - vault; if (m.action==='claim' || m.action==='unstake') flashGain(g); vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
       if (m.ok){
-        if (m.action === 'lock') setStakeMsg('🔒 Locked! ' + (m.burned?('('+m.burned+' burned 🔥) '):'') + 'Earning ' + Math.round((stakeState.apr||0)*100) + '% APR', true);
+        if (m.action === 'lock') setStakeMsg('🔒 New lock opened! ' + (m.burned?('('+m.burned.toLocaleString()+' burned 🔥)'):''), true);
         else if (m.action === 'claim') setStakeMsg('✓ Claimed ' + (m.claimed||0).toLocaleString() + ' $BYEBOSS yield', true);
         else if (m.action === 'unstake') setStakeMsg('✓ Unstaked ' + (m.returned||0).toLocaleString() + (m.penalty?(' (−'+m.penalty.toLocaleString()+' early-burn 🔥)'):'') + (m.claimed?(' +'+m.claimed.toLocaleString()+' yield'):''), true);
       } else {
         setStakeMsg(
           m.reason==='term' ? 'Pick a lock term' :
-          m.reason==='min' ? ('Minimum is ' + (m.min||stakeState.min) + ' $BYEBOSS') :
+          m.reason==='min' ? ('Minimum is ' + (m.min||stakeState.min).toLocaleString() + ' $BYEBOSS') :
           m.reason==='funds' ? 'Not enough in your vault' :
+          m.reason==='max' ? ('Max lock reached — ' + (m.left!=null?(m.left.toLocaleString()+' $BYEBOSS left (1% of supply)'):'1% of supply')) :
+          m.reason==='maxpos' ? ('Max ' + (m.maxPos||20) + ' locks at once — claim/unstake one first') :
           m.reason==='nothing' ? 'No yield to claim yet' :
           m.reason==='pool' ? 'Reward pool is low — try again soon' :
-          m.reason==='none' ? 'You have no active stake' : 'Action failed', false);
+          m.reason==='none' ? 'No such lock' : 'Action failed', false);
       }
       refreshStakeTermBtns(); if (vaultOpen()) refreshStakeUI();
     }
