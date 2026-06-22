@@ -58,15 +58,18 @@
   .ab .lbl{font-size:13px;font-weight:700;letter-spacing:.3px;color:#e7fff3}
   .touch{display:none}
   body.touch .touch{display:block}
-  .dpad{position:absolute;left:18px;bottom:118px;width:150px;height:150px;z-index:6}
-  .dpad button{position:absolute;width:50px;height:50px;border-radius:12px;background:rgba(20,14,34,.8);
-    border:1px solid rgba(255,255,255,.14);color:#cdebd9;font-size:18px;display:grid;place-items:center}
-  .dpad button:active{background:rgba(57,255,139,.25);border-color:#39ff8b;color:#fff}
-  .dpad .up{left:50px;top:0}.dpad .down{left:50px;top:100px}.dpad .left{left:0;top:50px}.dpad .right{left:100px;top:50px}
-  .rbtns{position:absolute;right:18px;bottom:118px;display:flex;flex-direction:column;gap:12px;z-index:6}
-  .rbtns button{width:78px;height:54px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(20,14,34,.8);
-    color:#eafff2;font-weight:800;font-size:13px;letter-spacing:.4px}
+  body.touch.panel-open .touch{display:none}
+  .joy{position:absolute;left:22px;bottom:108px;width:132px;height:132px;border-radius:50%;z-index:6;
+    background:rgba(20,14,34,.4);border:2px solid rgba(255,255,255,.18);touch-action:none}
+  .joy-knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;
+    background:rgba(57,255,139,.5);border:2px solid #39ff8b;box-shadow:0 0 16px rgba(57,255,139,.55);transition:transform .04s linear}
+  .rbtns{position:absolute;right:18px;bottom:108px;display:flex;flex-direction:column;gap:12px;z-index:6}
+  .rbtns button{width:80px;height:56px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(20,14,34,.8);
+    color:#eafff2;font-weight:800;font-size:13px;letter-spacing:.4px;touch-action:none}
   .rbtns button:active{background:rgba(57,255,139,.25);border-color:#39ff8b}
+  #fireBtn{background:rgba(255,90,90,.28);border-color:rgba(255,120,120,.5)}
+  #interactBtn{background:rgba(58,209,255,.22);border-color:rgba(58,209,255,.5)}
+  body.touch .vault-box, body.touch .vault .vault-box{max-width:min(460px,94vw)}
   #load{position:absolute;inset:0;z-index:20;background:#06040d;display:grid;place-items:center;transition:opacity .4s}
   #load.hide{opacity:0;pointer-events:none}
   #load .box{text-align:center}
@@ -402,13 +405,12 @@
       </div>
     </div>
     <div class="touch">
-      <div class="dpad">
-        <button class="up"    data-dir="f">▲</button>
-        <button class="down"  data-dir="b">▼</button>
-        <button class="left"  data-dir="l">◀</button>
-        <button class="right" data-dir="r">▶</button>
+      <div class="joy" id="joy"><div class="joy-knob" id="joyKnob"></div></div>
+      <div class="rbtns">
+        <button data-btn="interact" id="interactBtn">✋ USE</button>
+        <button data-btn="jump">JUMP</button>
+        <button id="fireBtn">🔫 FIRE</button>
       </div>
-      <div class="rbtns"><button data-btn="run">RUN</button><button data-btn="jump">JUMP</button><button id="fireBtn">🔫 FIRE</button></div>
     </div>
   </div>
   <div id="load"><div class="box">
@@ -1860,19 +1862,7 @@ addEventListener('keydown', e=>{
   if (e.code === 'KeyM' && (!mpConnected || !mpWs || mpWs.readyState !== 1)){ try { document.exitPointerLock(); } catch(err){} mpJoin(); e.preventDefault(); return; }   // M = connect Phantom & join (no need to Esc + click)
   for (const a in binds){ if (binds[a] === e.code){ if (a === 'jump') triggerJump(); else keys[a] = true; e.preventDefault(); return; } }
   if (ARROWS[e.code]){ keys[ARROWS[e.code]] = true; e.preventDefault(); return; }
-  if (e.code === 'KeyE'){                                   // open the nearest landmark panel
-    if (vaultOpen()) closeVault();
-    else if (shopBldOpen()) closeShopBld();
-    else if (statsOpen()) closeStats();
-    else if (casinoOpen()) closeCasino();
-    else if (depositOpen()) closeDeposit();
-    else if (mpConnected && nearVault()) openVault();
-    else if (mpConnected && nearShop()) openShopBld();
-    else if (mpConnected && nearStats()) openStats();
-    else if (mpConnected && nearCasino()) openCasino();
-    else if (mpConnected && nearDeposit()) openDeposit();
-    e.preventDefault();
-  }
+  if (e.code === 'KeyE'){ doInteract(); e.preventDefault(); }
 });
 addEventListener('keyup', e=>{
   for (const a in binds){ if (binds[a] === e.code && a !== 'jump'){ keys[a] = false; return; } }
@@ -1901,15 +1891,39 @@ const abEls = {};
 document.querySelectorAll('.ab').forEach(el=>{ const a = el.dataset.act; abEls[a] = el;
   el.addEventListener('pointerdown', ev=>{ ev.preventDefault(); doAction(a); }); });
 function flashAbility(a){ const el = abEls[a]; if (!el) return; el.classList.add('pressed'); setTimeout(()=>el.classList.remove('pressed'),160); }
-if (('ontouchstart' in window) || navigator.maxTouchPoints>0) document.body.classList.add('touch');
-document.querySelectorAll('.dpad button').forEach(b=>{ const d = b.dataset.dir;
-  const on = e=>{ e.preventDefault(); keys[d] = true; }, off = e=>{ e.preventDefault(); keys[d] = false; };
-  b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off);
-  b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off); });
+if (('ontouchstart' in window) || navigator.maxTouchPoints>0){ document.body.classList.add('touch');
+  document.querySelectorAll('.bankprompt').forEach(p => { p.innerHTML = p.innerHTML.replace(/Press <b>E<\/b>/, 'Tap <b>✋ USE</b>'); }); }
+// Open / close the nearest building (E key and the mobile USE button both call this).
+function doInteract(){
+  if (vaultOpen()) closeVault();
+  else if (shopBldOpen()) closeShopBld();
+  else if (statsOpen()) closeStats();
+  else if (casinoOpen()) closeCasino();
+  else if (depositOpen()) closeDeposit();
+  else if (mpConnected && nearVault()) openVault();
+  else if (mpConnected && nearShop()) openShopBld();
+  else if (mpConnected && nearStats()) openStats();
+  else if (mpConnected && nearCasino()) openCasino();
+  else if (mpConnected && nearDeposit()) openDeposit();
+}
+// Analog movement joystick (left thumb): push the stick to move, push far to run.
+const touchMove = { x:0, z:0, mag:0 };
+(function(){
+  const joy = document.getElementById('joy'), knob = document.getElementById('joyKnob');
+  if (!joy) return;
+  let jid = null, cx = 0, cy = 0, R = 54;
+  const start = t => { const r = joy.getBoundingClientRect(); cx = r.left + r.width/2; cy = r.top + r.height/2; R = r.width/2 - 14; jid = t.identifier; move(t); };
+  const move  = t => { const dx = t.clientX - cx, dy = t.clientY - cy, d = Math.hypot(dx, dy) || 1, cl = Math.min(d, R), nx = dx/d, ny = dy/d; knob.style.transform = 'translate(' + (nx*cl) + 'px,' + (ny*cl) + 'px)'; touchMove.x = nx * (cl/R); touchMove.z = -ny * (cl/R); touchMove.mag = cl/R; };
+  const end   = () => { jid = null; touchMove.x = touchMove.z = touchMove.mag = 0; knob.style.transform = 'translate(0,0)'; };
+  joy.addEventListener('touchstart', e => { e.preventDefault(); if (jid === null) start(e.changedTouches[0]); }, {passive:false});
+  joy.addEventListener('touchmove',  e => { e.preventDefault(); for (const t of e.changedTouches) if (t.identifier === jid) move(t); }, {passive:false});
+  joy.addEventListener('touchend',   e => { for (const t of e.changedTouches) if (t.identifier === jid) end(); }, {passive:true});
+  joy.addEventListener('touchcancel', end, {passive:true});
+})();
+// Right-side action buttons (FIRE wired separately below)
 document.querySelectorAll('.rbtns button').forEach(b=>{ const w = b.dataset.btn;
-  if (w==='run'){ b.addEventListener('pointerdown', e=>{ e.preventDefault(); keys.run = true; });
-    b.addEventListener('pointerup', e=>{ e.preventDefault(); keys.run = false; }); b.addEventListener('pointerleave', ()=>keys.run=false); }
-  else b.addEventListener('pointerdown', e=>{ e.preventDefault(); triggerJump(); }); });
+  if (w === 'jump')     b.addEventListener('pointerdown', e=>{ e.preventDefault(); triggerJump(); });
+  else if (w === 'interact') b.addEventListener('pointerdown', e=>{ e.preventDefault(); doInteract(); }); });
 
 // ---------------------------------------------------------------------------
 // Character state / actions
@@ -2346,15 +2360,17 @@ function update(dt){
   regen(dt);
   if (locked){ lockTimer -= dt; if (lockTimer <= 0) locked = false; }
 
-  let moving = false;
+  let moving = false, running = false;
   if (!locked && !dead && !vaultOpen() && !shopBldOpen() && !cfgOpen() && !statsOpen() && !casinoOpen() && !depositOpen()){
-    const mF = (keys.f?1:0) - (keys.b?1:0);   // W/S forward-back (camera-relative)
-    const mR = (keys.r?1:0) - (keys.l?1:0);   // A/D strafe
+    let mF = (keys.f?1:0) - (keys.b?1:0);   // W/S forward-back (camera-relative)
+    let mR = (keys.r?1:0) - (keys.l?1:0);   // A/D strafe
+    if (touchMove.mag > 0.12){ mF = touchMove.z; mR = touchMove.x; }   // analog joystick overrides keys
     moving = !!(mF || mR);
+    running = keys.run || (touchMove.mag > 0.72);                      // push the stick far to run
     if (moving){
       const wx = -Math.sin(camYaw)*mF + Math.cos(camYaw)*mR;   // input -> world, relative to camera
       const wz = -Math.cos(camYaw)*mF - Math.sin(camYaw)*mR;
-      const len = Math.hypot(wx, wz) || 1, spd = keys.run ? RUN : WALK;
+      const len = Math.hypot(wx, wz) || 1, spd = running ? RUN : WALK;
       const stepX = (wx/len)*spd*dt, stepZ = (wz/len)*spd*dt;
       if (!wallBlocked(pos.x, pos.z, pos.x + stepX, pos.z)) pos.x += stepX;   // slide along casino walls
       if (!wallBlocked(pos.x, pos.z, pos.x, pos.z + stepZ)) pos.z += stepZ;
@@ -2376,7 +2392,7 @@ function update(dt){
   else if (mixer){
     if (!locked){
       if (!grounded) playClip(CLIP.jump, false);
-      else if (moving) playClip(keys.run ? CLIP.run : CLIP.walk, false);
+      else if (moving) playClip(running ? CLIP.run : CLIP.walk, false);
       else playClip(CLIP.idle, false);
     }
     mixer.update(dt);
@@ -2429,6 +2445,7 @@ function update(dt){
   for (const e of serverApples.values()){ if (e.group.visible) e.group.rotation.y += dt*1.6; }
   // "Press E" prompts when standing on the vault / shop (and no panel is open)
   const anyPanel = vaultOpen() || shopBldOpen() || cfgOpen() || statsOpen() || casinoOpen() || depositOpen();
+  document.body.classList.toggle('panel-open', anyPanel);   // hide the touch controls behind open panels
   if (bankPrompt) bankPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && nearVault()));
   if (shopPrompt) shopPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && !nearVault() && nearShop()));
   if (statsPrompt) statsPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && !nearVault() && !nearShop() && nearStats()));
