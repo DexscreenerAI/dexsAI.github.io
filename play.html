@@ -189,7 +189,7 @@
 <audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
-  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v19</div>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v20</div>
   <div class="hud">
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
@@ -1581,10 +1581,15 @@ function fmtDur(ms){ const s=Math.max(0,Math.floor(ms/1000)); const d=Math.floor
 function posLivePending(pos){ const extra = (pos.amount||0) * (pos.apr||0) * Math.max(0, Date.now() - _stakeRecvAt) / (365*24*3600*1000); return Math.floor((pos.pending||0) + extra); }
 function renderStakeList(){
   const list = document.getElementById('stakeList'); if (!list) return;
-  const ps = stakeState.positions || [], now = Date.now();
+  // Drive the countdown off the SERVER clock (serverNow + real time elapsed since we got it),
+  // never the device clock — a wrong phone/PC clock must not make the lock timer look reset.
+  const ps = stakeState.positions || [], now = stakeState.serverNow ? (stakeState.serverNow + Math.max(0, Date.now() - _stakeRecvAt)) : Date.now();
   list.innerHTML = ps.map(pos => {
     const termLbl = pos.term>0 ? (pos.term+'d') : 'Flex', aprLbl = Math.round((pos.apr||0)*100);
-    const lockLbl = (pos.endsAt && pos.term>0) ? (pos.endsAt>now ? ('🔒 unlocks in '+fmtDur(pos.endsAt-now)) : '🔓 unlocked') : '🔓 flexible';
+    const lockedFor = pos.start ? fmtDur(Math.max(0, now - pos.start)) : '';   // elapsed since the lock started — proves the time is kept
+    const lockLbl = (pos.endsAt && pos.term>0)
+      ? (pos.endsAt>now ? ('🔒 unlocks in '+fmtDur(pos.endsAt-now)+(lockedFor?' · locked '+lockedFor:'')) : ('🔓 unlocked'+(lockedFor?' · locked '+lockedFor:'')))
+      : ('🔓 flexible'+(lockedFor?' · '+lockedFor+' staked':''));
     const pend = posLivePending(pos);
     return '<div style="background:rgba(11,22,34,.7);border:1px solid rgba(255,210,127,.25);border-radius:9px;padding:8px 9px">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800"><span>'+Math.round(pos.amount).toLocaleString()+' <small style="color:#9a8a6a">'+termLbl+' · '+aprLbl+'% APR</small></span><span style="color:#39ff8b" data-pend="'+pos.id+'">+'+pend.toLocaleString()+'</span></div>'
