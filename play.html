@@ -735,7 +735,7 @@ if (nameSave) nameSave.onclick = saveName;
 if (nameInput) nameInput.addEventListener('keydown', e => { e.stopPropagation(); if (e.code === 'Enter') saveName(); });
 
 // ---- stats building panel (allocation + burn tracker) ----
-let allocation = 100000000, burnTarget = 1000, statPool = 0, statPending = 0, statBurned = 0, statCasino = 0;
+let allocation = 100000000, burnTarget = 1000, statPool = 0, statPending = 0, statBurned = 0, statCasino = 0, statEmitted = 0, statRealBurned = 0;
 const statsPanel = document.getElementById('statsP');
 const fmtN = (n) => { n = Math.round(+n||0); if (n >= 1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'') + 'M'; if (n >= 1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'') + 'k'; return '' + n; };
 function statsOpen(){ return statsPanel && !statsPanel.classList.contains('hidden'); }
@@ -743,10 +743,10 @@ function refreshStats(){
   const $ = id => document.getElementById(id);
   if ($('stAlloc'))  $('stAlloc').textContent  = fmtN(allocation);
   if ($('stPool'))   $('stPool').textContent   = Math.round(statPool).toLocaleString();          // full precision so every emit/refund is visible
-  if ($('stEmitted'))$('stEmitted').textContent= Math.max(0, Math.round(allocation - statPool)).toLocaleString();
+  if ($('stEmitted'))$('stEmitted').textContent= Math.max(0, Math.round(statEmitted)).toLocaleString();   // gross $BYEBOSS handed to players — rises on every casino win, never falls
   if ($('stBought')) $('stBought').textContent = fmtN(statBurned + statPending);
   if ($('stCasino')) $('stCasino').textContent = fmtN(statCasino);
-  if ($('stBurned')) $('stBurned').textContent = fmtN(statBurned);
+  if ($('stBurned')) $('stBurned').textContent = fmtN(statRealBurned > 0 ? statRealBurned : statBurned);   // REAL on-chain total burned (initial supply − current) when available
   if ($('stTarget')) $('stTarget').textContent = fmtN(burnTarget);
   if ($('stTarget2'))$('stTarget2').textContent= fmtN(burnTarget);
   if ($('stPending'))$('stPending').textContent= fmtN(statPending);
@@ -1424,6 +1424,8 @@ function onSnap(m){
   if (Number.isFinite(m.pending)) statPending = m.pending;
   if (Number.isFinite(m.burned)) statBurned = m.burned;
   if (Number.isFinite(m.casinoNet)) statCasino = m.casinoNet;
+  if (Number.isFinite(m.emitted)) statEmitted = m.emitted;            // gross "earned by players" (monotonic)
+  if (Number.isFinite(m.realBurned)) statRealBurned = m.realBurned;   // REAL on-chain total burned
   if (statsOpen()) refreshStats();
   const seen = new Set();
   for (const pl of m.players){
