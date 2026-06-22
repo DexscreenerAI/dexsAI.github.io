@@ -479,6 +479,7 @@ window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 200));
 resize(); setTimeout(resize, 300); setTimeout(resize, 1200);   // re-fit after the mobile address bar settles
 // Live diagnostic — updates the always-on banner (no gating), so the verdict shows on ANY device.
+try { document.body.style.setProperty('background', '#ff00ff', 'important'); } catch (e) {}   // magenta: if you SEE magenta, the canvas isn't covering the screen
 {
   const dbg = window.__jsok || document.createElement('div');
   setInterval(() => { try {
@@ -489,9 +490,12 @@ resize(); setTimeout(resize, 300); setTimeout(resize, 1200);   // re-fit after t
     else if (T && L < T)             verdict = 'MAP LOADING ' + L + '/' + T;
     else if (inf.calls === 0)        verdict = 'NOTHING DRAWN (0 calls)';
     else                             verdict = 'RENDERING ' + inf.calls + ' calls';
-    const F = (typeof loadFails!=='undefined') ? loadFails : 0;
+    const ld = document.getElementById('load'); const ls = ld ? (ld.classList.contains('hide') ? 'hidden' : 'SHOWING') : 'none';
+    const cs = (window.getComputedStyle ? getComputedStyle(canvas) : {});
     dbg.style.background = (verdict[0]==='R') ? '#00a000' : '#cc8800';
-    dbg.textContent = 'v11-M · ' + verdict + '\ncv ' + w + 'x' + h + ' · gl' + (renderer.capabilities.isWebGL2?2:1) + ' · load ' + L + '/' + T + (F?(' · '+F+' FAILED'):'') + ' · ctx ' + (renderer.getContext && renderer.getContext().isContextLost && renderer.getContext().isContextLost() ? 'LOST' : 'ok');
+    dbg.textContent = 'v11-M · ' + verdict + '\nbuf ' + w + 'x' + h + ' · disp ' + canvas.clientWidth + 'x' + canvas.clientHeight
+      + '\nloadScreen ' + ls + ' · canvas vis ' + (cs.visibility||'?') + '/' + (cs.display||'?') + ' z' + (cs.zIndex||'auto')
+      + '\nload ' + L + '/' + T + ' · gl' + (renderer.capabilities.isWebGL2?2:1) + ' · ctx ' + (renderer.getContext && renderer.getContext().isContextLost && renderer.getContext().isContextLost() ? 'LOST' : 'ok');
   } catch (e) { try { dbg.textContent = 'dbg ' + e.message; } catch(_){} } }, 500);
 }
 
