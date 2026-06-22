@@ -353,6 +353,15 @@
           </div>
           <div id="depMsg" style="min-height:20px;font-weight:700;color:#bfe9ff;margin-bottom:10px">≈ +<b id="depPreview">100</b> $BYEBOSS to your vault</div>
           <button id="depGo" type="button" style="width:100%;padding:13px;font-size:16px;font-weight:800;border:none;border-radius:10px;background:linear-gradient(#3ad1ff,#1488c8);color:#04222e;cursor:pointer">💰 Deposit to vault</button>
+          <div id="wdWrap" style="margin-top:13px;border-top:1px solid rgba(58,209,255,.22);padding-top:11px;display:none">
+            <div style="font-size:13px;color:#ffd27f;font-weight:800;margin-bottom:7px">💸 Withdraw to your wallet</div>
+            <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:7px">
+              <input id="wdAmt" type="number" min="1" step="1" placeholder="amount" style="width:128px;text-align:center;font-size:17px;font-weight:800;padding:7px;border-radius:8px;border:1px solid #ffd27f;background:#0b1622;color:#fff" />
+              <button id="wdMax" class="slot-bbtn" style="border-color:#ffd27f;color:#ffd27f">MAX</button>
+            </div>
+            <div id="wdMsg" style="min-height:18px;font-size:12px;font-weight:700;color:#bfe9ff;margin-bottom:8px"></div>
+            <button id="wdGo" type="button" style="width:100%;padding:11px;font-size:15px;font-weight:800;border:none;border-radius:10px;background:linear-gradient(#ffd27f,#e0a23a);color:#2a1c04;cursor:pointer">💸 Withdraw</button>
+          </div>
           <div style="margin-top:11px;font-size:12px;line-height:1.5">
             <span id="depRecToggle" style="color:#7fb8d8;cursor:pointer;text-decoration:underline">Already sent but not credited? Recover by tx signature ▾</span>
             <div id="depRecBox" style="display:none;margin-top:7px">
@@ -884,9 +893,10 @@ function renderDepHist(){
   if (!arr.length){ wrap.style.display = 'none'; list.innerHTML = ''; return; }
   wrap.style.display = 'block';
   list.innerHTML = arr.slice(0, 15).map(r => {
-    const ic  = r.status === 'success' ? '✅' : r.status === 'failed' ? '❌' : '⏳';
+    const isOut = r.type === 'out';
+    const ic  = r.status === 'success' ? (isOut ? '💸' : '✅') : r.status === 'failed' ? '❌' : '⏳';
     const col = r.status === 'success' ? '#39ff8b' : r.status === 'failed' ? '#ff8a8a' : '#ffd27f';
-    const amt = (r.amount != null) ? ('+' + Number(r.amount).toLocaleString()) : '—';
+    const amt = (r.amount != null) ? ((isOut ? '−' : '+') + Number(r.amount).toLocaleString()) : '—';
     const sigOk = r.sig && /^[1-9A-HJ-NP-Za-km-z]{20,100}$/.test(r.sig);
     const sigShort = sigOk ? (r.sig.slice(0,4) + '…' + r.sig.slice(-4)) : 'no tx';
     const right = sigOk
@@ -897,7 +907,8 @@ function renderDepHist(){
       + '<span style="color:#6f93ad">' + right + ' · ' + depHistAgo(r.ts) + '</span></div>';
   }).join('');
 }
-function openDeposit(){ if (!depositPanel) return; depPreviewUpdate(); if (!depositOn) setDepMsg('⚠️ Deposits are not enabled yet', false); else setDepMsg('≈ +<b>' + Math.floor(+depAmt.value||0) + '</b> $BYEBOSS to your vault', null); { clearTimeout(_depBgT); const dbox = document.querySelector('#depositP .vault-box'); if (dbox) dbox.classList.remove('depositok'); } depositPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} if (mpConnected && walletAddr) mpSend({ t: 'dephist' }); renderDepHist(); }
+function openDeposit(){ if (!depositPanel) return; depPreviewUpdate(); if (!depositOn) setDepMsg('⚠️ Deposits are not enabled yet', false); else setDepMsg('≈ +<b>' + Math.floor(+depAmt.value||0) + '</b> $BYEBOSS to your vault', null); { clearTimeout(_depBgT); const dbox = document.querySelector('#depositP .vault-box'); if (dbox) dbox.classList.remove('depositok'); } { const ww = document.getElementById('wdWrap'); if (ww) ww.style.display = withdrawOn ? 'block' : 'none'; const wm = document.getElementById('wdMsg'); if (wm){ wm.textContent = ''; } }
+  depositPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} if (mpConnected && walletAddr) mpSend({ t: 'dephist' }); renderDepHist(); }
 function closeDeposit(){ if (depositPanel) depositPanel.classList.add('hidden'); }
 { const x = document.getElementById('depositClose'); if (x) x.onclick = closeDeposit; }
 if (depAmt){
@@ -997,6 +1008,27 @@ if (depAmt){ depAmt.addEventListener('keydown', (e) => { e.stopPropagation(); if
   if (recGo) recGo.addEventListener('click', recoverDeposit);
   if (recSig) recSig.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter'){ e.preventDefault(); recoverDeposit(); } });
 }
+// ---- Withdraw: vault -> real wallet ----
+const wdAmt = document.getElementById('wdAmt'), wdMsgEl = document.getElementById('wdMsg'), wdBtn = document.getElementById('wdGo'), wdMaxBtn = document.getElementById('wdMax');
+function setWdMsg(t, ok){ if (!wdMsgEl) return; wdMsgEl.textContent = t; wdMsgEl.style.color = ok === true ? '#39ff8b' : ok === false ? '#ff8a8a' : '#bfe9ff'; }
+function doWithdraw(){
+  if (_wdBusy){ setWdMsg('Already processing — hold on…', null); return; }
+  if (!mpConnected){ setWdMsg('Connect to the game first (👻)', false); return; }
+  if (!withdrawOn){ setWdMsg('Withdrawals are off right now', false); return; }
+  if (!walletAddr){ setWdMsg('Connect your wallet first', false); return; }
+  const amount = Math.floor(+wdAmt.value || 0);
+  if (!(amount >= withdrawMin)){ setWdMsg('Minimum withdraw is ' + withdrawMin + ' $BYEBOSS', false); return; }
+  if (amount > Math.floor(vault)){ setWdMsg('Not enough in your vault', false); return; }
+  if (!confirm('Withdraw ' + amount.toLocaleString() + ' $BYEBOSS to your wallet?\n' + walletAddr)) return;
+  _wdBusy = true; if (wdBtn) wdBtn.disabled = true;
+  setWdMsg('Requesting withdrawal…', null);
+  mpSend({ t: 'withdraw', amount });
+  if (_wdFailT) clearTimeout(_wdFailT);
+  _wdFailT = setTimeout(() => { _wdFailT = null; if (_wdBusy){ _wdBusy = false; if (wdBtn) wdBtn.disabled = false; setWdMsg('Timed out — check your wallet & history before retrying', false); } }, 120000);
+}
+if (wdBtn) wdBtn.addEventListener('click', doWithdraw);
+if (wdMaxBtn) wdMaxBtn.addEventListener('click', () => { if (wdAmt) wdAmt.value = Math.floor(vault); });
+if (wdAmt) wdAmt.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter'){ e.preventDefault(); doWithdraw(); } });
 addEventListener('keydown', (e) => { if (e.code === 'Enter' && depositOpen()){ e.preventDefault(); doDeposit(); } });
 
 // ---- iso sprite character (a 2D billboard option in the Shop) ----
@@ -1313,6 +1345,7 @@ const MP_URL = 'wss://dexscreener-telegram-bot-production.up.railway.app/game';
 let mpWs = null, mpConnected = false, mpId = null, byebossTemplate = null, mpDailyCap = 400;
 let mpWantConnected = false, mpRetry = 0, mpReconnectT = null, mpLastSnap = 0;   // auto-reconnect + keepalive state
 let hotWallet = null, depositMintAddr = null, depositOn = false;                 // on-chain deposit target (from welcome)
+let withdrawOn = false, withdrawMin = 50, withdrawDailyCap = 50000, _wdBusy = false, _wdFailT = null;   // vault -> wallet withdrawals
 let vault = 0, carried = 0;   // secured (claimable) vs on-hand (at risk) balances
 let _vaultSeen = null;        // for the "+N" pickup popup (vault gains)
 // "+N $BYEBOSS" floating combat-text, spawned in the 3D world just above the
@@ -1571,6 +1604,7 @@ function mpConnect(){
       placeCasino(m.casino || null);              // render the casino building
       placeDeposit(m.deposit || null);            // render the deposit building
       hotWallet = m.hotWallet || null; depositMintAddr = m.depositMint || null; depositOn = !!m.depositOn;
+      withdrawOn = !!m.withdrawOn; if (Number.isFinite(m.withdrawMin)) withdrawMin = m.withdrawMin; if (Number.isFinite(m.withdrawDailyCap)) withdrawDailyCap = m.withdrawDailyCap;
       if (Number.isFinite(m.allocation)) allocation = m.allocation;
       if (Number.isFinite(m.burnTarget)) burnTarget = m.burnTarget;
       if (Array.isArray(m.skins)) ownedSkins = new Set(m.skins);   // owned skins from the server
@@ -1620,6 +1654,29 @@ function mpConnect(){
           m.reason==='disabled' ? 'Deposits are off right now' :
           m.reason==='offline' ? 'Reconnected — paste your tx signature in “Recover” to credit it' :
           'Could not verify the deposit', false);
+      }
+    }
+    else if (m.t === 'withdraw'){                                         // vault -> wallet result
+      if (m.ok && m.stage === 'sending'){
+        if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
+        setWdMsg('Sending ' + (m.amount||0).toLocaleString() + ' $BYEBOSS on-chain… (up to ~1 min)', null);
+      } else if (m.ok && m.stage === 'done'){
+        _wdBusy = false; if (wdBtn) wdBtn.disabled = false; if (_wdFailT){ clearTimeout(_wdFailT); _wdFailT = null; }
+        if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
+        setWdMsg('✓ Sent! ' + (m.amount||0).toLocaleString() + ' $BYEBOSS is in your wallet', true);
+        if (m.sig) depHistAdd({ sig: m.sig, amount: m.amount, status: 'success', type: 'out', ts: Date.now(), wallet: walletAddr });
+        if (wdAmt) wdAmt.value = '';
+      } else {
+        _wdBusy = false; if (wdBtn) wdBtn.disabled = false; if (_wdFailT){ clearTimeout(_wdFailT); _wdFailT = null; }
+        if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
+        setWdMsg(
+          m.reason==='disabled' ? 'Withdrawals are off right now' :
+          m.reason==='busy' ? 'A withdrawal is already in progress' :
+          m.reason==='min' ? ('Minimum withdraw is ' + (m.min||withdrawMin) + ' $BYEBOSS') :
+          m.reason==='funds' ? 'Not enough in your vault' :
+          m.reason==='cap' ? ('Daily limit reached — ' + (m.left||0).toLocaleString() + ' $BYEBOSS left today') :
+          m.reason==='sendfail' ? ('Send failed — refunded to your vault. ' + (m.error||'')) :
+          'Withdrawal failed', false);
       }
     }
     else if (m.t === 'dephist'){ _serverDepHist = Array.isArray(m.list) ? m.list : []; renderDepHist(); }   // permanent server deposit history
