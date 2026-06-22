@@ -467,15 +467,20 @@ resize(); setTimeout(resize, 300); setTimeout(resize, 1200);   // re-fit after t
 // Live diagnostic badge on touch devices (turns a "black screen" into reportable facts).
 if (('ontouchstart' in window) || navigator.maxTouchPoints>0){
   const dbg = document.createElement('div'); dbg.id = 'dbg';
-  dbg.style.cssText = 'position:fixed;left:6px;top:6px;z-index:99998;background:rgba(0,0,0,.72);color:#5cff8f;font:10px/1.35 monospace;padding:4px 7px;border-radius:6px;pointer-events:none;max-width:62vw';
+  dbg.style.cssText = 'position:fixed;left:6px;top:6px;z-index:99998;background:rgba(0,0,0,.82);color:#5cff8f;font:13px/1.4 monospace;padding:7px 10px;border-radius:7px;pointer-events:none;max-width:90vw';
   const add = () => { (document.body || document.documentElement).appendChild(dbg); };
   if (document.body) add(); else addEventListener('DOMContentLoaded', add);
   setInterval(() => { try {
     const sz = renderer.getSize(new THREE.Vector2()), inf = renderer.info.render;
-    dbg.textContent = 'cv ' + Math.round(sz.x) + 'x' + Math.round(sz.y) + ' dpr' + (window.devicePixelRatio||1)
-      + ' | load ' + (typeof loaded!=='undefined'?loaded:'?') + '/' + (typeof total!=='undefined'?total:'?')
-      + ' run' + ((typeof running!=='undefined'&&running)?1:0)
-      + ' | calls ' + inf.calls + ' tri ' + inf.triangles + ' gl' + (renderer.capabilities.isWebGL2?2:1);
+    const w = Math.round(sz.x), h = Math.round(sz.y), L = (typeof loaded!=='undefined'?loaded:0), T = (typeof total!=='undefined'?total:0);
+    let verdict;
+    if (w === 0 || h === 0)          verdict = '❌ CANVAS ' + w + 'x' + h + ' (size 0)';
+    else if (T && L < T)             verdict = '⏳ MAP LOADING ' + L + '/' + T;
+    else if (inf.calls === 0)        verdict = '❌ NOTHING DRAWN (0 calls)';
+    else                             verdict = '✅ RENDERING ' + inf.calls + ' calls';
+    const F = (typeof loadFails!=='undefined') ? loadFails : 0;
+    dbg.textContent = verdict + '\ncv ' + w + 'x' + h + ' · gl' + (renderer.capabilities.isWebGL2?2:1) + ' · load ' + L + '/' + T + (F?(' · '+F+' FAILED'):'');
+    dbg.style.whiteSpace = 'pre';
   } catch (e) { dbg.textContent = 'dbg ' + e.message; } }, 500);
 }
 
@@ -488,13 +493,14 @@ sun.position.set(14, 24, 10); scene.add(sun);
 // Asset loading
 // ---------------------------------------------------------------------------
 const texLoader = new THREE.TextureLoader();
-let loaded = 0, total = 0, started = false;
+let loaded = 0, total = 0, started = false, loadFails = 0;
 const loadBar = document.getElementById('loadBar'), loadPct = document.getElementById('loadPct');
-function asset(){ loaded++; const p = Math.round(loaded/total*100); loadBar.style.width = p+'%'; loadPct.textContent = p+'%';
+function asset(){ loaded++; const p = total ? Math.round(loaded/total*100) : 0; if (loadBar) loadBar.style.width = p+'%'; if (loadPct) loadPct.textContent = p+'%';
   if (loaded >= total) start(); }
+function assetFail(url){ loadFails++; console.warn('asset failed:', url); asset(); }
 function tex(url, srgb, repeat){
   total++;
-  const t = texLoader.load(url, asset, undefined, asset);
+  const t = texLoader.load(url, asset, undefined, () => assetFail(url));
   if (srgb) t.colorSpace = THREE.SRGBColorSpace;
   if (repeat){ t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat[0], repeat[1]); }
   return t;
