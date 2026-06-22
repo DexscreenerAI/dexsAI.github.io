@@ -1603,7 +1603,14 @@ function placeCasino(pt){
   if (pt){ casinoX = pt.x; casinoZ = pt.z; casinoPoint = pt; }
   if (!casinoPoint) return;
   if (!casinoTemplate){ _pendingCasino = casinoPoint; return; }
-  const c = casinoTemplate.clone(true); c.traverse(o => { o.frustumCulled = false; });
+  const c = casinoTemplate.clone(true);
+  c.traverse(o => {                                    // render both sides so it isn't black/hollow from outside
+    o.frustumCulled = false;
+    if (o.isMesh && o.material){
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      for (const mt of mats){ mt.side = THREE.DoubleSide; if (mt.transparent && mt.opacity < 0.05) mt.opacity = 1; mt.needsUpdate = true; }
+    }
+  });
   // The model's geometry is offset far from its local origin, so we can't just set
   // position — we measure the scaled+rotated bounds and recenter the footprint on
   // the teleport point (and drop it onto the ground).
