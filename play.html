@@ -464,11 +464,12 @@ function resize(){
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 200));
 resize(); setTimeout(resize, 300); setTimeout(resize, 1200);   // re-fit after the mobile address bar settles
-// Live diagnostic badge on touch devices (turns a "black screen" into reportable facts).
-if (('ontouchstart' in window) || navigator.maxTouchPoints>0){
+// Live diagnostic badge — touch devices, small screens, or ?debug (so it's visible whatever the device reports).
+if (('ontouchstart' in window) || navigator.maxTouchPoints>0 || ((screen && screen.width) ? screen.width < 820 : false) || location.search.indexOf('debug') >= 0){
   const dbg = document.createElement('div'); dbg.id = 'dbg';
-  dbg.style.cssText = 'position:fixed;left:6px;top:6px;z-index:99998;background:rgba(0,0,0,.82);color:#5cff8f;font:13px/1.4 monospace;padding:7px 10px;border-radius:7px;pointer-events:none;max-width:90vw';
-  const add = () => { (document.body || document.documentElement).appendChild(dbg); };
+  dbg.style.cssText = 'position:fixed;left:6px;top:6px;z-index:99998;background:rgba(0,0,0,.82);color:#5cff8f;font:13px/1.4 monospace;padding:7px 10px;border-radius:7px;pointer-events:none;max-width:90vw;white-space:pre';
+  dbg.textContent = 'starting…';
+  const add = () => { try { (document.body || document.documentElement).appendChild(dbg); } catch (e) {} };
   if (document.body) add(); else addEventListener('DOMContentLoaded', add);
   setInterval(() => { try {
     const sz = renderer.getSize(new THREE.Vector2()), inf = renderer.info.render;
@@ -1395,11 +1396,11 @@ let walletAddr = null;
 const walletBtn = document.getElementById('walletBtn');
 async function connectWallet(){
   const prov = (window.phantom && window.phantom.solana) || window.solana;
-  if (!prov || !prov.isPhantom){ window.open('https://phantom.app/', '_blank'); return; }
-  try { const r = await prov.connect(); walletAddr = r.publicKey.toString();
+  if (!prov || !prov.isPhantom){ if (walletBtn) walletBtn.textContent = '👻 No Phantom — open in Phantom app'; window.open('https://phantom.app/', '_blank'); return; }
+  try { if (walletBtn) walletBtn.textContent = '👻 connecting…'; const r = await prov.connect(); walletAddr = r.publicKey.toString();
     walletBtn.textContent = '👻 ' + walletAddr.slice(0,4) + '…' + walletAddr.slice(-4); walletBtn.style.borderColor = '#39ff8b';
     scoreVal.textContent = score; }   // unlock the $BYEBOSS counter
-  catch(e){ console.warn('wallet connect cancelled', e); }
+  catch(e){ console.warn('wallet connect cancelled', e); if (walletBtn) walletBtn.textContent = '👻 Connect wallet'; }
 }
 // ===== multiplayer client (authoritative game server on Railway) =====
 const MP_URL = 'wss://dexscreener-telegram-bot-production.up.railway.app/game';
@@ -1894,7 +1895,7 @@ function keyLabel(code){ if (!code) return '—'; if (code.startsWith('Key')) re
 addEventListener('keydown', e=>{
   if (_capturingBind){ e.preventDefault(); if (e.code !== 'Escape'){ binds[_capturingBind] = e.code; saveBinds(); } _capturingBind = null; renderBinds(); return; }
   if (e.code === 'Backquote'){ _dbgOn = !_dbgOn; if (dbgEl) dbgEl.style.display = _dbgOn ? 'block' : 'none'; e.preventDefault(); return; }   // ` toggles debug overlay
-  if (e.code === 'KeyM' && (!mpConnected || !mpWs || mpWs.readyState !== 1)){ try { document.exitPointerLock(); } catch(err){} mpJoin(); e.preventDefault(); return; }   // M = connect Phantom & join (no need to Esc + click)
+  if (e.code === 'KeyM' && !/^(INPUT|TEXTAREA)$/.test(((document.activeElement||{}).tagName)||'')){ try { document.exitPointerLock(); } catch(err){} mpJoin(); e.preventDefault(); return; }   // M = connect Phantom & join (idempotent; works whatever the state)
   for (const a in binds){ if (binds[a] === e.code){ if (a === 'jump') triggerJump(); else keys[a] = true; e.preventDefault(); return; } }
   if (ARROWS[e.code]){ keys[ARROWS[e.code]] = true; e.preventDefault(); return; }
   if (e.code === 'KeyE'){ doInteract(); e.preventDefault(); }
