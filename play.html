@@ -38,7 +38,8 @@
   @keyframes gainpop{0%{opacity:0;transform:translateY(8px)}18%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
   .bankprompt{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);background:rgba(6,4,13,.85);
     border:1px solid rgba(57,255,139,.55);color:#eafff2;padding:8px 15px;border-radius:10px;font-weight:700;
-    font-size:14px;z-index:7;pointer-events:none;box-shadow:0 0 14px rgba(57,255,139,.25)}
+    font-size:14px;z-index:7;pointer-events:none;box-shadow:0 0 14px rgba(57,255,139,.25);max-width:80vw;text-align:center}
+  body.touch .bankprompt{bottom:auto;top:calc(54px + env(safe-area-inset-top,0px));font-size:11.5px;padding:5px 11px;white-space:nowrap}
   .bankprompt b{color:#39ff8b}
   .xpwrap{position:absolute;left:18px;bottom:54px;display:flex;align-items:center;gap:9px;z-index:6;
     background:rgba(6,4,13,.7);border:1px solid rgba(160,110,255,.45);padding:6px 12px;border-radius:11px;backdrop-filter:blur(6px)}
@@ -63,7 +64,7 @@
     background:rgba(20,14,34,.4);border:2px solid rgba(255,255,255,.18);touch-action:none}
   .joy-knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;
     background:rgba(57,255,139,.5);border:2px solid #39ff8b;box-shadow:0 0 16px rgba(57,255,139,.55);transition:transform .04s linear}
-  .rbtns{position:absolute;right:16px;bottom:calc(72px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;z-index:6}
+  .rbtns{position:absolute;right:16px;bottom:calc(116px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:13px;z-index:6}
   .rbtns button{width:80px;height:56px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(20,14,34,.8);
     color:#eafff2;font-weight:800;font-size:13px;letter-spacing:.4px;touch-action:none}
   .rbtns button:active{background:rgba(57,255,139,.25);border-color:#39ff8b}
@@ -553,7 +554,7 @@ trail.rotation.x = -Math.PI/2; trail.position.y = 0.02; scene.add(trail);
 // Trees: clones of a low-poly GLB, scattered around (skip the trail + spawn).
 const treeGroup = new THREE.Group(); scene.add(treeGroup);
 let treeTemplate = null, treeMinY = 0;
-const TREE = { count:143, scaleMin:1.95, scaleMax:1.95, area:150, yOffset:-1.45 };   // tuned
+const TREE = { count: (typeof _isMobile !== 'undefined' && _isMobile) ? 45 : 143, scaleMin:1.95, scaleMax:1.95, area:150, yOffset:-1.45 };   // fewer trees on mobile (perf)
 function makeRng(seed){ let s = seed>>>0; return () => { s = (Math.imul(s,1103515245)+12345)>>>0; return s/4294967296; }; }
 function scatterTrees(){
   treeGroup.clear();
