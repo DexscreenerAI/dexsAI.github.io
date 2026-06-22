@@ -186,7 +186,7 @@
 <audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
-  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v11-M</div>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v12-M</div>
   <div class="hud">
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
@@ -466,11 +466,18 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 // <body> so the HUD/joystick/wallet button show on top. Then force <body>/#game to a real
 // viewport height so those DIVs lay out.
 document.documentElement.insertBefore(canvas, document.body);
-canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;display:block;z-index:-1';   // BEHIND the HUD (which is non-positioned and would otherwise paint under the positioned canvas)
+canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;display:block;z-index:-1';
+// This iOS Safari doesn't lay out the <body> subtree, so move the WHOLE #game UI (HUD, wallet
+// button, panels, joystick) under <html>, where it renders. #game stays click-through
+// (pointer-events:none) so touch-look still reaches the canvas behind it.
 try {
-  document.documentElement.style.height = '100vh';
-  document.body.style.height = '100vh'; document.body.style.minHeight = '100vh';
-  const g = document.getElementById('game'); if (g) g.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;overflow:hidden;z-index:1';
+  const g = document.getElementById('game');
+  if (g){
+    document.documentElement.appendChild(g);
+    g.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:1;pointer-events:none';
+    const h = g.querySelector('.hud'); if (h){ h.style.cssText += ';position:absolute;top:0;left:0;right:auto;bottom:auto;width:100%;height:100%'; }
+    const t = g.querySelector('.touch'); if (t){ t.style.display = 'block'; }
+  }
 } catch (e) {}
 canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); try { window.dispatchEvent(new ErrorEvent('error', { message: '⚠ WebGL CONTEXT LOST (GPU memory)' })); } catch (_) {} }, false);
 canvas.addEventListener('webglcontextrestored', () => { try { window.dispatchEvent(new ErrorEvent('error', { message: 'WebGL context restored' })); } catch (_) {} }, false);
