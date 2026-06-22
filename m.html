@@ -449,9 +449,9 @@ window.addEventListener('error', (ev) => {
 // m.html debug: an immediate, UNCONDITIONAL banner proving the game script started.
 (function(){ try {
   const b = document.createElement('div'); b.id = 'jsok';
-  b.style.cssText = 'position:fixed;left:5%;right:5%;top:36%;z-index:100000;background:#0a8a0a;color:#fff;font:bold 17px/1.5 monospace;padding:16px;text-align:center;white-space:pre-wrap;border-radius:12px;border:2px solid #fff;box-shadow:0 0 40px #000';
+  b.style.cssText = 'position:fixed;left:4%;right:4%;top:34%;z-index:2147483647;background:#0a8a0a;color:#fff;font:bold 17px/1.5 monospace;padding:16px;text-align:center;white-space:pre-wrap;border-radius:12px;border:3px solid #fff;box-shadow:0 0 50px #000';
   b.textContent = 'v11-M · JS started — loading…';
-  (document.body || document.documentElement).appendChild(b);
+  document.documentElement.appendChild(b);   // attach to <html>, above body's stacking context (over the load screen)
   window.__jsok = b;
 } catch (e) {} })();
 const canvas = document.getElementById('cv');
@@ -2523,7 +2523,7 @@ function start(){
   running = true; last = performance.now(); requestAnimationFrame(frame);
 }
 // fallback boot in case an asset never resolves (GLB is ~7MB)
-setTimeout(()=>{ if (!running) start(); }, 20000);
+setTimeout(()=>{ if (!running) start(); }, 4000);   // boot fast even if assets lag, so the load screen can't sit black
 </script>
 </body>
 </html>
