@@ -330,7 +330,7 @@
             <button id="depPlus" class="slot-bbtn" style="border-color:#3ad1ff;color:#9be8ff">+</button>
           </div>
           <div id="depMsg" style="min-height:20px;font-weight:700;color:#bfe9ff;margin-bottom:10px">≈ +<b id="depPreview">100</b> $BYEBOSS to your vault</div>
-          <button id="depBtn" style="width:100%;padding:13px;font-size:16px;font-weight:800;border:none;border-radius:10px;background:linear-gradient(#3ad1ff,#1488c8);color:#04222e;cursor:pointer">💰 Deposit to vault</button>
+          <button id="depGo" type="button" style="width:100%;padding:13px;font-size:16px;font-weight:800;border:none;border-radius:10px;background:linear-gradient(#3ad1ff,#1488c8);color:#04222e;cursor:pointer">💰 Deposit to vault</button>
         </div>
       </div>
     </div>
@@ -790,7 +790,7 @@ function onSlotResult(m){
 
 // ---- DEPOSIT panel: send real $BYEBOSS to the hot wallet -> vault credit (1:1) ----
 const DEP_RPC = 'https://dexscreener-telegram-bot-production.up.railway.app/api/rpc';
-const TOKEN_PROGRAM_ID_STR = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+const TOKEN_PROGRAM_ID_STR = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';   // $BYEBOSS is a Token-2022 mint (verified on-chain)
 const ATA_PROGRAM_ID_STR   = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL';
 let _web3Promise = null, _depBusy = false, _depFailT = null;
 function loadSolanaWeb3(){
@@ -817,7 +817,7 @@ function ataFor(web3, ownerStr, mintStr){
   return ata;
 }
 const depositPanel = document.getElementById('depositP');
-const depAmt = document.getElementById('depAmt'), depMsgEl = document.getElementById('depMsg'), depBtn = document.getElementById('depBtn'), depPreview = document.getElementById('depPreview');
+const depAmt = document.getElementById('depAmt'), depMsgEl = document.getElementById('depMsg'), depBtn = document.getElementById('depGo'), depPreview = document.getElementById('depPreview');
 function depositOpen(){ return depositPanel && !depositPanel.classList.contains('hidden'); }
 function setDepMsg(t, ok){ if (!depMsgEl) return; depMsgEl.innerHTML = t; depMsgEl.style.color = ok === true ? '#39ff8b' : ok === false ? '#ff8a8a' : '#bfe9ff'; }
 function depPreviewUpdate(){ const a = Math.max(0, Math.floor(+depAmt.value || 0)); if (depPreview) depPreview.textContent = a; }
