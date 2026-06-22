@@ -443,7 +443,7 @@ function scatterTrees(){
     const s = TREE.scaleMin + rng()*Math.max(0, TREE.scaleMax - TREE.scaleMin);
     const ry = rng()*6.28;
     if (Math.abs(x) < 3.6 && Math.abs(z) < 70) continue;   // keep the trail clear
-    if (Math.abs(x) < 6 && Math.abs(z) < 6) continue;       // keep spawn clear
+    if (x*x + z*z < 27*27) continue;                        // keep the whole building hub (and plaza) clear of trees
     const t = treeTemplate.clone(true);
     t.scale.setScalar(s);
     t.userData.baseY = -treeMinY * s;
