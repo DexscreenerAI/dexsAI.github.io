@@ -189,7 +189,7 @@
 <audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
-  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v18</div>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v19</div>
   <div class="hud">
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
@@ -2148,11 +2148,11 @@ const BOUND = 250;
 const monsterGroup = new THREE.Group(); scene.add(monsterGroup);
 let monsterTemplate = null, monsterMinY = 0, monsterScale = 1;
 const monsters = [];
-const MON_COUNT = 6, MON_SPEED = 2.6, MON_DETECT = 30, MON_HP = 14, MON_HIT_RANGE = 4.4;
+const MON_COUNT = 6, MON_SPEED = 2.6, MON_DETECT = 30, MON_HP = 14, MON_HIT_RANGE = 4.4, MON_STOP = 1.9;
 function spawnMonsterAt(m){
   const a = Math.random()*6.28, r = 24 + Math.random()*80;
   m.pos.set(Math.cos(a)*r, 0, Math.sin(a)*r);
-  m.hp = MON_HP; m.byeboss = 5 + Math.floor(Math.random()*20); m.atkT = 0; m.state = 'alive'; m.t = Math.random()*2; m.wander = Math.random()*6.28;
+  m.hp = MON_HP; m.byeboss = 5 + Math.floor(Math.random()*20); m.atkT = 0; m.state = 'alive'; m.t = Math.random()*2; m.wander = Math.random()*6.28; m.chasing = false;
   m.model.visible = true; m.model.scale.setScalar(monsterScale); m.model.rotation.set(0, m.wander, 0);
   m.model.position.set(m.pos.x, -monsterMinY*monsterScale, m.pos.z);
 }
@@ -2179,14 +2179,27 @@ function updateMonsters(dt){
       continue;
     }
     const dx = pos.x - m.pos.x, dz = pos.z - m.pos.z, d = Math.hypot(dx, dz);
-    let dirx, dirz;
-    if (d < MON_DETECT && d > 1.4){ dirx = dx/d; dirz = dz/d; }
-    else { m.t += dt; if (m.t > 2.5){ m.t = 0; m.wander = Math.random()*6.28; } dirx = Math.sin(m.wander); dirz = Math.cos(m.wander); }
-    m.pos.x = Math.max(-BOUND, Math.min(BOUND, m.pos.x + dirx*MON_SPEED*dt));
-    m.pos.z = Math.max(-BOUND, Math.min(BOUND, m.pos.z + dirz*MON_SPEED*dt));
+    // Hysteresis on detection + a real "stop & hold" state at close range. Without this the
+    // bot flips chase<->wander every single frame near the player, which on a high-refresh PC
+    // reads as a constant tremble. Now it commits to chasing, then stops and just faces you.
+    if (!m.chasing){ if (d < MON_DETECT) m.chasing = true; }
+    else if (d > MON_DETECT + 6) m.chasing = false;
+    let dirx = 0, dirz = 0, face = m.model.rotation.y, moving = true;
+    if (m.chasing && d > MON_STOP){            // walk toward the player
+      dirx = dx/d; dirz = dz/d; face = Math.atan2(dx, dz);
+    } else if (m.chasing){                      // already next to the player — hold position, keep facing them
+      moving = false; if (d > 0.4) face = Math.atan2(dx, dz);
+    } else {                                     // idle wander
+      m.t += dt; if (m.t > 2.5){ m.t = 0; m.wander = Math.random()*6.28; }
+      dirx = Math.sin(m.wander); dirz = Math.cos(m.wander); face = m.wander;
+    }
+    if (moving){
+      m.pos.x = Math.max(-BOUND, Math.min(BOUND, m.pos.x + dirx*MON_SPEED*dt));
+      m.pos.z = Math.max(-BOUND, Math.min(BOUND, m.pos.z + dirz*MON_SPEED*dt));
+    }
     m.model.position.set(m.pos.x, -monsterMinY*monsterScale, m.pos.z);
-    m.model.rotation.y = angleLerp(m.model.rotation.y, Math.atan2(dirx, dirz), 1 - Math.pow(0.0015, dt));
-    m.mixer.update(dt);
+    m.model.rotation.y = angleLerp(m.model.rotation.y, face, 1 - Math.pow(0.0015, dt));
+    m.mixer.update(moving ? dt : dt*0.3);       // ease the legs when standing so it doesn't run in place
     m.atkT -= dt;
     if (d < 2.6 && m.atkT <= 0 && !mpConnected){ m.atkT = 0.7; damagePlayer(1); }   // bots hurt you on contact (solo only)
   }
