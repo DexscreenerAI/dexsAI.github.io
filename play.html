@@ -171,6 +171,8 @@
   .respawn span{font-size:18px;color:#ffcaca}
   .respawn.hide{display:none}
 </style>
+<!-- Solana web3 (for on-chain $BYEBOSS deposits) — same bundle the Burn page uses -->
+<script defer src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
 </head>
 <body>
 <!-- audio: gunshot one-shot + player footstep loop + nearby-enemy footstep loop (distance-based) -->
@@ -790,16 +792,21 @@ function onSlotResult(m){
 const DEP_RPC = 'https://dexscreener-telegram-bot-production.up.railway.app/api/rpc';
 const TOKEN_PROGRAM_ID_STR = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const ATA_PROGRAM_ID_STR   = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL';
-let _web3Promise = null, _depBusy = false;
+let _web3Promise = null, _depBusy = false, _depFailT = null;
 function loadSolanaWeb3(){
   if (window.solanaWeb3) return Promise.resolve(window.solanaWeb3);
   if (_web3Promise) return _web3Promise;
   _web3Promise = new Promise((resolve, reject) => {
+    // wait for the static <script defer> in <head>; if it's slow, inject our own and poll
+    let done = false;
+    const finish = () => { if (done) return; if (window.solanaWeb3){ done = true; resolve(window.solanaWeb3); } };
+    const poll = setInterval(finish, 150);
     const s = document.createElement('script');
     s.src = 'https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js';
-    s.onload = () => window.solanaWeb3 ? resolve(window.solanaWeb3) : reject(new Error('web3 missing'));
-    s.onerror = () => reject(new Error('web3 load failed'));
+    s.onload = finish;
+    s.onerror = () => {};   // the polling + timeout below handle the outcome
     document.head.appendChild(s);
+    setTimeout(() => { clearInterval(poll); if (!done){ if (window.solanaWeb3){ done = true; resolve(window.solanaWeb3); } else { _web3Promise = null; reject(new Error('wallet library did not load')); } } }, 12000);
   });
   return _web3Promise;
 }
@@ -825,20 +832,23 @@ if (depAmt){
   if (dp) dp.onclick = () => { depAmt.value = Math.max(1, Math.floor(+depAmt.value||1) + dstep()); depAmt.dispatchEvent(new Event('input')); };
 }
 async function doDeposit(){
-  if (_depBusy) return;
-  if (!walletAddr){ await connectWallet(); if (!walletAddr) return; }
+  if (_depBusy){ setDepMsg('Already processing — hold on…', null); return; }
+  if (!walletAddr){ setDepMsg('Connecting wallet…', null); await connectWallet(); if (!walletAddr){ setDepMsg('Connect your Phantom wallet first', false); return; } }
   if (!mpConnected){ setDepMsg('Connect to the game first (👻)', false); return; }
   if (!depositOn || !hotWallet || !depositMintAddr){ setDepMsg('⚠️ Deposits are not enabled right now', false); return; }
   const amount = Math.floor(+depAmt.value || 0);
   if (!(amount >= 1)){ setDepMsg('Enter a whole amount (min 1)', false); return; }
   _depBusy = true; if (depBtn) depBtn.disabled = true;
-  setDepMsg('Confirm the transfer in your wallet…', null);
+  if (_depFailT) clearTimeout(_depFailT);
+  _depFailT = setTimeout(() => { _depFailT = null; if (_depBusy){ _depBusy = false; if (depBtn) depBtn.disabled = false; setDepMsg('Timed out — try again', false); } }, 90000);   // never stay stuck
   try {
+    setDepMsg('Loading wallet library…', null);
     const web3 = await loadSolanaWeb3();
     const prov = (window.phantom && window.phantom.solana) || window.solana;
-    if (!prov) throw new Error('no wallet');
-    const conn = new web3.Connection(DEP_RPC, { wsEndpoint: false, commitment: 'confirmed' });
+    if (!prov) throw new Error('Phantom not found');
     if (prov.connect && !prov.isConnected){ try { await prov.connect(); } catch(e){} }   // make sure the wallet is connected for signing
+    setDepMsg('Preparing transaction…', null);
+    const conn = new web3.Connection(DEP_RPC, { wsEndpoint: false, commitment: 'confirmed' });
     const player = new web3.PublicKey(walletAddr);
     const srcAta = ataFor(web3, walletAddr, depositMintAddr);
     const dstAta = ataFor(web3, hotWallet, depositMintAddr);
@@ -857,6 +867,7 @@ async function doDeposit(){
     const tx = new web3.Transaction().add(ix);
     tx.feePayer = player;
     tx.recentBlockhash = (await conn.getLatestBlockhash('confirmed')).blockhash;
+    setDepMsg('👻 Approve the transfer in Phantom…', null);
     // sign with the wallet (this is what pops up Phantom), then send the raw tx
     const signed = await prov.signTransaction(tx);
     const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: true });
@@ -872,13 +883,17 @@ async function doDeposit(){
     setDepMsg('Crediting your vault…', null);
     mpSend({ t: 'topup', sig });                                     // server verifies on-chain + credits; reply via onmessage
   } catch(e){
+    if (_depFailT){ clearTimeout(_depFailT); _depFailT = null; }
     const msg = String((e && e.message) || e || '');
     console.error('deposit failed:', e);
     setDepMsg(/reject|cancel|User|declined/i.test(msg) ? 'Deposit cancelled' : ('Deposit failed: ' + (msg.slice(0, 90) || 'unknown error')), false);
     _depBusy = false; if (depBtn) depBtn.disabled = false;
   }
 }
-if (depBtn) depBtn.onclick = doDeposit;
+if (depBtn){ depBtn.addEventListener('click', doDeposit); }
+// Enter key triggers the deposit while the panel is open
+if (depAmt){ depAmt.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter'){ e.preventDefault(); doDeposit(); } }); }
+addEventListener('keydown', (e) => { if (e.code === 'Enter' && depositOpen()){ e.preventDefault(); doDeposit(); } });
 
 // ---- iso sprite character (a 2D billboard option in the Shop) ----
 const ISO_STATES = { idle:{fps:7,loop:true}, walk:{fps:12,loop:true}, run:{fps:16,loop:true}, jump:{fps:16,loop:false}, shot:{fps:22,loop:true} };
@@ -1465,7 +1480,7 @@ function mpConnect(){
     else if (m.t === 'shot'){ if (m.id !== mpId) spawnRemoteShot(m); }   // render another player's tracer
     else if (m.t === 'bigwin'){ onBigWin(m); }                            // someone hit a x10/x50/x100
     else if (m.t === 'topup'){                                            // on-chain deposit result
-      _depBusy = false; if (depBtn) depBtn.disabled = false;
+      _depBusy = false; if (depBtn) depBtn.disabled = false; if (_depFailT){ clearTimeout(_depFailT); _depFailT = null; }
       if (m.ok){
         if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
         setDepMsg('✓ +' + m.amount + ' $BYEBOSS added to your vault!', true);
