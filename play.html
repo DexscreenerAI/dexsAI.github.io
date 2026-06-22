@@ -186,7 +186,7 @@
 <audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
-  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v10</div>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v11</div>
   <div class="hud">
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
@@ -473,7 +473,7 @@ resize(); setTimeout(resize, 300); setTimeout(resize, 1200);   // re-fit after t
 // Live diagnostic badge — touch devices, small screens, or ?debug (so it's visible whatever the device reports).
 if (('ontouchstart' in window) || navigator.maxTouchPoints>0 || ((screen && screen.width) ? screen.width < 820 : false) || location.search.indexOf('debug') >= 0){
   const dbg = document.createElement('div'); dbg.id = 'dbg';
-  dbg.style.cssText = 'position:fixed;left:6px;top:6px;z-index:99998;background:rgba(0,0,0,.82);color:#5cff8f;font:13px/1.4 monospace;padding:7px 10px;border-radius:7px;pointer-events:none;max-width:90vw;white-space:pre';
+  dbg.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99998;background:#ffde00;color:#000;font:bold 15px/1.45 monospace;padding:9px 12px;text-align:center;pointer-events:none;white-space:pre-wrap';
   dbg.textContent = 'starting…';
   const add = () => { try { (document.body || document.documentElement).appendChild(dbg); } catch (e) {} };
   if (document.body) add(); else addEventListener('DOMContentLoaded', add);
@@ -486,8 +486,7 @@ if (('ontouchstart' in window) || navigator.maxTouchPoints>0 || ((screen && scre
     else if (inf.calls === 0)        verdict = '❌ NOTHING DRAWN (0 calls)';
     else                             verdict = '✅ RENDERING ' + inf.calls + ' calls';
     const F = (typeof loadFails!=='undefined') ? loadFails : 0;
-    dbg.textContent = verdict + '\ncv ' + w + 'x' + h + ' · gl' + (renderer.capabilities.isWebGL2?2:1) + ' · load ' + L + '/' + T + (F?(' · '+F+' FAILED'):'');
-    dbg.style.whiteSpace = 'pre';
+    dbg.textContent = 'build v11  ·  ' + verdict + '\ncv ' + w + 'x' + h + ' · gl' + (renderer.capabilities.isWebGL2?2:1) + ' · load ' + L + '/' + T + (F?(' · '+F+' FAILED'):'') + ' · ctx ' + (renderer.getContext && renderer.getContext().isContextLost && renderer.getContext().isContextLost() ? 'LOST' : 'ok');
   } catch (e) { dbg.textContent = 'dbg ' + e.message; } }, 500);
 }
 
