@@ -186,6 +186,7 @@
 <audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v9</div>
   <div class="hud">
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
@@ -2496,6 +2497,10 @@ function reportOnce(tag, e){ if (_reported[tag]) return; _reported[tag] = 1; con
 function frame(now){
   if (!running) return;
   const dt = Math.min(0.05, (now - last)/1000 || 0); last = now;
+  // Auto-fit the drawing buffer to the window every frame — bulletproof against mobile
+  // reporting a 0/late size at init (the classic "renders black but the game runs" bug).
+  try { const w = window.innerWidth || canvas.clientWidth || 360, h = window.innerHeight || canvas.clientHeight || 640, dpr = renderer.getPixelRatio();
+    if (w && h && (Math.abs(canvas.width - Math.round(w*dpr)) > 2 || Math.abs(canvas.height - Math.round(h*dpr)) > 2)){ renderer.setSize(w, h); camera.aspect = w/h; camera.updateProjectionMatrix(); } } catch (e) {}
   // Each step is isolated so a single (e.g. mobile-only) error can't black-screen the world.
   try { update(dt); } catch (e) { reportOnce('update', e); }
   try { updateFloaters(dt); } catch (e) { reportOnce('floaters', e); }
