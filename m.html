@@ -461,11 +461,13 @@ const _isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) |
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !_isMobile, powerPreference: 'high-performance' });
 renderer.setPixelRatio(_isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-// FIX black screen: the <canvas> (a replaced element) collapsed to 0x0 display because it had no
-// EXPLICIT size and the inset:0 / height:100% chain doesn't resolve on this iOS Safari. Force
-// explicit viewport units (100vw/100vh) on both the container and the canvas.
-{ const g = document.getElementById('game'); if (g) g.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;overflow:hidden'; }
+// FIX black screen: <body> collapses to 0 height on this iOS Safari, so everything inside it
+// (incl. the canvas) renders at 0px → black, while the diagnostic banner (attached to <html>)
+// shows fine. So move the canvas OUT to <html> and size it with explicit viewport units.
+document.documentElement.appendChild(canvas);
 canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;display:block;z-index:0';
+// Also try to give <body> a real height so the HUD/controls (still inside it) lay out.
+try { document.documentElement.style.height = '100%'; document.body.style.height = '100vh'; document.body.style.minHeight = '100vh'; } catch (e) {}
 canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); try { window.dispatchEvent(new ErrorEvent('error', { message: '⚠ WebGL CONTEXT LOST (GPU memory)' })); } catch (_) {} }, false);
 canvas.addEventListener('webglcontextrestored', () => { try { window.dispatchEvent(new ErrorEvent('error', { message: 'WebGL context restored' })); } catch (_) {} }, false);
 
