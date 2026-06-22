@@ -434,6 +434,17 @@ THREE.Mesh.prototype.raycast = acceleratedRaycast;   // BVH-accelerated raycasts
 // ---------------------------------------------------------------------------
 // Renderer / scene / camera
 // ---------------------------------------------------------------------------
+// Surface any uncaught error on screen (esp. mobile, where there's no console) so a
+// "black screen" becomes a readable message instead of a silent halt.
+window.addEventListener('error', (ev) => {
+  try {
+    let box = document.getElementById('errbox');
+    if (!box){ box = document.createElement('div'); box.id = 'errbox';
+      box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:rgba(130,0,0,.96);color:#fff;font:12px/1.4 monospace;padding:10px;max-height:46vh;overflow:auto;white-space:pre-wrap';
+      (document.body || document.documentElement).appendChild(box); }
+    box.textContent += '⚠ ' + (ev.message || (ev.error && ev.error.message) || ev.error || 'error') + (ev.lineno ? (' :' + ev.lineno) : '') + '\n';
+  } catch (e) {}
+});
 const canvas = document.getElementById('cv');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -1848,6 +1859,7 @@ document.addEventListener('visibilitychange', () => {
 // Input
 // ---------------------------------------------------------------------------
 const keys = { f:false, b:false, l:false, r:false, run:false };
+const touchMove = { x:0, z:0, mag:0 };   // analog joystick vector (defined early so update() never sees it undefined)
 const DEFAULT_BINDS = { f:'KeyW', b:'KeyS', l:'KeyA', r:'KeyD', run:'ShiftLeft', jump:'Space' };
 const BIND_LABELS = { f:'Forward', b:'Backward', l:'Left', r:'Right', run:'Run', jump:'Jump' };
 const ARROWS = { ArrowUp:'f', ArrowDown:'b', ArrowLeft:'l', ArrowRight:'r' };   // always-on movement fallback
@@ -1891,8 +1903,10 @@ const abEls = {};
 document.querySelectorAll('.ab').forEach(el=>{ const a = el.dataset.act; abEls[a] = el;
   el.addEventListener('pointerdown', ev=>{ ev.preventDefault(); doAction(a); }); });
 function flashAbility(a){ const el = abEls[a]; if (!el) return; el.classList.add('pressed'); setTimeout(()=>el.classList.remove('pressed'),160); }
-if (('ontouchstart' in window) || navigator.maxTouchPoints>0){ document.body.classList.add('touch');
-  document.querySelectorAll('.bankprompt').forEach(p => { p.innerHTML = p.innerHTML.replace(/Press <b>E<\/b>/, 'Tap <b>✋ USE</b>'); }); }
+try {
+  if (('ontouchstart' in window) || navigator.maxTouchPoints>0){ document.body.classList.add('touch');
+    document.querySelectorAll('.bankprompt').forEach(p => { p.innerHTML = p.innerHTML.replace(/Press <b>E<\/b>/, 'Tap <b>✋ USE</b>'); }); }
+} catch (e) { console.warn('touch init', e); }
 // Open / close the nearest building (E key and the mobile USE button both call this).
 function doInteract(){
   if (vaultOpen()) closeVault();
@@ -1907,10 +1921,9 @@ function doInteract(){
   else if (mpConnected && nearDeposit()) openDeposit();
 }
 // Analog movement joystick (left thumb): push the stick to move, push far to run.
-const touchMove = { x:0, z:0, mag:0 };
 (function(){
   const joy = document.getElementById('joy'), knob = document.getElementById('joyKnob');
-  if (!joy) return;
+  if (!joy || !knob) return;
   let jid = null, cx = 0, cy = 0, R = 54;
   const start = t => { const r = joy.getBoundingClientRect(); cx = r.left + r.width/2; cy = r.top + r.height/2; R = r.width/2 - 14; jid = t.identifier; move(t); };
   const move  = t => { const dx = t.clientX - cx, dy = t.clientY - cy, d = Math.hypot(dx, dy) || 1, cl = Math.min(d, R), nx = dx/d, ny = dy/d; knob.style.transform = 'translate(' + (nx*cl) + 'px,' + (ny*cl) + 'px)'; touchMove.x = nx * (cl/R); touchMove.z = -ny * (cl/R); touchMove.mag = cl/R; };
@@ -2454,13 +2467,16 @@ function update(dt){
 }
 
 let last = 0, running = false;
+const _reported = {};
+function reportOnce(tag, e){ if (_reported[tag]) return; _reported[tag] = 1; console.error(tag, e); try { window.dispatchEvent(new ErrorEvent('error', { message: tag + ': ' + ((e && e.message) || e) })); } catch (_) {} }
 function frame(now){
   if (!running) return;
   const dt = Math.min(0.05, (now - last)/1000 || 0); last = now;
-  update(dt);
-  updateFloaters(dt);
-  renderer.render(scene, camera);
-  drawMinimap();
+  // Each step is isolated so a single (e.g. mobile-only) error can't black-screen the world.
+  try { update(dt); } catch (e) { reportOnce('update', e); }
+  try { updateFloaters(dt); } catch (e) { reportOnce('floaters', e); }
+  try { renderer.render(scene, camera); } catch (e) { reportOnce('render', e); }
+  try { drawMinimap(); } catch (e) { reportOnce('minimap', e); }
   requestAnimationFrame(frame);
 }
 function start(){
