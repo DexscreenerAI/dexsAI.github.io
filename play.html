@@ -1540,7 +1540,8 @@ function onSnap(m){
       if (Number.isFinite(pl.hp)){ hp = Math.max(0, pl.hp); updateHpBar(); }
       if (Number.isFinite(pl.vault)){ if (_slotSpinning){ vault = pl.vault; } else { if (_vaultSeen !== null && pl.vault > _vaultSeen) flashGain(pl.vault - _vaultSeen); _vaultSeen = pl.vault; vault = pl.vault; scoreVal.textContent = vault; } }   // everything goes straight to the vault; slot results reveal in the panel, not here
       if (Number.isFinite(pl.carried)) carried = pl.carried;
-      if (capVal && Number.isFinite(pl.earnedToday)) capVal.textContent = `today ${pl.earnedToday}/${m.dailyCap || mpDailyCap}`;
+      if (Number.isFinite(pl.dailyCap)) mpDailyCap = pl.dailyCap;   // holdings-scaled daily cap (live)
+      if (capVal && Number.isFinite(pl.earnedToday)) capVal.textContent = `today ${pl.earnedToday}/${pl.dailyCap || m.dailyCap || mpDailyCap}`;
       if (Number.isFinite(pl.level)){
         if (lvlVal) lvlVal.textContent = 'Lvl ' + pl.level;
         if (xpFill) xpFill.style.width = (pl.xpNeed > 0 ? Math.max(0, Math.min(100, pl.xpInto / pl.xpNeed * 100)) : 100) + '%';
