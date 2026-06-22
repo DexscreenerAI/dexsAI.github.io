@@ -278,12 +278,15 @@
       .slot-bbtn{ padding:5px 9px; font-size:14px; font-weight:800; border:1px solid #ff5ad0; border-radius:7px; background:#160d22; color:#ff9be0; cursor:pointer }
       .slot-bbtn:active{ transform:scale(.94) }
       /* casino panel = the bright $BYEBOSS Casino image (no darkening) with controls laid over it */
-      #casinoP .vault-box{ position:relative; width:min(94vw,460px); aspect-ratio:4/3; background:#08030f url('./assets/game/slots/casino-bg.png') center/cover no-repeat; border:1.5px solid #ff5ad0; border-radius:16px; box-shadow:0 0 30px rgba(255,90,208,.5); overflow:hidden }
+      .casino-wrap{ display:flex; flex-direction:column; align-items:center; gap:10px; width:min(94vw,460px) }
+      #casinoP .vault-box{ position:relative; width:100%; aspect-ratio:4/3; background:#08030f url('./assets/game/slots/casino-bg.png') center/cover no-repeat; border:1.5px solid #ff5ad0; border-radius:16px; box-shadow:0 0 30px rgba(255,90,208,.5); overflow:hidden }
       .casino-x{ position:absolute; top:6px; right:12px; z-index:6; color:#fff; font-size:20px; cursor:pointer; text-shadow:0 1px 4px #000 }
       .casino-vault{ position:absolute; left:50%; top:2.5%; transform:translateX(-50%); z-index:5; font-size:15px; font-weight:800; color:#fff; text-shadow:0 1px 3px #000; background:rgba(8,3,16,.66); padding:3px 12px; border-radius:9px; white-space:nowrap }
       .casino-vault b{ color:#ffd755; font-size:16px }
-      .casino-bet{ position:absolute; left:50%; top:8.5%; transform:translateX(-50%); z-index:5; display:flex; gap:4px; align-items:center; background:rgba(8,3,16,.72); padding:3px 6px; border-radius:10px; border:1px solid rgba(255,90,208,.5) }
-      .casino-bet input{ width:58px; text-align:center; font-size:13px; font-weight:700; padding:3px; border-radius:6px; border:1px solid #ff5ad0; background:#160d22; color:#fff }
+      /* bet bar sits OUTSIDE the game box, below PLAY NOW */
+      .casino-bet{ display:flex; gap:6px; align-items:center; justify-content:center; background:rgba(8,3,16,.9); padding:8px 12px; border-radius:12px; border:1px solid rgba(255,90,208,.6); box-shadow:0 6px 18px rgba(0,0,0,.45) }
+      .casino-betlbl{ font-weight:800; font-size:13px; color:#ff9be0; letter-spacing:.5px }
+      .casino-bet input{ width:72px; text-align:center; font-size:16px; font-weight:800; padding:6px; border-radius:7px; border:1px solid #ff5ad0; background:#160d22; color:#fff }
       .casino-msg{ position:absolute; left:4%; right:4%; top:42%; z-index:3; text-align:center; font-weight:800; font-size:13px; color:#fff; text-shadow:0 2px 5px #000,0 0 8px #000 }
       .casino-reels{ position:absolute; left:0; right:0; top:54%; z-index:3; display:flex; gap:3%; justify-content:center }
       .casino-reels .slot-reel{ width:13.5%; aspect-ratio:1 }
@@ -294,15 +297,18 @@
       #spinBtn:disabled{ cursor:default }
     </style>
     <div id="casinoP" class="vault hidden">
-      <div class="vault-box">
-        <span id="casinoClose" class="casino-x">✕</span>
-        <div id="slotMsg" class="casino-msg">🎰 Spin to win — RTP 80%</div>
-        <div class="casino-reels">
-          <span class="slot-reel"><img id="sri0" alt=""></span><span class="slot-reel"><img id="sri1" alt=""></span><span class="slot-reel"><img id="sri2" alt=""></span>
+      <div class="casino-wrap">
+        <div class="vault-box">
+          <span id="casinoClose" class="casino-x">✕</span>
+          <div id="slotMsg" class="casino-msg">🎰 Spin to win!</div>
+          <div class="casino-reels">
+            <span class="slot-reel"><img id="sri0" alt=""></span><span class="slot-reel"><img id="sri1" alt=""></span><span class="slot-reel"><img id="sri2" alt=""></span>
+          </div>
+          <div class="casino-vault">Vault: <b id="slotVault">0</b> $BYEBOSS</div>
+          <button id="spinBtn" title="Spin — PLAY NOW"></button>
         </div>
-        <div class="casino-vault">Vault: <b id="slotVault">0</b> $BYEBOSS</div>
-        <button id="spinBtn" title="Spin — PLAY NOW"></button>
         <div class="casino-bet">
+          <span class="casino-betlbl">Bet</span>
           <button id="betMinus" class="slot-bbtn">−</button>
           <input id="slotBet" type="number" min="1" step="1" value="1" />
           <button id="betPlus" class="slot-bbtn">+</button>
