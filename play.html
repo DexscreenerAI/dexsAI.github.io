@@ -186,7 +186,7 @@
 <audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
-  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v9</div>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v10</div>
   <div class="hud">
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
@@ -447,9 +447,14 @@ window.addEventListener('error', (ev) => {
   } catch (e) {}
 });
 const canvas = document.getElementById('cv');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+// Mobile GPUs have far less memory: drop antialias + use pixel ratio 1 so the framebuffer
+// doesn't exhaust VRAM and lose the context (the classic "renders black but game runs" bug).
+const _isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || ((screen && screen.width) ? screen.width < 820 : false);
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !_isMobile, powerPreference: 'high-performance' });
+renderer.setPixelRatio(_isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); try { window.dispatchEvent(new ErrorEvent('error', { message: '⚠ WebGL CONTEXT LOST (GPU memory)' })); } catch (_) {} }, false);
+canvas.addEventListener('webglcontextrestored', () => { try { window.dispatchEvent(new ErrorEvent('error', { message: 'WebGL context restored' })); } catch (_) {} }, false);
 
 const scene = new THREE.Scene();
 const FOG = new THREE.Color('#bfe0cf');         // soft daylight haze (forest)
