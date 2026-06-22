@@ -39,7 +39,7 @@
   .bankprompt{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);background:rgba(6,4,13,.85);
     border:1px solid rgba(57,255,139,.55);color:#eafff2;padding:8px 15px;border-radius:10px;font-weight:700;
     font-size:14px;z-index:7;pointer-events:none;box-shadow:0 0 14px rgba(57,255,139,.25);max-width:80vw;text-align:center}
-  body.touch .bankprompt{bottom:auto;top:calc(54px + env(safe-area-inset-top,0px));font-size:11.5px;padding:5px 11px;white-space:nowrap}
+  body.touch .bankprompt{display:none}
   .bankprompt b{color:#39ff8b}
   .xpwrap{position:absolute;left:18px;bottom:54px;display:flex;align-items:center;gap:9px;z-index:6;
     background:rgba(6,4,13,.7);border:1px solid rgba(160,110,255,.45);padding:6px 12px;border-radius:11px;backdrop-filter:blur(6px)}
@@ -64,7 +64,7 @@
     background:rgba(20,14,34,.4);border:2px solid rgba(255,255,255,.18);touch-action:none}
   .joy-knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;
     background:rgba(57,255,139,.5);border:2px solid #39ff8b;box-shadow:0 0 16px rgba(57,255,139,.55);transition:transform .04s linear}
-  .rbtns{position:absolute;right:16px;bottom:calc(116px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:13px;z-index:6}
+  .rbtns{position:absolute;right:14px;bottom:calc(180px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;z-index:6}
   .rbtns button{width:80px;height:56px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(20,14,34,.8);
     color:#eafff2;font-weight:800;font-size:13px;letter-spacing:.4px;touch-action:none}
   .rbtns button:active{background:rgba(57,255,139,.25);border-color:#39ff8b}
@@ -89,6 +89,7 @@
     border-radius:11px;font-weight:800;font-size:14px;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap}
   .menu-btn:hover{border-color:#7c4dff;color:#b69bff}
   @media (max-width:560px){ .menubar{top:8px} .menu-btn{padding:7px 12px;font-size:12px} }
+  body.touch .menubar{left:12px;top:calc(50px + env(safe-area-inset-top,0px));transform:none}   /* Settings below the Back button on mobile */
   .shop{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:rgba(4,3,10,.62);backdrop-filter:blur(3px)}
   .shop.hidden{display:none}
   .shop-box{width:min(94vw,640px);background:linear-gradient(180deg,#100d20,#0a0813);border:1px solid rgba(124,77,255,.5);border-radius:22px;overflow:hidden;box-shadow:0 28px 80px rgba(0,0,0,.65)}
@@ -187,7 +188,7 @@
 <audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
-  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v11</div>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v13</div>
   <div class="hud">
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
@@ -460,9 +461,9 @@ canvas.addEventListener('webglcontextrestored', () => { try { window.dispatchEve
 const scene = new THREE.Scene();
 const FOG = new THREE.Color('#bfe0cf');         // soft daylight haze (forest)
 scene.background = FOG.clone();
-scene.fog = new THREE.Fog(FOG.clone(), 24, 95);
+scene.fog = new THREE.Fog(FOG.clone(), _isMobile ? 20 : 24, _isMobile ? 68 : 95);   // pull fog in on mobile (cull distant draws)
 
-const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 400);
+const camera = new THREE.PerspectiveCamera(55, 1, 0.1, _isMobile ? 130 : 400);   // nearer far-plane on mobile
 let _restructured = false;
 function resize(){
   const w = window.innerWidth || document.documentElement.clientWidth || 360;
@@ -766,6 +767,7 @@ function _thumbRenderer(){
   return _thumbR;
 }
 function _glbThumb(gltf){
+  if (_isMobile) return '';   // skip skin thumbnails on mobile — a 2nd WebGL context exhausts the GPU and crashes weaker phones
   const r = _thumbRenderer(), sc = new THREE.Scene();
   sc.add(new THREE.AmbientLight(0xffffff, 1.25));
   const dl = new THREE.DirectionalLight(0xffffff, 1.4); dl.position.set(2, 5, 3); sc.add(dl);
@@ -2543,9 +2545,14 @@ function frame(now){
     if (w && h && (Math.abs(canvas.width - Math.round(w*dpr)) > 2 || Math.abs(canvas.height - Math.round(h*dpr)) > 2)){ renderer.setSize(w, h, !_restructured); camera.aspect = w/h; camera.updateProjectionMatrix(); } } catch (e) {}
   // Each step is isolated so a single (e.g. mobile-only) error can't black-screen the world.
   try { update(dt); } catch (e) { reportOnce('update', e); }
-  try { updateFloaters(dt); } catch (e) { reportOnce('floaters', e); }
-  try { renderer.render(scene, camera); } catch (e) { reportOnce('render', e); }
-  try { drawMinimap(); } catch (e) { reportOnce('minimap', e); }
+  // On mobile, STOP rendering the 3D scene while a full-screen panel covers it — the GPU was
+  // still drawing the whole world behind the panel, which overheats/crashes weaker phones.
+  const _panelHidden = _isMobile && (vaultOpen() || shopBldOpen() || cfgOpen() || statsOpen() || casinoOpen() || depositOpen());
+  if (!_panelHidden){
+    try { updateFloaters(dt); } catch (e) { reportOnce('floaters', e); }
+    try { renderer.render(scene, camera); } catch (e) { reportOnce('render', e); }
+    try { drawMinimap(); } catch (e) { reportOnce('minimap', e); }
+  }
   requestAnimationFrame(frame);
 }
 function start(){
