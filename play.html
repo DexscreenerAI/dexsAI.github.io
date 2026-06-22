@@ -189,6 +189,17 @@
       <span class="title"><span class="b">$BYE</span><span class="g">BOSS</span> · WORLD</span>
     </div>
     <div class="menubar"><button id="cfgBtn" class="menu-btn" title="Movement keys & settings">⚙ Settings</button></div>
+    <style>
+      .lb{position:absolute;left:10px;top:92px;z-index:6;background:rgba(6,4,13,.72);border:1px solid rgba(57,255,139,.28);border-radius:12px;padding:9px 11px;backdrop-filter:blur(6px);box-shadow:0 6px 22px rgba(0,0,0,.45)}
+      .lb.hide{display:none}
+      .lb-title{font-size:11px;font-weight:800;letter-spacing:.6px;color:#ffd54a;margin-bottom:6px}
+      .lb ol{list-style:none;display:flex;flex-direction:column;gap:4px;margin:0;padding:0}
+      .lb li{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;white-space:nowrap}
+      .lb li .rk{width:16px;text-align:center;font-weight:800;color:#ffd54a}
+      .lb li .nm{flex:1;overflow:hidden;text-overflow:ellipsis;max-width:94px;color:#eafff2}
+      .lb li .vl{color:#39ff8b;font-weight:800}
+    </style>
+    <div id="leaderboard" class="lb hide"><div class="lb-title">🏆 TOP VAULTS</div><ol id="lbList"></ol></div>
     <canvas id="minimap" width="480" height="480" class="minimap"></canvas>
     <div id="crosshair" class="crosshair"></div>
     <div class="score"><span class="coin">$</span><span style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap">🔒<b id="scoreVal">—</b><small style="opacity:.55;font-weight:600;font-size:11px">$BYEBOSS vault</small></span></div>
@@ -1265,6 +1276,15 @@ const casinoPrompt = document.getElementById('casinoPrompt');
 const depositPrompt = document.getElementById('depositPrompt');
 const xpwrapEl = document.getElementById('xpwrap'), lvlVal = document.getElementById('lvlVal'), xpFill = document.getElementById('xpFill');
 function fmtPool(n){ n=+n; if(!isFinite(n)) return ''; if(n>=1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M'; if(n>=1e3) return Math.round(n/1e3)+'k'; return ''+n; }
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const _lbWrap = document.getElementById('leaderboard'), _lbList = document.getElementById('lbList');
+function renderLeaderboard(top){
+  if (!_lbWrap || !_lbList) return;
+  if (!Array.isArray(top) || !top.length){ _lbWrap.classList.add('hide'); return; }
+  const medals = ['🥇','🥈','🥉'];
+  _lbList.innerHTML = top.map((e,i)=>`<li><span class="rk">${medals[i]||(i+1)}</span><span class="nm">${escapeHtml(e.name||'?')}</span><span class="vl">${fmtN(e.vault)}</span></li>`).join('');
+  _lbWrap.classList.remove('hide');
+}
 function doTeleport(dest){ if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'teleport', to: dest })); }
 function mpSend(o){ if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify(o)); }
 function sendSkin(){ mpSend({ t: 'setskin', skin: selectedSkin }); }   // tell the server which skin we equipped (so others see it)
@@ -1512,10 +1532,11 @@ function mpConnect(){
         setDepMsg(m.reason==='used' ? 'This deposit was already credited' : m.reason==='notfound' ? 'Not confirmed yet — wait a few seconds and press Deposit again' : m.reason==='disabled' ? 'Deposits are off right now' : 'Could not verify the deposit', false);
       }
     }
+    else if (m.t === 'lb'){ renderLeaderboard(m.top); }                  // top-5 vault leaderboard
     else if (m.t === 'snap'){ mpLastSnap = Date.now(); onSnap(m); }
     else if (m.t === 'left'){ removeRemote(m.id); }
   };
-  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearServerApples(); clearVaults(); clearShop(); clearStats(); clearCasino(); clearDeposit(); closeVault(); closeShopBld(); closeStats(); closeCasino(); closeDeposit(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = '0'; if (scoreVal) scoreVal.textContent = '—'; if (bankPrompt) bankPrompt.classList.add('hide'); if (xpwrapEl) xpwrapEl.style.display = 'none'; vault = carried = 0; _vaultSeen = null; if (mpCountEl) mpCountEl.textContent = '🔴 offline'; if (mpWantConnected && walletAddr) scheduleReconnect(); };
+  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearServerApples(); clearVaults(); clearShop(); clearStats(); clearCasino(); clearDeposit(); closeVault(); closeShopBld(); closeStats(); closeCasino(); closeDeposit(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = '0'; if (scoreVal) scoreVal.textContent = '—'; if (bankPrompt) bankPrompt.classList.add('hide'); if (xpwrapEl) xpwrapEl.style.display = 'none'; if (_lbWrap) _lbWrap.classList.add('hide'); vault = carried = 0; _vaultSeen = null; if (mpCountEl) mpCountEl.textContent = '🔴 offline'; if (mpWantConnected && walletAddr) scheduleReconnect(); };
   mpWs.onerror = () => {};
 }
 function scheduleReconnect(){
