@@ -1345,7 +1345,7 @@ const MP_URL = 'wss://dexscreener-telegram-bot-production.up.railway.app/game';
 let mpWs = null, mpConnected = false, mpId = null, byebossTemplate = null, mpDailyCap = 400;
 let mpWantConnected = false, mpRetry = 0, mpReconnectT = null, mpLastSnap = 0;   // auto-reconnect + keepalive state
 let hotWallet = null, depositMintAddr = null, depositOn = false;                 // on-chain deposit target (from welcome)
-let withdrawOn = false, withdrawMin = 50, withdrawDailyCap = 50000, _wdBusy = false, _wdFailT = null;   // vault -> wallet withdrawals
+let withdrawOn = false, withdrawMin = 5000, withdrawDailyCap = 50000, _wdBusy = false, _wdFailT = null;   // vault -> wallet withdrawals
 let vault = 0, carried = 0;   // secured (claimable) vs on-hand (at risk) balances
 let _vaultSeen = null;        // for the "+N" pickup popup (vault gains)
 // "+N $BYEBOSS" floating combat-text, spawned in the 3D world just above the
