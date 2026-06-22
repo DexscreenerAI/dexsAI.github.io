@@ -1158,8 +1158,8 @@ function applyApples(){ for (const e of serverApples.values()){ e.group.scale.se
 // ---- STATS building (burn tracker; teleport landmark) ----
 let statsPoint = null, statsTemplate = null, statsScale = 2, _pendingStats = null, statsMesh = null;
 let statsX = 40, statsZ = -38;
-new GLTFLoader().load('./assets/game/building1.glb', (g) => {
-  statsTemplate = g.scene; statsScale = fitScale(statsTemplate, 7.5);
+new GLTFLoader().load('./assets/game/stats-bld.glb', (g) => {
+  statsTemplate = g.scene; statsScale = fitScale(statsTemplate, 8);
   if (_pendingStats !== null){ placeStats(_pendingStats); _pendingStats = null; }
 }, undefined, () => {});
 function placeStats(pt){
@@ -1176,7 +1176,7 @@ function clearStats(){ if (statsMesh){ scene.remove(statsMesh); statsMesh = null
 // ---- DEPOSIT building (send real $BYEBOSS -> vault; teleport landmark) ----
 let depositPoint = null, depositTemplate = null, depositScale = 2, _pendingDeposit = null, depositMesh = null;
 let depositX = -40, depositZ = -62;
-new GLTFLoader().load('./assets/game/building2.glb', (g) => {
+new GLTFLoader().load('./assets/game/deposit-bld.glb', (g) => {
   depositTemplate = g.scene; depositScale = fitScale(depositTemplate, 8);
   if (_pendingDeposit !== null){ placeDeposit(_pendingDeposit); _pendingDeposit = null; }
 }, undefined, () => {});
