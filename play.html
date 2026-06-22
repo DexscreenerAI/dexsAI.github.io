@@ -189,7 +189,7 @@
 <audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
-  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v20</div>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v21</div>
   <div class="hud">
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
@@ -1933,6 +1933,7 @@ function mpConnect(){
           m.reason==='min' ? ('Minimum withdraw is ' + (m.min||withdrawMin) + ' $BYEBOSS') :
           m.reason==='funds' ? 'Not enough in your vault' :
           m.reason==='cap' ? ('Daily limit reached — ' + (m.left||0).toLocaleString() + ' $BYEBOSS left today') :
+          m.reason==='cooldown' ? ('Please wait ' + Math.max(1, Math.ceil((m.wait||0)/60)) + ' min before your next withdrawal') :
           m.reason==='sendfail' ? ('Send failed — refunded to your vault. ' + (m.error||'')) :
           'Withdrawal failed', false);
       }
