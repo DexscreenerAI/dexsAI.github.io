@@ -1768,7 +1768,7 @@ const casinoColliders = [];
 let casinoPoint = null, casinoTemplate = null, _pendingCasino = null, casinoMesh = null;
 let casinoX = 40, casinoZ = -62;
 const CASINO_H = 12;   // building height in world units (others are ~7.5)
-new GLTFLoader().load('./assets/game/casino.glb', (gltf) => {
+new GLTFLoader().load('./assets/game/casino.glb?v=3', (gltf) => {   // ?v busts the browser cache for the new model
   casinoTemplate = gltf.scene;
   if (_pendingCasino !== null){ placeCasino(_pendingCasino); _pendingCasino = null; }
 }, undefined, (err) => console.error('casino failed to load', err));
