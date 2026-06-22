@@ -457,10 +457,27 @@ scene.fog = new THREE.Fog(FOG.clone(), 24, 95);
 
 const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 400);
 function resize(){
-  const w = window.innerWidth, h = window.innerHeight;
+  const w = window.innerWidth || document.documentElement.clientWidth || 360;
+  const h = window.innerHeight || document.documentElement.clientHeight || 640;   // mobile can report 0 mid-load
   renderer.setSize(w, h); camera.aspect = w/h; camera.updateProjectionMatrix();
 }
-window.addEventListener('resize', resize); resize();
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+resize(); setTimeout(resize, 300); setTimeout(resize, 1200);   // re-fit after the mobile address bar settles
+// Live diagnostic badge on touch devices (turns a "black screen" into reportable facts).
+if (('ontouchstart' in window) || navigator.maxTouchPoints>0){
+  const dbg = document.createElement('div'); dbg.id = 'dbg';
+  dbg.style.cssText = 'position:fixed;left:6px;top:6px;z-index:99998;background:rgba(0,0,0,.72);color:#5cff8f;font:10px/1.35 monospace;padding:4px 7px;border-radius:6px;pointer-events:none;max-width:62vw';
+  const add = () => { (document.body || document.documentElement).appendChild(dbg); };
+  if (document.body) add(); else addEventListener('DOMContentLoaded', add);
+  setInterval(() => { try {
+    const sz = renderer.getSize(new THREE.Vector2()), inf = renderer.info.render;
+    dbg.textContent = 'cv ' + Math.round(sz.x) + 'x' + Math.round(sz.y) + ' dpr' + (window.devicePixelRatio||1)
+      + ' | load ' + (typeof loaded!=='undefined'?loaded:'?') + '/' + (typeof total!=='undefined'?total:'?')
+      + ' run' + ((typeof running!=='undefined'&&running)?1:0)
+      + ' | calls ' + inf.calls + ' tri ' + inf.triangles + ' gl' + (renderer.capabilities.isWebGL2?2:1);
+  } catch (e) { dbg.textContent = 'dbg ' + e.message; } }, 500);
+}
 
 // lights
 scene.add(new THREE.HemisphereLight('#eaf6d8', '#33502a', 1.05));
