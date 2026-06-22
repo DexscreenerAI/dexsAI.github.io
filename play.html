@@ -837,7 +837,8 @@ async function doDeposit(){
     const web3 = await loadSolanaWeb3();
     const prov = (window.phantom && window.phantom.solana) || window.solana;
     if (!prov) throw new Error('no wallet');
-    const conn = new web3.Connection(DEP_RPC, 'confirmed');
+    const conn = new web3.Connection(DEP_RPC, { wsEndpoint: false, commitment: 'confirmed' });
+    if (prov.connect && !prov.isConnected){ try { await prov.connect(); } catch(e){} }   // make sure the wallet is connected for signing
     const player = new web3.PublicKey(walletAddr);
     const srcAta = ataFor(web3, walletAddr, depositMintAddr);
     const dstAta = ataFor(web3, hotWallet, depositMintAddr);
@@ -856,22 +857,24 @@ async function doDeposit(){
     const tx = new web3.Transaction().add(ix);
     tx.feePayer = player;
     tx.recentBlockhash = (await conn.getLatestBlockhash('confirmed')).blockhash;
-    const res = await prov.signAndSendTransaction(tx);
-    const sig = (res && res.signature) ? res.signature : res;
+    // sign with the wallet (this is what pops up Phantom), then send the raw tx
+    const signed = await prov.signTransaction(tx);
+    const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: true });
     setDepMsg('Waiting for confirmation…', null);
     for (let i = 0; i < 24; i++){                                    // wait until confirmed so the server can see it
       await new Promise(r => setTimeout(r, 2000));
       try {
         const st = await conn.getSignatureStatuses([sig]); const s = st && st.value && st.value[0];
-        if (s && s.err) throw new Error('tx failed');
+        if (s && s.err) throw new Error('tx failed on-chain');
         if (s && (s.confirmationStatus === 'confirmed' || s.confirmationStatus === 'finalized')) break;
-      } catch(e){ if (String(e.message).includes('failed')) throw e; }
+      } catch(e){ if (String(e.message).includes('on-chain')) throw e; }
     }
     setDepMsg('Crediting your vault…', null);
     mpSend({ t: 'topup', sig });                                     // server verifies on-chain + credits; reply via onmessage
   } catch(e){
-    console.warn('deposit failed', e);
-    setDepMsg(/reject|cancel|User/i.test(String(e && e.message)) ? 'Deposit cancelled' : 'Deposit failed — try again', false);
+    const msg = String((e && e.message) || e || '');
+    console.error('deposit failed:', e);
+    setDepMsg(/reject|cancel|User|declined/i.test(msg) ? 'Deposit cancelled' : ('Deposit failed: ' + (msg.slice(0, 90) || 'unknown error')), false);
     _depBusy = false; if (depBtn) depBtn.disabled = false;
   }
 }
