@@ -354,7 +354,8 @@
           <div id="depMsg" style="min-height:20px;font-weight:700;color:#bfe9ff;margin-bottom:10px">≈ +<b id="depPreview">100</b> $BYEBOSS to your vault</div>
           <button id="depGo" type="button" style="width:100%;padding:13px;font-size:16px;font-weight:800;border:none;border-radius:10px;background:linear-gradient(#3ad1ff,#1488c8);color:#04222e;cursor:pointer">💰 Deposit to vault</button>
           <div id="wdWrap" style="margin-top:13px;border-top:1px solid rgba(58,209,255,.22);padding-top:11px;display:none">
-            <div style="font-size:13px;color:#ffd27f;font-weight:800;margin-bottom:7px">💸 Withdraw to your wallet</div>
+            <div style="font-size:13px;color:#ffd27f;font-weight:800;margin-bottom:3px">💸 Withdraw to your wallet</div>
+            <div style="font-size:11px;color:#9a8a6a;margin-bottom:7px">🔥 1% of every withdrawal is burned forever</div>
             <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:7px">
               <input id="wdAmt" type="number" min="1" step="1" placeholder="amount" style="width:128px;text-align:center;font-size:17px;font-weight:800;padding:7px;border-radius:8px;border:1px solid #ffd27f;background:#0b1622;color:#fff" />
               <button id="wdMax" class="slot-bbtn" style="border-color:#ffd27f;color:#ffd27f">MAX</button>
@@ -370,7 +371,7 @@
             </div>
           </div>
           <div id="depHistWrap" style="margin-top:12px;text-align:left;display:none">
-            <div style="font-size:12px;color:#7fb8d8;font-weight:800;margin-bottom:5px;border-top:1px solid rgba(58,209,255,.22);padding-top:9px">📜 Your deposits</div>
+            <div style="font-size:12px;color:#7fb8d8;font-weight:800;margin-bottom:5px;border-top:1px solid rgba(58,209,255,.22);padding-top:9px">📜 Your transactions <small style="color:#6f93ad;font-weight:600">deposits + withdrawals</small></div>
             <div id="depHistList" style="display:flex;flex-direction:column;gap:4px;max-height:140px;overflow-y:auto"></div>
           </div>
         </div>
@@ -888,7 +889,7 @@ function renderDepHist(){
   // Server entries are authoritative successes; local adds pending/failed/cancelled ones.
   const bySig = new Map(); const noSig = [];
   for (const r of local){ if (r.sig) bySig.set(r.sig, Object.assign({}, r)); else noSig.push(r); }
-  for (const s of (_serverDepHist || [])){ if (!s || !s.sig) continue; const ex = bySig.get(s.sig) || {}; bySig.set(s.sig, Object.assign({}, ex, { sig: s.sig, amount: (s.amount != null ? s.amount : ex.amount), ts: ex.ts || s.ts || Date.now(), status: 'success', server: true })); }
+  for (const s of (_serverDepHist || [])){ if (!s || !s.sig) continue; const ex = bySig.get(s.sig) || {}; bySig.set(s.sig, Object.assign({}, ex, { sig: s.sig, amount: (s.amount != null ? s.amount : ex.amount), ts: ex.ts || s.ts || Date.now(), status: 'success', server: true, type: s.type || ex.type || 'in' })); }
   let arr = [...bySig.values(), ...noSig].sort((a, b) => (b.ts || 0) - (a.ts || 0));
   if (!arr.length){ wrap.style.display = 'none'; list.innerHTML = ''; return; }
   wrap.style.display = 'block';
