@@ -234,6 +234,7 @@
           <div id="vaultMenu" class="vault-grid">
             <div class="vtile" id="vbDaily"><div class="vtile-ico">📅</div><div class="vtile-t">Daily Quest</div><div class="vtile-s">Claim free $BYEBOSS every day</div></div>
             <div class="vtile" id="vbDeposit"><div class="vtile-ico">🏦</div><div class="vtile-t">Vault</div><div class="vtile-s">Secure your $BYEBOSS from PvP</div></div>
+            <div class="vtile" id="vbStake"><div class="vtile-ico">🔒</div><div class="vtile-t">Lock &amp; Earn</div><div class="vtile-s">Stake $BYEBOSS for daily yield</div></div>
           </div>
           <div id="vaultDaily" class="vault-page" style="display:none">
             <div class="vault-hero">
@@ -257,6 +258,29 @@
               <button class="vact vact-big" id="depBtn">Deposit</button>
             </div>
             <div class="vault-back" id="depBack">← Back</div>
+          </div>
+          <div id="vaultStake" class="vault-page" style="display:none">
+            <div id="stakePos" style="display:none">
+              <div class="vault-hero">
+                <div class="vault-reward"><span id="stakeAmount">0</span> <small>🔒 locked · <b id="stakeApr">0</b>% APR</small></div>
+                <div class="vault-streak">💰 <b id="stakePending">0</b> $BYEBOSS pending · <span id="stakeEnds"></span></div>
+              </div>
+              <div class="vault-grid">
+                <button class="vact vact-big" id="stakeClaimBtn">Claim yield</button>
+                <button class="vact vact-big" id="unstakeBtn">Unstake</button>
+              </div>
+            </div>
+            <p class="vault-note">Lock $BYEBOSS for daily yield. 🔥 1% is burned on stake · unstaking early burns 10% of the principal.</p>
+            <input id="stakeAmt" class="vinput" type="number" min="1000" value="1000">
+            <div class="vault-grid" id="stakeTermRow" style="grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0">
+              <button type="button" class="slot-bbtn stake-term" data-term="0">Flex<br>5%</button>
+              <button type="button" class="slot-bbtn stake-term" data-term="7">7d<br>12%</button>
+              <button type="button" class="slot-bbtn stake-term" data-term="30">30d<br>30%</button>
+              <button type="button" class="slot-bbtn stake-term" data-term="90">90d<br>60%</button>
+            </div>
+            <button class="vact vact-big" id="stakeBtn">🔒 Lock</button>
+            <div id="stakeMsg" style="min-height:18px;font-size:12px;font-weight:700;margin-top:6px;color:#bfe9ff"></div>
+            <div class="vault-back" id="stakeBack">← Back</div>
           </div>
         </div>
       </div>
@@ -1399,12 +1423,33 @@ function sendSkin(){ mpSend({ t: 'setskin', skin: selectedSkin }); }   // tell t
 // ===== vault panel (daily quest + deposit a chosen amount) =====
 let claimedToday = false, dailyReward = 20, claims = 0;
 const vaultPanel = document.getElementById('vault');
-const vMenu = document.getElementById('vaultMenu'), vDailyView = document.getElementById('vaultDaily'), vDepView = document.getElementById('vaultDeposit');
+const vMenu = document.getElementById('vaultMenu'), vDailyView = document.getElementById('vaultDaily'), vDepView = document.getElementById('vaultDeposit'), vStakeView = document.getElementById('vaultStake');
 const vCarriedEl = document.getElementById('vaultCarried'), vSecuredEl = document.getElementById('vaultSecured');
 const vAmt = document.getElementById('vaultAmt'), vSlider = document.getElementById('vaultSlider');
 const dailyClaimBtn = document.getElementById('dailyClaimBtn'), dailyInfo = document.getElementById('dailyInfo');
 const dailyClaimsEl = document.getElementById('dailyClaims'), vaultBalHead = document.getElementById('vaultBalHead');
-function vaultView(which){ vMenu.style.display = which==='menu'?'grid':'none'; vDailyView.style.display = which==='daily'?'flex':'none'; vDepView.style.display = which==='deposit'?'flex':'none'; }
+function vaultView(which){ vMenu.style.display = which==='menu'?'grid':'none'; vDailyView.style.display = which==='daily'?'flex':'none'; vDepView.style.display = which==='deposit'?'flex':'none'; if (vStakeView) vStakeView.style.display = which==='stake'?'block':'none'; if (which==='stake'){ if (mpConnected) mpSend({ t: 'stakeinfo' }); refreshStakeUI(); } }
+// ---- Staking state + UI ----
+let stakeState = { amount:0, term:0, apr:0, pending:0, endsAt:0, serverNow:0, min:1000, terms:{} }, selectedStakeTerm = 0, _stakeRecvAt = 0;
+function setStakeMsg(t, ok){ const e = document.getElementById('stakeMsg'); if (!e) return; e.textContent = t || ''; e.style.color = ok===true?'#39ff8b':ok===false?'#ff8a8a':'#bfe9ff'; }
+function refreshStakeTermBtns(){ for (const b of document.querySelectorAll('.stake-term')){ const on = +b.dataset.term === selectedStakeTerm; b.style.background = on?'#2a1c04':'#160d22'; b.style.borderColor = on?'#ffd27f':'#ff5ad0'; b.style.color = on?'#ffd27f':'#ff9be0'; } }
+function stakeLivePending(){ if (!(stakeState.amount > 0)) return 0; const extra = stakeState.amount * (stakeState.apr||0) * Math.max(0, Date.now() - _stakeRecvAt) / (365*24*3600*1000); return Math.floor((stakeState.pending||0) + extra); }
+function fmtDur(ms){ const s=Math.max(0,Math.floor(ms/1000)); const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),mn=Math.floor(s%3600/60); if (d>0) return d+'d '+h+'h'; if (h>0) return h+'h '+mn+'m'; return mn+'m'; }
+function refreshStakeUI(){
+  const pos = document.getElementById('stakePos'), staking = stakeState.amount > 0;
+  if (pos) pos.style.display = staking ? 'block' : 'none';
+  const setT = (id,v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  if (staking){
+    setT('stakeAmount', Math.round(stakeState.amount).toLocaleString());
+    setT('stakeApr', Math.round((stakeState.apr||0)*100));
+    setT('stakePending', stakeLivePending().toLocaleString());
+    const ends = document.getElementById('stakeEnds');
+    if (ends){ if (stakeState.endsAt && stakeState.term>0){ const left = stakeState.endsAt - Date.now(); ends.textContent = left>0 ? ('unlocks in '+fmtDur(left)) : 'unlocked ✓'; } else ends.textContent = 'flexible (no lock)'; }
+  }
+  const sa = document.getElementById('stakeAmt'); if (sa && stakeState.min) sa.min = stakeState.min;
+  const sb = document.getElementById('stakeBtn'); if (sb) sb.textContent = staking ? '🔒 Lock more' : '🔒 Lock';
+}
+setInterval(() => { if (vaultOpen() && vStakeView && vStakeView.style.display !== 'none' && stakeState.amount > 0){ const e = document.getElementById('stakePending'); if (e) e.textContent = stakeLivePending().toLocaleString(); } }, 1000);
 function vaultOpen(){ return vaultPanel && !vaultPanel.classList.contains('hidden'); }
 function refreshVaultUI(){
   if (vaultBalHead) vaultBalHead.textContent = '🔒 ' + vault + ' $BYEBOSS';
@@ -1416,19 +1461,36 @@ function refreshVaultUI(){
   if (dailyClaimsEl) dailyClaimsEl.textContent = claims;
   if (dailyClaimBtn){ dailyClaimBtn.disabled = claimedToday; dailyClaimBtn.textContent = claimedToday ? 'Already claimed today ✓' : ('Claim ' + dailyReward + ' $BYEBOSS'); }
 }
-function openVault(){ if (!mpConnected || !vaultPanel) return; vaultPanel.classList.remove('hidden'); vaultView('daily'); refreshVaultUI(); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
+function openVault(){ if (!mpConnected || !vaultPanel) return; vaultPanel.classList.remove('hidden'); vaultView('menu'); refreshVaultUI(); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
 function closeVault(){ if (vaultPanel) vaultPanel.classList.add('hidden'); }
 if (vaultPanel){
   document.getElementById('vaultClose').onclick = closeVault;
   document.getElementById('vbDaily').onclick   = () => { vaultView('daily'); refreshVaultUI(); };
   document.getElementById('vbDeposit').onclick = () => { vaultView('deposit'); refreshVaultUI(); };
-  document.getElementById('dailyBack').onclick = () => closeVault();
+  document.getElementById('vbStake').onclick   = () => { vaultView('stake'); };
+  document.getElementById('dailyBack').onclick = () => vaultView('menu');
   document.getElementById('depBack').onclick   = () => vaultView('menu');
   dailyClaimBtn.onclick = () => { if (!claimedToday) mpSend({ t: 'dailyclaim' }); };
   vSlider.oninput = () => { vAmt.value = vSlider.value; };
   vAmt.oninput    = () => { const v = Math.max(0, Math.min(carried, Math.floor(+vAmt.value || 0))); vSlider.value = v; };
   document.getElementById('depAllBtn').onclick = () => { if (carried > 0) mpSend({ t: 'deposit', amount: carried }); };
   document.getElementById('depBtn').onclick    = () => { const a = Math.max(0, Math.min(carried, Math.floor(+vAmt.value || 0))); if (a > 0) mpSend({ t: 'deposit', amount: a }); };
+  // ---- Staking (Lock & Earn) ----
+  const stakeBack = document.getElementById('stakeBack'); if (stakeBack) stakeBack.onclick = () => vaultView('menu');
+  for (const b of document.querySelectorAll('.stake-term')) b.onclick = () => { selectedStakeTerm = +b.dataset.term; refreshStakeTermBtns(); };
+  const stakeBtn = document.getElementById('stakeBtn'); if (stakeBtn) stakeBtn.onclick = () => {
+    const amt = Math.floor(+document.getElementById('stakeAmt').value || 0);
+    if (!(amt >= (stakeState.min || 1000))){ setStakeMsg('Minimum is ' + (stakeState.min || 1000) + ' $BYEBOSS', false); return; }
+    if (amt > Math.floor(vault)){ setStakeMsg('Not enough in your vault', false); return; }
+    setStakeMsg('Locking…', null); mpSend({ t: 'stake', amount: amt, term: selectedStakeTerm });
+  };
+  const stakeClaimBtn = document.getElementById('stakeClaimBtn'); if (stakeClaimBtn) stakeClaimBtn.onclick = () => { setStakeMsg('Claiming…', null); mpSend({ t: 'stakeclaim' }); };
+  const unstakeBtn = document.getElementById('unstakeBtn'); if (unstakeBtn) unstakeBtn.onclick = () => {
+    const early = stakeState.endsAt && Date.now() < stakeState.endsAt;
+    if (early && !confirm('Unstake early? 10% of your principal will be burned 🔥')) return;
+    setStakeMsg('Unstaking…', null); mpSend({ t: 'unstake' });
+  };
+  refreshStakeTermBtns();
 }
 const remotePlayers = new Map();
 const mpCountEl = document.getElementById('mpCount');
@@ -1609,6 +1671,7 @@ function mpConnect(){
       withdrawOn = !!m.withdrawOn; if (Number.isFinite(m.withdrawMin)) withdrawMin = m.withdrawMin; if (Number.isFinite(m.withdrawDailyCap)) withdrawDailyCap = m.withdrawDailyCap;
       if (Number.isFinite(m.allocation)) allocation = m.allocation;
       if (Number.isFinite(m.burnTarget)) burnTarget = m.burnTarget;
+      if (m.stake){ stakeState = Object.assign(stakeState, m.stake); _stakeRecvAt = Date.now(); }   // staking position
       if (Array.isArray(m.skins)) ownedSkins = new Set(m.skins);   // owned skins from the server
       if (Number.isFinite(m.skinPrice)) skinPrice = m.skinPrice;
       myName = m.username || '';
@@ -1623,6 +1686,24 @@ function mpConnect(){
     else if (m.t === 'apples'){ syncServerApples(m.apples); }
     else if (m.t === 'tp'){ if (typeof pos !== 'undefined'){ pos.x = m.x; pos.z = m.z; } }   // server teleported us
     else if (m.t === 'claim'){ if (m.ok){ claimedToday = true; if (Number.isFinite(m.vault)){ flashGain(m.vault - vault); vault = m.vault; scoreVal.textContent = vault; _vaultSeen = vault; } if (Number.isFinite(m.claims)) claims = m.claims; } if (vaultOpen()) refreshVaultUI(); }
+    else if (m.t === 'stake'){                                            // Lock & Earn result
+      if (m.stake){ stakeState = Object.assign(stakeState, m.stake); _stakeRecvAt = Date.now(); }
+      if (Number.isFinite(m.vault)){ const g = m.vault - vault; if (m.action==='claim' || m.action==='unstake') flashGain(g); vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
+      if (m.ok){
+        if (m.action === 'lock') setStakeMsg('🔒 Locked! ' + (m.burned?('('+m.burned+' burned 🔥) '):'') + 'Earning ' + Math.round((stakeState.apr||0)*100) + '% APR', true);
+        else if (m.action === 'claim') setStakeMsg('✓ Claimed ' + (m.claimed||0).toLocaleString() + ' $BYEBOSS yield', true);
+        else if (m.action === 'unstake') setStakeMsg('✓ Unstaked ' + (m.returned||0).toLocaleString() + (m.penalty?(' (−'+m.penalty.toLocaleString()+' early-burn 🔥)'):'') + (m.claimed?(' +'+m.claimed.toLocaleString()+' yield'):''), true);
+      } else {
+        setStakeMsg(
+          m.reason==='term' ? 'Pick a lock term' :
+          m.reason==='min' ? ('Minimum is ' + (m.min||stakeState.min) + ' $BYEBOSS') :
+          m.reason==='funds' ? 'Not enough in your vault' :
+          m.reason==='nothing' ? 'No yield to claim yet' :
+          m.reason==='pool' ? 'Reward pool is low — try again soon' :
+          m.reason==='none' ? 'You have no active stake' : 'Action failed', false);
+      }
+      refreshStakeTermBtns(); if (vaultOpen()) refreshStakeUI();
+    }
     else if (m.t === 'skin'){ if (m.ok){ ownedSkins = new Set(m.skins); if (Number.isFinite(m.vault)) vault = m.vault; selectedSkin = m.skin; try { localStorage.setItem('bb_skin', m.skin); } catch(e){} selectChar(m.skin); } renderShop(); }
     else if (m.t === 'name'){ if (m.ok){ myName = m.name; if (nameInput) nameInput.value = m.name; setNameMsg('✓ Saved as ' + m.name, true); } else { setNameMsg(m.reason === 'taken' ? 'That name is already taken' : 'Invalid name (3–16: letters, numbers, _ -)', false); } }
     else if (m.t === 'burn'){ if (Number.isFinite(m.totalBurned)) statBurned = m.totalBurned; statPending = 0; if (statsOpen()) refreshStats(); if (mpCountEl){ mpCountEl.textContent = `🔥 ${fmtN(m.amount)} $BYEBOSS burned!`; } }
