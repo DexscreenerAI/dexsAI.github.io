@@ -191,6 +191,7 @@
     <div id="bankPrompt" class="bankprompt hide">🏦 Press <b>E</b> to open the vault</div>
     <div id="shopPrompt" class="bankprompt hide">🛍️ Press <b>E</b> to open the shop</div>
     <div id="casinoPrompt" class="bankprompt hide">🎰 Press <b>E</b> to enter the casino</div>
+    <div id="depositPrompt" class="bankprompt hide">💰 Press <b>E</b> to deposit $BYEBOSS</div>
     <div class="hpbar"><span>❤️</span><div class="hpb"><i id="hpFill"></i></div></div>
     <div id="xpwrap" class="xpwrap" style="display:none"><span class="lvl" id="lvlVal">Lvl 1</span><div class="xpb"><i id="xpFill"></i></div></div>
     <button id="walletBtn" class="walletbtn">👻 Connect Phantom</button>
@@ -313,6 +314,21 @@
           <input id="slotBet" type="number" min="1" step="1" value="1" />
           <button id="betPlus" class="slot-bbtn">+</button>
           <button id="betMax" class="slot-bbtn">MAX</button>
+        </div>
+      </div>
+    </div>
+    <div id="depositP" class="vault hidden">
+      <div class="vault-box">
+        <div class="vault-head"><span>💰 DEPOSIT $BYEBOSS</span><span id="depositClose" class="vault-x">✕</span></div>
+        <div class="vault-body" style="text-align:center">
+          <p class="vault-note" style="margin:0 0 4px">Send real $BYEBOSS from your wallet to your in-game vault, <b>1:1</b>. Tokens go to the official $BYEBOSS creator wallet.</p>
+          <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin:10px 0 6px">
+            <button id="depMinus" class="slot-bbtn" style="border-color:#3ad1ff;color:#9be8ff">−</button>
+            <input id="depAmt" type="number" min="1" step="1" value="100" style="width:128px;text-align:center;font-size:19px;font-weight:800;padding:8px;border-radius:8px;border:1px solid #3ad1ff;background:#0b1622;color:#fff" />
+            <button id="depPlus" class="slot-bbtn" style="border-color:#3ad1ff;color:#9be8ff">+</button>
+          </div>
+          <div id="depMsg" style="min-height:20px;font-weight:700;color:#bfe9ff;margin-bottom:10px">≈ +<b id="depPreview">100</b> $BYEBOSS to your vault</div>
+          <button id="depBtn" style="width:100%;padding:13px;font-size:16px;font-weight:800;border:none;border-radius:10px;background:linear-gradient(#3ad1ff,#1488c8);color:#04222e;cursor:pointer">💰 Deposit to vault</button>
         </div>
       </div>
     </div>
@@ -770,6 +786,97 @@ function onSlotResult(m){
   }, 2*220 + 120);
 }
 
+// ---- DEPOSIT panel: send real $BYEBOSS to the hot wallet -> vault credit (1:1) ----
+const DEP_RPC = 'https://dexscreener-telegram-bot-production.up.railway.app/api/rpc';
+const TOKEN_PROGRAM_ID_STR = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+const ATA_PROGRAM_ID_STR   = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL';
+let _web3Promise = null, _depBusy = false;
+function loadSolanaWeb3(){
+  if (window.solanaWeb3) return Promise.resolve(window.solanaWeb3);
+  if (_web3Promise) return _web3Promise;
+  _web3Promise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js';
+    s.onload = () => window.solanaWeb3 ? resolve(window.solanaWeb3) : reject(new Error('web3 missing'));
+    s.onerror = () => reject(new Error('web3 load failed'));
+    document.head.appendChild(s);
+  });
+  return _web3Promise;
+}
+function ataFor(web3, ownerStr, mintStr){
+  const owner = new web3.PublicKey(ownerStr), mint = new web3.PublicKey(mintStr);
+  const tp = new web3.PublicKey(TOKEN_PROGRAM_ID_STR), ap = new web3.PublicKey(ATA_PROGRAM_ID_STR);
+  const [ata] = web3.PublicKey.findProgramAddressSync([owner.toBuffer(), tp.toBuffer(), mint.toBuffer()], ap);
+  return ata;
+}
+const depositPanel = document.getElementById('depositP');
+const depAmt = document.getElementById('depAmt'), depMsgEl = document.getElementById('depMsg'), depBtn = document.getElementById('depBtn'), depPreview = document.getElementById('depPreview');
+function depositOpen(){ return depositPanel && !depositPanel.classList.contains('hidden'); }
+function setDepMsg(t, ok){ if (!depMsgEl) return; depMsgEl.innerHTML = t; depMsgEl.style.color = ok === true ? '#39ff8b' : ok === false ? '#ff8a8a' : '#bfe9ff'; }
+function depPreviewUpdate(){ const a = Math.max(0, Math.floor(+depAmt.value || 0)); if (depPreview) depPreview.textContent = a; }
+function openDeposit(){ if (!depositPanel) return; depPreviewUpdate(); if (!depositOn) setDepMsg('⚠️ Deposits are not enabled yet', false); else setDepMsg('≈ +<b>' + Math.floor(+depAmt.value||0) + '</b> $BYEBOSS to your vault', null); depositPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
+function closeDeposit(){ if (depositPanel) depositPanel.classList.add('hidden'); }
+{ const x = document.getElementById('depositClose'); if (x) x.onclick = closeDeposit; }
+if (depAmt){
+  depAmt.addEventListener('input', () => { if (!_depBusy){ depPreviewUpdate(); setDepMsg('≈ +<b>' + Math.floor(+depAmt.value||0) + '</b> $BYEBOSS to your vault', null); } });
+  const dm = document.getElementById('depMinus'), dp = document.getElementById('depPlus');
+  const dstep = () => Math.max(1, Math.round((+depAmt.value||1) * 0.25));
+  if (dm) dm.onclick = () => { depAmt.value = Math.max(1, Math.floor(+depAmt.value||1) - dstep()); depAmt.dispatchEvent(new Event('input')); };
+  if (dp) dp.onclick = () => { depAmt.value = Math.max(1, Math.floor(+depAmt.value||1) + dstep()); depAmt.dispatchEvent(new Event('input')); };
+}
+async function doDeposit(){
+  if (_depBusy) return;
+  if (!walletAddr){ await connectWallet(); if (!walletAddr) return; }
+  if (!mpConnected){ setDepMsg('Connect to the game first (👻)', false); return; }
+  if (!depositOn || !hotWallet || !depositMintAddr){ setDepMsg('⚠️ Deposits are not enabled right now', false); return; }
+  const amount = Math.floor(+depAmt.value || 0);
+  if (!(amount >= 1)){ setDepMsg('Enter a whole amount (min 1)', false); return; }
+  _depBusy = true; if (depBtn) depBtn.disabled = true;
+  setDepMsg('Confirm the transfer in your wallet…', null);
+  try {
+    const web3 = await loadSolanaWeb3();
+    const prov = (window.phantom && window.phantom.solana) || window.solana;
+    if (!prov) throw new Error('no wallet');
+    const conn = new web3.Connection(DEP_RPC, 'confirmed');
+    const player = new web3.PublicKey(walletAddr);
+    const srcAta = ataFor(web3, walletAddr, depositMintAddr);
+    const dstAta = ataFor(web3, hotWallet, depositMintAddr);
+    const raw = BigInt(amount) * 1000000n;                            // $BYEBOSS has 6 decimals
+    const data = new Uint8Array(10); data[0] = 12; new DataView(data.buffer).setBigUint64(1, raw, true); data[9] = 6;   // SPL TransferChecked
+    const ix = new web3.TransactionInstruction({
+      programId: new web3.PublicKey(TOKEN_PROGRAM_ID_STR),
+      keys: [
+        { pubkey: srcAta, isSigner: false, isWritable: true },
+        { pubkey: new web3.PublicKey(depositMintAddr), isSigner: false, isWritable: false },
+        { pubkey: dstAta, isSigner: false, isWritable: true },
+        { pubkey: player, isSigner: true, isWritable: false },
+      ],
+      data,
+    });
+    const tx = new web3.Transaction().add(ix);
+    tx.feePayer = player;
+    tx.recentBlockhash = (await conn.getLatestBlockhash('confirmed')).blockhash;
+    const res = await prov.signAndSendTransaction(tx);
+    const sig = (res && res.signature) ? res.signature : res;
+    setDepMsg('Waiting for confirmation…', null);
+    for (let i = 0; i < 24; i++){                                    // wait until confirmed so the server can see it
+      await new Promise(r => setTimeout(r, 2000));
+      try {
+        const st = await conn.getSignatureStatuses([sig]); const s = st && st.value && st.value[0];
+        if (s && s.err) throw new Error('tx failed');
+        if (s && (s.confirmationStatus === 'confirmed' || s.confirmationStatus === 'finalized')) break;
+      } catch(e){ if (String(e.message).includes('failed')) throw e; }
+    }
+    setDepMsg('Crediting your vault…', null);
+    mpSend({ t: 'topup', sig });                                     // server verifies on-chain + credits; reply via onmessage
+  } catch(e){
+    console.warn('deposit failed', e);
+    setDepMsg(/reject|cancel|User/i.test(String(e && e.message)) ? 'Deposit cancelled' : 'Deposit failed — try again', false);
+    _depBusy = false; if (depBtn) depBtn.disabled = false;
+  }
+}
+if (depBtn) depBtn.onclick = doDeposit;
+
 // ---- iso sprite character (a 2D billboard option in the Shop) ----
 const ISO_STATES = { idle:{fps:7,loop:true}, walk:{fps:12,loop:true}, run:{fps:16,loop:true}, jump:{fps:16,loop:false}, shot:{fps:22,loop:true} };
 const ISO_DIRS = ['up','down','right'];
@@ -949,7 +1056,7 @@ function placeProp(m, x, z, scale, rotY, yNudge){
   const b = new THREE.Box3().setFromObject(m); m.position.y = -b.min.y + yNudge;
 }
 // Floating 3D name sign above a building (world-placed sprite just over the roof).
-const _signs = { vault:null, shop:null, stats:null, casino:null };
+const _signs = { vault:null, shop:null, stats:null, casino:null, deposit:null };
 function buildingSign(key, mesh, text, color, scl){
   if (_signs[key]){ scene.remove(_signs[key]); _signs[key] = null; }
   if (!mesh) return;
@@ -1027,6 +1134,25 @@ function placeStats(pt){
   buildingSign('stats', statsMesh, 'STATS', '#ffd54a');
 }
 function clearStats(){ if (statsMesh){ scene.remove(statsMesh); statsMesh = null; } clearSign('stats'); }
+
+// ---- DEPOSIT building (send real $BYEBOSS -> vault; teleport landmark) ----
+let depositPoint = null, depositTemplate = null, depositScale = 2, _pendingDeposit = null, depositMesh = null;
+let depositX = -40, depositZ = -62;
+new GLTFLoader().load('./assets/game/building2.glb', (g) => {
+  depositTemplate = g.scene; depositScale = fitScale(depositTemplate, 8);
+  if (_pendingDeposit !== null){ placeDeposit(_pendingDeposit); _pendingDeposit = null; }
+}, undefined, () => {});
+function placeDeposit(pt){
+  if (depositMesh){ scene.remove(depositMesh); depositMesh = null; }
+  if (pt){ depositX = pt.x; depositZ = pt.z; depositPoint = pt; }
+  if (!depositPoint) return;
+  if (!depositTemplate){ _pendingDeposit = depositPoint; return; }
+  const m = depositTemplate.clone(true); m.traverse(o => { o.frustumCulled = false; }); scene.add(m);
+  placeProp(m, depositX, depositZ, depositScale, 0, 0); depositMesh = m;
+  buildingSign('deposit', depositMesh, 'DEPOSIT', '#3ad1ff');
+}
+function clearDeposit(){ if (depositMesh){ scene.remove(depositMesh); depositMesh = null; } clearSign('deposit'); }
+function nearDeposit(){ return !!depositPoint && lookingAt(depositPoint.x, depositPoint.z); }
 function nearStats(){ return !!statsPoint && lookingAt(statsPoint.x, statsPoint.z); }
 
 let score = 0; const scoreVal = document.getElementById('scoreVal');
@@ -1064,6 +1190,7 @@ async function connectWallet(){
 const MP_URL = 'wss://dexscreener-telegram-bot-production.up.railway.app/game';
 let mpWs = null, mpConnected = false, mpId = null, byebossTemplate = null, mpDailyCap = 400;
 let mpWantConnected = false, mpRetry = 0, mpReconnectT = null, mpLastSnap = 0;   // auto-reconnect + keepalive state
+let hotWallet = null, depositMintAddr = null, depositOn = false;                 // on-chain deposit target (from welcome)
 let vault = 0, carried = 0;   // secured (claimable) vs on-hand (at risk) balances
 let _vaultSeen = null;        // for the "+N" pickup popup (vault gains)
 // "+N $BYEBOSS" floating combat-text, spawned in the 3D world just above the
@@ -1097,6 +1224,7 @@ const shopPrompt = document.getElementById('shopPrompt');
 const dbgEl = document.getElementById('dbg'); let _dbgOn = false;
 const statsPrompt = document.getElementById('statsPrompt');
 const casinoPrompt = document.getElementById('casinoPrompt');
+const depositPrompt = document.getElementById('depositPrompt');
 const xpwrapEl = document.getElementById('xpwrap'), lvlVal = document.getElementById('lvlVal'), xpFill = document.getElementById('xpFill');
 function fmtPool(n){ n=+n; if(!isFinite(n)) return ''; if(n>=1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M'; if(n>=1e3) return Math.round(n/1e3)+'k'; return ''+n; }
 function doTeleport(dest){ if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'teleport', to: dest })); }
@@ -1308,6 +1436,8 @@ function mpConnect(){
       placeShop(m.shop || null);                  // render the shop building
       placeStats(m.stats || null);                // render the stats building
       placeCasino(m.casino || null);              // render the casino building
+      placeDeposit(m.deposit || null);            // render the deposit building
+      hotWallet = m.hotWallet || null; depositMintAddr = m.depositMint || null; depositOn = !!m.depositOn;
       if (Number.isFinite(m.allocation)) allocation = m.allocation;
       if (Number.isFinite(m.burnTarget)) burnTarget = m.burnTarget;
       if (Array.isArray(m.skins)) ownedSkins = new Set(m.skins);   // owned skins from the server
@@ -1331,10 +1461,20 @@ function mpConnect(){
     else if (m.t === 'slot'){ onSlotResult(m); }
     else if (m.t === 'shot'){ if (m.id !== mpId) spawnRemoteShot(m); }   // render another player's tracer
     else if (m.t === 'bigwin'){ onBigWin(m); }                            // someone hit a x10/x50/x100
+    else if (m.t === 'topup'){                                            // on-chain deposit result
+      _depBusy = false; if (depBtn) depBtn.disabled = false;
+      if (m.ok){
+        if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
+        setDepMsg('✓ +' + m.amount + ' $BYEBOSS added to your vault!', true);
+        flashGain(m.amount);
+      } else {
+        setDepMsg(m.reason==='used' ? 'This deposit was already credited' : m.reason==='notfound' ? 'Not confirmed yet — wait a few seconds and press Deposit again' : m.reason==='disabled' ? 'Deposits are off right now' : 'Could not verify the deposit', false);
+      }
+    }
     else if (m.t === 'snap'){ mpLastSnap = Date.now(); onSnap(m); }
     else if (m.t === 'left'){ removeRemote(m.id); }
   };
-  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearServerApples(); clearVaults(); clearShop(); clearStats(); clearCasino(); closeVault(); closeShopBld(); closeStats(); closeCasino(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = '0'; if (scoreVal) scoreVal.textContent = '—'; if (bankPrompt) bankPrompt.classList.add('hide'); if (xpwrapEl) xpwrapEl.style.display = 'none'; vault = carried = 0; _vaultSeen = null; if (mpCountEl) mpCountEl.textContent = '🔴 offline'; if (mpWantConnected && walletAddr) scheduleReconnect(); };
+  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearServerApples(); clearVaults(); clearShop(); clearStats(); clearCasino(); clearDeposit(); closeVault(); closeShopBld(); closeStats(); closeCasino(); closeDeposit(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = '0'; if (scoreVal) scoreVal.textContent = '—'; if (bankPrompt) bankPrompt.classList.add('hide'); if (xpwrapEl) xpwrapEl.style.display = 'none'; vault = carried = 0; _vaultSeen = null; if (mpCountEl) mpCountEl.textContent = '🔴 offline'; if (mpWantConnected && walletAddr) scheduleReconnect(); };
   mpWs.onerror = () => {};
 }
 function scheduleReconnect(){
@@ -1409,10 +1549,12 @@ addEventListener('keydown', e=>{
     else if (shopBldOpen()) closeShopBld();
     else if (statsOpen()) closeStats();
     else if (casinoOpen()) closeCasino();
+    else if (depositOpen()) closeDeposit();
     else if (mpConnected && nearVault()) openVault();
     else if (mpConnected && nearShop()) openShopBld();
     else if (mpConnected && nearStats()) openStats();
     else if (mpConnected && nearCasino()) openCasino();
+    else if (mpConnected && nearDeposit()) openDeposit();
     e.preventDefault();
   }
 });
@@ -1815,7 +1957,7 @@ function buildGunPanel(){
 const LOOK_SENS = 0.0026, PITCH_MIN = -0.5, PITCH_MAX = 1.0;
 canvas.addEventListener('click', () => {
   const shopOpen = !document.getElementById('shop').classList.contains('hidden');
-  if (!shopOpen && !vaultOpen() && !cfgOpen() && !statsOpen() && !casinoOpen() && document.pointerLockElement !== canvas){ try { canvas.requestPointerLock(); } catch(e){} }
+  if (!shopOpen && !vaultOpen() && !cfgOpen() && !statsOpen() && !casinoOpen() && !depositOpen() && document.pointerLockElement !== canvas){ try { canvas.requestPointerLock(); } catch(e){} }
 });
 document.addEventListener('mousemove', (e) => {
   if (document.pointerLockElement !== canvas) return;
@@ -1830,7 +1972,7 @@ canvas.addEventListener('touchend', (e) => { for (const t of e.changedTouches){ 
 // ===== minimap (bottom-right): player, monsters, coins, buildings =====
 const mmCanvas = document.getElementById('minimap'), mmCtx = mmCanvas ? mmCanvas.getContext('2d') : null;
 const MM_RANGE = 115;
-const _vaultMM = { x:-999, y:-999 }, _shopMM = { x:-999, y:-999 }, _statsMM = { x:-999, y:-999 }, _casinoMM = { x:-999, y:-999 };   // screen pos of the teleport icons
+const _vaultMM = { x:-999, y:-999 }, _shopMM = { x:-999, y:-999 }, _statsMM = { x:-999, y:-999 }, _casinoMM = { x:-999, y:-999 }, _depositMM = { x:-999, y:-999 };   // screen pos of the teleport icons
 if (mmCanvas){
   mmCanvas.style.cursor = 'pointer';
   mmCanvas.addEventListener('click', (e) => {
@@ -1843,6 +1985,7 @@ if (mmCanvas){
     else if (Math.hypot(cx - _shopMM.x, cy - _shopMM.y) < r) doTeleport('shop');
     else if (Math.hypot(cx - _statsMM.x, cy - _statsMM.y) < r) doTeleport('stats');
     else if (Math.hypot(cx - _casinoMM.x, cy - _casinoMM.y) < r) doTeleport('casino');
+    else if (Math.hypot(cx - _depositMM.x, cy - _depositMM.y) < r) doTeleport('deposit');
   });
 }
 function drawMinimap(){
@@ -1875,6 +2018,7 @@ function drawMinimap(){
   if (mpConnected && shopPoint){ const p = _mmIcon(shopPoint.x, shopPoint.z); mmCtx.fillText('🏪', p.x, p.y); _shopMM.x = p.x; _shopMM.y = p.y; } else { _shopMM.x = -999; _shopMM.y = -999; }
   if (mpConnected && statsPoint){ const p = _mmIcon(statsPoint.x, statsPoint.z); mmCtx.fillText('📊', p.x, p.y); _statsMM.x = p.x; _statsMM.y = p.y; } else { _statsMM.x = -999; _statsMM.y = -999; }
   if (mpConnected && casinoPoint){ const p = _mmIcon(casinoPoint.x, casinoPoint.z); mmCtx.fillText('🎰', p.x, p.y); _casinoMM.x = p.x; _casinoMM.y = p.y; } else { _casinoMM.x = -999; _casinoMM.y = -999; }
+  if (mpConnected && depositPoint){ const p = _mmIcon(depositPoint.x, depositPoint.z); mmCtx.fillText('💰', p.x, p.y); _depositMM.x = p.x; _depositMM.y = p.y; } else { _depositMM.x = -999; _depositMM.y = -999; }
   const fx = Math.sin(faceAngle), fz = Math.cos(faceAngle), px = -fz, py = fx;
   mmCtx.fillStyle = '#39ff8b'; mmCtx.beginPath();
   mmCtx.moveTo(c+fx*8, c+fz*8); mmCtx.lineTo(c-fx*4+px*5, c-fz*4+py*5); mmCtx.lineTo(c-fx*4-px*5, c-fz*4-py*5);
@@ -1885,7 +2029,7 @@ function update(dt){
   if (locked){ lockTimer -= dt; if (lockTimer <= 0) locked = false; }
 
   let moving = false;
-  if (!locked && !dead && !vaultOpen() && !shopBldOpen() && !cfgOpen() && !statsOpen() && !casinoOpen()){
+  if (!locked && !dead && !vaultOpen() && !shopBldOpen() && !cfgOpen() && !statsOpen() && !casinoOpen() && !depositOpen()){
     const mF = (keys.f?1:0) - (keys.b?1:0);   // W/S forward-back (camera-relative)
     const mR = (keys.r?1:0) - (keys.l?1:0);   // A/D strafe
     moving = !!(mF || mR);
@@ -1966,11 +2110,12 @@ function update(dt){
   for (const e of serverBags.values()){ if (e.group.visible) e.group.rotation.y += dt*2.2; }
   for (const e of serverApples.values()){ if (e.group.visible) e.group.rotation.y += dt*1.6; }
   // "Press E" prompts when standing on the vault / shop (and no panel is open)
-  const anyPanel = vaultOpen() || shopBldOpen() || cfgOpen() || statsOpen() || casinoOpen();
+  const anyPanel = vaultOpen() || shopBldOpen() || cfgOpen() || statsOpen() || casinoOpen() || depositOpen();
   if (bankPrompt) bankPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && nearVault()));
   if (shopPrompt) shopPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && !nearVault() && nearShop()));
   if (statsPrompt) statsPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && !nearVault() && !nearShop() && nearStats()));
   if (casinoPrompt) casinoPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && !nearVault() && !nearShop() && !nearStats() && nearCasino()));
+  if (depositPrompt) depositPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && !nearVault() && !nearShop() && !nearStats() && !nearCasino() && nearDeposit()));
 }
 
 let last = 0, running = false;
