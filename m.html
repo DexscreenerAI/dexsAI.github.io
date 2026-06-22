@@ -446,6 +446,14 @@ window.addEventListener('error', (ev) => {
     box.textContent += '⚠ ' + (ev.message || (ev.error && ev.error.message) || ev.error || 'error') + (ev.lineno ? (' :' + ev.lineno) : '') + '\n';
   } catch (e) {}
 });
+// m.html debug: an immediate, UNCONDITIONAL banner proving the game script started.
+(function(){ try {
+  const b = document.createElement('div'); b.id = 'jsok';
+  b.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:100000;background:#00a000;color:#fff;font:bold 14px monospace;padding:8px;text-align:center;white-space:pre-wrap';
+  b.textContent = 'v11-M · JS started — loading…';
+  (document.body || document.documentElement).appendChild(b);
+  window.__jsok = b;
+} catch (e) {} })();
 const canvas = document.getElementById('cv');
 // Mobile GPUs have far less memory: drop antialias + use pixel ratio 1 so the framebuffer
 // doesn't exhaust VRAM and lose the context (the classic "renders black but game runs" bug).
@@ -470,24 +478,21 @@ function resize(){
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 200));
 resize(); setTimeout(resize, 300); setTimeout(resize, 1200);   // re-fit after the mobile address bar settles
-// Live diagnostic badge — touch devices, small screens, or ?debug (so it's visible whatever the device reports).
-if (('ontouchstart' in window) || navigator.maxTouchPoints>0 || ((screen && screen.width) ? screen.width < 820 : false) || location.search.indexOf('debug') >= 0){
-  const dbg = document.createElement('div'); dbg.id = 'dbg';
-  dbg.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99998;background:#ffde00;color:#000;font:bold 15px/1.45 monospace;padding:9px 12px;text-align:center;pointer-events:none;white-space:pre-wrap';
-  dbg.textContent = 'starting…';
-  const add = () => { try { (document.body || document.documentElement).appendChild(dbg); } catch (e) {} };
-  if (document.body) add(); else addEventListener('DOMContentLoaded', add);
+// Live diagnostic — updates the always-on banner (no gating), so the verdict shows on ANY device.
+{
+  const dbg = window.__jsok || document.createElement('div');
   setInterval(() => { try {
     const sz = renderer.getSize(new THREE.Vector2()), inf = renderer.info.render;
     const w = Math.round(sz.x), h = Math.round(sz.y), L = (typeof loaded!=='undefined'?loaded:0), T = (typeof total!=='undefined'?total:0);
     let verdict;
-    if (w === 0 || h === 0)          verdict = '❌ CANVAS ' + w + 'x' + h + ' (size 0)';
-    else if (T && L < T)             verdict = '⏳ MAP LOADING ' + L + '/' + T;
-    else if (inf.calls === 0)        verdict = '❌ NOTHING DRAWN (0 calls)';
-    else                             verdict = '✅ RENDERING ' + inf.calls + ' calls';
+    if (w === 0 || h === 0)          verdict = 'CANVAS ' + w + 'x' + h + ' (size 0)';
+    else if (T && L < T)             verdict = 'MAP LOADING ' + L + '/' + T;
+    else if (inf.calls === 0)        verdict = 'NOTHING DRAWN (0 calls)';
+    else                             verdict = 'RENDERING ' + inf.calls + ' calls';
     const F = (typeof loadFails!=='undefined') ? loadFails : 0;
-    dbg.textContent = 'build v11-M  ·  ' + verdict + '\ncv ' + w + 'x' + h + ' · gl' + (renderer.capabilities.isWebGL2?2:1) + ' · load ' + L + '/' + T + (F?(' · '+F+' FAILED'):'') + ' · ctx ' + (renderer.getContext && renderer.getContext().isContextLost && renderer.getContext().isContextLost() ? 'LOST' : 'ok');
-  } catch (e) { dbg.textContent = 'dbg ' + e.message; } }, 500);
+    dbg.style.background = (verdict[0]==='R') ? '#00a000' : '#cc8800';
+    dbg.textContent = 'v11-M · ' + verdict + '\ncv ' + w + 'x' + h + ' · gl' + (renderer.capabilities.isWebGL2?2:1) + ' · load ' + L + '/' + T + (F?(' · '+F+' FAILED'):'') + ' · ctx ' + (renderer.getContext && renderer.getContext().isContextLost && renderer.getContext().isContextLost() ? 'LOST' : 'ok');
+  } catch (e) { try { dbg.textContent = 'dbg ' + e.message; } catch(_){} } }, 500);
 }
 
 // lights
