@@ -209,7 +209,7 @@
     <div id="depositPrompt" class="bankprompt hide">💰 Press <b>E</b> to deposit $BYEBOSS</div>
     <div class="hpbar"><span>❤️</span><div class="hpb"><i id="hpFill"></i></div></div>
     <div id="xpwrap" class="xpwrap" style="display:none"><span class="lvl" id="lvlVal">Lvl 1</span><div class="xpb"><i id="xpFill"></i></div></div>
-    <button id="walletBtn" class="walletbtn">👻 Connect Phantom</button>
+    <button id="walletBtn" class="walletbtn" title="Or press M">👻 Connect Phantom <small style="opacity:.6">(M)</small></button>
     <div id="mpCount" class="mpcount" style="display:none"></div>
     <div id="dbg" class="dbg" style="display:none"></div>
     <div id="respawn" class="respawn hide">💀 ELIMINATED<br><span>respawning…</span></div>
@@ -1604,6 +1604,7 @@ function keyLabel(code){ if (!code) return '—'; if (code.startsWith('Key')) re
 addEventListener('keydown', e=>{
   if (_capturingBind){ e.preventDefault(); if (e.code !== 'Escape'){ binds[_capturingBind] = e.code; saveBinds(); } _capturingBind = null; renderBinds(); return; }
   if (e.code === 'Backquote'){ _dbgOn = !_dbgOn; if (dbgEl) dbgEl.style.display = _dbgOn ? 'block' : 'none'; e.preventDefault(); return; }   // ` toggles debug overlay
+  if (e.code === 'KeyM' && (!mpConnected || !mpWs || mpWs.readyState !== 1)){ try { document.exitPointerLock(); } catch(err){} mpJoin(); e.preventDefault(); return; }   // M = connect Phantom & join (no need to Esc + click)
   for (const a in binds){ if (binds[a] === e.code){ if (a === 'jump') triggerJump(); else keys[a] = true; e.preventDefault(); return; } }
   if (ARROWS[e.code]){ keys[ARROWS[e.code]] = true; e.preventDefault(); return; }
   if (e.code === 'KeyE'){                                   // open the nearest landmark panel
