@@ -179,6 +179,7 @@
 <audio id="snd-shoot"      src="https://files.catbox.moe/zej06i.mp3" preload="auto"></audio>
 <audio id="snd-step"       src="https://files.catbox.moe/vdvwod.mp3" preload="auto" loop></audio>
 <audio id="snd-enemy-step" src="https://files.catbox.moe/vdvwod.mp3" preload="auto" loop></audio>
+<audio id="snd-slot"       src="https://files.catbox.moe/goq31j.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
   <div class="hud">
@@ -763,6 +764,7 @@ function doSpin(){
   if (!(bet >= 1)){ if (slotMsgEl){ slotMsgEl.textContent = 'Enter a bet'; slotMsgEl.style.color = '#ff8a8a'; } return; }
   if (bet > vault){ if (slotMsgEl){ slotMsgEl.textContent = 'Not enough $BYEBOSS in your vault'; slotMsgEl.style.color = '#ff8a8a'; } return; }
   _slotSpinning = true; if (spinBtn) spinBtn.disabled = true;
+  playSlot();   // sound on press PLAY
   if (slotMsgEl){ slotMsgEl.textContent = 'Spinning…'; slotMsgEl.style.color = '#cfc2e8'; }
   _slotAnim = setInterval(() => { for (let i = 0; i < srImgs.length; i++) setReel(i, SLOT_KEYS[(Math.random()*SLOT_KEYS.length)|0]); }, 70);
   mpSend({ t: 'slot', bet });
@@ -781,7 +783,7 @@ function onSlotResult(m){
     if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }   // sync — no world popup for gambling
     refreshSlot();
     if (slotMsgEl){
-      if (m.payout > 0){ slotMsgEl.textContent = `🎉 WIN ×${m.mult}  +${m.payout} $BYEBOSS!`; slotMsgEl.style.color = '#39ff8b'; }
+      if (m.payout > 0){ slotMsgEl.textContent = `🎉 WIN ×${m.mult}  +${m.payout} $BYEBOSS!`; slotMsgEl.style.color = '#39ff8b'; playSlot(); }   // sound on win
       else { slotMsgEl.textContent = `No win — ${m.bet} to the allocation. Spin again!`; slotMsgEl.style.color = '#ff9d6b'; }
     }
     _slotSpinning = false; if (spinBtn) spinBtn.disabled = false;
@@ -1828,15 +1830,16 @@ new GLTFLoader().load('./assets/game/gun.glb', (gltf) => {
 }, undefined, (err) => console.error('gun load failed', err));
 
 // ===== audio: gunshot one-shot + footstep loops (player + nearby online enemy) =====
-const sndShoot = document.getElementById('snd-shoot'), sndStep = document.getElementById('snd-step'), sndEnemyStep = document.getElementById('snd-enemy-step');
-const STEP_VOL = 0.5, SHOOT_VOL = 0.9, ENEMY_STEP_VOL = 0.65, ENEMY_STEP_MAX = 14;   // enemy steps only when REALLY close
+const sndShoot = document.getElementById('snd-shoot'), sndStep = document.getElementById('snd-step'), sndEnemyStep = document.getElementById('snd-enemy-step'), sndSlot = document.getElementById('snd-slot');
+const STEP_VOL = 0.5, SHOOT_VOL = 0.9, ENEMY_STEP_VOL = 0.65, ENEMY_STEP_MAX = 14, SLOT_VOL = 0.85;   // enemy steps only when REALLY close
 let _audioOn = false;
 function unlockAudio(){
   if (_audioOn) return; _audioOn = true;
-  for (const a of [sndShoot, sndStep, sndEnemyStep]){ if (!a) continue; try { a.volume = 0; a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(()=>{}); } catch(e){} }
+  for (const a of [sndShoot, sndStep, sndEnemyStep, sndSlot]){ if (!a) continue; try { a.volume = 0; a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(()=>{}); } catch(e){} }
 }
 addEventListener('pointerdown', unlockAudio); addEventListener('keydown', unlockAudio);
 function playShoot(){ if (!sndShoot) return; if (!_audioOn) unlockAudio(); try { sndShoot.volume = SHOOT_VOL; sndShoot.currentTime = 0; sndShoot.play().catch(()=>{}); } catch(e){} }
+function playSlot(){ if (!sndSlot) return; if (!_audioOn) unlockAudio(); try { sndSlot.volume = SLOT_VOL; sndSlot.currentTime = 0; sndSlot.play().catch(()=>{}); } catch(e){} }
 // Player footsteps: loop while moving on the ground, stop when stopped (self-heals if a play() was refused).
 function setStep(on){
   if (!sndStep || !_audioOn) return;
