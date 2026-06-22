@@ -571,6 +571,7 @@ for (let i=0;i<9;i++){
 // ---------------------------------------------------------------------------
 const player = new THREE.Group(); scene.add(player);
 const pos = player.position;                 // we move this group around
+pos.set(0, 0, -4);                            // spawn just in front of the DEPOSIT building (north of plaza centre)
 player.rotation.y = Math.PI;                  // spawn facing away from the camera
 let mixer = null, curAction = null, actions = {}, durations = {}, CLIP = {};
 const faceOffset = 0;      // facing offset (radians)
@@ -1195,7 +1196,7 @@ function damagePlayer(d){
   if (dead) return;
   hp -= d; sinceHit = 0; updateHpBar();
   if (hp <= 0){ hp = 0; dead = true; aiming = false; if (respawnEl) respawnEl.classList.remove('hide');
-    setTimeout(() => { hp = MAX_HP; dead = false; sinceHit = 99; if (typeof pos !== 'undefined') pos.set(0,0,0); updateHpBar(); if (respawnEl) respawnEl.classList.add('hide'); }, 2000); }
+    setTimeout(() => { hp = MAX_HP; dead = false; sinceHit = 99; if (typeof pos !== 'undefined') pos.set(0,0,-4); updateHpBar(); if (respawnEl) respawnEl.classList.add('hide'); }, 2000); }
 }
 function regen(dt){
   if (mpConnected) return;          // the server owns HP in multiplayer
