@@ -360,6 +360,10 @@
               <button id="depRecGo" type="button" style="margin-top:6px;width:100%;padding:9px;font-size:14px;font-weight:800;border:none;border-radius:8px;background:#1488c8;color:#eaf8ff;cursor:pointer">🔁 Credit this deposit</button>
             </div>
           </div>
+          <div id="depHistWrap" style="margin-top:12px;text-align:left;display:none">
+            <div style="font-size:12px;color:#7fb8d8;font-weight:800;margin-bottom:5px;border-top:1px solid rgba(58,209,255,.22);padding-top:9px">📜 Your deposits</div>
+            <div id="depHistList" style="display:flex;flex-direction:column;gap:4px;max-height:140px;overflow-y:auto"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -859,7 +863,35 @@ const depAmt = document.getElementById('depAmt'), depMsgEl = document.getElement
 function depositOpen(){ return depositPanel && !depositPanel.classList.contains('hidden'); }
 function setDepMsg(t, ok){ if (!depMsgEl) return; depMsgEl.innerHTML = t; depMsgEl.style.color = ok === true ? '#39ff8b' : ok === false ? '#ff8a8a' : '#bfe9ff'; }
 function depPreviewUpdate(){ const a = Math.max(0, Math.floor(+depAmt.value || 0)); if (depPreview) depPreview.textContent = a; }
-function openDeposit(){ if (!depositPanel) return; depPreviewUpdate(); if (!depositOn) setDepMsg('⚠️ Deposits are not enabled yet', false); else setDepMsg('≈ +<b>' + Math.floor(+depAmt.value||0) + '</b> $BYEBOSS to your vault', null); { clearTimeout(_depBgT); const dbox = document.querySelector('#depositP .vault-box'); if (dbox) dbox.classList.remove('depositok'); } depositPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
+// ---- deposit history (per browser, localStorage): success / failed / pending ----
+const DEP_HIST_KEY = 'byeboss_dep_hist_v1';
+function depHistLoad(){ try { return JSON.parse(localStorage.getItem(DEP_HIST_KEY) || '[]') || []; } catch(e){ return []; } }
+function depHistSaveArr(arr){ try { localStorage.setItem(DEP_HIST_KEY, JSON.stringify(arr.slice(0, 40))); } catch(e){} }
+function depHistAdd(rec){ const arr = depHistLoad(); const i = rec.sig ? arr.findIndex(r => r.sig && r.sig === rec.sig) : -1; if (i >= 0){ if (arr[i].status === 'success' && rec.status === 'pending') rec = Object.assign({}, rec, { status: 'success' }); arr[i] = Object.assign({}, arr[i], rec); } else arr.unshift(rec); depHistSaveArr(arr); renderDepHist(); }
+function depHistSet(sig, patch){ if (!sig) return; const arr = depHistLoad(); const i = arr.findIndex(r => r.sig === sig); if (i >= 0){ arr[i] = Object.assign({}, arr[i], patch); depHistSaveArr(arr); renderDepHist(); } }
+function depHistAgo(ts){ if (!ts) return ''; const s = Math.max(0, (Date.now() - ts) / 1000); if (s < 60) return Math.floor(s) + 's'; if (s < 3600) return Math.floor(s/60) + 'm'; if (s < 86400) return Math.floor(s/3600) + 'h'; return Math.floor(s/86400) + 'd'; }
+function renderDepHist(){
+  const wrap = document.getElementById('depHistWrap'), list = document.getElementById('depHistList');
+  if (!wrap || !list) return;
+  let arr = depHistLoad();
+  if (walletAddr) arr = arr.filter(r => !r.wallet || r.wallet === walletAddr);
+  if (!arr.length){ wrap.style.display = 'none'; list.innerHTML = ''; return; }
+  wrap.style.display = 'block';
+  list.innerHTML = arr.slice(0, 15).map(r => {
+    const ic  = r.status === 'success' ? '✅' : r.status === 'failed' ? '❌' : '⏳';
+    const col = r.status === 'success' ? '#39ff8b' : r.status === 'failed' ? '#ff8a8a' : '#ffd27f';
+    const amt = (r.amount != null) ? ('+' + Number(r.amount).toLocaleString()) : '—';
+    const sigOk = r.sig && /^[1-9A-HJ-NP-Za-km-z]{20,100}$/.test(r.sig);
+    const sigShort = sigOk ? (r.sig.slice(0,4) + '…' + r.sig.slice(-4)) : 'no tx';
+    const right = sigOk
+      ? '<a href="https://solscan.io/tx/' + r.sig + '" target="_blank" rel="noopener" style="color:#7fb8d8;text-decoration:none">' + sigShort + ' ↗</a>'
+      : '<span style="color:#6f93ad">' + sigShort + '</span>';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;background:rgba(11,22,34,.6);border:1px solid rgba(58,209,255,.18);border-radius:7px;padding:5px 8px">'
+      + '<span style="color:' + col + ';font-weight:800">' + ic + ' ' + amt + '</span>'
+      + '<span style="color:#6f93ad">' + right + ' · ' + depHistAgo(r.ts) + '</span></div>';
+  }).join('');
+}
+function openDeposit(){ if (!depositPanel) return; depPreviewUpdate(); if (!depositOn) setDepMsg('⚠️ Deposits are not enabled yet', false); else setDepMsg('≈ +<b>' + Math.floor(+depAmt.value||0) + '</b> $BYEBOSS to your vault', null); { clearTimeout(_depBgT); const dbox = document.querySelector('#depositP .vault-box'); if (dbox) dbox.classList.remove('depositok'); } depositPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} renderDepHist(); }
 function closeDeposit(){ if (depositPanel) depositPanel.classList.add('hidden'); }
 { const x = document.getElementById('depositClose'); if (x) x.onclick = closeDeposit; }
 if (depAmt){
@@ -879,6 +911,7 @@ async function doDeposit(){
   _depBusy = true; if (depBtn) depBtn.disabled = true;
   if (_depFailT) clearTimeout(_depFailT);
   _depFailT = setTimeout(() => { _depFailT = null; if (_depBusy){ _depBusy = false; if (depBtn) depBtn.disabled = false; setDepMsg('Timed out — try again', false); } }, 90000);   // never stay stuck
+  let depSig = null;
   try {
     setDepMsg('Loading wallet library…', null);
     const web3 = await loadSolanaWeb3();
@@ -909,6 +942,7 @@ async function doDeposit(){
     // sign with the wallet (this is what pops up Phantom), then send the raw tx
     const signed = await prov.signTransaction(tx);
     const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: true });
+    depSig = sig;
     setDepMsg('Waiting for confirmation…', null);
     for (let i = 0; i < 24; i++){                                    // wait until confirmed so the server can see it
       await new Promise(r => setTimeout(r, 2000));
@@ -920,12 +954,15 @@ async function doDeposit(){
     }
     setDepMsg('Crediting your vault…', null);
     _lastDepSig = sig; _depAutoRetry = 0;                            // remember it so a retry re-checks the SAME tx (never sends new tokens)
+    depHistAdd({ sig, amount, status: 'pending', ts: Date.now(), wallet: walletAddr });
     mpSend({ t: 'topup', sig });                                     // server verifies on-chain + credits; reply via onmessage
   } catch(e){
     if (_depFailT){ clearTimeout(_depFailT); _depFailT = null; }
     const msg = String((e && e.message) || e || '');
     console.error('deposit failed:', e);
-    setDepMsg(/reject|cancel|User|declined/i.test(msg) ? 'Deposit cancelled' : ('Deposit failed: ' + (msg.slice(0, 90) || 'unknown error')), false);
+    const cancelled = /reject|cancel|User|declined/i.test(msg);
+    setDepMsg(cancelled ? 'Deposit cancelled' : ('Deposit failed: ' + (msg.slice(0, 90) || 'unknown error')), false);
+    if (!cancelled) depHistAdd({ sig: depSig || undefined, amount, status: 'failed', ts: Date.now(), wallet: walletAddr });
     _depBusy = false; if (depBtn) depBtn.disabled = false;
   }
 }
@@ -948,6 +985,7 @@ if (depAmt){ depAmt.addEventListener('keydown', (e) => { e.stopPropagation(); if
     if (_depFailT) clearTimeout(_depFailT);
     _depFailT = setTimeout(() => { _depFailT = null; if (_depBusy){ _depBusy = false; if (depBtn) depBtn.disabled = false; setDepMsg('Timed out — try Recover again', false); } }, 90000);
     setDepMsg('Checking that transaction on-chain…', null);
+    depHistAdd({ sig, amount: null, status: 'pending', ts: Date.now(), wallet: walletAddr });
     mpSend({ t: 'topup', sig });
   }
   if (recGo) recGo.addEventListener('click', recoverDeposit);
@@ -1553,7 +1591,8 @@ function mpConnect(){
     else if (m.t === 'topup'){                                            // on-chain deposit result
       if (m.ok){
         _depBusy = false; if (depBtn) depBtn.disabled = false; if (_depFailT){ clearTimeout(_depFailT); _depFailT = null; }
-        _lastDepSig = null; _depAutoRetry = 0;
+        const okSig = _lastDepSig; _lastDepSig = null; _depAutoRetry = 0;
+        if (okSig) depHistSet(okSig, { status: 'success', amount: m.amount }); else depHistAdd({ amount: m.amount, status: 'success', ts: Date.now(), wallet: walletAddr });
         if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
         setDepMsg('✓ +' + m.amount + ' $BYEBOSS added to your vault!', true);
         flashGain(m.amount);
@@ -1566,6 +1605,8 @@ function mpConnect(){
         setTimeout(() => { if (_lastDepSig && mpConnected) mpSend({ t: 'topup', sig: _lastDepSig }); }, 4000);
       } else {
         _depBusy = false; if (depBtn) depBtn.disabled = false; if (_depFailT){ clearTimeout(_depFailT); _depFailT = null; }
+        const endSig = _lastDepSig; _lastDepSig = null; _depAutoRetry = 0;
+        if (endSig) depHistSet(endSig, { status: m.reason === 'used' ? 'success' : 'failed' });
         setDepMsg(
           m.reason==='used' ? 'This deposit was already credited ✓' :
           m.reason==='notfound' ? 'Not visible on-chain yet — your tokens are safe. Open “Recover by tx signature” below and paste it in ~30s.' :
