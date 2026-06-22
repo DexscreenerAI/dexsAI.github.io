@@ -466,7 +466,7 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 // <body> so the HUD/joystick/wallet button show on top. Then force <body>/#game to a real
 // viewport height so those DIVs lay out.
 document.documentElement.insertBefore(canvas, document.body);
-canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;display:block;z-index:0';
+canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;display:block;z-index:-1';   // BEHIND the HUD (which is non-positioned and would otherwise paint under the positioned canvas)
 try {
   document.documentElement.style.height = '100vh';
   document.body.style.height = '100vh'; document.body.style.minHeight = '100vh';
@@ -490,7 +490,7 @@ window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 200));
 resize(); setTimeout(resize, 300); setTimeout(resize, 1200);   // re-fit after the mobile address bar settles
 // Live diagnostic — updates the always-on banner (no gating), so the verdict shows on ANY device.
-try { document.body.style.setProperty('background', '#ff00ff', 'important'); } catch (e) {}   // magenta: if you SEE magenta, the canvas isn't covering the screen
+try { document.body.style.setProperty('background', 'transparent', 'important'); document.documentElement.style.setProperty('background', 'transparent', 'important'); } catch (e) {}   // transparent so the z-index:-1 canvas (game) shows through, HUD on top
 {
   const dbg = window.__jsok || document.createElement('div');
   setInterval(() => { try {
