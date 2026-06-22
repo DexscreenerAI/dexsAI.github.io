@@ -1,0 +1,2524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>$BYEBOSS — WORLD (beta)</title>
+<meta name="description" content="$BYEBOSS: WORLD — a 2.5D Three.js forest. Your sprite, in a real 3D world.">
+<meta name="theme-color" content="#06040d">
+<link rel="icon" type="image/png" href="https://i.ibb.co/pvKhr9Fh/5962780110555385014-Photoroom.png">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;overflow:hidden;background:#06040d;
+    font-family:'Trebuchet MS',Verdana,system-ui,sans-serif;color:#eafff2;user-select:none;touch-action:none}
+  #game{position:fixed;inset:0}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  .hud{position:absolute;inset:0;pointer-events:none;z-index:5}
+  .hud > *{pointer-events:auto}
+  .hint{position:absolute;top:14px;left:50%;transform:translateX(-50%);
+    background:rgba(6,4,13,.72);border:1px solid rgba(57,255,139,.25);padding:9px 18px;border-radius:999px;
+    font-size:13px;letter-spacing:.3px;color:#cdebd9;white-space:nowrap;backdrop-filter:blur(6px);box-shadow:0 6px 22px rgba(0,0,0,.45)}
+  .hint b{color:#39ff8b;font-weight:700}
+  .brand{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:10px}
+  .brand a.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:rgba(6,4,13,.72);
+    border:1px solid rgba(255,255,255,.14);color:#eafff2;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:700;backdrop-filter:blur(6px)}
+  .brand a.back:hover{border-color:rgba(57,255,139,.6);color:#39ff8b}
+  .brand .title{font-weight:800;font-size:15px;letter-spacing:.4px;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+  .brand .title .b{color:#ff3b3b}.brand .title .g{color:#39ff8b}
+  .brand .tag{font-size:10px;background:rgba(57,255,139,.16);color:#39ff8b;border:1px solid rgba(57,255,139,.4);
+    padding:2px 7px;border-radius:999px;font-weight:700;letter-spacing:.5px}
+  .score{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:8px;background:rgba(6,4,13,.72);
+    border:1px solid rgba(255,196,0,.35);padding:8px 14px;border-radius:12px;font-weight:800;font-size:15px;backdrop-filter:blur(6px)}
+  .score .coin{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe680,#ffb300 55%,#b87900);
+    box-shadow:0 0 8px rgba(255,196,0,.6);display:grid;place-items:center;color:#5a3b00;font-size:11px;font-weight:900}
+  .score b{color:#ffd54a}
+  .gain{position:absolute;top:50px;right:18px;z-index:9;color:#39ff8b;font-weight:900;font-size:18px;
+    text-shadow:0 2px 7px rgba(0,0,0,.85);animation:gainpop .95s ease-out forwards;pointer-events:none}
+  @keyframes gainpop{0%{opacity:0;transform:translateY(8px)}18%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+  .bankprompt{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);background:rgba(6,4,13,.85);
+    border:1px solid rgba(57,255,139,.55);color:#eafff2;padding:8px 15px;border-radius:10px;font-weight:700;
+    font-size:14px;z-index:7;pointer-events:none;box-shadow:0 0 14px rgba(57,255,139,.25)}
+  .bankprompt b{color:#39ff8b}
+  .xpwrap{position:absolute;left:18px;bottom:54px;display:flex;align-items:center;gap:9px;z-index:6;
+    background:rgba(6,4,13,.7);border:1px solid rgba(160,110,255,.45);padding:6px 12px;border-radius:11px;backdrop-filter:blur(6px)}
+  .xpwrap .lvl{color:#c9a6ff;font-weight:800;font-size:14px;white-space:nowrap}
+  .xpb{width:220px;height:9px;border-radius:6px;background:rgba(255,255,255,.13);overflow:hidden}
+  .xpb i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c3aff,#c9a6ff);border-radius:6px;transition:width .2s}
+  .abilities{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:12px;z-index:6}
+  .ab{position:relative;width:84px;height:88px;border-radius:14px;cursor:pointer;
+    background:linear-gradient(180deg,rgba(20,14,34,.78),rgba(10,7,20,.82));border:1px solid rgba(255,255,255,.12);
+    backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    transition:transform .08s,border-color .12s,box-shadow .12s}
+  .ab:hover{border-color:rgba(57,255,139,.55)}
+  .ab:active,.ab.pressed{transform:translateY(2px) scale(.97);border-color:#39ff8b;box-shadow:0 0 0 2px rgba(57,255,139,.35) inset,0 0 18px rgba(57,255,139,.35)}
+  .ab .num{position:absolute;top:-9px;left:-9px;width:24px;height:24px;border-radius:8px;background:#0c0a17;
+    border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;font-size:12px;font-weight:800;color:#eafff2}
+  .ab .ico{font-size:23px;line-height:1;color:#ffb300;filter:drop-shadow(0 0 6px rgba(255,179,0,.5))}
+  .ab .lbl{font-size:13px;font-weight:700;letter-spacing:.3px;color:#e7fff3}
+  .touch{display:none}
+  body.touch .touch{display:block}
+  body.touch.panel-open .touch{display:none}
+  .joy{position:absolute;left:22px;bottom:108px;width:132px;height:132px;border-radius:50%;z-index:6;
+    background:rgba(20,14,34,.4);border:2px solid rgba(255,255,255,.18);touch-action:none}
+  .joy-knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;
+    background:rgba(57,255,139,.5);border:2px solid #39ff8b;box-shadow:0 0 16px rgba(57,255,139,.55);transition:transform .04s linear}
+  .rbtns{position:absolute;right:18px;bottom:108px;display:flex;flex-direction:column;gap:12px;z-index:6}
+  .rbtns button{width:80px;height:56px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(20,14,34,.8);
+    color:#eafff2;font-weight:800;font-size:13px;letter-spacing:.4px;touch-action:none}
+  .rbtns button:active{background:rgba(57,255,139,.25);border-color:#39ff8b}
+  #fireBtn{background:rgba(255,90,90,.28);border-color:rgba(255,120,120,.5)}
+  #interactBtn{background:rgba(58,209,255,.22);border-color:rgba(58,209,255,.5)}
+  body.touch .vault-box, body.touch .vault .vault-box{max-width:min(460px,94vw)}
+  #load{position:absolute;inset:0;z-index:20;background:#06040d;display:grid;place-items:center;transition:opacity .4s}
+  #load.hide{opacity:0;pointer-events:none}
+  #load .box{text-align:center}
+  #load .logo{font-size:34px;font-weight:900;letter-spacing:1px;margin-bottom:6px}
+  #load .logo .b{color:#ff3b3b}#load .logo .g{color:#39ff8b}
+  #load .sub{color:#9fb6a8;font-size:13px;margin-bottom:22px;letter-spacing:.5px}
+  #load .bar{width:240px;height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin:0 auto}
+  #load .bar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#39ff8b,#7c4dff);transition:width .2s}
+  #load .pct{margin-top:10px;font-size:12px;color:#6f8a7c}
+  @media (max-width:560px){ .hint{font-size:11px;padding:7px 12px} .ab{width:66px;height:76px}.ab .ico{font-size:19px}.ab .lbl{font-size:11px} .brand .title{font-size:13px} }
+
+  /* Shop */
+  /* settings / key-bindings button, just above the bottom-right minimap */
+  .menubar{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:8;display:flex;gap:8px}
+  .menu-btn{background:rgba(6,4,13,.74);border:1px solid rgba(124,77,255,.55);color:#eafff2;padding:9px 16px;
+    border-radius:11px;font-weight:800;font-size:14px;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap}
+  .menu-btn:hover{border-color:#7c4dff;color:#b69bff}
+  @media (max-width:560px){ .menubar{top:8px} .menu-btn{padding:7px 12px;font-size:12px} }
+  .shop{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:rgba(4,3,10,.62);backdrop-filter:blur(3px)}
+  .shop.hidden{display:none}
+  .shop-box{width:min(94vw,640px);background:linear-gradient(180deg,#100d20,#0a0813);border:1px solid rgba(124,77,255,.5);border-radius:22px;overflow:hidden;box-shadow:0 28px 80px rgba(0,0,0,.65)}
+  .shop-head{display:flex;justify-content:space-between;align-items:center;padding:18px 24px;font-weight:800;letter-spacing:.6px;font-size:18px;color:#fff;
+    background:linear-gradient(90deg,rgba(124,77,255,.3),rgba(57,255,139,.1))}
+  .shop-x{cursor:pointer;opacity:.8;font-size:18px}.shop-x:hover{opacity:1;color:#ff6b6b}
+  .shop-list{display:flex;flex-wrap:wrap;gap:16px;padding:24px;justify-content:center}
+  .shopcard{width:170px;height:180px;border-radius:18px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    background:#15122a;border:2px solid rgba(255,255,255,.12);color:#eafff2;transition:transform .1s,border-color .12s,box-shadow .12s;font-family:inherit}
+  .shopcard:hover{transform:translateY(-2px);border-color:rgba(124,77,255,.75)}
+  .shopcard.active{border-color:#39ff8b;box-shadow:0 0 0 2px rgba(57,255,139,.3) inset}
+  .sc-ic{font-size:52px;line-height:1}.sc-nm{font-weight:800;font-size:16px}
+  .sc-img{width:104px;height:104px;object-fit:contain;border-radius:10px;background:rgba(0,0,0,.18)}
+  .sc-act{font-size:13px;font-weight:800;color:#39ff8b;background:rgba(57,255,139,.14);padding:5px 12px;border-radius:999px}
+  .sc-act.buy{color:#ffd54a;background:rgba(255,196,0,.16)}
+  .shop-foot{padding:0 24px 18px;text-align:center;color:#6f8a7c;font-size:12px}
+  .name-row{display:flex;align-items:center;gap:10px;padding:16px 24px 4px}
+  .name-row .name-lbl{font-weight:800;color:#c9a6ff;font-size:14px;white-space:nowrap}
+  .name-row .vinput{flex:1;padding:10px;font-size:15px;text-align:left}
+  .name-row .vact{padding:10px 18px}
+  .name-msg{padding:2px 24px 0;text-align:center;font-size:13px;font-weight:700;min-height:18px}
+  .name-msg.ok{color:#39ff8b}.name-msg.err{color:#ff6b6b}
+  /* vault panel */
+  .vault{position:absolute;inset:0;z-index:31;display:grid;place-items:center;background:rgba(4,3,10,.66);backdrop-filter:blur(4px)}
+  .vault.hidden{display:none}
+  .vault-box{width:min(94vw,640px);background:linear-gradient(180deg,#100d20,#0a0813);border:1px solid rgba(57,255,139,.4);border-radius:22px;overflow:hidden;box-shadow:0 28px 80px rgba(0,0,0,.65)}
+  .vault-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:18px 24px;font-weight:800;letter-spacing:.6px;font-size:18px;color:#fff;background:linear-gradient(90deg,rgba(57,255,139,.2),transparent)}
+  .vault-balhead{margin-left:auto;color:#ffd54a;font-size:14px}
+  .vault-x{cursor:pointer;opacity:.8;font-size:18px}.vault-x:hover{opacity:1;color:#ff6b6b}
+  .vault-body{padding:24px;display:flex;flex-direction:column;gap:16px}
+  .vault-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .vault-page{display:flex;flex-direction:column;gap:14px}
+  .vtile{cursor:pointer;border:1px solid rgba(124,77,255,.45);background:#15122a;border-radius:18px;padding:30px 18px;text-align:center;transition:.15s}
+  .vtile:hover{border-color:#39ff8b;background:#1c1838;transform:translateY(-2px)}
+  .vtile-ico{font-size:42px;line-height:1}.vtile-t{font-weight:800;font-size:18px;margin-top:10px}.vtile-s{font-size:12px;opacity:.6;margin-top:5px}
+  .vault-hero{display:flex;gap:16px;justify-content:space-around;background:#15122a;border-radius:16px;padding:20px;text-align:center}
+  .vault-reward,.vault-bal{font-size:30px;font-weight:900;color:#39ff8b}.vault-bal:first-child{color:#ff9d3b}
+  .vault-reward small,.vault-bal small{display:block;font-size:12px;font-weight:700;opacity:.65;color:#cfe;margin-top:3px}
+  .vault-streak{font-size:18px;font-weight:800;color:#ffd54a;align-self:center}.vault-streak b{font-size:24px}
+  .vault-note{color:#9aa;font-size:13px;margin:0;text-align:center}
+  .vinput{width:100%;background:#1a182b;border:1px solid rgba(124,77,255,.4);color:#fff;border-radius:10px;padding:13px;font-size:18px;font-weight:800;text-align:center}
+  .vact{cursor:pointer;border:none;background:#39ff8b;color:#06140a;border-radius:12px;padding:13px;font-weight:800;font-size:15px}
+  .vact-big{padding:16px;font-size:16px}
+  .vact:hover{filter:brightness(1.08)}.vact:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.7)}
+  .vault-back{cursor:pointer;color:#9aa;font-size:14px;font-weight:700;text-align:center}.vault-back:hover{color:#fff}
+  .cfg-list{display:flex;flex-direction:column;gap:8px}
+  .cfg-row{display:flex;justify-content:space-between;align-items:center;background:#15122a;border-radius:10px;padding:10px 14px;font-weight:700}
+  .cfg-key{min-width:96px;text-align:center;cursor:pointer;background:#1a182b;border:1px solid rgba(124,77,255,.5);border-radius:8px;padding:7px 12px;color:#c9a6ff;font-weight:800}
+  .cfg-key.capturing{border-color:#39ff8b;color:#39ff8b;animation:cfgblink 1s infinite}
+  @keyframes cfgblink{50%{opacity:.5}}
+  .st-row{display:flex;justify-content:space-between;align-items:center;background:#15122a;border-radius:10px;padding:13px 16px;font-weight:700;color:#cfe}
+  .st-row small{opacity:.55;font-weight:600}.st-row b{color:#ffd54a;font-size:16px}
+  .st-burnbox{background:#1c1322;border:1px solid rgba(255,120,60,.4);border-radius:14px;padding:16px}
+  .st-burnhead{font-weight:800;color:#ff9d3b}.st-burnhead small{opacity:.7;font-weight:600}.st-burnhead b{color:#ffd54a}
+  .st-bar{height:12px;border-radius:8px;background:rgba(255,255,255,.12);overflow:hidden;margin:10px 0 6px}
+  .st-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff5a2c,#ffb347);transition:width .3s}
+  .st-burnsub{text-align:center;color:#ffb37a;font-weight:700;font-size:13px}.st-burnsub b{color:#fff}
+
+  /* Minimap */
+  .minimap{position:absolute;inset:auto;right:16px;bottom:16px;width:206px;height:206px;z-index:6;border-radius:50%;
+    background:rgba(6,18,10,.4);box-shadow:0 8px 26px rgba(0,0,0,.55)}
+  @media (max-width:560px){ .minimap{width:140px;height:140px;bottom:96px} }
+
+  /* Crosshair */
+  .crosshair{position:absolute;left:50%;top:50%;width:24px;height:24px;transform:translate(-50%,-50%);z-index:6;pointer-events:none}
+  .crosshair::before,.crosshair::after{content:'';position:absolute;background:rgba(57,255,139,.9);box-shadow:0 0 4px rgba(0,0,0,.7)}
+  .crosshair::before{left:50%;top:0;width:2px;height:100%;transform:translateX(-50%)}
+  .crosshair::after{top:50%;left:0;height:2px;width:100%;transform:translateY(-50%)}
+
+  /* health, wallet, respawn */
+  .hpbar{position:absolute;bottom:16px;left:18px;z-index:6;display:flex;align-items:center;gap:8px;
+    background:rgba(6,4,13,.6);padding:6px 12px;border-radius:999px;border:1px solid rgba(255,80,80,.4);backdrop-filter:blur(6px)}
+  .hpb{width:220px;height:12px;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden}
+  .hpb i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff4d4d,#ff9a42);transition:width .15s}
+  .walletbtn{position:absolute;top:52px;right:12px;z-index:7;background:rgba(124,77,255,.22);border:1px solid rgba(124,77,255,.6);
+    color:#eafff2;padding:8px 13px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;backdrop-filter:blur(6px)}
+  .walletbtn:hover{border-color:#9b6dff}
+  .mpcount{position:absolute;top:90px;right:12px;z-index:6;background:rgba(6,4,13,.62);border:1px solid rgba(57,255,139,.4);
+    color:#cdebd9;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:700;backdrop-filter:blur(6px)}
+  .dbg{position:absolute;left:12px;top:64px;z-index:20;background:rgba(0,0,0,.8);color:#39ff8b;font:12px ui-monospace,Menlo,monospace;
+    padding:9px 11px;border-radius:8px;white-space:pre;pointer-events:none;border:1px solid rgba(57,255,139,.3)}
+  .respawn{position:absolute;inset:0;z-index:8;display:grid;place-items:center;background:rgba(40,0,0,.45);
+    color:#fff;font-size:44px;font-weight:900;text-align:center;text-shadow:0 3px 12px #000}
+  .respawn span{font-size:18px;color:#ffcaca}
+  .respawn.hide{display:none}
+</style>
+<!-- Solana web3 (for on-chain $BYEBOSS deposits) — same bundle the Burn page uses -->
+<script defer src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
+</head>
+<body>
+<!-- audio: gunshot one-shot + player footstep loop + nearby-enemy footstep loop (distance-based) -->
+<audio id="snd-shoot"      src="https://files.catbox.moe/zej06i.mp3" preload="auto"></audio>
+<audio id="snd-step"       src="https://files.catbox.moe/vdvwod.mp3" preload="auto" loop></audio>
+<audio id="snd-enemy-step" src="https://files.catbox.moe/vdvwod.mp3" preload="auto" loop></audio>
+<audio id="snd-slot"       src="./assets/game/sfx/slot-spin.mp3" preload="auto"></audio>
+<audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
+<div id="game">
+  <canvas id="cv"></canvas>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v11-M</div>
+  <div class="hud">
+    <div class="brand">
+      <a class="back" href="./game.html" title="Back">‹ Back</a>
+      <span class="title"><span class="b">$BYE</span><span class="g">BOSS</span> · WORLD</span>
+    </div>
+    <div class="menubar"><button id="cfgBtn" class="menu-btn" title="Movement keys & settings">⚙ Settings</button></div>
+    <style>
+      .lb{position:absolute;left:10px;top:92px;z-index:6;background:rgba(6,4,13,.72);border:1px solid rgba(57,255,139,.28);border-radius:12px;padding:9px 11px;backdrop-filter:blur(6px);box-shadow:0 6px 22px rgba(0,0,0,.45)}
+      .lb.hide{display:none}
+      .lb-title{font-size:11px;font-weight:800;letter-spacing:.6px;color:#ffd54a;margin-bottom:6px}
+      .lb ol{list-style:none;display:flex;flex-direction:column;gap:4px;margin:0;padding:0}
+      .lb li{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;white-space:nowrap}
+      .lb li .rk{width:16px;text-align:center;font-weight:800;color:#ffd54a}
+      .lb li .nm{flex:1;overflow:hidden;text-overflow:ellipsis;max-width:94px;color:#eafff2}
+      .lb li .vl{color:#39ff8b;font-weight:800}
+    </style>
+    <div id="leaderboard" class="lb hide"><div class="lb-title">🏆 TOP VAULTS</div><ol id="lbList"></ol></div>
+    <canvas id="minimap" width="480" height="480" class="minimap"></canvas>
+    <div id="crosshair" class="crosshair"></div>
+    <div class="score"><span class="coin">$</span><span style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap">🔒<b id="scoreVal">—</b><small style="opacity:.55;font-weight:600;font-size:11px">$BYEBOSS vault</small></span></div>
+    <div id="bankPrompt" class="bankprompt hide">🏦 Press <b>E</b> to open the vault</div>
+    <div id="shopPrompt" class="bankprompt hide">🛍️ Press <b>E</b> to open the shop</div>
+    <div id="casinoPrompt" class="bankprompt hide">🎰 Press <b>E</b> to enter the casino</div>
+    <div id="depositPrompt" class="bankprompt hide">💰 Press <b>E</b> to deposit $BYEBOSS</div>
+    <div class="hpbar"><span>❤️</span><div class="hpb"><i id="hpFill"></i></div></div>
+    <div id="xpwrap" class="xpwrap" style="display:none"><span class="lvl" id="lvlVal">Lvl 1</span><div class="xpb"><i id="xpFill"></i></div></div>
+    <button id="walletBtn" class="walletbtn" title="Or press M">👻 Connect Phantom <small style="opacity:.6">(M)</small></button>
+    <div id="mpCount" class="mpcount" style="display:none"></div>
+    <div id="dbg" class="dbg" style="display:none"></div>
+    <div id="respawn" class="respawn hide">💀 ELIMINATED<br><span>respawning…</span></div>
+
+    <div id="shop" class="shop hidden">
+      <div class="shop-box">
+        <div class="shop-head"><span>🛍️ SKINS SHOP</span><span id="shopClose" class="shop-x">✕</span></div>
+        <div class="name-row">
+          <span class="name-lbl">Username</span>
+          <input id="nameInput" class="vinput" maxlength="16" placeholder="3–16 chars" autocomplete="off" spellcheck="false">
+          <button class="vact" id="nameSave">Save</button>
+        </div>
+        <div id="nameMsg" class="name-msg"></div>
+        <div id="shopList" class="shop-list"></div>
+        <div class="shop-foot">Buy skins with your 🔒 vault balance · equip anytime · more soon 🤘</div>
+      </div>
+    </div>
+    <div id="vault" class="vault hidden">
+      <div class="vault-box">
+        <div class="vault-head"><span>🏦 VAULT</span><span id="vaultBalHead" class="vault-balhead"></span><span id="vaultClose" class="vault-x">✕</span></div>
+        <div class="vault-body">
+          <div id="vaultMenu" class="vault-grid">
+            <div class="vtile" id="vbDaily"><div class="vtile-ico">📅</div><div class="vtile-t">Daily Quest</div><div class="vtile-s">Claim free $BYEBOSS every day</div></div>
+            <div class="vtile" id="vbDeposit" style="display:none"><div class="vtile-ico">🏦</div><div class="vtile-t">Vault</div><div class="vtile-s">Secure your $BYEBOSS from PvP</div></div>
+            <div class="vtile" id="vbStake"><div class="vtile-ico">🔒</div><div class="vtile-t">Lock &amp; Earn</div><div class="vtile-s">Stake $BYEBOSS for daily yield</div></div>
+          </div>
+          <div id="vaultDaily" class="vault-page" style="display:none">
+            <div class="vault-hero">
+              <div class="vault-reward"><span id="dailyInfo">20</span> <small>$BYEBOSS / day</small></div>
+              <div class="vault-streak">🔥 <b id="dailyClaims">0</b> days claimed total</div>
+            </div>
+            <p class="vault-note">Come back every day to claim free $BYEBOSS straight into your vault.</p>
+            <button class="vact vact-big" id="dailyClaimBtn">Claim</button>
+            <div class="vault-back" id="dailyBack">← Back</div>
+          </div>
+          <div id="vaultDeposit" class="vault-page" style="display:none">
+            <div class="vault-hero">
+              <div class="vault-bal"><span id="vaultCarried">0</span> <small>⚠️ on you</small></div>
+              <div class="vault-bal"><span id="vaultSecured">0</span> <small>🔒 in vault</small></div>
+            </div>
+            <p class="vault-note">Choose how much to secure in your vault (safe from PvP).</p>
+            <input id="vaultAmt" class="vinput" type="number" min="1" value="1">
+            <input id="vaultSlider" type="range" min="0" max="0" value="0" style="width:100%;margin:10px 0">
+            <div class="vault-grid">
+              <button class="vact vact-big" id="depAllBtn">Deposit all</button>
+              <button class="vact vact-big" id="depBtn">Deposit</button>
+            </div>
+            <div class="vault-back" id="depBack">← Back</div>
+          </div>
+          <div id="vaultStake" class="vault-page" style="display:none">
+            <div style="text-align:center;font-size:12px;color:#7fb8d8;margin-bottom:9px;background:rgba(255,210,127,.07);border:1px solid rgba(255,210,127,.2);border-radius:8px;padding:6px">🌍 Total locked by all players: <b id="stakeGlobalVal" style="color:#ffd27f">—</b> $BYEBOSS</div>
+            <div id="stakeSummary" style="display:none">
+              <div class="vault-hero">
+                <div class="vault-reward"><span id="stakeTotal">0</span> <small>🔒 locked · max <span id="stakeMax">10M</span></small></div>
+                <div class="vault-streak">💰 <b id="stakeTotalPending">0</b> $BYEBOSS pending total</div>
+              </div>
+              <button class="vact" id="stakeClaimAllBtn" style="margin:2px 0 9px">💰 Claim all yield</button>
+              <div id="stakeList" style="display:flex;flex-direction:column;gap:7px;max-height:208px;overflow-y:auto;margin-bottom:11px"></div>
+            </div>
+            <div style="font-size:12px;color:#ffd27f;font-weight:800;border-top:1px solid rgba(255,210,127,.25);padding-top:9px;margin-bottom:5px">➕ New lock <small style="color:#9a8a6a;font-weight:600">— each one is independent</small></div>
+            <p class="vault-note" style="margin:0 0 7px">🔥 1% burned on stake · early unstake burns 10% · max 1% of supply locked.</p>
+            <input id="stakeAmt" class="vinput" type="number" min="1000" value="1000">
+            <div class="vault-grid" id="stakeTermRow" style="grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0">
+              <button type="button" class="slot-bbtn stake-term" data-term="0">Flex<br>5%</button>
+              <button type="button" class="slot-bbtn stake-term" data-term="7">7d<br>12%</button>
+              <button type="button" class="slot-bbtn stake-term" data-term="30">30d<br>30%</button>
+              <button type="button" class="slot-bbtn stake-term" data-term="90">90d<br>60%</button>
+            </div>
+            <button class="vact vact-big" id="stakeBtn">🔒 Lock</button>
+            <div id="stakeMsg" style="min-height:18px;font-size:12px;font-weight:700;margin-top:6px;color:#bfe9ff"></div>
+            <div class="vault-back" id="stakeBack">← Back</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="cfg" class="vault hidden">
+      <div class="vault-box" style="max-width:460px">
+        <div class="vault-head"><span>⚙ KEY BINDINGS</span><span id="cfgClose" class="vault-x">✕</span></div>
+        <div class="vault-body"><div id="cfgList" class="cfg-list"></div>
+          <div class="vault-grid"><button class="vact" id="cfgReset">Reset defaults</button><button class="vact" id="cfgDone">Done</button></div>
+        </div>
+      </div>
+    </div>
+    <div id="statsP" class="vault hidden">
+      <div class="vault-box">
+        <div class="vault-head"><span>📊 $BYEBOSS STATS</span><span id="statsClose" class="vault-x">✕</span></div>
+        <div class="vault-body">
+          <div class="st-row"><span>Allocation total <small>(10% supply)</small></span><b id="stAlloc">—</b></div>
+          <div class="st-row"><span>Allocation left <small>(live)</small></span><b id="stPool" style="color:#39ff8b">—</b></div>
+          <div class="st-row"><span>Earned by players</span><b id="stEmitted">—</b></div>
+          <div class="st-row"><span>Bought in shop (all-time)</span><b id="stBought">—</b></div>
+          <div class="st-row"><span>Casino → allocation 🎰</span><b id="stCasino">—</b></div>
+          <div class="st-row"><span>Total burned 🔥</span><b id="stBurned">—</b></div>
+          <div class="st-burnbox">
+            <div class="st-burnhead">Next burn <small>auto at <b id="stTarget">—</b></small></div>
+            <div class="st-bar"><i id="stFill"></i></div>
+            <div class="st-burnsub"><b id="stPending">0</b> / <span id="stTarget2">—</span> pending 🔥</div>
+          </div>
+          <p class="vault-note">Allocation drops as players earn $BYEBOSS (coins, kills, casino wins) and rises when players lose at the casino. Skin spends feed the burn pile — burned forever at the target.</p>
+        </div>
+      </div>
+    </div>
+    <style>
+      .slot-reel{ background:#0c0617; border:2px solid #ff5ad0; border-radius:10px; box-shadow:inset 0 0 12px rgba(255,90,208,.4); overflow:hidden; display:block }
+      .slot-reel img{ width:100%; height:100%; object-fit:cover; display:block }
+      .slot-bbtn{ padding:5px 9px; font-size:14px; font-weight:800; border:1px solid #ff5ad0; border-radius:7px; background:#160d22; color:#ff9be0; cursor:pointer }
+      .slot-bbtn.on{ background:linear-gradient(#39ff8b,#16c46a); color:#04220f; border-color:#39ff8b; box-shadow:0 0 12px rgba(57,255,139,.7) }   /* AUTO active */
+      .slot-bbtn:active{ transform:scale(.94) }
+      /* casino panel = the bright $BYEBOSS Casino image (no darkening) with controls laid over it */
+      .casino-wrap{ display:flex; flex-direction:column; align-items:center; gap:10px; width:min(94vw,460px) }
+      #casinoP .vault-box{ position:relative; width:100%; aspect-ratio:4/3; background:#08030f url('./assets/game/slots/casino-bg.png') center/cover no-repeat; border:1.5px solid #ff5ad0; border-radius:16px; box-shadow:0 0 30px rgba(255,90,208,.5); overflow:hidden }
+      .casino-x{ position:absolute; top:6px; right:12px; z-index:6; color:#fff; font-size:20px; cursor:pointer; text-shadow:0 1px 4px #000 }
+      .casino-vault{ position:absolute; left:50%; top:2.5%; transform:translateX(-50%); z-index:5; font-size:15px; font-weight:800; color:#fff; text-shadow:0 1px 3px #000; background:rgba(8,3,16,.66); padding:3px 12px; border-radius:9px; white-space:nowrap }
+      .casino-vault b{ color:#ffd755; font-size:16px }
+      /* bet bar sits OUTSIDE the game box, below PLAY NOW */
+      .casino-bet{ display:flex; gap:6px; align-items:center; justify-content:center; background:rgba(8,3,16,.9); padding:8px 12px; border-radius:12px; border:1px solid rgba(255,90,208,.6); box-shadow:0 6px 18px rgba(0,0,0,.45) }
+      .casino-betlbl{ font-weight:800; font-size:13px; color:#ff9be0; letter-spacing:.5px }
+      .casino-bet input{ width:72px; text-align:center; font-size:16px; font-weight:800; padding:6px; border-radius:7px; border:1px solid #ff5ad0; background:#160d22; color:#fff }
+      .casino-msg{ position:absolute; left:4%; right:4%; top:42%; z-index:3; text-align:center; font-weight:800; font-size:13px; color:#fff; text-shadow:0 2px 5px #000,0 0 8px #000 }
+      .casino-reels{ position:absolute; left:0; right:0; top:54%; z-index:3; display:flex; gap:3%; justify-content:center }
+      .casino-reels .slot-reel{ width:13.5%; aspect-ratio:1 }
+      /* the SPIN trigger is transparent and sits over the image's PLAY NOW button (hover glow shows its zone) */
+      #spinBtn{ position:absolute; left:25%; top:80%; width:50%; height:11%; z-index:5; background:transparent; border:0; border-radius:30px; cursor:pointer; padding:0; color:transparent; font-size:0 }
+      #spinBtn:hover{ box-shadow:0 0 0 2px rgba(255,255,255,.5) inset,0 0 18px rgba(255,210,80,.6) }
+      #spinBtn:active{ transform:translateY(1px) }
+      #spinBtn:disabled{ cursor:default }
+    </style>
+    <div id="casinoP" class="vault hidden">
+      <div class="casino-wrap">
+        <div class="vault-box">
+          <span id="casinoClose" class="casino-x">✕</span>
+          <div id="slotMsg" class="casino-msg">🎰 Spin to win!</div>
+          <div class="casino-reels">
+            <span class="slot-reel"><img id="sri0" alt=""></span><span class="slot-reel"><img id="sri1" alt=""></span><span class="slot-reel"><img id="sri2" alt=""></span>
+          </div>
+          <div class="casino-vault">Vault: <b id="slotVault">0</b> $BYEBOSS</div>
+          <button id="spinBtn" title="Spin — PLAY NOW"></button>
+        </div>
+        <div class="casino-bet">
+          <span class="casino-betlbl">Bet</span>
+          <button id="betMinus" class="slot-bbtn">−</button>
+          <input id="slotBet" type="number" min="1" step="1" value="1" />
+          <button id="betPlus" class="slot-bbtn">+</button>
+          <button id="betMax" class="slot-bbtn">MAX</button>
+          <button id="betAuto" class="slot-bbtn" title="Auto-spin">AUTO</button>
+        </div>
+      </div>
+    </div>
+    <style>
+      /* deposit panel background: "awaiting" by default, flips to "successful" for 5s after a deposit */
+      #depositP .vault-box{ background: linear-gradient(rgba(6,5,16,.5), rgba(6,5,16,.64)), url('./assets/game/deposit-await.png') center/cover no-repeat; border:1.5px solid #3ad1ff }
+      #depositP .vault-box.depositok{ background: linear-gradient(rgba(4,16,8,.38), rgba(4,16,8,.5)), url('./assets/game/deposit-ok.png') center/cover no-repeat; border-color:#39ff8b }
+      #depositP .vault-head{ background:rgba(6,5,16,.35) }
+      #depositP .vault-note{ text-shadow:0 1px 4px #000 }
+    </style>
+    <div id="depositP" class="vault hidden">
+      <div class="vault-box">
+        <div class="vault-head"><span>💰 DEPOSIT $BYEBOSS</span><span id="depositClose" class="vault-x">✕</span></div>
+        <div class="vault-body" style="text-align:center">
+          <p class="vault-note" style="margin:0 0 4px">Send real $BYEBOSS from your wallet to your in-game vault, <b>1:1</b>. Tokens go to the official $BYEBOSS creator wallet.</p>
+          <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin:10px 0 6px">
+            <button id="depMinus" class="slot-bbtn" style="border-color:#3ad1ff;color:#9be8ff">−</button>
+            <input id="depAmt" type="number" min="1" step="1" value="100" style="width:128px;text-align:center;font-size:19px;font-weight:800;padding:8px;border-radius:8px;border:1px solid #3ad1ff;background:#0b1622;color:#fff" />
+            <button id="depPlus" class="slot-bbtn" style="border-color:#3ad1ff;color:#9be8ff">+</button>
+          </div>
+          <div id="depMsg" style="min-height:20px;font-weight:700;color:#bfe9ff;margin-bottom:10px">≈ +<b id="depPreview">100</b> $BYEBOSS to your vault</div>
+          <button id="depGo" type="button" style="width:100%;padding:13px;font-size:16px;font-weight:800;border:none;border-radius:10px;background:linear-gradient(#3ad1ff,#1488c8);color:#04222e;cursor:pointer">💰 Deposit to vault</button>
+          <div id="wdWrap" style="margin-top:13px;border-top:1px solid rgba(58,209,255,.22);padding-top:11px;display:none">
+            <div style="font-size:13px;color:#ffd27f;font-weight:800;margin-bottom:3px">💸 Withdraw to your wallet</div>
+            <div style="font-size:11px;color:#9a8a6a;margin-bottom:7px">🔥 1% of every withdrawal is burned forever</div>
+            <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:7px">
+              <input id="wdAmt" type="number" min="1" step="1" placeholder="amount" style="width:128px;text-align:center;font-size:17px;font-weight:800;padding:7px;border-radius:8px;border:1px solid #ffd27f;background:#0b1622;color:#fff" />
+              <button id="wdMax" class="slot-bbtn" style="border-color:#ffd27f;color:#ffd27f">MAX</button>
+            </div>
+            <div id="wdMsg" style="min-height:18px;font-size:12px;font-weight:700;color:#bfe9ff;margin-bottom:8px"></div>
+            <button id="wdGo" type="button" style="width:100%;padding:11px;font-size:15px;font-weight:800;border:none;border-radius:10px;background:linear-gradient(#ffd27f,#e0a23a);color:#2a1c04;cursor:pointer">💸 Withdraw</button>
+          </div>
+          <div style="margin-top:11px;font-size:12px;line-height:1.5">
+            <span id="depRecToggle" style="color:#7fb8d8;cursor:pointer;text-decoration:underline">Already sent but not credited? Recover by tx signature ▾</span>
+            <div id="depRecBox" style="display:none;margin-top:7px">
+              <input id="depRecSig" type="text" placeholder="Paste your Solana transaction signature" style="width:100%;box-sizing:border-box;text-align:center;font-size:12px;padding:8px;border-radius:8px;border:1px solid #3ad1ff;background:#0b1622;color:#fff" />
+              <button id="depRecGo" type="button" style="margin-top:6px;width:100%;padding:9px;font-size:14px;font-weight:800;border:none;border-radius:8px;background:#1488c8;color:#eaf8ff;cursor:pointer">🔁 Credit this deposit</button>
+            </div>
+          </div>
+          <div id="depHistWrap" style="margin-top:12px;text-align:left;display:none">
+            <div style="font-size:12px;color:#7fb8d8;font-weight:800;margin-bottom:5px;border-top:1px solid rgba(58,209,255,.22);padding-top:9px">📜 Your transactions <small style="color:#6f93ad;font-weight:600">deposits + withdrawals</small></div>
+            <div id="depHistList" style="display:flex;flex-direction:column;gap:4px;max-height:140px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="touch">
+      <div class="joy" id="joy"><div class="joy-knob" id="joyKnob"></div></div>
+      <div class="rbtns">
+        <button data-btn="interact" id="interactBtn">✋ USE</button>
+        <button data-btn="jump">JUMP</button>
+        <button id="fireBtn">🔫 FIRE</button>
+      </div>
+    </div>
+  </div>
+  <div id="load"><div class="box">
+    <div class="logo"><span class="b">$BYE</span><span class="g">BOSS</span></div>
+    <div class="sub">WORLD · loading the forest…</div>
+    <div class="bar"><i id="loadBar"></i></div>
+    <div class="pct" id="loadPct">0%</div>
+  </div></div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "./assets/vendor/three.module.js", "three-mesh-bvh": "./assets/vendor/three-mesh-bvh.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from './assets/vendor/GLTFLoader.js';
+import { MeshBVH, acceleratedRaycast } from 'three-mesh-bvh';
+import * as SkeletonUtils from './assets/vendor/SkeletonUtils.js';
+THREE.Mesh.prototype.raycast = acceleratedRaycast;   // BVH-accelerated raycasts (used for casino collision)
+
+// ---------------------------------------------------------------------------
+// Renderer / scene / camera
+// ---------------------------------------------------------------------------
+// Surface any uncaught error on screen (esp. mobile, where there's no console) so a
+// "black screen" becomes a readable message instead of a silent halt.
+window.addEventListener('error', (ev) => {
+  try {
+    let box = document.getElementById('errbox');
+    if (!box){ box = document.createElement('div'); box.id = 'errbox';
+      box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:rgba(130,0,0,.96);color:#fff;font:12px/1.4 monospace;padding:10px;max-height:46vh;overflow:auto;white-space:pre-wrap';
+      (document.body || document.documentElement).appendChild(box); }
+    box.textContent += '⚠ ' + (ev.message || (ev.error && ev.error.message) || ev.error || 'error') + (ev.lineno ? (' :' + ev.lineno) : '') + '\n';
+  } catch (e) {}
+});
+const canvas = document.getElementById('cv');
+// Mobile GPUs have far less memory: drop antialias + use pixel ratio 1 so the framebuffer
+// doesn't exhaust VRAM and lose the context (the classic "renders black but game runs" bug).
+const _isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || ((screen && screen.width) ? screen.width < 820 : false);
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !_isMobile, powerPreference: 'high-performance' });
+renderer.setPixelRatio(_isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); try { window.dispatchEvent(new ErrorEvent('error', { message: '⚠ WebGL CONTEXT LOST (GPU memory)' })); } catch (_) {} }, false);
+canvas.addEventListener('webglcontextrestored', () => { try { window.dispatchEvent(new ErrorEvent('error', { message: 'WebGL context restored' })); } catch (_) {} }, false);
+
+const scene = new THREE.Scene();
+const FOG = new THREE.Color('#bfe0cf');         // soft daylight haze (forest)
+scene.background = FOG.clone();
+scene.fog = new THREE.Fog(FOG.clone(), 24, 95);
+
+const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 400);
+function resize(){
+  const w = window.innerWidth || document.documentElement.clientWidth || 360;
+  const h = window.innerHeight || document.documentElement.clientHeight || 640;   // mobile can report 0 mid-load
+  renderer.setSize(w, h); camera.aspect = w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+resize(); setTimeout(resize, 300); setTimeout(resize, 1200);   // re-fit after the mobile address bar settles
+// Live diagnostic badge — touch devices, small screens, or ?debug (so it's visible whatever the device reports).
+if (('ontouchstart' in window) || navigator.maxTouchPoints>0 || ((screen && screen.width) ? screen.width < 820 : false) || location.search.indexOf('debug') >= 0){
+  const dbg = document.createElement('div'); dbg.id = 'dbg';
+  dbg.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99998;background:#ffde00;color:#000;font:bold 15px/1.45 monospace;padding:9px 12px;text-align:center;pointer-events:none;white-space:pre-wrap';
+  dbg.textContent = 'starting…';
+  const add = () => { try { (document.body || document.documentElement).appendChild(dbg); } catch (e) {} };
+  if (document.body) add(); else addEventListener('DOMContentLoaded', add);
+  setInterval(() => { try {
+    const sz = renderer.getSize(new THREE.Vector2()), inf = renderer.info.render;
+    const w = Math.round(sz.x), h = Math.round(sz.y), L = (typeof loaded!=='undefined'?loaded:0), T = (typeof total!=='undefined'?total:0);
+    let verdict;
+    if (w === 0 || h === 0)          verdict = '❌ CANVAS ' + w + 'x' + h + ' (size 0)';
+    else if (T && L < T)             verdict = '⏳ MAP LOADING ' + L + '/' + T;
+    else if (inf.calls === 0)        verdict = '❌ NOTHING DRAWN (0 calls)';
+    else                             verdict = '✅ RENDERING ' + inf.calls + ' calls';
+    const F = (typeof loadFails!=='undefined') ? loadFails : 0;
+    dbg.textContent = 'build v11-M  ·  ' + verdict + '\ncv ' + w + 'x' + h + ' · gl' + (renderer.capabilities.isWebGL2?2:1) + ' · load ' + L + '/' + T + (F?(' · '+F+' FAILED'):'') + ' · ctx ' + (renderer.getContext && renderer.getContext().isContextLost && renderer.getContext().isContextLost() ? 'LOST' : 'ok');
+  } catch (e) { dbg.textContent = 'dbg ' + e.message; } }, 500);
+}
+
+// lights
+scene.add(new THREE.HemisphereLight('#eaf6d8', '#33502a', 1.05));
+const sun = new THREE.DirectionalLight('#fff6df', 1.15);
+sun.position.set(14, 24, 10); scene.add(sun);
+
+// ---------------------------------------------------------------------------
+// Asset loading
+// ---------------------------------------------------------------------------
+const texLoader = new THREE.TextureLoader();
+let loaded = 0, total = 0, started = false, loadFails = 0;
+const loadBar = document.getElementById('loadBar'), loadPct = document.getElementById('loadPct');
+function asset(){ loaded++; const p = total ? Math.round(loaded/total*100) : 0; if (loadBar) loadBar.style.width = p+'%'; if (loadPct) loadPct.textContent = p+'%';
+  if (loaded >= total) start(); }
+function assetFail(url){ loadFails++; console.warn('asset failed:', url); asset(); }
+function tex(url, srgb, repeat){
+  total++;
+  const t = texLoader.load(url, asset, undefined, () => assetFail(url));
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  if (repeat){ t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat[0], repeat[1]); }
+  return t;
+}
+
+// ground (tiled grass) + a dirt trail
+const grassTex = tex('./assets/game/ground-grass.jpg', true, [125,125]);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(540,540), new THREE.MeshLambertMaterial({ map:grassTex }));
+ground.rotation.x = -Math.PI/2; scene.add(ground);
+const dirtTex = tex('./assets/game/ground-brick.jpg', true, [3,187]);
+const trail = new THREE.Mesh(new THREE.PlaneGeometry(5.5,540), new THREE.MeshLambertMaterial({ map:dirtTex }));
+trail.rotation.x = -Math.PI/2; trail.position.y = 0.02; scene.add(trail);
+
+// (the character is the rigged ByeBoss GLB — loaded further down)
+
+// ---------------------------------------------------------------------------
+// World props — GLB trees, lamp posts, bushes
+// ---------------------------------------------------------------------------
+// Trees: clones of a low-poly GLB, scattered around (skip the trail + spawn).
+const treeGroup = new THREE.Group(); scene.add(treeGroup);
+let treeTemplate = null, treeMinY = 0;
+const TREE = { count:143, scaleMin:1.95, scaleMax:1.95, area:150, yOffset:-1.45 };   // tuned
+function makeRng(seed){ let s = seed>>>0; return () => { s = (Math.imul(s,1103515245)+12345)>>>0; return s/4294967296; }; }
+function scatterTrees(){
+  treeGroup.clear();
+  if (!treeTemplate) return;
+  const rng = makeRng(20240607);                          // fixed seed -> stable layout while tuning
+  let placed = 0, guard = 0;
+  while (placed < TREE.count && guard < TREE.count*10 + 80){
+    guard++;
+    const x = (rng()-0.5)*2*TREE.area, z = (rng()-0.5)*2*TREE.area;
+    const s = TREE.scaleMin + rng()*Math.max(0, TREE.scaleMax - TREE.scaleMin);
+    const ry = rng()*6.28;
+    if (Math.abs(x) < 3.6 && Math.abs(z) < 70) continue;   // keep the trail clear
+    if (x*x + z*z < 27*27) continue;                        // keep the whole building hub (and plaza) clear of trees
+    const t = treeTemplate.clone(true);
+    t.scale.setScalar(s);
+    t.userData.baseY = -treeMinY * s;
+    t.position.set(x, t.userData.baseY + TREE.yOffset, z);
+    t.rotation.y = ry;
+    treeGroup.add(t); placed++;
+  }
+}
+total++;
+new GLTFLoader().load('./assets/game/tree.glb', (gltf) => {
+  treeTemplate = gltf.scene;
+  treeMinY = new THREE.Box3().setFromObject(treeTemplate).min.y;   // base offset so trunks sit on the ground
+  scatterTrees();
+  asset();
+}, undefined, (err) => { console.error('tree GLB failed to load', err); asset(); });
+
+// ---- abandoned buildings (decor) — loaded after start, popped in when ready ----
+const BUILDINGS = ['./assets/game/building1.glb', './assets/game/building2.glb', './assets/game/building3.glb'];
+const buildingGroup = new THREE.Group(); scene.add(buildingGroup);
+const buildTemplates = [];
+const BUILD = { count:6, scale:1.0, area:140, yOffset:0 };   // tuned via the panel
+const B_TARGET = 16, B_PATTERN = [2,0,1,0,1,0,1];            // template per slot (building3 sparse — it's the heavy one)
+function scatterBuildings(){
+  buildingGroup.clear();
+  if (!buildTemplates.some(Boolean)) return;
+  const rng = makeRng(91135);
+  let placed = 0, guard = 0;
+  while (placed < BUILD.count && guard < BUILD.count*14 + 80){
+    guard++;
+    const x = (rng()-0.5)*2*BUILD.area, z = (rng()-0.5)*2*BUILD.area;
+    const rot = rng()*6.28;
+    const tpl = buildTemplates[B_PATTERN[placed % B_PATTERN.length]];
+    if (Math.abs(x) < 9 && Math.abs(z) < 82) continue;   // keep the trail clear
+    if (Math.abs(x) < 13 && Math.abs(z) < 13) continue;   // keep spawn clear
+    if (!tpl) continue;
+    const s = tpl.unitScale * BUILD.scale;
+    const m = tpl.scene.clone(true);
+    m.scale.setScalar(s);
+    m.userData.baseY = -tpl.minY * s;
+    m.position.set(x, m.userData.baseY + BUILD.yOffset, z);
+    m.rotation.y = rot;
+    buildingGroup.add(m); placed++;
+  }
+  if (typeof rebuildSolids === 'function') rebuildSolids();   // refresh collision footprints
+}
+let bLoaded = 0;
+BUILDINGS.forEach((url, i) => {
+  const done = () => { if (++bLoaded === BUILDINGS.length){ scatterBuildings(); } };
+  new GLTFLoader().load(url, (gltf) => {
+    const sc = gltf.scene; sc.traverse(o => { o.frustumCulled = false; });
+    const box = new THREE.Box3().setFromObject(sc), size = box.getSize(new THREE.Vector3());
+    buildTemplates[i] = { scene:sc, unitScale: B_TARGET / Math.max(size.x, size.y, size.z, 0.001), minY: box.min.y };
+    done();
+  }, undefined, (err) => { console.error('building failed:', url, err); done(); });
+});
+// TEMP building-tuning panel — drag, Copier, send me the values, then I bake + delete it.
+function buildBuildingPanel(){
+  if (document.getElementById('blddbg')) return;
+  const store = {};
+  const p = document.createElement('div'); p.id = 'blddbg';
+  p.style.cssText = 'position:fixed;top:64px;right:14px;width:248px;z-index:50;background:rgba(10,8,18,.93);border:1px solid rgba(255,150,60,.55);border-radius:12px;color:#eafff2;font:12px Trebuchet MS,Verdana,sans-serif;box-shadow:0 12px 32px rgba(0,0,0,.55);backdrop-filter:blur(6px);user-select:none';
+  const head = document.createElement('div');
+  head.style.cssText = 'cursor:move;padding:8px 10px;background:rgba(255,150,60,.22);border-radius:12px 12px 0 0;font-weight:800;display:flex;justify-content:space-between;align-items:center';
+  head.innerHTML = '<span>🏚️ BÂTIMENTS — glisse-moi</span><span id="bldX" style="cursor:pointer;opacity:.75">✕</span>';
+  const body = document.createElement('div');
+  body.style.cssText = 'padding:10px 12px;display:flex;flex-direction:column;gap:9px;max-height:62vh;overflow:auto';
+  p.append(head, body);
+  function row(label, min, max, step, val, fn){
+    store[label] = +val;
+    const wrap = document.createElement('div');
+    const h = document.createElement('div'); h.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:2px';
+    const nm = document.createElement('span'); nm.textContent = label;
+    const out = document.createElement('span'); out.style.color = '#ffb066'; out.textContent = (+val).toFixed(2);
+    h.append(nm, out);
+    const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = val; inp.style.width = '100%';
+    inp.addEventListener('input', () => { const v = parseFloat(inp.value); out.textContent = v.toFixed(2); store[label] = v; fn(v); });
+    wrap.append(h, inp); body.append(wrap);
+  }
+  row('count',   0, 20, 1,    BUILD.count,   v => { BUILD.count = Math.round(v); scatterBuildings(); });
+  row('scale',   0.2, 4, 0.05, BUILD.scale,  v => { BUILD.scale = v; scatterBuildings(); });
+  row('area',    40, 320, 5,  BUILD.area,    v => { BUILD.area = v; scatterBuildings(); });
+  row('yOffset', -6, 6, 0.1,  BUILD.yOffset, v => { BUILD.yOffset = v; buildingGroup.children.forEach(m => m.position.y = (m.userData.baseY || 0) + v); });
+  const btn = document.createElement('button');
+  btn.textContent = '📋 Copier les valeurs';
+  btn.style.cssText = 'margin-top:4px;padding:9px;border-radius:8px;border:1px solid #ff963c;background:rgba(255,150,60,.22);color:#eafff2;font-weight:800;cursor:pointer';
+  btn.onclick = () => {
+    const txt = 'BUILD ' + Object.entries(store).map(([k,v]) => `${k}=${(+v).toFixed(3)}`).join(' | ');
+    const ok = () => { btn.textContent = '✅ Copié — colle-le-moi'; setTimeout(() => btn.textContent = '📋 Copier les valeurs', 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok).catch(() => prompt('Copie ça :', txt));
+    else prompt('Copie ça :', txt);
+  };
+  body.append(btn);
+  p.addEventListener('keydown', e => e.stopPropagation());
+  let dragging = false, ox = 0, oy = 0;
+  head.addEventListener('pointerdown', e => { if (e.target.id === 'bldX') return; dragging = true; ox = e.clientX - p.offsetLeft; oy = e.clientY - p.offsetTop; e.preventDefault(); });
+  window.addEventListener('pointermove', e => { if (!dragging) return; p.style.left = Math.max(0, e.clientX - ox) + 'px'; p.style.top = Math.max(0, e.clientY - oy) + 'px'; p.style.right = 'auto'; });
+  window.addEventListener('pointerup', () => dragging = false);
+  head.querySelector('#bldX').onclick = () => p.remove();
+  document.body.appendChild(p);
+}
+// bushes (ground detail)
+const bushGeo = new THREE.IcosahedronGeometry(0.5, 0);
+const bushMat = new THREE.MeshLambertMaterial({ color:'#2c6e34', flatShading:true });
+for (let i=0;i<70;i++){
+  const x = (Math.random()-0.5)*220, z = (Math.random()-0.5)*220;
+  if (Math.abs(x) < 3 && Math.abs(z) < 70) continue;
+  const b = new THREE.Mesh(bushGeo, bushMat);
+  b.position.set(x, 0.18, z); b.scale.set(0.5+Math.random()*0.7, 0.4+Math.random()*0.4, 0.5+Math.random()*0.7);
+  scene.add(b);
+}
+// lamp posts (a few cast real light)
+const poleGeo = new THREE.CylinderGeometry(0.05, 0.07, 3.2, 6);
+const poleMat = new THREE.MeshLambertMaterial({ color:'#23262b' });
+const bulbGeo = new THREE.SphereGeometry(0.17, 10, 10);
+const bulbMat = new THREE.MeshBasicMaterial({ color:'#ffe6ad' });
+for (let i=0;i<9;i++){
+  const z = -64 + i*16, x = (i%2 ? 2.8 : -2.8);
+  const g = new THREE.Group();
+  const p = new THREE.Mesh(poleGeo, poleMat); p.position.y = 1.6; g.add(p);
+  const b = new THREE.Mesh(bulbGeo, bulbMat); b.position.y = 3.15; g.add(b);
+  if (i < 5){ const L = new THREE.PointLight('#ffd9a0', 7, 17, 2); L.position.y = 3.1; g.add(L); }
+  g.position.set(x, 0, z); scene.add(g);
+}
+
+// ---------------------------------------------------------------------------
+// Character — the rigged ByeBoss GLB (replaces the old 2D billboard)
+// ---------------------------------------------------------------------------
+const player = new THREE.Group(); scene.add(player);
+const pos = player.position;                 // we move this group around
+pos.set(0, 0, -4);                            // spawn just in front of the DEPOSIT building (north of plaza centre)
+player.rotation.y = Math.PI;                  // spawn facing away from the camera
+let mixer = null, curAction = null, actions = {}, durations = {}, CLIP = {};
+const faceOffset = 0;      // facing offset (radians)
+const camLookY = 1.2;      // camera look-at height
+function playClip(name, once){
+  const a = actions[name]; if (!a) return;
+  if (a === curAction && a.isRunning() && !once) return;
+  if (curAction && curAction !== a) curAction.fadeOut(0.18);
+  a.reset(); a.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity); a.clampWhenFinished = once;
+  a.fadeIn(0.18).play(); curAction = a;
+}
+
+// ---- characters (the Shop) ----
+const CHARACTERS = [
+  { name:'ByeBoss', url:'./assets/game/byeboss.glb' },
+  { name:'PEPE', url:'./assets/game/char2.glb' },
+  { name:'ByeBoss 2D', type:'sprite' },
+];
+// Skins: ownership is server-side (bought with vault $BYEBOSS); which one you
+// equip is local (cosmetic — other players always see you as ByeBoss anyway).
+let ownedSkins = new Set([2]);     // index 2 is free; rest synced from server on welcome
+let skinPrice = 50;
+const DEFAULT_SKIN = 2;            // main character for everyone (Iso 2D), until they equip another
+let selectedSkin = (() => { try { const raw = localStorage.getItem('bb_skin'); if (raw != null){ const s = +raw; if (Number.isInteger(s) && CHARACTERS[s]) return s; } } catch(e){} return DEFAULT_SKIN; })();
+const CHAR_SCALE = 2.25, CHAR_Y = 1.052;
+// logical action -> first available clip name (each GLB may name them differently)
+const CLIP_CAND = {
+  idle:['idle'], walk:['walk_loop','walk'], run:['sprint_loop','run'], jump:['jump_loop','jump'],
+  punch:['punch_jab','punch'], kick:['kick'],
+  attack:['sword_attack','sword_regular_combo','sword_regular_a','attack','punch_jab'],
+  pickup:['jump_start','pickup'],
+};
+const charCache = {};
+let activeModel = null;
+function applyChar(c){
+  spriteActive = false; if (isoSprite) isoSprite.visible = false; if (gunModel) gunModel.visible = true;
+  if (activeModel) player.remove(activeModel);
+  activeModel = c.model; player.add(activeModel);
+  mixer = c.mixer; actions = c.actions; durations = c.durations; CLIP = c.CLIP; curAction = null;
+  playClip(CLIP.idle, false);
+}
+function selectChar(i, onDone){
+  if (CHARACTERS[i].type === 'sprite'){ applyIsoChar(onDone); return; }
+  if (charCache[i]){ applyChar(charCache[i]); onDone && onDone(); return; }
+  new GLTFLoader().load(CHARACTERS[i].url, (gltf) => {
+    const model = gltf.scene; model.traverse(o => { o.frustumCulled = false; });
+    model.scale.setScalar(CHAR_SCALE); model.position.y = CHAR_Y;
+    const mx = new THREE.AnimationMixer(model), acts = {}, durs = {}, have = new Set();
+    for (const clip of gltf.animations){ acts[clip.name] = mx.clipAction(clip); durs[clip.name] = clip.duration; have.add(clip.name); }
+    const cmap = {}; for (const k in CLIP_CAND){ cmap[k] = CLIP_CAND[k].find(n => have.has(n)) || CLIP_CAND[k][0]; }
+    const c = { model, mixer:mx, actions:acts, durations:durs, CLIP:cmap };
+    charCache[i] = c; applyChar(c); onDone && onDone();
+  }, undefined, (err) => { console.error('character failed:', CHARACTERS[i].url, err); onDone && onDone(); });
+}
+total++;
+queueMicrotask(() => selectChar(selectedSkin, asset));   // last-equipped skin (deferred so every definition below exists)
+
+// ---- skins shop (opened by the shop building; buy with vault $BYEBOSS) ----
+const shopPanel = document.getElementById('shop'), shopListEl = document.getElementById('shopList');
+function shopBldOpen(){ return shopPanel && !shopPanel.classList.contains('hidden'); }
+// Real avatar previews for the skin cards (rendered once, cached).
+const thumbCache = {};
+let _thumbR = null;
+function _thumbRenderer(){
+  if (!_thumbR){ _thumbR = new THREE.WebGLRenderer({ alpha:true, antialias:true, preserveDrawingBuffer:true }); _thumbR.setSize(180, 180); _thumbR.outputColorSpace = THREE.SRGBColorSpace; }
+  return _thumbR;
+}
+function _glbThumb(gltf){
+  const r = _thumbRenderer(), sc = new THREE.Scene();
+  sc.add(new THREE.AmbientLight(0xffffff, 1.25));
+  const dl = new THREE.DirectionalLight(0xffffff, 1.4); dl.position.set(2, 5, 3); sc.add(dl);
+  const m = SkeletonUtils.clone(gltf.scene); sc.add(m);
+  const idle = (gltf.animations || []).find(a => /idle/i.test(a.name)) || (gltf.animations || [])[0];   // pose in idle
+  if (idle){ const mx = new THREE.AnimationMixer(m); mx.clipAction(idle).play(); mx.update(0.4); }
+  m.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(m), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const cam = new THREE.PerspectiveCamera(32, 1, 0.05, 100);
+  const maxd = Math.max(size.x, size.y, size.z) || 1, dist = (maxd * 0.5) / Math.tan(16 * Math.PI / 180) * 1.2;
+  cam.position.set(c.x, c.y + size.y * 0.06, c.z + dist); cam.lookAt(c.x, c.y, c.z);
+  r.render(sc, cam);
+  return r.domElement.toDataURL('image/png');
+}
+function ensureThumb(i){
+  if (thumbCache[i] !== undefined) return;   // null = in progress, string = ready
+  thumbCache[i] = null;
+  const ch = CHARACTERS[i];
+  if (ch.type === 'sprite'){
+    const img = new Image();
+    img.onload = () => { try {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 160; const ctx = cv.getContext('2d');
+      const fw = img.width / 5, fh = img.height / 5;            // 5×5 sheet, frame 0 = top-left (front idle)
+      ctx.drawImage(img, 0, 0, fw, fh, 6, 6, 148, 148);
+      thumbCache[i] = cv.toDataURL('image/png'); if (shopBldOpen()) renderShop();
+    } catch(e){} };
+    img.src = './assets/game/iso/idle_down.png';
+  } else {
+    new GLTFLoader().load(ch.url, (g) => { try { thumbCache[i] = _glbThumb(g); if (shopBldOpen()) renderShop(); } catch(e){} }, undefined, () => {});
+  }
+}
+function renderShop(){
+  if (!shopListEl) return; shopListEl.innerHTML = '';
+  CHARACTERS.forEach((ch, i) => {
+    const owned = ownedSkins.has(i), sel = (i === selectedSkin);
+    const card = document.createElement('button');
+    card.className = 'shopcard' + (sel ? ' active' : '');
+    const label = sel ? '✓ Equipped' : owned ? 'Select' : ('Buy ' + skinPrice + ' 🔒');
+    ensureThumb(i);
+    const ic = thumbCache[i] ? `<img class="sc-img" src="${thumbCache[i]}" alt="">` : `<span class="sc-ic">${owned ? '🎮' : '🔒'}</span>`;
+    card.innerHTML = `${ic}<span class="sc-nm">${ch.name}</span><span class="sc-act${owned?'':' buy'}">${label}</span>`;
+    card.onclick = () => {
+      if (sel) return;
+      if (owned){ selectedSkin = i; try { localStorage.setItem('bb_skin', i); } catch(e){} selectChar(i); sendSkin(); renderShop(); }
+      else if (mpConnected){ mpSend({ t: 'buyskin', skin: i }); }   // server pays from the vault
+    };
+    shopListEl.appendChild(card);
+  });
+}
+function openShopBld(){ if (!shopPanel) return; renderShop(); shopPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
+function closeShopBld(){ if (shopPanel) shopPanel.classList.add('hidden'); }
+// Interact reach for buildings: open it if you're right next to it (within ~10u,
+// any direction) OR a bit further out (up to ~16u) as long as the camera is aimed
+// at it — so "being around it" or "looking at it" both let you press E.
+function lookingAt(px, pz){
+  const dx = px - pos.x, dz = pz - pos.z, d2 = dx*dx + dz*dz;
+  if (d2 <= 100) return true;                                    // ~10u: just being near works
+  if (d2 <= 256){                                                // 10–16u: must be facing it
+    const d = Math.sqrt(d2) || 1;
+    return (dx/d)*(-Math.sin(camYaw)) + (dz/d)*(-Math.cos(camYaw)) > 0.5;
+  }
+  return false;
+}
+function nearShop(){ return !!shopPoint && lookingAt(shopPoint.x, shopPoint.z); }
+{ const x = document.getElementById('shopClose'); if (x) x.onclick = closeShopBld; }
+renderShop();
+
+// ---- username (display name; the WALLET stays the identity, so renaming keeps the vault) ----
+let myName = '';
+const nameInput = document.getElementById('nameInput'), nameSave = document.getElementById('nameSave'), nameMsg = document.getElementById('nameMsg');
+function setNameMsg(text, ok){ if (!nameMsg) return; nameMsg.textContent = text || ''; nameMsg.className = 'name-msg' + (text ? (ok ? ' ok' : ' err') : ''); }
+function saveName(){
+  if (!mpConnected){ setNameMsg('Connect your wallet first', false); return; }
+  const v = (nameInput.value || '').trim();
+  if (v.length < 3 || v.length > 16){ setNameMsg('3–16 characters', false); return; }
+  if (v === myName){ setNameMsg('That is already your name', false); return; }
+  setNameMsg('Saving…', true); mpSend({ t: 'setname', name: v });
+}
+if (nameSave) nameSave.onclick = saveName;
+if (nameInput) nameInput.addEventListener('keydown', e => { e.stopPropagation(); if (e.code === 'Enter') saveName(); });
+
+// ---- stats building panel (allocation + burn tracker) ----
+let allocation = 100000000, burnTarget = 1000, statPool = 0, statPending = 0, statBurned = 0, statCasino = 0, statEmitted = 0, statRealBurned = 0;
+const statsPanel = document.getElementById('statsP');
+const fmtN = (n) => { n = Math.round(+n||0); if (n >= 1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'') + 'M'; if (n >= 1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'') + 'k'; return '' + n; };
+function statsOpen(){ return statsPanel && !statsPanel.classList.contains('hidden'); }
+function refreshStats(){
+  const $ = id => document.getElementById(id);
+  if ($('stAlloc'))  $('stAlloc').textContent  = fmtN(allocation);
+  if ($('stPool'))   $('stPool').textContent   = Math.round(statPool).toLocaleString();          // full precision so every emit/refund is visible
+  if ($('stEmitted'))$('stEmitted').textContent= Math.max(0, Math.round(statEmitted)).toLocaleString();   // gross $BYEBOSS handed to players — rises on every casino win, never falls
+  if ($('stBought')) $('stBought').textContent = fmtN(statBurned + statPending);
+  if ($('stCasino')) $('stCasino').textContent = fmtN(statCasino);
+  if ($('stBurned')) $('stBurned').textContent = fmtN(statRealBurned > 0 ? statRealBurned : statBurned);   // REAL on-chain total burned (initial supply − current) when available
+  if ($('stTarget')) $('stTarget').textContent = fmtN(burnTarget);
+  if ($('stTarget2'))$('stTarget2').textContent= fmtN(burnTarget);
+  if ($('stPending'))$('stPending').textContent= fmtN(statPending);
+  if ($('stFill'))   $('stFill').style.width    = Math.max(0, Math.min(100, statPending / (burnTarget||1) * 100)) + '%';
+}
+function openStats(){ if (!statsPanel) return; refreshStats(); statsPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
+function closeStats(){ if (statsPanel) statsPanel.classList.add('hidden'); }
+{ const x = document.getElementById('statsClose'); if (x) x.onclick = closeStats; }
+
+// ---- CASINO panel: slot machine (vault-funded, 80% RTP, authoritative) ----
+const casinoPanel = document.getElementById('casinoP');
+function casinoOpen(){ return casinoPanel && !casinoPanel.classList.contains('hidden'); }
+function openCasino(){ if (!casinoPanel) return; refreshSlot(); casinoPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
+function closeCasino(){ if (casinoPanel) casinoPanel.classList.add('hidden'); setAuto(false); }   // stop auto-spin when leaving
+{ const x = document.getElementById('casinoClose'); if (x) x.onclick = closeCasino; }
+
+const SLOT_KEYS = ['s0','s1','s2','s3','s4'];   // server sends these ids; map each to its image
+const SLOT_IMG = { s0:'./assets/game/slots/s0.jpg', s1:'./assets/game/slots/s1.jpg', s2:'./assets/game/slots/s2.jpg', s3:'./assets/game/slots/s3.jpg', s4:'./assets/game/slots/s4.jpg' };
+for (const k in SLOT_IMG){ const im = new Image(); im.src = SLOT_IMG[k]; }   // preload so spins don't flash
+const srImgs = ['sri0','sri1','sri2'].map(id => document.getElementById(id));
+function setReel(i, key){ const im = srImgs[i], url = SLOT_IMG[key]; if (im && url) im.src = url; }
+srImgs.forEach((im, i) => { if (im) im.src = SLOT_IMG[SLOT_KEYS[i]]; });   // show three faces initially
+const slotBet = document.getElementById('slotBet'), slotMsgEl = document.getElementById('slotMsg'), slotVaultEl = document.getElementById('slotVault'), spinBtn = document.getElementById('spinBtn');
+let _slotSpinning = false, _slotAnim = null, _slotAuto = false;
+function setAuto(on){ _slotAuto = !!on; const ba = document.getElementById('betAuto'); if (ba) ba.classList.toggle('on', _slotAuto); }
+function refreshSlot(){ if (slotVaultEl) slotVaultEl.textContent = vault; if (slotBet){ slotBet.max = Math.max(1, vault); if ((+slotBet.value||0) > vault) slotBet.value = Math.max(1, vault); } }
+function setBet(v){ if (!slotBet) return; slotBet.value = Math.max(1, Math.min(Math.max(1, vault), Math.floor(v||1))); }
+if (slotBet){
+  const step = () => Math.max(1, Math.round((+slotBet.value||1) * 0.2));
+  const bm = document.getElementById('betMinus'), bp = document.getElementById('betPlus'), bx = document.getElementById('betMax'), ba = document.getElementById('betAuto');
+  if (bm) bm.onclick = () => setBet((+slotBet.value||1) - step());
+  if (bp) bp.onclick = () => setBet((+slotBet.value||1) + step());
+  if (bx) bx.onclick = () => setBet(vault);
+  if (ba) ba.onclick = () => { setAuto(!_slotAuto); if (_slotAuto && !_slotSpinning) doSpin(); };   // toggle auto-spin
+}
+function doSpin(){
+  if (_slotSpinning || !mpConnected) return;
+  const bet = Math.floor(+slotBet.value || 0);
+  if (!(bet >= 1)){ if (slotMsgEl){ slotMsgEl.textContent = 'Enter a bet'; slotMsgEl.style.color = '#ff8a8a'; } return; }
+  if (bet > vault){ if (slotMsgEl){ slotMsgEl.textContent = 'Not enough $BYEBOSS in your vault'; slotMsgEl.style.color = '#ff8a8a'; } return; }
+  _slotSpinning = true; if (spinBtn) spinBtn.disabled = true;
+  playSlot();   // sound on press PLAY
+  if (slotMsgEl){ slotMsgEl.textContent = 'Spinning…'; slotMsgEl.style.color = '#cfc2e8'; }
+  _slotAnim = setInterval(() => { for (let i = 0; i < srImgs.length; i++) setReel(i, SLOT_KEYS[(Math.random()*SLOT_KEYS.length)|0]); }, 40);
+  mpSend({ t: 'slot', bet });
+}
+if (spinBtn) spinBtn.onclick = doSpin;
+function onSlotResult(m){
+  if (_slotAnim){ clearInterval(_slotAnim); _slotAnim = null; }
+  if (!m.ok){
+    _slotSpinning = false; if (spinBtn) spinBtn.disabled = false; setAuto(false);   // any rejection stops auto-spin
+    const why = m.reason==='funds'?'Not enough $BYEBOSS':m.reason==='far'?'Stand by the casino to play':m.reason==='pool'?'Bet too large right now':'Invalid bet';
+    if (slotMsgEl){ slotMsgEl.textContent = why; slotMsgEl.style.color = '#ff8a8a'; }
+    return;
+  }
+  (m.reels||[]).forEach((s, i) => setTimeout(() => setReel(i, s), i*110));   // reveal left-to-right (2x faster)
+  setTimeout(() => {
+    if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }   // sync — no world popup for gambling
+    refreshSlot();
+    if (slotMsgEl){
+      if (m.payout > 0){ slotMsgEl.textContent = `🎉 WIN ×${m.mult}  +${m.payout} $BYEBOSS!`; slotMsgEl.style.color = '#39ff8b'; playSlotWin(); }   // dedicated win sound (clean, not cut by the spin sound)
+      else { slotMsgEl.textContent = `No win — ${m.bet} to the allocation. Spin again!`; slotMsgEl.style.color = '#ff9d6b'; }
+    }
+    _slotSpinning = false; if (spinBtn) spinBtn.disabled = false;
+    if (_slotAuto){                                   // keep going if auto-spin is on and you can still afford it
+      const nb = Math.floor(+slotBet.value || 0);
+      if (mpConnected && nb >= 1 && nb <= vault) setTimeout(() => { if (_slotAuto) doSpin(); }, 375);
+      else setAuto(false);
+    }
+  }, 2*110 + 60);
+}
+
+// ---- DEPOSIT panel: send real $BYEBOSS to the hot wallet -> vault credit (1:1) ----
+const DEP_RPC = 'https://dexscreener-telegram-bot-production.up.railway.app/api/rpc';
+const TOKEN_PROGRAM_ID_STR = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';   // $BYEBOSS is a Token-2022 mint (verified on-chain)
+const ATA_PROGRAM_ID_STR   = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL';
+let _web3Promise = null, _depBusy = false, _depFailT = null, _depBgT = null, _lastDepSig = null, _depAutoRetry = 0, _serverDepHist = [];
+function loadSolanaWeb3(){
+  if (window.solanaWeb3) return Promise.resolve(window.solanaWeb3);
+  if (_web3Promise) return _web3Promise;
+  _web3Promise = new Promise((resolve, reject) => {
+    // wait for the static <script defer> in <head>; if it's slow, inject our own and poll
+    let done = false;
+    const finish = () => { if (done) return; if (window.solanaWeb3){ done = true; resolve(window.solanaWeb3); } };
+    const poll = setInterval(finish, 150);
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js';
+    s.onload = finish;
+    s.onerror = () => {};   // the polling + timeout below handle the outcome
+    document.head.appendChild(s);
+    setTimeout(() => { clearInterval(poll); if (!done){ if (window.solanaWeb3){ done = true; resolve(window.solanaWeb3); } else { _web3Promise = null; reject(new Error('wallet library did not load')); } } }, 12000);
+  });
+  return _web3Promise;
+}
+function ataFor(web3, ownerStr, mintStr){
+  const owner = new web3.PublicKey(ownerStr), mint = new web3.PublicKey(mintStr);
+  const tp = new web3.PublicKey(TOKEN_PROGRAM_ID_STR), ap = new web3.PublicKey(ATA_PROGRAM_ID_STR);
+  const [ata] = web3.PublicKey.findProgramAddressSync([owner.toBuffer(), tp.toBuffer(), mint.toBuffer()], ap);
+  return ata;
+}
+const depositPanel = document.getElementById('depositP');
+const depAmt = document.getElementById('depAmt'), depMsgEl = document.getElementById('depMsg'), depBtn = document.getElementById('depGo'), depPreview = document.getElementById('depPreview');
+function depositOpen(){ return depositPanel && !depositPanel.classList.contains('hidden'); }
+function setDepMsg(t, ok){ if (!depMsgEl) return; depMsgEl.innerHTML = t; depMsgEl.style.color = ok === true ? '#39ff8b' : ok === false ? '#ff8a8a' : '#bfe9ff'; }
+function depPreviewUpdate(){ const a = Math.max(0, Math.floor(+depAmt.value || 0)); if (depPreview) depPreview.textContent = a; }
+// ---- deposit history (per browser, localStorage): success / failed / pending ----
+const DEP_HIST_KEY = 'byeboss_dep_hist_v1';
+function depHistLoad(){ try { return JSON.parse(localStorage.getItem(DEP_HIST_KEY) || '[]') || []; } catch(e){ return []; } }
+function depHistSaveArr(arr){ try { localStorage.setItem(DEP_HIST_KEY, JSON.stringify(arr.slice(0, 40))); } catch(e){} }
+function depHistAdd(rec){ const arr = depHistLoad(); const i = rec.sig ? arr.findIndex(r => r.sig && r.sig === rec.sig) : -1; if (i >= 0){ if (arr[i].status === 'success' && rec.status === 'pending') rec = Object.assign({}, rec, { status: 'success' }); arr[i] = Object.assign({}, arr[i], rec); } else arr.unshift(rec); depHistSaveArr(arr); renderDepHist(); }
+function depHistSet(sig, patch){ if (!sig) return; const arr = depHistLoad(); const i = arr.findIndex(r => r.sig === sig); if (i >= 0){ arr[i] = Object.assign({}, arr[i], patch); depHistSaveArr(arr); renderDepHist(); } }
+function depHistAgo(ts){ if (!ts) return ''; const s = Math.max(0, (Date.now() - ts) / 1000); if (s < 60) return Math.floor(s) + 's'; if (s < 3600) return Math.floor(s/60) + 'm'; if (s < 86400) return Math.floor(s/3600) + 'h'; return Math.floor(s/86400) + 'd'; }
+function renderDepHist(){
+  const wrap = document.getElementById('depHistWrap'), list = document.getElementById('depHistList');
+  if (!wrap || !list) return;
+  let local = depHistLoad();
+  if (walletAddr) local = local.filter(r => !r.wallet || r.wallet === walletAddr);
+  // Merge the permanent server history (credited deposits, cross-device) over the local log.
+  // Server entries are authoritative successes; local adds pending/failed/cancelled ones.
+  const bySig = new Map(); const noSig = [];
+  for (const r of local){ if (r.sig) bySig.set(r.sig, Object.assign({}, r)); else noSig.push(r); }
+  for (const s of (_serverDepHist || [])){ if (!s || !s.sig) continue; const ex = bySig.get(s.sig) || {}; bySig.set(s.sig, Object.assign({}, ex, { sig: s.sig, amount: (s.amount != null ? s.amount : ex.amount), ts: ex.ts || s.ts || Date.now(), status: 'success', server: true, type: s.type || ex.type || 'in' })); }
+  let arr = [...bySig.values(), ...noSig].sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  if (!arr.length){ wrap.style.display = 'none'; list.innerHTML = ''; return; }
+  wrap.style.display = 'block';
+  list.innerHTML = arr.slice(0, 15).map(r => {
+    const isOut = r.type === 'out';
+    const ic  = r.status === 'success' ? (isOut ? '💸' : '✅') : r.status === 'failed' ? '❌' : '⏳';
+    const col = r.status === 'success' ? '#39ff8b' : r.status === 'failed' ? '#ff8a8a' : '#ffd27f';
+    const amt = (r.amount != null) ? ((isOut ? '−' : '+') + Number(r.amount).toLocaleString()) : '—';
+    const sigOk = r.sig && /^[1-9A-HJ-NP-Za-km-z]{20,100}$/.test(r.sig);
+    const sigShort = sigOk ? (r.sig.slice(0,4) + '…' + r.sig.slice(-4)) : 'no tx';
+    const right = sigOk
+      ? '<a href="https://solscan.io/tx/' + r.sig + '" target="_blank" rel="noopener" style="color:#7fb8d8;text-decoration:none">' + sigShort + ' ↗</a>'
+      : '<span style="color:#6f93ad">' + sigShort + '</span>';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;background:rgba(11,22,34,.6);border:1px solid rgba(58,209,255,.18);border-radius:7px;padding:5px 8px">'
+      + '<span style="color:' + col + ';font-weight:800">' + ic + ' ' + amt + '</span>'
+      + '<span style="color:#6f93ad">' + right + ' · ' + depHistAgo(r.ts) + '</span></div>';
+  }).join('');
+}
+function openDeposit(){ if (!depositPanel) return; depPreviewUpdate(); if (!depositOn) setDepMsg('⚠️ Deposits are not enabled yet', false); else setDepMsg('≈ +<b>' + Math.floor(+depAmt.value||0) + '</b> $BYEBOSS to your vault', null); { clearTimeout(_depBgT); const dbox = document.querySelector('#depositP .vault-box'); if (dbox) dbox.classList.remove('depositok'); } { const ww = document.getElementById('wdWrap'); if (ww) ww.style.display = withdrawOn ? 'block' : 'none'; const wm = document.getElementById('wdMsg'); if (wm){ wm.textContent = ''; } }
+  depositPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} if (mpConnected && walletAddr) mpSend({ t: 'dephist' }); renderDepHist(); }
+function closeDeposit(){ if (depositPanel) depositPanel.classList.add('hidden'); }
+{ const x = document.getElementById('depositClose'); if (x) x.onclick = closeDeposit; }
+if (depAmt){
+  depAmt.addEventListener('input', () => { if (!_depBusy){ depPreviewUpdate(); setDepMsg('≈ +<b>' + Math.floor(+depAmt.value||0) + '</b> $BYEBOSS to your vault', null); } });
+  const dm = document.getElementById('depMinus'), dp = document.getElementById('depPlus');
+  const dstep = () => Math.max(1, Math.round((+depAmt.value||1) * 0.25));
+  if (dm) dm.onclick = () => { depAmt.value = Math.max(1, Math.floor(+depAmt.value||1) - dstep()); depAmt.dispatchEvent(new Event('input')); };
+  if (dp) dp.onclick = () => { depAmt.value = Math.max(1, Math.floor(+depAmt.value||1) + dstep()); depAmt.dispatchEvent(new Event('input')); };
+}
+async function doDeposit(){
+  if (_depBusy){ setDepMsg('Already processing — hold on…', null); return; }
+  if (!walletAddr){ setDepMsg('Connecting wallet…', null); await connectWallet(); if (!walletAddr){ setDepMsg('Connect your Phantom wallet first', false); return; } }
+  if (!mpConnected){ setDepMsg('Connect to the game first (👻)', false); return; }
+  if (!depositOn || !hotWallet || !depositMintAddr){ setDepMsg('⚠️ Deposits are not enabled right now', false); return; }
+  const amount = Math.floor(+depAmt.value || 0);
+  if (!(amount >= 1)){ setDepMsg('Enter a whole amount (min 1)', false); return; }
+  _depBusy = true; if (depBtn) depBtn.disabled = true;
+  if (_depFailT) clearTimeout(_depFailT);
+  _depFailT = setTimeout(() => { _depFailT = null; if (_depBusy){ _depBusy = false; if (depBtn) depBtn.disabled = false; setDepMsg('Timed out — try again', false); } }, 90000);   // never stay stuck
+  let depSig = null;
+  try {
+    setDepMsg('Loading wallet library…', null);
+    const web3 = await loadSolanaWeb3();
+    const prov = (window.phantom && window.phantom.solana) || window.solana;
+    if (!prov) throw new Error('Phantom not found');
+    if (prov.connect && !prov.isConnected){ try { await prov.connect(); } catch(e){} }   // make sure the wallet is connected for signing
+    setDepMsg('Preparing transaction…', null);
+    const conn = new web3.Connection(DEP_RPC, { wsEndpoint: false, commitment: 'confirmed' });
+    const player = new web3.PublicKey(walletAddr);
+    const srcAta = ataFor(web3, walletAddr, depositMintAddr);
+    const dstAta = ataFor(web3, hotWallet, depositMintAddr);
+    const raw = BigInt(amount) * 1000000n;                            // $BYEBOSS has 6 decimals
+    const data = new Uint8Array(10); data[0] = 12; new DataView(data.buffer).setBigUint64(1, raw, true); data[9] = 6;   // SPL TransferChecked
+    const ix = new web3.TransactionInstruction({
+      programId: new web3.PublicKey(TOKEN_PROGRAM_ID_STR),
+      keys: [
+        { pubkey: srcAta, isSigner: false, isWritable: true },
+        { pubkey: new web3.PublicKey(depositMintAddr), isSigner: false, isWritable: false },
+        { pubkey: dstAta, isSigner: false, isWritable: true },
+        { pubkey: player, isSigner: true, isWritable: false },
+      ],
+      data,
+    });
+    const tx = new web3.Transaction().add(ix);
+    tx.feePayer = player;
+    tx.recentBlockhash = (await conn.getLatestBlockhash('confirmed')).blockhash;
+    setDepMsg('👻 Approve the transfer in Phantom…', null);
+    // sign with the wallet (this is what pops up Phantom), then send the raw tx
+    const signed = await prov.signTransaction(tx);
+    const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: true });
+    depSig = sig;
+    setDepMsg('Waiting for confirmation…', null);
+    for (let i = 0; i < 24; i++){                                    // wait until confirmed so the server can see it
+      await new Promise(r => setTimeout(r, 2000));
+      try {
+        const st = await conn.getSignatureStatuses([sig]); const s = st && st.value && st.value[0];
+        if (s && s.err) throw new Error('tx failed on-chain');
+        if (s && (s.confirmationStatus === 'confirmed' || s.confirmationStatus === 'finalized')) break;
+      } catch(e){ if (String(e.message).includes('on-chain')) throw e; }
+    }
+    setDepMsg('Crediting your vault…', null);
+    _lastDepSig = sig; _depAutoRetry = 0;                            // remember it so a retry re-checks the SAME tx (never sends new tokens)
+    depHistAdd({ sig, amount, status: 'pending', ts: Date.now(), wallet: walletAddr });
+    mpSend({ t: 'topup', sig });                                     // server verifies on-chain + credits; reply via onmessage
+  } catch(e){
+    if (_depFailT){ clearTimeout(_depFailT); _depFailT = null; }
+    const msg = String((e && e.message) || e || '');
+    console.error('deposit failed:', e);
+    const cancelled = /reject|cancel|User|declined/i.test(msg);
+    setDepMsg(cancelled ? 'Deposit cancelled' : ('Deposit failed: ' + (msg.slice(0, 90) || 'unknown error')), false);
+    if (!cancelled) depHistAdd({ sig: depSig || undefined, amount, status: 'failed', ts: Date.now(), wallet: walletAddr });
+    _depBusy = false; if (depBtn) depBtn.disabled = false;
+  }
+}
+if (depBtn){ depBtn.addEventListener('click', doDeposit); }
+// Enter key triggers the deposit while the panel is open
+if (depAmt){ depAmt.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter'){ e.preventDefault(); doDeposit(); } }); }
+// Recover a deposit that was paid on-chain but not credited (e.g. confirmation lag):
+// paste the tx signature and the server re-verifies + credits it. Never sends new tokens.
+{
+  const recToggle = document.getElementById('depRecToggle'), recBox = document.getElementById('depRecBox'),
+        recSig = document.getElementById('depRecSig'), recGo = document.getElementById('depRecGo');
+  if (recToggle && recBox) recToggle.addEventListener('click', () => { recBox.style.display = recBox.style.display === 'none' ? 'block' : 'none'; if (recBox.style.display === 'block' && recSig) recSig.focus(); });
+  function recoverDeposit(){
+    const sig = ((recSig && recSig.value) || '').trim();
+    if (!/^[1-9A-HJ-NP-Za-km-z]{32,100}$/.test(sig)){ setDepMsg('Paste a valid transaction signature', false); return; }
+    if (!mpConnected){ setDepMsg('Connect to the game first (👻)', false); return; }
+    if (_depBusy){ setDepMsg('Already processing — hold on…', null); return; }
+    _lastDepSig = sig; _depAutoRetry = 0;
+    _depBusy = true; if (depBtn) depBtn.disabled = true;
+    if (_depFailT) clearTimeout(_depFailT);
+    _depFailT = setTimeout(() => { _depFailT = null; if (_depBusy){ _depBusy = false; if (depBtn) depBtn.disabled = false; setDepMsg('Timed out — try Recover again', false); } }, 90000);
+    setDepMsg('Checking that transaction on-chain…', null);
+    depHistAdd({ sig, amount: null, status: 'pending', ts: Date.now(), wallet: walletAddr });
+    mpSend({ t: 'topup', sig });
+  }
+  if (recGo) recGo.addEventListener('click', recoverDeposit);
+  if (recSig) recSig.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter'){ e.preventDefault(); recoverDeposit(); } });
+}
+// ---- Withdraw: vault -> real wallet ----
+const wdAmt = document.getElementById('wdAmt'), wdMsgEl = document.getElementById('wdMsg'), wdBtn = document.getElementById('wdGo'), wdMaxBtn = document.getElementById('wdMax');
+function setWdMsg(t, ok){ if (!wdMsgEl) return; wdMsgEl.textContent = t; wdMsgEl.style.color = ok === true ? '#39ff8b' : ok === false ? '#ff8a8a' : '#bfe9ff'; }
+function doWithdraw(){
+  if (_wdBusy){ setWdMsg('Already processing — hold on…', null); return; }
+  if (!mpConnected){ setWdMsg('Connect to the game first (👻)', false); return; }
+  if (!withdrawOn){ setWdMsg('Withdrawals are off right now', false); return; }
+  if (!walletAddr){ setWdMsg('Connect your wallet first', false); return; }
+  const amount = Math.floor(+wdAmt.value || 0);
+  if (!(amount >= withdrawMin)){ setWdMsg('Minimum withdraw is ' + withdrawMin + ' $BYEBOSS', false); return; }
+  if (amount > Math.floor(vault)){ setWdMsg('Not enough in your vault', false); return; }
+  if (!confirm('Withdraw ' + amount.toLocaleString() + ' $BYEBOSS to your wallet?\n' + walletAddr)) return;
+  _wdBusy = true; if (wdBtn) wdBtn.disabled = true;
+  setWdMsg('Requesting withdrawal…', null);
+  mpSend({ t: 'withdraw', amount });
+  if (_wdFailT) clearTimeout(_wdFailT);
+  _wdFailT = setTimeout(() => { _wdFailT = null; if (_wdBusy){ _wdBusy = false; if (wdBtn) wdBtn.disabled = false; setWdMsg('Timed out — check your wallet & history before retrying', false); } }, 120000);
+}
+if (wdBtn) wdBtn.addEventListener('click', doWithdraw);
+if (wdMaxBtn) wdMaxBtn.addEventListener('click', () => { if (wdAmt) wdAmt.value = Math.floor(vault); });
+if (wdAmt) wdAmt.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter'){ e.preventDefault(); doWithdraw(); } });
+addEventListener('keydown', (e) => { if (e.code === 'Enter' && depositOpen()){ e.preventDefault(); doDeposit(); } });
+
+// ---- iso sprite character (a 2D billboard option in the Shop) ----
+const ISO_STATES = { idle:{fps:7,loop:true}, walk:{fps:12,loop:true}, run:{fps:16,loop:true}, jump:{fps:16,loop:false}, shot:{fps:22,loop:true} };
+const ISO_DIRS = ['up','down','right'];
+const ISO = { y:0.96, scale:2.7 };   // tuned
+const isoTex = {}; let isoLoaded = false, isoSprite = null, spriteActive = false, sprState = 'idle', sprT = 0;
+function loadIso(onDone){
+  if (isoLoaded){ onDone && onDone(); return; }
+  const total2 = ISO_DIRS.length * Object.keys(ISO_STATES).length; let n = 0;
+  const tick = () => { if (++n >= total2){ isoLoaded = true; onDone && onDone(); } };
+  for (const s in ISO_STATES) for (const d of ISO_DIRS){
+    const t = new THREE.TextureLoader().load('./assets/game/iso/'+s+'_'+d+'.png', tick, undefined, tick);
+    t.colorSpace = THREE.SRGBColorSpace; t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearFilter;
+    t.generateMipmaps = false; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1/5, 1/5);
+    isoTex[s+'_'+d] = t;
+  }
+  isoSprite = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
+    new THREE.MeshBasicMaterial({ transparent:true, alphaTest:0.3, side:THREE.DoubleSide }));
+  isoSprite.visible = false; scene.add(isoSprite);
+}
+function applyIsoChar(onDone){
+  loadIso(() => {
+    if (activeModel){ player.remove(activeModel); activeModel = null; }   // hide the GLB
+    if (gunModel) gunModel.visible = false;                                // iso sprites already hold a gun
+    mixer = null; spriteActive = true; isoSprite.visible = true; sprState = 'idle'; sprT = 0;
+    onDone && onDone();
+  });
+}
+function isoDir(){   // character facing -> screen direction (relative to the camera)
+  const fx = Math.sin(faceAngle), fz = Math.cos(faceAngle);
+  const fdot = fx*(-Math.sin(camYaw)) + fz*(-Math.cos(camYaw));   // along camera forward
+  const rdot = fx*( Math.cos(camYaw)) + fz*(-Math.sin(camYaw));   // along camera right
+  if (Math.abs(fdot) >= Math.abs(rdot)) return fdot > 0 ? 'up' : 'down';
+  return rdot > 0 ? 'right' : 'left';
+}
+function updateSpriteChar(dt, moving){
+  let st;
+  if (aiming || locked) st = 'shot';
+  else if (!grounded) st = 'jump';
+  else if (moving) st = (keys.run ? 'run' : 'walk');
+  else st = 'idle';
+  if (st !== sprState){ sprState = st; sprT = 0; } else sprT += dt;
+  const dir = isoDir(), flip = dir === 'left', cfg = ISO_STATES[st];
+  let f = Math.floor(sprT*cfg.fps); f = cfg.loop ? f % 25 : Math.min(f, 24);
+  const tex = isoTex[st + '_' + (flip ? 'right' : dir)];
+  if (tex){ const col = f % 5, row = (f/5)|0; tex.offset.set(col/5, 1 - (row+1)/5); isoSprite.material.map = tex; isoSprite.material.needsUpdate = true; }
+  isoSprite.scale.set(flip ? -ISO.scale : ISO.scale, ISO.scale, 1);
+  isoSprite.position.set(pos.x, pos.y + ISO.y, pos.z);
+  isoSprite.rotation.set(0, Math.atan2(camera.position.x - pos.x, camera.position.z - pos.z), 0);
+}
+// TEMP iso ground/size panel — drag, place on the ground, Copier, send me, then I bake + delete.
+function buildIsoPanel(){
+  if (document.getElementById('isodbg')) return;
+  const store = {};
+  const p = document.createElement('div'); p.id = 'isodbg';
+  p.style.cssText = 'position:fixed;top:120px;left:14px;width:218px;z-index:50;background:rgba(10,8,18,.93);border:1px solid rgba(57,255,139,.5);border-radius:12px;color:#eafff2;font:12px Trebuchet MS,Verdana,sans-serif;box-shadow:0 12px 32px rgba(0,0,0,.55);backdrop-filter:blur(6px);user-select:none';
+  const head = document.createElement('div'); head.style.cssText = 'cursor:move;padding:8px 10px;background:rgba(57,255,139,.16);border-radius:12px 12px 0 0;font-weight:800;display:flex;justify-content:space-between;align-items:center';
+  head.innerHTML = '<span>🕹️ ISO — glisse-moi</span><span id="isoX" style="cursor:pointer;opacity:.75">✕</span>';
+  const body = document.createElement('div'); body.style.cssText = 'padding:10px 12px;display:flex;flex-direction:column;gap:9px';
+  p.append(head, body);
+  function row(label, min, max, step, val, fn){
+    store[label] = +val;
+    const w = document.createElement('div'); const h = document.createElement('div'); h.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:2px';
+    const nm = document.createElement('span'); nm.textContent = label; const out = document.createElement('span'); out.style.color = '#39ff8b'; out.textContent = (+val).toFixed(2); h.append(nm, out);
+    const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = val; inp.style.width = '100%';
+    inp.addEventListener('input', () => { const v = parseFloat(inp.value); out.textContent = v.toFixed(2); store[label] = v; fn(v); }); w.append(h, inp); body.append(w);
+  }
+  row('y', -1, 4, 0.02, ISO.y, v => ISO.y = v);
+  row('scale', 1, 6, 0.05, ISO.scale, v => ISO.scale = v);
+  const btn = document.createElement('button'); btn.textContent = '📋 Copier les valeurs';
+  btn.style.cssText = 'margin-top:4px;padding:9px;border-radius:8px;border:1px solid #39ff8b;background:rgba(57,255,139,.2);color:#eafff2;font-weight:800;cursor:pointer';
+  btn.onclick = () => { const txt = 'ISO ' + Object.entries(store).map(([k,v]) => `${k}=${(+v).toFixed(3)}`).join(' | ');
+    const ok = () => { btn.textContent = '✅ Copié — colle-le-moi'; setTimeout(() => btn.textContent = '📋 Copier les valeurs', 1400); };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok).catch(() => prompt('Copie :', txt)); else prompt('Copie :', txt); };
+  body.append(btn);
+  p.addEventListener('keydown', e => e.stopPropagation());
+  let dr = false, ox = 0, oy = 0;
+  head.addEventListener('pointerdown', e => { if (e.target.id === 'isoX') return; dr = true; ox = e.clientX - p.offsetLeft; oy = e.clientY - p.offsetTop; e.preventDefault(); });
+  window.addEventListener('pointermove', e => { if (!dr) return; p.style.left = Math.max(0, e.clientX - ox) + 'px'; p.style.top = Math.max(0, e.clientY - oy) + 'px'; });
+  window.addEventListener('pointerup', () => dr = false);
+  head.querySelector('#isoX').onclick = () => p.remove();
+  document.body.appendChild(p);
+}
+
+// soft blob shadow under the character
+const shadow = new THREE.Mesh(
+  new THREE.CircleGeometry(0.8, 22),
+  new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.28, depthWrite:false })
+);
+shadow.rotation.x = -Math.PI/2; shadow.position.y = 0.02; scene.add(shadow);
+
+// $BYEBOSS coins — a gold token with the logo on each face
+const coinBodyGeo = new THREE.CylinderGeometry(0.40, 0.40, 0.09, 28);     // gold rim/body
+const coinDiscGeo = new THREE.CircleGeometry(0.40, 28);                    // logo faces — upright UVs (head up)
+const coinSideMat = new THREE.MeshBasicMaterial({ color:'#caa12a' });
+const coinCapMat  = new THREE.MeshBasicMaterial({ color:'#ffd23a', side:THREE.DoubleSide });   // logo painted on once it loads
+const coins = [];
+function makeCoinMesh(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(coinBodyGeo, coinSideMat); body.rotation.x = Math.PI/2;          // standing gold disc
+  const f = new THREE.Mesh(coinDiscGeo, coinCapMat); f.position.z = 0.05;                       // front logo
+  const b = new THREE.Mesh(coinDiscGeo, coinCapMat); b.position.z = -0.05; b.rotation.y = Math.PI; // back logo
+  g.add(body, f, b); return g;
+}
+function spawnCoin(c){
+  const a = Math.random()*6.28, r = 6 + Math.random()*70;
+  c.position.set(Math.cos(a)*r, 0.75, Math.sin(a)*r); c.visible = true; c.userData.dead = false;
+}
+// Solo / decorative coins (no wallet => purely visual, don't count).
+for (let i=0;i<14;i++){ const g = makeCoinMesh(); spawnCoin(g); scene.add(g); coins.push(g); }
+
+// Multiplayer: the SERVER owns the coins (spawns, validates pickups, respawns).
+// The client only renders them and asks to collect; the balance is authoritative.
+const serverCoins = new Map();      // server id -> { group, x, z }
+const _pendingCollect = new Set();  // ids we've already asked to collect (no spam)
+function syncServerCoins(list){
+  const seen = new Set();
+  for (const sc of (list||[])){
+    seen.add(sc.id);
+    let e = serverCoins.get(sc.id);
+    if (!e){ const group = makeCoinMesh(); scene.add(group); e = { group }; serverCoins.set(sc.id, e); }
+    e.x = sc.x; e.z = sc.z; e.group.position.set(sc.x, 0.75, sc.z); e.group.visible = true;
+    _pendingCollect.delete(sc.id);   // re-advertised by the server -> collectable again
+  }
+  for (const [id,e] of [...serverCoins]) if (!seen.has(id)){ scene.remove(e.group); serverCoins.delete(id); _pendingCollect.delete(id); }
+}
+function clearServerCoins(){ for (const [,e] of serverCoins) scene.remove(e.group); serverCoins.clear(); _pendingCollect.clear(); }
+
+// Loot bags: a killed player drops their CARRIED $BYEBOSS here. Bigger gold pile.
+const serverBags = new Map();       // server bag id -> { group, x, z, amount }
+function syncServerBags(list){
+  const seen = new Set();
+  for (const b of (list||[])){
+    seen.add(b.id);
+    let e = serverBags.get(b.id);
+    if (!e){ const group = makeCoinMesh(); group.scale.setScalar(1.7); scene.add(group); e = { group }; serverBags.set(b.id, e); }
+    e.x = b.x; e.z = b.z; e.amount = b.amount; e.group.position.set(b.x, 0.85, b.z); e.group.visible = true;
+  }
+  for (const [id,e] of [...serverBags]) if (!seen.has(id)){ scene.remove(e.group); serverBags.delete(id); }
+}
+function clearServerBags(){ for (const [,e] of serverBags) scene.remove(e.group); serverBags.clear(); }
+
+// Apples (server-spawned health pickups) — render the apple GLB, walk over to heal.
+const serverApples = new Map();   // id -> { group, x, z }
+let appleTemplate = null, appleScale = 4.9, appleY = 0.4, _lastApples = [];   // baked
+new GLTFLoader().load('./assets/game/apple.glb', (g) => {
+  appleTemplate = g.scene;
+  clearServerApples(); syncServerApples(_lastApples);              // re-skin any fallback spheres
+}, undefined, () => {});
+function makeAppleMesh(){
+  if (appleTemplate){ const m = appleTemplate.clone(true); m.scale.setScalar(appleScale); m.traverse(o=>{o.frustumCulled=false;}); return m; }
+  return new THREE.Mesh(new THREE.SphereGeometry(0.5,16,12), new THREE.MeshBasicMaterial({ color:'#e23b3b' })); // fallback until GLB loads
+}
+function syncServerApples(list){
+  _lastApples = list || [];
+  const seen = new Set();
+  for (const a of _lastApples){
+    seen.add(a.id);
+    let e = serverApples.get(a.id);
+    if (!e){ const group = makeAppleMesh(); scene.add(group); e = { group }; serverApples.set(a.id, e); }
+    e.x = a.x; e.z = a.z; e.group.position.set(a.x, appleY, a.z); e.group.visible = true;
+  }
+  for (const [id,e] of [...serverApples]) if (!seen.has(id)){ scene.remove(e.group); serverApples.delete(id); }
+}
+function clearServerApples(){ for (const [,e] of serverApples) scene.remove(e.group); serverApples.clear(); }
+
+// Landmarks: vault (bank) + shop building, positions sent by the server on
+// welcome. Both are single teleport points.
+// Sink a placed prop so its LOWEST vertex sits exactly on the ground (y=0),
+// whatever the model's pivot — fixes "floating" props.
+function groundMesh(m){ m.position.y = 0; m.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(m); m.position.y -= b.min.y; }
+function fitScale(t, targetH){ t.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(t); const h = (b.max.y - b.min.y) || 1; return targetH / h; }
+// Scale, rotate, place at (x,z), then sink so the lowest vertex sits at y=0 + yNudge.
+function placeProp(m, x, z, scale, rotY, yNudge){
+  if (!m) return;
+  m.scale.setScalar(scale); m.rotation.y = rotY;
+  m.position.set(x, 0, z); m.updateMatrixWorld(true);
+  const b = new THREE.Box3().setFromObject(m); m.position.y = -b.min.y + yNudge;
+}
+// Floating 3D name sign above a building (world-placed sprite just over the roof).
+const _signs = { vault:null, shop:null, stats:null, casino:null, deposit:null };
+function buildingSign(key, mesh, text, color, scl){
+  if (_signs[key]){ scene.remove(_signs[key]); _signs[key] = null; }
+  if (!mesh) return;
+  mesh.updateMatrixWorld(true);
+  const b = new THREE.Box3().setFromObject(mesh);
+  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 128;
+  const ctx = cv.getContext('2d');
+  ctx.font = 'bold 84px Trebuchet MS, Verdana, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.lineWidth = 14; ctx.strokeStyle = 'rgba(0,0,0,.92)'; ctx.strokeText(text, 256, 74);
+  ctx.fillStyle = color; ctx.fillText(text, 256, 74);
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
+  const sw = scl ? scl[0] : 9, sh = scl ? scl[1] : 2.25;
+  spr.scale.set(sw, sh, 1);
+  spr.position.set((b.min.x + b.max.x) / 2, b.max.y + 1.4, (b.min.z + b.max.z) / 2);   // bbox center, so it sits over the building even if the model is off-origin
+  scene.add(spr); _signs[key] = spr;
+}
+function clearSign(key){ if (_signs[key]){ scene.remove(_signs[key]); _signs[key] = null; } }
+
+// ---- VAULT (single) — tunable via the temp panel ----
+let vaultPoints = [];               // [{x,z}]
+let vaultTemplate = null, vaultScale = 1.6, _pendingVaults = null;          // baked
+let vaultX = 35, vaultZ = 35, vaultYNudge = -2.95, vaultRotY = 0;           // baked
+const vaultMeshes = [];
+new GLTFLoader().load('./assets/game/vault.glb', (g) => {
+  vaultTemplate = g.scene;
+  if (_pendingVaults){ placeVaults(_pendingVaults); _pendingVaults = null; }
+}, undefined, () => {});
+function applyVault(){ vaultPoints[0] = { x: vaultX, z: vaultZ }; placeProp(vaultMeshes[0], vaultX, vaultZ, vaultScale, vaultRotY, vaultYNudge); }
+function placeVaults(list){
+  for (const m of vaultMeshes) scene.remove(m); vaultMeshes.length = 0;
+  if (list && list.length){ vaultX = list[0].x; vaultZ = list[0].z; }   // start at the server point
+  if (!vaultTemplate){ _pendingVaults = list; return; }
+  const m = vaultTemplate.clone(true); m.traverse(o => { o.frustumCulled = false; }); scene.add(m); vaultMeshes.push(m);
+  applyVault();
+  buildingSign('vault', vaultMeshes[0], 'VAULT', '#39ff8b');
+}
+function clearVaults(){ for (const m of vaultMeshes) scene.remove(m); vaultMeshes.length = 0; clearSign('vault'); }
+function nearVault(){ for (const v of vaultPoints){ if (lookingAt(v.x, v.z)) return true; } return false; }
+
+// ---- SHOP building (single) — tunable via the temp panel ----
+let shopPoint = null, shopTemplate = null, shopScale = 1.3, _pendingShop = null, shopMesh = null;   // baked
+let shopX = -36, shopZ = -39, shopYNudge = 0, shopRotY = 0;                                         // baked
+new GLTFLoader().load('./assets/game/shop.glb?v=2', (g) => {
+  shopTemplate = g.scene; shopScale = fitScale(shopTemplate, 7);   // auto-fit the new model to ~7u tall (its native size differs from the old shop)
+  if (_pendingShop !== null){ placeShop(_pendingShop); _pendingShop = null; }
+}, undefined, () => {});
+function applyShop(){ shopPoint = { x: shopX, z: shopZ }; placeProp(shopMesh, shopX, shopZ, shopScale, shopRotY, shopYNudge); }
+function placeShop(pt){
+  if (shopMesh){ scene.remove(shopMesh); shopMesh = null; }
+  if (pt){ shopX = pt.x; shopZ = pt.z; shopPoint = pt; }   // start at the server point
+  if (!shopPoint) return;
+  if (!shopTemplate){ _pendingShop = shopPoint; return; }
+  const m = shopTemplate.clone(true); m.traverse(o => { o.frustumCulled = false; }); scene.add(m); shopMesh = m;
+  applyShop();
+  buildingSign('shop', shopMesh, 'SHOP', '#c9a6ff');
+}
+function clearShop(){ if (shopMesh){ scene.remove(shopMesh); shopMesh = null; } clearSign('shop'); }
+function applyApples(){ for (const e of serverApples.values()){ e.group.scale.setScalar(appleScale); e.group.position.y = appleY; } }
+
+// ---- STATS building (burn tracker; teleport landmark) ----
+let statsPoint = null, statsTemplate = null, statsScale = 2, _pendingStats = null, statsMesh = null;
+let statsX = 40, statsZ = -38;
+new GLTFLoader().load('./assets/game/stats-bld.glb', (g) => {
+  statsTemplate = g.scene; statsScale = fitScale(statsTemplate, 8);
+  if (_pendingStats !== null){ placeStats(_pendingStats); _pendingStats = null; }
+}, undefined, () => {});
+function placeStats(pt){
+  if (statsMesh){ scene.remove(statsMesh); statsMesh = null; }
+  if (pt){ statsX = pt.x; statsZ = pt.z; statsPoint = pt; }
+  if (!statsPoint) return;
+  if (!statsTemplate){ _pendingStats = statsPoint; return; }
+  const m = statsTemplate.clone(true); m.traverse(o => { o.frustumCulled = false; }); scene.add(m);
+  placeProp(m, statsX, statsZ, statsScale, 0, 0); statsMesh = m;
+  buildingSign('stats', statsMesh, 'STATS', '#ffd54a');
+}
+function clearStats(){ if (statsMesh){ scene.remove(statsMesh); statsMesh = null; } clearSign('stats'); }
+
+// ---- DEPOSIT building (send real $BYEBOSS -> vault; teleport landmark) ----
+let depositPoint = null, depositTemplate = null, depositScale = 2, _pendingDeposit = null, depositMesh = null;
+let depositX = -40, depositZ = -62;
+new GLTFLoader().load('./assets/game/deposit-bld.glb', (g) => {
+  depositTemplate = g.scene; depositScale = fitScale(depositTemplate, 8);
+  if (_pendingDeposit !== null){ placeDeposit(_pendingDeposit); _pendingDeposit = null; }
+}, undefined, () => {});
+function placeDeposit(pt){
+  if (depositMesh){ scene.remove(depositMesh); depositMesh = null; }
+  if (pt){ depositX = pt.x; depositZ = pt.z; depositPoint = pt; }
+  if (!depositPoint) return;
+  if (!depositTemplate){ _pendingDeposit = depositPoint; return; }
+  const m = depositTemplate.clone(true); m.traverse(o => { o.frustumCulled = false; }); scene.add(m);
+  placeProp(m, depositX, depositZ, depositScale, 0, 0); depositMesh = m;
+  buildingSign('deposit', depositMesh, 'DEPOSIT', '#3ad1ff');
+}
+function clearDeposit(){ if (depositMesh){ scene.remove(depositMesh); depositMesh = null; } clearSign('deposit'); }
+function nearDeposit(){ return !!depositPoint && lookingAt(depositPoint.x, depositPoint.z); }
+function nearStats(){ return !!statsPoint && lookingAt(statsPoint.x, statsPoint.z); }
+
+let score = 0; const scoreVal = document.getElementById('scoreVal');
+scoreVal.textContent = '—';   // $BYEBOSS vault only counts once a wallet is connected
+
+// ---- player health / PvP loop ----
+const MAX_HP = 20;
+let hp = MAX_HP, sinceHit = 99, regenAcc = 0, dead = false;
+const hpFill = document.getElementById('hpFill'), respawnEl = document.getElementById('respawn');
+function updateHpBar(){ if (hpFill) hpFill.style.width = Math.max(0, hp/MAX_HP*100) + '%'; }
+function damagePlayer(d){
+  if (dead) return;
+  hp -= d; sinceHit = 0; updateHpBar();
+  if (hp <= 0){ hp = 0; dead = true; aiming = false; if (respawnEl) respawnEl.classList.remove('hide');
+    setTimeout(() => { hp = MAX_HP; dead = false; sinceHit = 99; if (typeof pos !== 'undefined') pos.set(0,0,-4); updateHpBar(); if (respawnEl) respawnEl.classList.add('hide'); }, 2000); }
+}
+function regen(dt){
+  if (mpConnected) return;          // the server owns HP in multiplayer
+  if (dead || hp >= MAX_HP) return;
+  sinceHit += dt;
+  if (sinceHit > 5){ regenAcc += dt; while (regenAcc >= 1){ regenAcc -= 1; hp = Math.min(MAX_HP, hp + 1); updateHpBar(); } }
+}
+// ---- Phantom wallet (identity) ----
+let walletAddr = null;
+const walletBtn = document.getElementById('walletBtn');
+async function connectWallet(){
+  const prov = (window.phantom && window.phantom.solana) || window.solana;
+  if (!prov || !prov.isPhantom){ if (walletBtn) walletBtn.textContent = '👻 No Phantom — open in Phantom app'; window.open('https://phantom.app/', '_blank'); return; }
+  try { if (walletBtn) walletBtn.textContent = '👻 connecting…'; const r = await prov.connect(); walletAddr = r.publicKey.toString();
+    walletBtn.textContent = '👻 ' + walletAddr.slice(0,4) + '…' + walletAddr.slice(-4); walletBtn.style.borderColor = '#39ff8b';
+    scoreVal.textContent = score; }   // unlock the $BYEBOSS counter
+  catch(e){ console.warn('wallet connect cancelled', e); if (walletBtn) walletBtn.textContent = '👻 Connect wallet'; }
+}
+// ===== multiplayer client (authoritative game server on Railway) =====
+const MP_URL = 'wss://dexscreener-telegram-bot-production.up.railway.app/game';
+let mpWs = null, mpConnected = false, mpId = null, byebossTemplate = null, mpDailyCap = 400;
+let mpWantConnected = false, mpRetry = 0, mpReconnectT = null, mpLastSnap = 0;   // auto-reconnect + keepalive state
+let hotWallet = null, depositMintAddr = null, depositOn = false;                 // on-chain deposit target (from welcome)
+let withdrawOn = false, withdrawMin = 5000, withdrawDailyCap = 50000, _wdBusy = false, _wdFailT = null;   // vault -> wallet withdrawals
+let vault = 0, carried = 0;   // secured (claimable) vs on-hand (at risk) balances
+let _vaultSeen = null;        // for the "+N" pickup popup (vault gains)
+// "+N $BYEBOSS" floating combat-text, spawned in the 3D world just above the
+// player's head (coins picked up / enemies killed), drifting up as it fades.
+const _floaters = [];
+function floatText(text, color){
+  if (typeof pos === 'undefined') return;
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64;
+  const ctx = cv.getContext('2d');
+  ctx.font = 'bold 40px Trebuchet MS, Verdana, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.lineWidth = 7; ctx.strokeStyle = 'rgba(0,0,0,.9)'; ctx.strokeText(text, 128, 36);
+  ctx.fillStyle = color || '#ffd23a'; ctx.fillText(text, 128, 36);
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
+  spr.scale.set(3.2, 0.8, 1); spr.position.set(pos.x, pos.y + 5.0, pos.z);
+  scene.add(spr); _floaters.push({ spr, tex, t: 0 });
+}
+function updateFloaters(dt){
+  for (let i = _floaters.length - 1; i >= 0; i--){
+    const f = _floaters[i]; f.t += dt;
+    f.spr.position.y += dt * 1.7;                          // drift upward
+    f.spr.material.opacity = Math.max(0, 1 - f.t / 1.2);   // fade over 1.2s
+    if (f.t >= 1.2){ scene.remove(f.spr); f.spr.material.dispose(); f.tex.dispose(); _floaters.splice(i, 1); }
+  }
+}
+function flashGain(n){ if (!(n > 0)) return; floatText('+' + n + ' $BYEBOSS', '#ffd23a'); }
+const capVal = document.getElementById('capVal');
+const carryVal = document.getElementById('carryVal');
+const bankPrompt = document.getElementById('bankPrompt');
+const shopPrompt = document.getElementById('shopPrompt');
+const dbgEl = document.getElementById('dbg'); let _dbgOn = false;
+const statsPrompt = document.getElementById('statsPrompt');
+const casinoPrompt = document.getElementById('casinoPrompt');
+const depositPrompt = document.getElementById('depositPrompt');
+const xpwrapEl = document.getElementById('xpwrap'), lvlVal = document.getElementById('lvlVal'), xpFill = document.getElementById('xpFill');
+function fmtPool(n){ n=+n; if(!isFinite(n)) return ''; if(n>=1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M'; if(n>=1e3) return Math.round(n/1e3)+'k'; return ''+n; }
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const _lbWrap = document.getElementById('leaderboard'), _lbList = document.getElementById('lbList');
+function renderLeaderboard(top){
+  if (!_lbWrap || !_lbList) return;
+  if (!Array.isArray(top) || !top.length){ _lbWrap.classList.add('hide'); return; }
+  const medals = ['🥇','🥈','🥉'];
+  _lbList.innerHTML = top.map((e,i)=>`<li><span class="rk">${medals[i]||(i+1)}</span><span class="nm">${escapeHtml(e.name||'?')}</span><span class="vl">${fmtN(e.vault)}</span></li>`).join('');
+  _lbWrap.classList.remove('hide');
+}
+function doTeleport(dest){ if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'teleport', to: dest })); }
+function mpSend(o){ if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify(o)); }
+function sendSkin(){ mpSend({ t: 'setskin', skin: selectedSkin }); }   // tell the server which skin we equipped (so others see it)
+
+// ===== vault panel (daily quest + deposit a chosen amount) =====
+let claimedToday = false, dailyReward = 20, claims = 0;
+const vaultPanel = document.getElementById('vault');
+const vMenu = document.getElementById('vaultMenu'), vDailyView = document.getElementById('vaultDaily'), vDepView = document.getElementById('vaultDeposit'), vStakeView = document.getElementById('vaultStake');
+const vCarriedEl = document.getElementById('vaultCarried'), vSecuredEl = document.getElementById('vaultSecured');
+const vAmt = document.getElementById('vaultAmt'), vSlider = document.getElementById('vaultSlider');
+const dailyClaimBtn = document.getElementById('dailyClaimBtn'), dailyInfo = document.getElementById('dailyInfo');
+const dailyClaimsEl = document.getElementById('dailyClaims'), vaultBalHead = document.getElementById('vaultBalHead');
+function vaultView(which){ vMenu.style.display = which==='menu'?'grid':'none'; vDailyView.style.display = which==='daily'?'flex':'none'; vDepView.style.display = which==='deposit'?'flex':'none'; if (vStakeView) vStakeView.style.display = which==='stake'?'block':'none'; if (which==='stake'){ if (mpConnected) mpSend({ t: 'stakeinfo' }); refreshStakeUI(); } }
+// ---- Staking state + UI (independent positions) ----
+let stakeState = { positions:[], total:0, totalPending:0, serverNow:0, min:1000, max:10000000, terms:{} }, selectedStakeTerm = 0, _stakeRecvAt = 0;
+function setStakeMsg(t, ok){ const e = document.getElementById('stakeMsg'); if (!e) return; e.textContent = t || ''; e.style.color = ok===true?'#39ff8b':ok===false?'#ff8a8a':'#bfe9ff'; }
+function refreshStakeTermBtns(){ for (const b of document.querySelectorAll('.stake-term')){ const on = +b.dataset.term === selectedStakeTerm; b.style.background = on?'#2a1c04':'#160d22'; b.style.borderColor = on?'#ffd27f':'#ff5ad0'; b.style.color = on?'#ffd27f':'#ff9be0'; } }
+function fmtDur(ms){ const s=Math.max(0,Math.floor(ms/1000)); const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),mn=Math.floor(s%3600/60); if (d>0) return d+'d '+h+'h'; if (h>0) return h+'h '+mn+'m'; return mn+'m'; }
+function posLivePending(pos){ const extra = (pos.amount||0) * (pos.apr||0) * Math.max(0, Date.now() - _stakeRecvAt) / (365*24*3600*1000); return Math.floor((pos.pending||0) + extra); }
+function renderStakeList(){
+  const list = document.getElementById('stakeList'); if (!list) return;
+  const ps = stakeState.positions || [], now = Date.now();
+  list.innerHTML = ps.map(pos => {
+    const termLbl = pos.term>0 ? (pos.term+'d') : 'Flex', aprLbl = Math.round((pos.apr||0)*100);
+    const lockLbl = (pos.endsAt && pos.term>0) ? (pos.endsAt>now ? ('🔒 unlocks in '+fmtDur(pos.endsAt-now)) : '🔓 unlocked') : '🔓 flexible';
+    const pend = posLivePending(pos);
+    return '<div style="background:rgba(11,22,34,.7);border:1px solid rgba(255,210,127,.25);border-radius:9px;padding:8px 9px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800"><span>'+Math.round(pos.amount).toLocaleString()+' <small style="color:#9a8a6a">'+termLbl+' · '+aprLbl+'% APR</small></span><span style="color:#39ff8b" data-pend="'+pos.id+'">+'+pend.toLocaleString()+'</span></div>'
+      + '<div style="font-size:11px;color:#7fb8d8;margin:3px 0 6px">'+lockLbl+'</div>'
+      + '<div style="display:flex;gap:6px"><button type="button" class="slot-bbtn stake-claim1" data-id="'+pos.id+'" style="flex:1;border-color:#39ff8b;color:#39ff8b">Claim</button>'
+      + '<button type="button" class="slot-bbtn stake-unstake1" data-id="'+pos.id+'" style="flex:1">Unstake</button></div></div>';
+  }).join('');
+  for (const b of list.querySelectorAll('.stake-claim1')) b.onclick = () => { setStakeMsg('Claiming…', null); mpSend({ t:'stakeclaim', id: b.dataset.id }); };
+  for (const b of list.querySelectorAll('.stake-unstake1')) b.onclick = () => {
+    const pos = (stakeState.positions||[]).find(x => x.id === b.dataset.id);
+    const early = pos && pos.endsAt && Date.now() < pos.endsAt;
+    if (early && !confirm('Unstake this lock early? 10% of its principal will be burned 🔥')) return;
+    setStakeMsg('Unstaking…', null); mpSend({ t:'unstake', id: b.dataset.id });
+  };
+}
+function refreshStakeUI(){
+  const sum = document.getElementById('stakeSummary'), has = (stakeState.positions||[]).length > 0;
+  if (sum) sum.style.display = has ? 'block' : 'none';
+  const setT = (id,v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  setT('stakeTotal', Math.round(stakeState.total||0).toLocaleString());
+  setT('stakeMax', fmtN(stakeState.max||10000000));
+  if (Number.isFinite(stakeState.globalTotal)) setT('stakeGlobalVal', Math.round(stakeState.globalTotal).toLocaleString());
+  setT('stakeTotalPending', (stakeState.positions||[]).reduce((s,p)=>s+posLivePending(p),0).toLocaleString());
+  const sa = document.getElementById('stakeAmt'); if (sa && stakeState.min) sa.min = stakeState.min;
+  renderStakeList();
+}
+setInterval(() => {
+  if (!(vaultOpen() && vStakeView && vStakeView.style.display !== 'none')) return;
+  if (!((stakeState.positions||[]).length)) return;
+  let tot = 0;
+  for (const pos of stakeState.positions){ const pend = posLivePending(pos); tot += pend; const e = document.querySelector('[data-pend="'+pos.id+'"]'); if (e) e.textContent = '+' + pend.toLocaleString(); }
+  const t = document.getElementById('stakeTotalPending'); if (t) t.textContent = tot.toLocaleString();
+}, 1000);
+function vaultOpen(){ return vaultPanel && !vaultPanel.classList.contains('hidden'); }
+function refreshVaultUI(){
+  if (vaultBalHead) vaultBalHead.textContent = '🔒 ' + vault + ' $BYEBOSS';
+  if (vCarriedEl) vCarriedEl.textContent = carried;
+  if (vSecuredEl) vSecuredEl.textContent = vault;
+  if (vSlider){ vSlider.max = carried; if (+vSlider.value > carried) vSlider.value = carried; }
+  if (vAmt){ vAmt.max = carried; if (+vAmt.value > carried) vAmt.value = carried; }
+  if (dailyInfo) dailyInfo.textContent = dailyReward;
+  if (dailyClaimsEl) dailyClaimsEl.textContent = claims;
+  if (dailyClaimBtn){ dailyClaimBtn.disabled = claimedToday; dailyClaimBtn.textContent = claimedToday ? 'Already claimed today ✓' : ('Claim ' + dailyReward + ' $BYEBOSS'); }
+}
+function openVault(){ if (!mpConnected || !vaultPanel) return; vaultPanel.classList.remove('hidden'); vaultView('menu'); refreshVaultUI(); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
+function closeVault(){ if (vaultPanel) vaultPanel.classList.add('hidden'); }
+if (vaultPanel){
+  document.getElementById('vaultClose').onclick = closeVault;
+  document.getElementById('vbDaily').onclick   = () => { vaultView('daily'); refreshVaultUI(); };
+  document.getElementById('vbDeposit').onclick = () => { vaultView('deposit'); refreshVaultUI(); };
+  document.getElementById('vbStake').onclick   = () => { vaultView('stake'); };
+  document.getElementById('dailyBack').onclick = () => vaultView('menu');
+  document.getElementById('depBack').onclick   = () => vaultView('menu');
+  dailyClaimBtn.onclick = () => { if (!claimedToday) mpSend({ t: 'dailyclaim' }); };
+  vSlider.oninput = () => { vAmt.value = vSlider.value; };
+  vAmt.oninput    = () => { const v = Math.max(0, Math.min(carried, Math.floor(+vAmt.value || 0))); vSlider.value = v; };
+  document.getElementById('depAllBtn').onclick = () => { if (carried > 0) mpSend({ t: 'deposit', amount: carried }); };
+  document.getElementById('depBtn').onclick    = () => { const a = Math.max(0, Math.min(carried, Math.floor(+vAmt.value || 0))); if (a > 0) mpSend({ t: 'deposit', amount: a }); };
+  // ---- Staking (Lock & Earn) ----
+  const stakeBack = document.getElementById('stakeBack'); if (stakeBack) stakeBack.onclick = () => vaultView('menu');
+  for (const b of document.querySelectorAll('.stake-term')) b.onclick = () => { selectedStakeTerm = +b.dataset.term; refreshStakeTermBtns(); };
+  const stakeBtn = document.getElementById('stakeBtn'); if (stakeBtn) stakeBtn.onclick = () => {
+    const amt = Math.floor(+document.getElementById('stakeAmt').value || 0);
+    if (!(amt >= (stakeState.min || 1000))){ setStakeMsg('Minimum is ' + (stakeState.min || 1000) + ' $BYEBOSS', false); return; }
+    if (amt > Math.floor(vault)){ setStakeMsg('Not enough in your vault', false); return; }
+    setStakeMsg('Locking…', null); mpSend({ t: 'stake', amount: amt, term: selectedStakeTerm });
+  };
+  const stakeClaimAllBtn = document.getElementById('stakeClaimAllBtn'); if (stakeClaimAllBtn) stakeClaimAllBtn.onclick = () => { setStakeMsg('Claiming all…', null); mpSend({ t: 'stakeclaim' }); };
+  refreshStakeTermBtns();
+}
+const remotePlayers = new Map();
+const mpCountEl = document.getElementById('mpCount');
+function b58encode(bytes){
+  const A = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  const digits = [0];
+  for (let i = 0; i < bytes.length; i++){ let carry = bytes[i];
+    for (let j = 0; j < digits.length; j++){ carry += digits[j] << 8; digits[j] = carry % 58; carry = (carry / 58) | 0; }
+    while (carry){ digits.push(carry % 58); carry = (carry / 58) | 0; } }
+  let s = ''; for (let k = 0; k < bytes.length && bytes[k] === 0; k++) s += '1';
+  for (let q = digits.length - 1; q >= 0; q--) s += A[digits[q]]; return s;
+}
+function loadByeboss(cb){ if (byebossTemplate){ cb(); return; } new GLTFLoader().load('./assets/game/byeboss.glb', g => { byebossTemplate = g; cb(); }, undefined, () => cb()); }
+// floating name label (canvas-sprite) shown above each remote player
+function makeLabel(text){
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64;
+  const ctx = cv.getContext('2d');
+  const draw = (t) => { ctx.clearRect(0,0,256,64); ctx.font = 'bold 30px Trebuchet MS, Verdana, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.strokeText(t, 128, 36); ctx.fillStyle = '#eafff2'; ctx.fillText(t, 128, 36); };
+  draw(text || '');
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  spr.scale.set(1.9, 0.48, 1); spr.center.set(0.5, 0); spr.position.set(0, 2.05, 0);   // above the head (group is scaled 2.25)
+  spr.userData.set = (t) => { draw(t || ''); tex.needsUpdate = true; };
+  return spr;
+}
+// ---- remote players: render each in the skin THEY equipped (3D GLB or 2D iso
+// sprite), with snapshot interpolation so movement is smooth enough for PvP ----
+const INTERP_DELAY = 0.08;          // render remotes ~80ms in the past (≈2 server ticks @25Hz)
+const remoteTemplates = {};         // skin index -> loaded gltf (3D skins)
+function getRemoteTemplate(skin, cb){
+  if (skin === 0 && byebossTemplate){ cb(byebossTemplate); return; }
+  if (remoteTemplates[skin]){ cb(remoteTemplates[skin]); return; }
+  const url = (skin === 1) ? './assets/game/char2.glb' : './assets/game/byeboss.glb';
+  new GLTFLoader().load(url, g => { remoteTemplates[skin] = g; if (skin === 0 && !byebossTemplate) byebossTemplate = g; cb(g); }, undefined, () => cb(null));
+}
+function clearRemoteVisual(r){
+  if (r.group){ scene.remove(r.group); r.group = null; r.mixer = null; r.aWalk = r.aIdle = null; }
+  if (r.sprite){ scene.remove(r.sprite); r.sprite = null; }
+  if (r.sprTexCache){ for (const k in r.sprTexCache){ try { r.sprTexCache[k].dispose(); } catch(e){} } r.sprTexCache = null; }
+}
+function buildRemoteVisual(r, skin){
+  clearRemoteVisual(r); r.skin = skin; r.curAnim = null;
+  if (skin === 2){                                   // 2D iso billboard
+    loadIso(() => {});
+    r.sprite = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ transparent:true, alphaTest:0.3, side:THREE.DoubleSide }));
+    scene.add(r.sprite); r.sprTexCache = {}; r.sprState = 'idle'; r.sprT = 0; r.labelY = 3.1;
+  } else {                                            // 3D GLB skin
+    r.labelY = 4.7;
+    getRemoteTemplate(skin, (g) => {
+      if (!g || r.skin !== skin) return;
+      const group = SkeletonUtils.clone(g.scene); group.scale.setScalar(CHAR_SCALE); group.traverse(o => { o.frustumCulled = false; }); scene.add(group);
+      const mixer = new THREE.AnimationMixer(group);
+      const find = names => g.animations.find(a => names.includes(a.name));
+      const walkClip = find(['walk_loop','walk']) || g.animations[0], idleClip = find(['idle']) || walkClip;
+      r.group = group; r.mixer = mixer;
+      r.aWalk = walkClip ? mixer.clipAction(walkClip) : null;
+      r.aIdle = idleClip ? mixer.clipAction(idleClip) : null;
+      if (r.aIdle){ r.aIdle.play(); } r.curAnim = 'idle';
+    });
+  }
+}
+function setRemoteAnim(r, moving){
+  if (!r.mixer) return;
+  const want = moving ? 'walk' : 'idle';
+  if (want === r.curAnim) return;
+  r.curAnim = want;
+  const to = want === 'walk' ? r.aWalk : r.aIdle, from = want === 'walk' ? r.aIdle : r.aWalk;
+  if (to && to === from){ to.play(); return; }
+  if (from) from.fadeOut(0.15);
+  if (to){ to.reset(); to.fadeIn(0.15); to.play(); }
+}
+function updateRemoteSprite(r, dt, moving, x, y, z){
+  if (!isoLoaded || !r.sprite) return;
+  const st = moving ? 'walk' : 'idle';
+  if (st !== r.sprState){ r.sprState = st; r.sprT = 0; } else r.sprT += dt;
+  const fx = Math.sin(r.ry), fz = Math.cos(r.ry);                 // remote facing -> screen direction
+  const fdot = fx*(-Math.sin(camYaw)) + fz*(-Math.cos(camYaw)), rdot = fx*(Math.cos(camYaw)) + fz*(-Math.sin(camYaw));
+  const dir = Math.abs(fdot) >= Math.abs(rdot) ? (fdot > 0 ? 'up' : 'down') : (rdot > 0 ? 'right' : 'left');
+  const flip = dir === 'left', cfg = ISO_STATES[st];
+  let f = Math.floor(r.sprT * cfg.fps); f = cfg.loop ? f % 25 : Math.min(f, 24);
+  const key = st + '_' + (flip ? 'right' : dir);
+  let tex = r.sprTexCache[key];
+  if (!tex && isoTex[key]){ tex = isoTex[key].clone(); tex.needsUpdate = true; r.sprTexCache[key] = tex; }   // own texture so it can't fight the local sprite
+  if (tex){ const col = f % 5, row = (f/5)|0; tex.offset.set(col/5, 1 - (row+1)/5); r.sprite.material.map = tex; r.sprite.material.needsUpdate = true; }
+  r.sprite.scale.set(flip ? -ISO.scale : ISO.scale, ISO.scale, 1);
+  r.sprite.position.set(x, (y||0) + ISO.y, z);
+  r.sprite.rotation.set(0, Math.atan2(camera.position.x - x, camera.position.z - z), 0);   // billboard to camera
+}
+function addRemote(pl){
+  const r = { id: pl.id, x: pl.x, y: pl.y || 0, z: pl.z, ry: pl.ry, buf: [], skin: -1, alive: pl.alive !== false, labelText: pl.name || '', labelY: 4.7 };
+  r.label = makeLabel(pl.name || ''); scene.add(r.label);
+  buildRemoteVisual(r, Number.isInteger(pl.skin) ? pl.skin : DEFAULT_SKIN);
+  remotePlayers.set(pl.id, r); return r;
+}
+function removeRemote(id){ const r = remotePlayers.get(id); if (r){ clearRemoteVisual(r); if (r.label) scene.remove(r.label); remotePlayers.delete(id); } }
+function onSnap(m){
+  if (mpCountEl) mpCountEl.textContent = `👥 ${m.online} online · ${m.accounts} accounts` + (Number.isFinite(m.pool) ? ` · pool ${fmtPool(m.pool)}` : '');
+  if (Number.isFinite(m.pool)) statPool = m.pool;
+  if (Number.isFinite(m.pending)) statPending = m.pending;
+  if (Number.isFinite(m.burned)) statBurned = m.burned;
+  if (Number.isFinite(m.casinoNet)) statCasino = m.casinoNet;
+  if (Number.isFinite(m.emitted)) statEmitted = m.emitted;            // gross "earned by players" (monotonic)
+  if (Number.isFinite(m.realBurned)) statRealBurned = m.realBurned;   // REAL on-chain total burned
+  if (Number.isFinite(m.staked)){ stakeState.globalTotal = m.staked; const sg = document.getElementById('stakeGlobalVal'); if (sg && vaultOpen() && vStakeView && vStakeView.style.display !== 'none') sg.textContent = Math.round(m.staked).toLocaleString(); }
+  if (statsOpen()) refreshStats();
+  const seen = new Set();
+  for (const pl of m.players){
+    seen.add(pl.id);
+    if (pl.id === mpId){                              // my authoritative state from the server
+      if (Number.isFinite(pl.hp)){ hp = Math.max(0, pl.hp); updateHpBar(); }
+      if (Number.isFinite(pl.vault)){ if (_slotSpinning){ vault = pl.vault; } else { if (_vaultSeen !== null && pl.vault > _vaultSeen) flashGain(pl.vault - _vaultSeen); _vaultSeen = pl.vault; vault = pl.vault; scoreVal.textContent = vault; } }   // everything goes straight to the vault; slot results reveal in the panel, not here
+      if (Number.isFinite(pl.carried)) carried = pl.carried;
+      if (Number.isFinite(pl.dailyCap)) mpDailyCap = pl.dailyCap;   // holdings-scaled daily cap (live)
+      if (capVal && Number.isFinite(pl.earnedToday)) capVal.textContent = `today ${pl.earnedToday}/${pl.dailyCap || m.dailyCap || mpDailyCap}`;
+      if (Number.isFinite(pl.level)){
+        if (lvlVal) lvlVal.textContent = 'Lvl ' + pl.level;
+        if (xpFill) xpFill.style.width = (pl.xpNeed > 0 ? Math.max(0, Math.min(100, pl.xpInto / pl.xpNeed * 100)) : 100) + '%';
+      }
+      if (typeof pl.claimedToday === 'boolean') claimedToday = pl.claimedToday;
+      if (Number.isFinite(pl.claims)) claims = pl.claims;
+      if (Number.isFinite(m.dailyReward)) dailyReward = m.dailyReward;
+      if (vaultOpen()) refreshVaultUI();        // keep the open panel in sync
+      const srvDead = !pl.alive || hp <= 0;
+      if (srvDead && !dead){ dead = true; aiming = false; if (respawnEl) respawnEl.classList.remove('hide'); }
+      else if (!srvDead && dead){ dead = false; if (respawnEl) respawnEl.classList.add('hide'); }
+      continue;
+    }
+    let r = remotePlayers.get(pl.id); if (!r){ r = addRemote(pl); }
+    const sk = Number.isInteger(pl.skin) ? pl.skin : DEFAULT_SKIN;
+    if (sk !== r.skin) buildRemoteVisual(r, sk);                 // they changed/equipped a skin -> swap the model
+    r.buf.push({ t: performance.now()/1000, x: pl.x, y: pl.y || 0, z: pl.z, ry: pl.ry });   // interpolation buffer
+    if (r.buf.length > 16) r.buf.shift();
+    r.alive = pl.alive !== false;
+    if (r.label && pl.name !== r.labelText){ r.labelText = pl.name; r.label.userData.set(pl.name || ''); }   // update nametag
+  }
+  for (const id of [...remotePlayers.keys()]) if (!seen.has(id)) removeRemote(id);
+}
+function updateRemotePlayers(dt){
+  const renderT = performance.now()/1000 - INTERP_DELAY;
+  for (const r of remotePlayers.values()){
+    const buf = r.buf; let x = r.x, y = r.y, z = r.z, ry = r.ry, moving = false;
+    if (buf && buf.length >= 2){
+      let i = buf.length - 1; while (i > 0 && buf[i].t > renderT) i--;     // newest snapshot at/under renderT
+      const a = buf[i], b = buf[Math.min(buf.length - 1, i + 1)];
+      const span = (b.t - a.t) || 1e-3, f = Math.max(0, Math.min(1, (renderT - a.t) / span));
+      x = a.x + (b.x - a.x) * f; y = a.y + (b.y - a.y) * f; z = a.z + (b.z - a.z) * f;
+      ry = angleLerp(a.ry, b.ry, f);
+      moving = Math.hypot(b.x - a.x, b.z - a.z) > 0.02;
+    } else if (buf && buf.length === 1){ x = buf[0].x; y = buf[0].y; z = buf[0].z; ry = buf[0].ry; }
+    r.x = x; r.y = y; r.z = z; r.ry = ry;
+    const vis = r.alive !== false;
+    if (r.group){ r.group.visible = vis; r.group.position.set(x, CHAR_Y + (y||0), z); r.group.rotation.y = ry; setRemoteAnim(r, moving); if (r.mixer) r.mixer.update(dt); }
+    if (r.sprite){ r.sprite.visible = vis; updateRemoteSprite(r, dt, moving, x, y, z); }
+    if (r.label){ r.label.visible = vis; r.label.position.set(x, CHAR_Y + (y||0) + (r.labelY || 4.7), z); }
+  }
+}
+function mpConnect(){
+  if (mpWs && (mpWs.readyState === 0 || mpWs.readyState === 1)) return;
+  loadByeboss(() => {});
+  if (mpCountEl){ mpCountEl.style.display = 'block'; mpCountEl.textContent = '🟡 Connecting…'; }
+  try { mpWs = new WebSocket(MP_URL); } catch(e){ if (mpCountEl) mpCountEl.textContent = '🔴 Connection failed'; return; }
+  mpWs.onmessage = async (ev) => {
+    let m; try { m = JSON.parse(ev.data); } catch { return; }
+    if (m.t === 'nonce'){
+      try {
+        const prov = (window.phantom && window.phantom.solana) || window.solana;
+        const res = await prov.signMessage(new TextEncoder().encode(m.nonce), 'utf8');
+        mpWs.send(JSON.stringify({ t: 'auth', wallet: walletAddr, sig: b58encode(res.signature || res) }));
+      } catch(e){ console.warn('sign failed', e); if (mpCountEl) mpCountEl.textContent = '🔴 Signature needed — click 👻 Connect again'; try { mpWs.close(); } catch {} }
+    } else if (m.t === 'welcome'){ mpId = m.id; mpConnected = true; mpRetry = 0; mpLastSnap = Date.now(); mpDailyCap = m.dailyCap || 400; if (mpCountEl) mpCountEl.style.display = 'block';
+      for (const c of coins) c.visible = false;   // the server owns the coins now
+      placeVaults(m.vaults || []);                // render the vault (bank)
+      placeShop(m.shop || null);                  // render the shop building
+      placeStats(m.stats || null);                // render the stats building
+      placeCasino(m.casino || null);              // render the casino building
+      placeDeposit(m.deposit || null);            // render the deposit building
+      hotWallet = m.hotWallet || null; depositMintAddr = m.depositMint || null; depositOn = !!m.depositOn;
+      withdrawOn = !!m.withdrawOn; if (Number.isFinite(m.withdrawMin)) withdrawMin = m.withdrawMin; if (Number.isFinite(m.withdrawDailyCap)) withdrawDailyCap = m.withdrawDailyCap;
+      if (Number.isFinite(m.allocation)) allocation = m.allocation;
+      if (Number.isFinite(m.burnTarget)) burnTarget = m.burnTarget;
+      if (m.stake){ stakeState = Object.assign(stakeState, m.stake); _stakeRecvAt = Date.now(); }   // staking position
+      if (Array.isArray(m.skins)) ownedSkins = new Set(m.skins);   // owned skins from the server
+      if (Number.isFinite(m.skinPrice)) skinPrice = m.skinPrice;
+      myName = m.username || '';
+      if (nameInput){ nameInput.value = myName; nameInput.placeholder = myName ? '' : (m.name || '3–16 chars'); }
+      renderShop();
+      if (xpwrapEl) xpwrapEl.style.display = 'flex';
+      sendSkin();                                  // let the server (and other players) know our equipped skin
+    }
+    else if (m.t === 'denied'){ console.warn('multiplayer denied:', m.m); }
+    else if (m.t === 'coins'){ syncServerCoins(m.coins); }
+    else if (m.t === 'bags'){ syncServerBags(m.bags); }
+    else if (m.t === 'apples'){ syncServerApples(m.apples); }
+    else if (m.t === 'tp'){ if (typeof pos !== 'undefined'){ pos.x = m.x; pos.z = m.z; } }   // server teleported us
+    else if (m.t === 'claim'){ if (m.ok){ claimedToday = true; if (Number.isFinite(m.vault)){ flashGain(m.vault - vault); vault = m.vault; scoreVal.textContent = vault; _vaultSeen = vault; } if (Number.isFinite(m.claims)) claims = m.claims; } if (vaultOpen()) refreshVaultUI(); }
+    else if (m.t === 'stake'){                                            // Lock & Earn result
+      if (m.stake){ stakeState = Object.assign(stakeState, m.stake); _stakeRecvAt = Date.now(); }
+      if (Number.isFinite(m.vault)){ const g = m.vault - vault; if (m.action==='claim' || m.action==='unstake') flashGain(g); vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
+      if (m.ok){
+        if (m.action === 'lock') setStakeMsg('🔒 New lock opened! ' + (m.burned?('('+m.burned.toLocaleString()+' burned 🔥)'):''), true);
+        else if (m.action === 'claim') setStakeMsg('✓ Claimed ' + (m.claimed||0).toLocaleString() + ' $BYEBOSS yield', true);
+        else if (m.action === 'unstake') setStakeMsg('✓ Unstaked ' + (m.returned||0).toLocaleString() + (m.penalty?(' (−'+m.penalty.toLocaleString()+' early-burn 🔥)'):'') + (m.claimed?(' +'+m.claimed.toLocaleString()+' yield'):''), true);
+      } else {
+        setStakeMsg(
+          m.reason==='term' ? 'Pick a lock term' :
+          m.reason==='min' ? ('Minimum is ' + (m.min||stakeState.min).toLocaleString() + ' $BYEBOSS') :
+          m.reason==='funds' ? 'Not enough in your vault' :
+          m.reason==='max' ? ('Max lock reached — ' + (m.left!=null?(m.left.toLocaleString()+' $BYEBOSS left (1% of supply)'):'1% of supply')) :
+          m.reason==='maxpos' ? ('Max ' + (m.maxPos||20) + ' locks at once — claim/unstake one first') :
+          m.reason==='nothing' ? 'No yield to claim yet' :
+          m.reason==='pool' ? 'Reward pool is low — try again soon' :
+          m.reason==='none' ? 'No such lock' : 'Action failed', false);
+      }
+      refreshStakeTermBtns(); if (vaultOpen()) refreshStakeUI();
+    }
+    else if (m.t === 'skin'){ if (m.ok){ ownedSkins = new Set(m.skins); if (Number.isFinite(m.vault)) vault = m.vault; selectedSkin = m.skin; try { localStorage.setItem('bb_skin', m.skin); } catch(e){} selectChar(m.skin); } renderShop(); }
+    else if (m.t === 'name'){ if (m.ok){ myName = m.name; if (nameInput) nameInput.value = m.name; setNameMsg('✓ Saved as ' + m.name, true); } else { setNameMsg(m.reason === 'taken' ? 'That name is already taken' : 'Invalid name (3–16: letters, numbers, _ -)', false); } }
+    else if (m.t === 'burn'){ if (Number.isFinite(m.totalBurned)) statBurned = m.totalBurned; statPending = 0; if (statsOpen()) refreshStats(); if (mpCountEl){ mpCountEl.textContent = `🔥 ${fmtN(m.amount)} $BYEBOSS burned!`; } }
+    else if (m.t === 'vaulted'){ if (Number.isFinite(m.vault)) vault = m.vault; if (Number.isFinite(m.carried)) carried = m.carried; if (vaultOpen()) refreshVaultUI(); }
+    else if (m.t === 'slot'){ onSlotResult(m); }
+    else if (m.t === 'shot'){ if (m.id !== mpId) spawnRemoteShot(m); }   // render another player's tracer
+    else if (m.t === 'bigwin'){ onBigWin(m); }                            // someone hit a x10/x50/x100
+    else if (m.t === 'topup'){                                            // on-chain deposit result
+      if (m.ok){
+        _depBusy = false; if (depBtn) depBtn.disabled = false; if (_depFailT){ clearTimeout(_depFailT); _depFailT = null; }
+        const okSig = _lastDepSig; _lastDepSig = null; _depAutoRetry = 0;
+        if (okSig) depHistSet(okSig, { status: 'success', amount: m.amount }); else depHistAdd({ amount: m.amount, status: 'success', ts: Date.now(), wallet: walletAddr });
+        if (mpConnected && walletAddr) mpSend({ t: 'dephist' });   // refresh the permanent server history
+        if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
+        setDepMsg('✓ +' + m.amount + ' $BYEBOSS added to your vault!', true);
+        flashGain(m.amount);
+        // flip the panel background to "DEPOSIT SUCCESSFUL" for 5s, then back to "awaiting"
+        const dbox = document.querySelector('#depositP .vault-box');
+        if (dbox){ dbox.classList.add('depositok'); clearTimeout(_depBgT); _depBgT = setTimeout(() => dbox.classList.remove('depositok'), 5000); }
+      } else if (m.reason === 'notfound' && _lastDepSig && _depAutoRetry < 4){
+        _depAutoRetry++;                                                  // tx not indexed yet — re-check the SAME sig (never sends new tokens)
+        setDepMsg('Confirming on-chain… (retry ' + _depAutoRetry + '/4)', null);
+        setTimeout(() => { if (_lastDepSig && mpConnected) mpSend({ t: 'topup', sig: _lastDepSig }); }, 4000);
+      } else {
+        _depBusy = false; if (depBtn) depBtn.disabled = false; if (_depFailT){ clearTimeout(_depFailT); _depFailT = null; }
+        const endSig = _lastDepSig; _lastDepSig = null; _depAutoRetry = 0;
+        if (endSig) depHistSet(endSig, { status: m.reason === 'used' ? 'success' : 'failed' });
+        setDepMsg(
+          m.reason==='used' ? 'This deposit was already credited ✓' :
+          m.reason==='notfound' ? 'Not visible on-chain yet — your tokens are safe. Open “Recover by tx signature” below and paste it in ~30s.' :
+          m.reason==='disabled' ? 'Deposits are off right now' :
+          m.reason==='offline' ? 'Reconnected — paste your tx signature in “Recover” to credit it' :
+          'Could not verify the deposit', false);
+      }
+    }
+    else if (m.t === 'withdraw'){                                         // vault -> wallet result
+      if (m.ok && m.stage === 'sending'){
+        if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
+        setWdMsg('Sending ' + (m.amount||0).toLocaleString() + ' $BYEBOSS on-chain… (up to ~1 min)', null);
+      } else if (m.ok && m.stage === 'done'){
+        _wdBusy = false; if (wdBtn) wdBtn.disabled = false; if (_wdFailT){ clearTimeout(_wdFailT); _wdFailT = null; }
+        if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
+        setWdMsg('✓ Sent! ' + (m.amount||0).toLocaleString() + ' $BYEBOSS is in your wallet', true);
+        if (m.sig) depHistAdd({ sig: m.sig, amount: m.amount, status: 'success', type: 'out', ts: Date.now(), wallet: walletAddr });
+        if (wdAmt) wdAmt.value = '';
+      } else {
+        _wdBusy = false; if (wdBtn) wdBtn.disabled = false; if (_wdFailT){ clearTimeout(_wdFailT); _wdFailT = null; }
+        if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
+        setWdMsg(
+          m.reason==='disabled' ? 'Withdrawals are off right now' :
+          m.reason==='busy' ? 'A withdrawal is already in progress' :
+          m.reason==='min' ? ('Minimum withdraw is ' + (m.min||withdrawMin) + ' $BYEBOSS') :
+          m.reason==='funds' ? 'Not enough in your vault' :
+          m.reason==='cap' ? ('Daily limit reached — ' + (m.left||0).toLocaleString() + ' $BYEBOSS left today') :
+          m.reason==='sendfail' ? ('Send failed — refunded to your vault. ' + (m.error||'')) :
+          'Withdrawal failed', false);
+      }
+    }
+    else if (m.t === 'dephist'){ _serverDepHist = Array.isArray(m.list) ? m.list : []; renderDepHist(); }   // permanent server deposit history
+    else if (m.t === 'lb'){ renderLeaderboard(m.top); }                  // top-5 vault leaderboard
+    else if (m.t === 'snap'){ mpLastSnap = Date.now(); onSnap(m); }
+    else if (m.t === 'left'){ removeRemote(m.id); }
+  };
+  mpWs.onclose = () => { mpConnected = false; mpId = null; for (const id of [...remotePlayers.keys()]) removeRemote(id); clearServerCoins(); clearServerBags(); clearServerApples(); clearVaults(); clearShop(); clearStats(); clearCasino(); clearDeposit(); closeVault(); closeShopBld(); closeStats(); closeCasino(); closeDeposit(); for (const c of coins){ if (!c.userData.dead) c.visible = true; } if (capVal) capVal.textContent = ''; if (carryVal) carryVal.textContent = '0'; if (scoreVal) scoreVal.textContent = '—'; if (bankPrompt) bankPrompt.classList.add('hide'); if (xpwrapEl) xpwrapEl.style.display = 'none'; if (_lbWrap) _lbWrap.classList.add('hide'); vault = carried = 0; _vaultSeen = null; if (mpCountEl) mpCountEl.textContent = '🔴 offline'; if (mpWantConnected && walletAddr) scheduleReconnect(); };
+  mpWs.onerror = () => {};
+}
+function scheduleReconnect(){
+  if (!mpWantConnected || !walletAddr || mpReconnectT) return;
+  const delay = mpRetry === 0 ? 400 : Math.min(8000, 600 * Math.pow(2, mpRetry));
+  mpRetry++;
+  if (mpCountEl){ mpCountEl.style.display = 'block'; mpCountEl.textContent = '🟡 Reconnecting…'; }
+  mpReconnectT = setTimeout(() => { mpReconnectT = null; mpConnect(); }, delay);
+}
+async function mpJoin(){
+  if (!walletAddr){ await connectWallet(); if (!walletAddr) return; }
+  mpWantConnected = true; mpRetry = 0;
+  if (mpReconnectT){ clearTimeout(mpReconnectT); mpReconnectT = null; }
+  // already truly live (connected and hearing from the server recently) — nothing to do
+  if (mpConnected && mpWs && mpWs.readyState === 1 && (Date.now() - mpLastSnap < 8000)) return;
+  // a stale/zombie or still-opening socket: drop it; its onclose schedules a fresh connect
+  if (mpWs && (mpWs.readyState === 0 || mpWs.readyState === 1)){ try { mpWs.close(); } catch(e){} return; }
+  mpConnect();   // closed or none: connect right away
+}
+if (walletBtn) walletBtn.addEventListener('click', mpJoin);
+setInterval(() => { if (mpConnected && mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'state', x: +pos.x.toFixed(2), y: +pos.y.toFixed(2), z: +pos.z.toFixed(2), ry: +faceAngle.toFixed(2) })); }, 50);   // 20Hz position updates (snappier PvP)
+// stale-socket watchdog: if we're "connected" but the server has gone quiet (network
+// blip, tab was backgrounded, laptop sleep), the socket is a zombie — drop it so the
+// onclose handler auto-reconnects instead of leaving us stuck looking connected.
+setInterval(() => {
+  if (mpConnected && mpWs && mpWs.readyState === 1 && mpLastSnap && (Date.now() - mpLastSnap > 12000)){
+    try { mpWs.close(); } catch(e){}
+  }
+}, 4000);
+// when the tab/app comes back to the foreground, make sure we're still connected
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && mpWantConnected && walletAddr && (!mpConnected || !mpWs || mpWs.readyState !== 1)){
+    mpRetry = 0; if (mpReconnectT){ clearTimeout(mpReconnectT); mpReconnectT = null; } mpConnect();
+  }
+});
+
+// paint the $BYEBOSS logo onto the coin faces (same-origin image -> canvas texture is safe)
+(function paintCoin(){
+  const img = new Image();
+  img.onload = () => {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 256;
+    const g = cv.getContext('2d');
+    const grd = g.createRadialGradient(128,102,16,128,128,132);
+    grd.addColorStop(0,'#ffe680'); grd.addColorStop(0.7,'#ffc23a'); grd.addColorStop(1,'#a86f00');
+    g.fillStyle = grd; g.beginPath(); g.arc(128,128,126,0,6.28); g.fill();
+    g.drawImage(img, 20, 20, 216, 216);                       // round logo, thin gold rim around it
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+    coinCapMat.map = t; coinCapMat.color.set('#ffffff'); coinCapMat.needsUpdate = true;
+  };
+  img.src = './assets/game/byeboss-logo.png';
+})();
+
+// ---------------------------------------------------------------------------
+// Input
+// ---------------------------------------------------------------------------
+const keys = { f:false, b:false, l:false, r:false, run:false };
+const touchMove = { x:0, z:0, mag:0 };   // analog joystick vector (defined early so update() never sees it undefined)
+const DEFAULT_BINDS = { f:'KeyW', b:'KeyS', l:'KeyA', r:'KeyD', run:'ShiftLeft', jump:'Space' };
+const BIND_LABELS = { f:'Forward', b:'Backward', l:'Left', r:'Right', run:'Run', jump:'Jump' };
+const ARROWS = { ArrowUp:'f', ArrowDown:'b', ArrowLeft:'l', ArrowRight:'r' };   // always-on movement fallback
+let binds = (() => { try { const s = JSON.parse(localStorage.getItem('bb_binds')); if (s) return Object.assign({}, DEFAULT_BINDS, s); } catch(e){} return { ...DEFAULT_BINDS }; })();
+let _capturingBind = null;
+function saveBinds(){ try { localStorage.setItem('bb_binds', JSON.stringify(binds)); } catch(e){} }
+function keyLabel(code){ if (!code) return '—'; if (code.startsWith('Key')) return code.slice(3); if (code.startsWith('Digit')) return code.slice(5);
+  return ({ Space:'SPACE', ShiftLeft:'L-SHIFT', ShiftRight:'R-SHIFT', ControlLeft:'L-CTRL', ControlRight:'R-CTRL', AltLeft:'L-ALT', ArrowUp:'↑', ArrowDown:'↓', ArrowLeft:'←', ArrowRight:'→' })[code] || code; }
+addEventListener('keydown', e=>{
+  if (_capturingBind){ e.preventDefault(); if (e.code !== 'Escape'){ binds[_capturingBind] = e.code; saveBinds(); } _capturingBind = null; renderBinds(); return; }
+  if (e.code === 'Backquote'){ _dbgOn = !_dbgOn; if (dbgEl) dbgEl.style.display = _dbgOn ? 'block' : 'none'; e.preventDefault(); return; }   // ` toggles debug overlay
+  if (e.code === 'KeyM' && !/^(INPUT|TEXTAREA)$/.test(((document.activeElement||{}).tagName)||'')){ try { document.exitPointerLock(); } catch(err){} mpJoin(); e.preventDefault(); return; }   // M = connect Phantom & join (idempotent; works whatever the state)
+  for (const a in binds){ if (binds[a] === e.code){ if (a === 'jump') triggerJump(); else keys[a] = true; e.preventDefault(); return; } }
+  if (ARROWS[e.code]){ keys[ARROWS[e.code]] = true; e.preventDefault(); return; }
+  if (e.code === 'KeyE'){ doInteract(); e.preventDefault(); }
+});
+addEventListener('keyup', e=>{
+  for (const a in binds){ if (binds[a] === e.code && a !== 'jump'){ keys[a] = false; return; } }
+  if (ARROWS[e.code]) keys[ARROWS[e.code]] = false;
+});
+// ----- key-bindings config panel (⚙) -----
+const cfgPanel = document.getElementById('cfg'), cfgList = document.getElementById('cfgList');
+function renderBinds(){
+  if (!cfgList) return; cfgList.innerHTML = '';
+  for (const a of ['f','b','l','r','run','jump']){
+    const row = document.createElement('div'); row.className = 'cfg-row';
+    const nm = document.createElement('span'); nm.textContent = BIND_LABELS[a];
+    const k = document.createElement('span'); k.className = 'cfg-key' + (_capturingBind===a ? ' capturing' : ''); k.textContent = _capturingBind===a ? 'press…' : keyLabel(binds[a]);
+    k.onclick = () => { _capturingBind = a; renderBinds(); };
+    row.append(nm, k); cfgList.appendChild(row);
+  }
+}
+function cfgOpen(){ return cfgPanel && !cfgPanel.classList.contains('hidden'); }
+function openCfg(){ if (!cfgPanel) return; renderBinds(); cfgPanel.classList.remove('hidden'); keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
+function closeCfg(){ if (cfgPanel){ cfgPanel.classList.add('hidden'); _capturingBind = null; } }
+{ const b=document.getElementById('cfgBtn'); if (b) b.onclick = openCfg;
+  const d=document.getElementById('cfgDone'); if (d) d.onclick = closeCfg;
+  const x=document.getElementById('cfgClose'); if (x) x.onclick = closeCfg;
+  const r=document.getElementById('cfgReset'); if (r) r.onclick = () => { binds = { ...DEFAULT_BINDS }; saveBinds(); _capturingBind=null; renderBinds(); }; }
+const abEls = {};
+document.querySelectorAll('.ab').forEach(el=>{ const a = el.dataset.act; abEls[a] = el;
+  el.addEventListener('pointerdown', ev=>{ ev.preventDefault(); doAction(a); }); });
+function flashAbility(a){ const el = abEls[a]; if (!el) return; el.classList.add('pressed'); setTimeout(()=>el.classList.remove('pressed'),160); }
+try {
+  if (('ontouchstart' in window) || navigator.maxTouchPoints>0){ document.body.classList.add('touch');
+    document.querySelectorAll('.bankprompt').forEach(p => { p.innerHTML = p.innerHTML.replace(/Press <b>E<\/b>/, 'Tap <b>✋ USE</b>'); }); }
+} catch (e) { console.warn('touch init', e); }
+// Open / close the nearest building (E key and the mobile USE button both call this).
+function doInteract(){
+  if (vaultOpen()) closeVault();
+  else if (shopBldOpen()) closeShopBld();
+  else if (statsOpen()) closeStats();
+  else if (casinoOpen()) closeCasino();
+  else if (depositOpen()) closeDeposit();
+  else if (mpConnected && nearVault()) openVault();
+  else if (mpConnected && nearShop()) openShopBld();
+  else if (mpConnected && nearStats()) openStats();
+  else if (mpConnected && nearCasino()) openCasino();
+  else if (mpConnected && nearDeposit()) openDeposit();
+}
+// Analog movement joystick (left thumb): push the stick to move, push far to run.
+(function(){
+  const joy = document.getElementById('joy'), knob = document.getElementById('joyKnob');
+  if (!joy || !knob) return;
+  let jid = null, cx = 0, cy = 0, R = 54;
+  const start = t => { const r = joy.getBoundingClientRect(); cx = r.left + r.width/2; cy = r.top + r.height/2; R = r.width/2 - 14; jid = t.identifier; move(t); };
+  const move  = t => { const dx = t.clientX - cx, dy = t.clientY - cy, d = Math.hypot(dx, dy) || 1, cl = Math.min(d, R), nx = dx/d, ny = dy/d; knob.style.transform = 'translate(' + (nx*cl) + 'px,' + (ny*cl) + 'px)'; touchMove.x = nx * (cl/R); touchMove.z = -ny * (cl/R); touchMove.mag = cl/R; };
+  const end   = () => { jid = null; touchMove.x = touchMove.z = touchMove.mag = 0; knob.style.transform = 'translate(0,0)'; };
+  joy.addEventListener('touchstart', e => { e.preventDefault(); if (jid === null) start(e.changedTouches[0]); }, {passive:false});
+  joy.addEventListener('touchmove',  e => { e.preventDefault(); for (const t of e.changedTouches) if (t.identifier === jid) move(t); }, {passive:false});
+  joy.addEventListener('touchend',   e => { for (const t of e.changedTouches) if (t.identifier === jid) end(); }, {passive:true});
+  joy.addEventListener('touchcancel', end, {passive:true});
+})();
+// Right-side action buttons (FIRE wired separately below)
+document.querySelectorAll('.rbtns button').forEach(b=>{ const w = b.dataset.btn;
+  if (w === 'jump')     b.addEventListener('pointerdown', e=>{ e.preventDefault(); triggerJump(); });
+  else if (w === 'interact') b.addEventListener('pointerdown', e=>{ e.preventDefault(); doInteract(); }); });
+
+// ---------------------------------------------------------------------------
+// Character state / actions
+// ---------------------------------------------------------------------------
+let locked = false, lockTimer = 0, grounded = true, vy = 0, faceAngle = Math.PI;
+let WALK = 7.0, RUN = 13.0, JUMP_V = 8.0; const GRAV = 22;
+
+function doAction(name){
+  if (dead || !grounded || locked) return;
+  const clip = CLIP[name] || CLIP.punch;
+  locked = true; lockTimer = durations[clip] || 0.5;
+  playClip(clip, true); flashAbility(name);
+  if (name === 'pickup') tryCollect();
+  else hitMonsters();                 // punch / kick / attack damage nearby monsters
+}
+function triggerJump(){
+  if (dead || !grounded || locked) return;
+  vy = JUMP_V; grounded = false;
+}
+function tryCollect(){
+  if (!walletAddr) return;   // no $BYEBOSS without a connected wallet (= an account)
+  if (mpConnected){
+    // Server owns the coins: ask to collect any we're standing on. The server
+    // validates proximity + daily cap + pool; the balance returns via the snap.
+    for (const [id,e] of serverCoins){
+      if (!e.group.visible || _pendingCollect.has(id)) continue;
+      const dx = e.x - pos.x, dz = e.z - pos.z;
+      if (dx*dx + dz*dz < 2.2){
+        e.group.visible = false;           // instant feedback; server confirms via next coins broadcast
+        _pendingCollect.add(id);
+        if (mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'collect', id }));
+      }
+    }
+    // Grab loot bags (dropped by killed players) we walk over.
+    for (const [id,e] of serverBags){
+      if (!e.group.visible) continue;
+      const dx = e.x - pos.x, dz = e.z - pos.z;
+      if (dx*dx + dz*dz < 2.6){
+        e.group.visible = false;
+        if (mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'grab', id }));
+      }
+    }
+    // Apples heal — only bother if not at full HP (server rejects at full anyway).
+    if (hp < MAX_HP){
+      for (const [id,e] of serverApples){
+        if (!e.group.visible) continue;
+        const dx = e.x - pos.x, dz = e.z - pos.z;
+        if (dx*dx + dz*dz < 2.6){
+          e.group.visible = false;
+          if (mpWs && mpWs.readyState === 1) mpWs.send(JSON.stringify({ t: 'apple', id }));
+        }
+      }
+    }
+    return;
+  }
+  // Solo (no server): local visual coins, counted locally.
+  for (const c of coins){ if (c.userData.dead) continue;
+    const dx = c.position.x - pos.x, dz = c.position.z - pos.z;
+    if (dx*dx + dz*dz < 2.2){ c.userData.dead = true; c.visible = false; score++; scoreVal.textContent = score;
+      setTimeout(()=>spawnCoin(c), 6000); }
+  }
+}
+function angleLerp(a, b, t){ let d = ((b - a + Math.PI) % (2*Math.PI)) - Math.PI; if (d < -Math.PI) d += 2*Math.PI; return a + d*t; }
+
+// ---------------------------------------------------------------------------
+// Update + render
+// ---------------------------------------------------------------------------
+let camYaw = 0, camPitch = 0;                     // mouse-controlled view angle (shooter-style)
+const CAM_DIST = 10, camTarget = new THREE.Vector3();
+const BOUND = 250;
+
+// ===== monsters — kill one for +1 $BYEBOSS =====
+const monsterGroup = new THREE.Group(); scene.add(monsterGroup);
+let monsterTemplate = null, monsterMinY = 0, monsterScale = 1;
+const monsters = [];
+const MON_COUNT = 6, MON_SPEED = 2.6, MON_DETECT = 30, MON_HP = 14, MON_HIT_RANGE = 4.4;
+function spawnMonsterAt(m){
+  const a = Math.random()*6.28, r = 24 + Math.random()*80;
+  m.pos.set(Math.cos(a)*r, 0, Math.sin(a)*r);
+  m.hp = MON_HP; m.byeboss = 5 + Math.floor(Math.random()*20); m.atkT = 0; m.state = 'alive'; m.t = Math.random()*2; m.wander = Math.random()*6.28;
+  m.model.visible = true; m.model.scale.setScalar(monsterScale); m.model.rotation.set(0, m.wander, 0);
+  m.model.position.set(m.pos.x, -monsterMinY*monsterScale, m.pos.z);
+}
+function makeMonsters(){
+  for (let i = 0; i < MON_COUNT; i++){
+    const model = SkeletonUtils.clone(botGltf.scene); model.traverse(o => { o.frustumCulled = false; });
+    monsterGroup.add(model);
+    const mixer = new THREE.AnimationMixer(model);
+    const walk = botGltf.animations.find(a => a.name === 'walk_loop') || botGltf.animations.find(a => a.name === 'idle') || botGltf.animations[0];
+    if (walk) mixer.clipAction(walk).play();
+    const m = { model, mixer, pos:new THREE.Vector3(), hp:MON_HP, state:'alive', t:0, wander:0 };
+    spawnMonsterAt(m); monsters.push(m);
+  }
+}
+function updateMonsters(dt){
+  for (const m of monsters){
+    if (m.state === 'dead') continue;
+    if (m.state === 'dying'){
+      m.t += dt; const k = Math.min(1, m.t/0.8);
+      m.model.scale.setScalar(monsterScale*(1-k));
+      m.model.rotation.x = k*1.4;
+      m.model.position.y = (-monsterMinY*monsterScale)*(1-k) - k*0.4;
+      if (m.t > 0.85){ m.state = 'dead'; m.model.visible = false; m.model.rotation.x = 0; setTimeout(()=>spawnMonsterAt(m), 4000 + Math.random()*5000); }
+      continue;
+    }
+    const dx = pos.x - m.pos.x, dz = pos.z - m.pos.z, d = Math.hypot(dx, dz);
+    let dirx, dirz;
+    if (d < MON_DETECT && d > 1.4){ dirx = dx/d; dirz = dz/d; }
+    else { m.t += dt; if (m.t > 2.5){ m.t = 0; m.wander = Math.random()*6.28; } dirx = Math.sin(m.wander); dirz = Math.cos(m.wander); }
+    m.pos.x = Math.max(-BOUND, Math.min(BOUND, m.pos.x + dirx*MON_SPEED*dt));
+    m.pos.z = Math.max(-BOUND, Math.min(BOUND, m.pos.z + dirz*MON_SPEED*dt));
+    m.model.position.set(m.pos.x, -monsterMinY*monsterScale, m.pos.z);
+    m.model.rotation.y = angleLerp(m.model.rotation.y, Math.atan2(dirx, dirz), 1 - Math.pow(0.0015, dt));
+    m.mixer.update(dt);
+    m.atkT -= dt;
+    if (d < 2.6 && m.atkT <= 0 && !mpConnected){ m.atkT = 0.7; damagePlayer(1); }   // bots hurt you on contact (solo only)
+  }
+}
+function hitMonsters(){
+  const fx = Math.sin(faceAngle + faceOffset), fz = Math.cos(faceAngle + faceOffset);
+  for (const m of monsters){
+    if (m.state !== 'alive') continue;
+    const dx = m.pos.x - pos.x, dz = m.pos.z - pos.z, d = Math.hypot(dx, dz);
+    if (d > MON_HIT_RANGE) continue;
+    if (d > 0.2 && (dx/d*fx + dz/d*fz) < 0.1) continue;   // must be roughly in front of the player
+    if (--m.hp <= 0){ m.state = 'dying'; m.t = 0; if (!mpConnected && walletAddr){ score += m.byeboss; scoreVal.textContent = score; } else if (mpConnected && mpWs && mpWs.readyState === 1){ mpWs.send(JSON.stringify({ t: 'botkill' })); } }   // solo loot, or MP bot-kill XP
+  }
+}
+// ===== bots — Skin #2 (char2) enemies you shoot to loot their $BYEBOSS =====
+let botGltf = null;
+new GLTFLoader().load('./assets/game/char2.glb', (gltf) => {
+  botGltf = gltf;
+  monsterScale = 2.25; monsterMinY = -1.052 / 2.25;   // feet on the ground (matches the player)
+  makeMonsters();
+}, undefined, (err) => console.error('bot model failed to load', err));
+
+// ===== casino landmark (teleport point; mini-games coming soon) =====
+// Walk freely in/out — no collision (you'll enter it to play once games ship).
+const casinoColliders = [];
+let casinoPoint = null, casinoTemplate = null, _pendingCasino = null, casinoMesh = null;
+let casinoX = 40, casinoZ = -62;
+const CASINO_H = 12;   // building height in world units (others are ~7.5)
+new GLTFLoader().load('./assets/game/casino.glb?v=3', (gltf) => {   // ?v busts the browser cache for the new model
+  casinoTemplate = gltf.scene;
+  if (_pendingCasino !== null){ placeCasino(_pendingCasino); _pendingCasino = null; }
+}, undefined, (err) => console.error('casino failed to load', err));
+function placeCasino(pt){
+  if (casinoMesh){ scene.remove(casinoMesh); casinoMesh = null; }
+  if (pt){ casinoX = pt.x; casinoZ = pt.z; casinoPoint = pt; }
+  if (!casinoPoint) return;
+  if (!casinoTemplate){ _pendingCasino = casinoPoint; return; }
+  const c = casinoTemplate.clone(true);
+  c.traverse(o => {                                    // render both sides so it isn't black/hollow from outside
+    o.frustumCulled = false;
+    if (o.isMesh && o.material){
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      for (const mt of mats){ mt.side = THREE.DoubleSide; if (mt.transparent && mt.opacity < 0.05) mt.opacity = 1; mt.needsUpdate = true; }
+    }
+  });
+  // The model's geometry is offset far from its local origin, so we can't just set
+  // position — we measure the scaled+rotated bounds and recenter the footprint on
+  // the teleport point (and drop it onto the ground).
+  c.position.set(0, 0, 0); c.rotation.y = -0.6; c.scale.setScalar(1); c.updateMatrixWorld(true);
+  const sy = (new THREE.Box3().setFromObject(c).getSize(new THREE.Vector3()).y) || 1;
+  c.scale.setScalar(CASINO_H / sy); c.updateMatrixWorld(true);              // modest building, not map-sized
+  const box = new THREE.Box3().setFromObject(c);
+  c.position.set(casinoX - (box.min.x + box.max.x) / 2, -box.min.y, casinoZ - (box.min.z + box.max.z) / 2);
+  scene.add(c); casinoMesh = c;
+  buildingSign('casino', casinoMesh, 'CASINO', '#ff5ad0', [11, 2.75]);      // sign sized for the smaller roof
+}
+function clearCasino(){ if (casinoMesh){ scene.remove(casinoMesh); casinoMesh = null; } clearSign('casino'); }
+function nearCasino(){ return !!casinoPoint && lookingAt(casinoPoint.x, casinoPoint.z); }
+// player vs casino walls — BVH raycast, axis-separated so you slide along walls
+const colRay = new THREE.Raycaster(); colRay.firstHitOnly = true;
+// Solid building footprints (XZ boxes) — you can't walk through them.
+const solids = [];
+function rebuildSolids(){
+  solids.length = 0;
+  for (const m of buildingGroup.children){
+    m.updateMatrixWorld(true);
+    const b = new THREE.Box3().setFromObject(m), inset = 0.5;
+    if (isFinite(b.min.x)) solids.push({ minX:b.min.x+inset, maxX:b.max.x-inset, minZ:b.min.z+inset, maxZ:b.max.z-inset });
+  }
+}
+function wallBlocked(fx, fz, tx, tz){
+  for (const s of solids){ if (tx > s.minX && tx < s.maxX && tz > s.minZ && tz < s.maxZ) return true; }   // solid buildings
+  if (casinoColliders.length){
+    _v0.set(fx, pos.y + 1.0, fz);
+    _v1.set(tx - fx, 0, tz - fz); const d = _v1.length(); if (d >= 1e-5){ _v1.divideScalar(d);
+      colRay.set(_v0, _v1); colRay.far = d + 0.7;
+      if (colRay.intersectObjects(casinoColliders, false).length > 0) return true; }
+  }
+  return false;
+}
+
+// ===== weapon: the gun (right-click = aim + fire, infinite ammo) =====
+const GUN = { px:-0.23, py:1.28, pz:0.47, rx:0, ry:-3.2, rz:0.1, scale:2.0, tip:0.5 };   // tuned
+let gunModel = null, muzzle = null;
+const gunTip = new THREE.Object3D();
+function applyGunTransform(){
+  if (!gunModel) return;
+  gunModel.position.set(GUN.px, GUN.py, GUN.pz);
+  gunModel.rotation.set(GUN.rx, GUN.ry, GUN.rz);
+  gunModel.scale.setScalar(GUN.scale);
+  gunTip.position.set(0, 0, GUN.tip);
+}
+new GLTFLoader().load('./assets/game/gun.glb', (gltf) => {
+  gunModel = gltf.scene; gunModel.traverse(o => { o.frustumCulled = false; });
+  gunModel.add(gunTip);
+  muzzle = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.35),
+    new THREE.MeshBasicMaterial({ color:0xffdd66, transparent:true, opacity:0.95, blending:THREE.AdditiveBlending, depthWrite:false }));
+  muzzle.visible = false; gunTip.add(muzzle);
+  applyGunTransform(); player.add(gunModel); gunModel.visible = !spriteActive;
+}, undefined, (err) => console.error('gun load failed', err));
+
+// ===== audio: gunshot one-shot + footstep loops (player + nearby online enemy) =====
+const sndShoot = document.getElementById('snd-shoot'), sndStep = document.getElementById('snd-step'), sndEnemyStep = document.getElementById('snd-enemy-step'), sndSlot = document.getElementById('snd-slot'), sndSlotWin = document.getElementById('snd-slot-win');
+const STEP_VOL = 0.5, SHOOT_VOL = 0.9, ENEMY_STEP_VOL = 0.65, ENEMY_STEP_MAX = 14, SLOT_VOL = 0.85, SLOT_WIN_VOL = 1.0;   // enemy steps only when REALLY close
+let _audioOn = false;
+function unlockAudio(){
+  if (_audioOn) return; _audioOn = true;
+  for (const a of [sndShoot, sndStep, sndEnemyStep, sndSlot, sndSlotWin]){ if (!a) continue; try { a.volume = 0; a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(()=>{}); } catch(e){} }
+}
+addEventListener('pointerdown', unlockAudio); addEventListener('keydown', unlockAudio);
+function playShoot(){ if (!sndShoot) return; if (!_audioOn) unlockAudio(); try { sndShoot.volume = SHOOT_VOL; sndShoot.currentTime = 0; sndShoot.play().catch(()=>{}); } catch(e){} }
+function playSlot(){ if (!sndSlot) return; if (!_audioOn) unlockAudio(); try { sndSlot.volume = SLOT_VOL; sndSlot.currentTime = 0; sndSlot.play().catch(()=>{}); } catch(e){} }
+function playSlotWin(){ if (!sndSlotWin) return; if (!_audioOn) unlockAudio(); try { if (sndSlot) sndSlot.pause(); sndSlotWin.volume = SLOT_WIN_VOL; sndSlotWin.currentTime = 0; sndSlotWin.play().catch(()=>{}); } catch(e){} }
+// Player footsteps: loop while moving on the ground, stop when stopped (self-heals if a play() was refused).
+function setStep(on){
+  if (!sndStep || !_audioOn) return;
+  if (on){ if (sndStep.paused){ try { sndStep.volume = STEP_VOL; sndStep.currentTime = 0; sndStep.play().catch(()=>{}); } catch(e){} } }
+  else if (!sndStep.paused){ try { sndStep.pause(); } catch(e){} }
+}
+// Nearest ONLINE enemy (other player) footsteps: only when very close, louder as they get closer. Bots stay silent.
+function syncEnemySteps(){
+  if (!sndEnemyStep) return;
+  if (!_audioOn || !mpConnected){ if (!sndEnemyStep.paused){ try { sndEnemyStep.pause(); } catch(e){} } return; }
+  let nearest = Infinity;
+  for (const r of remotePlayers.values()){
+    if (!r.moving || (r.group && !r.group.visible)) continue;
+    const d = Math.hypot(r.x - pos.x, r.z - pos.z);
+    if (d < nearest) nearest = d;
+  }
+  if (nearest > ENEMY_STEP_MAX){ if (!sndEnemyStep.paused){ try { sndEnemyStep.pause(); } catch(e){} } return; }
+  sndEnemyStep.volume = Math.max(0, Math.min(1, ENEMY_STEP_VOL * Math.pow(1 - nearest / ENEMY_STEP_MAX, 1.6)));   // closer = louder
+  if (sndEnemyStep.paused){ try { sndEnemyStep.currentTime = 0; sndEnemyStep.play().catch(()=>{}); } catch(e){} }
+}
+
+let aiming = false, aimT = 0, fireTimer = 0, muzzleTimer = 0;
+const FIRE_INTERVAL = 0.12;
+const raycaster = new THREE.Raycaster(), screenCenter = new THREE.Vector2(0, 0);
+// visible tracer bullets
+const _v0 = new THREE.Vector3(), _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3();
+const bulletGeo = new THREE.SphereGeometry(0.11, 8, 6);
+const bulletMat = new THREE.MeshBasicMaterial({ color:0xfff0a0 });
+const bullets = [];
+for (let i = 0; i < 28; i++){ const mesh = new THREE.Mesh(bulletGeo, bulletMat); mesh.visible = false; scene.add(mesh); bullets.push({ mesh, vel:new THREE.Vector3(), life:0 }); }
+const BULLET_SPEED = 70, BULLET_LIFE = 0.7;
+function spawnBullet(origin, dir){
+  const b = bullets.find(x => x.life <= 0); if (!b) return;
+  b.mesh.position.copy(origin); b.vel.copy(dir).multiplyScalar(BULLET_SPEED); b.life = BULLET_LIFE; b.mesh.visible = true;
+}
+function updateBullets(dt){
+  for (const b of bullets){ if (b.life <= 0) continue; b.life -= dt; b.mesh.position.addScaledVector(b.vel, dt); if (b.life <= 0) b.mesh.visible = false; }
+}
+// another player fired: draw their tracer from their gun in the aim direction
+function spawnRemoteShot(m){
+  _v0.set(m.x, (m.y || 0) + 1.9, m.z);
+  _v2.set(m.dx, m.dy, m.dz); const len = _v2.length() || 1; _v2.multiplyScalar(1 / len);
+  spawnBullet(_v0, _v2);
+  const dx = m.x - pos.x, dz = m.z - pos.z;
+  if (dx*dx + dz*dz < 1600){ try { playShoot(); } catch(e){} }   // gunshot sound only if within ~40u
+}
+// someone hit a big slot win — quick banner for everyone in the game
+function onBigWin(m){
+  const host = document.getElementById('game') || document.body;
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:16%;left:50%;transform:translateX(-50%);z-index:60;background:linear-gradient(#ff5ad0,#b23ea0);color:#fff;font-weight:800;padding:10px 18px;border-radius:12px;box-shadow:0 6px 26px rgba(0,0,0,.55);font-size:15px;pointer-events:none;text-align:center;white-space:nowrap';
+  el.textContent = `🎰 ${m.name || 'A player'} won ×${m.mult} — +${(+m.payout||0).toLocaleString()} $BYEBOSS!`;
+  host.appendChild(el); setTimeout(() => el.remove(), 4200);
+}
+function ownerMonster(obj){ for (const m of monsters){ let o = obj; while (o){ if (o === m.model) return m; o = o.parent; } } return null; }
+function fireGun(){
+  playShoot();   // gunshot sound on every shot
+  if (muzzle){ muzzle.visible = true; muzzle.scale.setScalar(0.7 + Math.random()*0.7); muzzle.rotation.z = Math.random()*6.28; muzzleTimer = 0.05; }
+  raycaster.setFromCamera(screenCenter, camera);
+  const ray = raycaster.ray;
+  // reliable bot hit: nearest bot to the aim ray (ray↔point — robust for skinned meshes)
+  let hitM = null, hitT = Infinity;
+  for (const m of monsters){
+    if (m.state !== 'alive') continue;
+    const ox = m.pos.x - ray.origin.x, oy = (m.pos.y + 1.3) - ray.origin.y, oz = m.pos.z - ray.origin.z;
+    const t = ox*ray.direction.x + oy*ray.direction.y + oz*ray.direction.z;
+    if (t < 0 || t > 140) continue;
+    const dx = ox - ray.direction.x*t, dy = oy - ray.direction.y*t, dz = oz - ray.direction.z*t;
+    if (dx*dx + dy*dy + dz*dz < 2.56 && t < hitT){ hitM = m; hitT = t; }   // ~1.6m hit radius
+  }
+  if (hitM && --hitM.hp <= 0){ hitM.state = 'dying'; hitM.t = 0; if (!mpConnected && walletAddr){ score += hitM.byeboss; scoreVal.textContent = score; } else if (mpConnected && mpWs && mpWs.readyState === 1){ mpWs.send(JSON.stringify({ t: 'botkill' })); } }
+  // bullet converges on the crosshair
+  const aimPoint = ray.at(140, _v1);
+  if (gunModel && gunModel.visible) gunTip.getWorldPosition(_v0);   // from the muzzle
+  else _v0.set(pos.x, pos.y + 1.9, pos.z);                          // ...or the chest/shoulder (gun hidden / iso)
+  spawnBullet(_v0, _v2.copy(aimPoint).sub(_v0).normalize());
+  if (mpConnected && mpWs && mpWs.readyState === 1){ const d = raycaster.ray.direction; mpWs.send(JSON.stringify({ t: 'shoot', dx: +d.x.toFixed(3), dy: +d.y.toFixed(3), dz: +d.z.toFixed(3) })); }
+}
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('mousedown', e => { if (e.button === 2) aiming = true; });
+window.addEventListener('mouseup', e => { if (e.button === 2) aiming = false; });
+const fireBtn = document.getElementById('fireBtn');
+if (fireBtn){
+  fireBtn.addEventListener('pointerdown', e => { e.preventDefault(); aiming = true; });
+  fireBtn.addEventListener('pointerup', e => { e.preventDefault(); aiming = false; });
+  fireBtn.addEventListener('pointerleave', () => { aiming = false; });
+}
+// TEMP gun-placement panel — drag, place it in the hand, Copier, send me the values, then I bake + delete.
+function buildGunPanel(){
+  if (document.getElementById('gundbg')) return;
+  const store = {};
+  const p = document.createElement('div'); p.id = 'gundbg';
+  p.style.cssText = 'position:fixed;top:120px;left:14px;width:228px;z-index:50;background:rgba(10,8,18,.93);border:1px solid rgba(90,170,255,.55);border-radius:12px;color:#eafff2;font:12px Trebuchet MS,Verdana,sans-serif;box-shadow:0 12px 32px rgba(0,0,0,.55);backdrop-filter:blur(6px);user-select:none';
+  const head = document.createElement('div');
+  head.style.cssText = 'cursor:move;padding:8px 10px;background:rgba(90,170,255,.22);border-radius:12px 12px 0 0;font-weight:800;display:flex;justify-content:space-between;align-items:center';
+  head.innerHTML = '<span>🔫 ARME — glisse-moi</span><span id="gunX" style="cursor:pointer;opacity:.75">✕</span>';
+  const body = document.createElement('div'); body.style.cssText = 'padding:10px 12px;display:flex;flex-direction:column;gap:8px;max-height:64vh;overflow:auto';
+  p.append(head, body);
+  function row(label, min, max, step, val, fn){
+    store[label] = +val;
+    const w = document.createElement('div');
+    const h = document.createElement('div'); h.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:2px';
+    const nm = document.createElement('span'); nm.textContent = label;
+    const out = document.createElement('span'); out.style.color = '#7cb8ff'; out.textContent = (+val).toFixed(2);
+    h.append(nm, out);
+    const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = val; inp.style.width = '100%';
+    inp.addEventListener('input', () => { const v = parseFloat(inp.value); out.textContent = v.toFixed(2); store[label] = v; fn(v); });
+    w.append(h, inp); body.append(w);
+  }
+  row('px', -2, 2, 0.01, GUN.px, v => { GUN.px = v; applyGunTransform(); });
+  row('py', 0, 3, 0.01, GUN.py, v => { GUN.py = v; applyGunTransform(); });
+  row('pz', -2, 2, 0.01, GUN.pz, v => { GUN.pz = v; applyGunTransform(); });
+  row('rotX', -3.2, 3.2, 0.05, GUN.rx, v => { GUN.rx = v; applyGunTransform(); });
+  row('rotY', -3.2, 3.2, 0.05, GUN.ry, v => { GUN.ry = v; applyGunTransform(); });
+  row('rotZ', -3.2, 3.2, 0.05, GUN.rz, v => { GUN.rz = v; applyGunTransform(); });
+  row('scale', 0.2, 4, 0.05, GUN.scale, v => { GUN.scale = v; applyGunTransform(); });
+  row('tip', -1, 2, 0.05, GUN.tip, v => { GUN.tip = v; applyGunTransform(); });
+  const btn = document.createElement('button'); btn.textContent = '📋 Copier les valeurs';
+  btn.style.cssText = 'margin-top:4px;padding:9px;border-radius:8px;border:1px solid #5aaaff;background:rgba(90,170,255,.22);color:#eafff2;font-weight:800;cursor:pointer';
+  btn.onclick = () => {
+    const txt = 'GUN ' + Object.entries(store).map(([k,v]) => `${k}=${(+v).toFixed(3)}`).join(' | ');
+    const ok = () => { btn.textContent = '✅ Copié — colle-le-moi'; setTimeout(() => btn.textContent = '📋 Copier les valeurs', 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok).catch(() => prompt('Copie ça :', txt)); else prompt('Copie ça :', txt);
+  };
+  body.append(btn);
+  p.addEventListener('keydown', e => e.stopPropagation());
+  let dr = false, ox = 0, oy = 0;
+  head.addEventListener('pointerdown', e => { if (e.target.id === 'gunX') return; dr = true; ox = e.clientX - p.offsetLeft; oy = e.clientY - p.offsetTop; e.preventDefault(); });
+  window.addEventListener('pointermove', e => { if (!dr) return; p.style.left = Math.max(0, e.clientX - ox) + 'px'; p.style.top = Math.max(0, e.clientY - oy) + 'px'; });
+  window.addEventListener('pointerup', () => dr = false);
+  head.querySelector('#gunX').onclick = () => p.remove();
+  document.body.appendChild(p);
+}
+
+// ===== mouse / touch look (shooter-style) =====
+const LOOK_SENS = 0.0026, PITCH_MIN = -0.5, PITCH_MAX = 1.0;
+canvas.addEventListener('click', () => {
+  const shopOpen = !document.getElementById('shop').classList.contains('hidden');
+  if (!shopOpen && !vaultOpen() && !cfgOpen() && !statsOpen() && !casinoOpen() && !depositOpen() && document.pointerLockElement !== canvas){ try { canvas.requestPointerLock(); } catch(e){} }
+});
+document.addEventListener('mousemove', (e) => {
+  if (document.pointerLockElement !== canvas) return;
+  camYaw -= e.movementX*LOOK_SENS;
+  camPitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, camPitch - e.movementY*LOOK_SENS));
+});
+let lookId = null, lastTX = 0, lastTY = 0;
+canvas.addEventListener('touchstart', (e) => { for (const t of e.changedTouches){ if (lookId === null && t.clientX > window.innerWidth*0.42){ lookId = t.identifier; lastTX = t.clientX; lastTY = t.clientY; } } }, {passive:true});
+canvas.addEventListener('touchmove', (e) => { for (const t of e.changedTouches){ if (t.identifier === lookId){ camYaw -= (t.clientX-lastTX)*0.005; camPitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, camPitch - (t.clientY-lastTY)*0.005)); lastTX = t.clientX; lastTY = t.clientY; } } }, {passive:true});
+canvas.addEventListener('touchend', (e) => { for (const t of e.changedTouches){ if (t.identifier === lookId) lookId = null; } }, {passive:true});
+
+// ===== minimap (bottom-right): player, monsters, coins, buildings =====
+const mmCanvas = document.getElementById('minimap'), mmCtx = mmCanvas ? mmCanvas.getContext('2d') : null;
+const MM_RANGE = 115;
+const _vaultMM = { x:-999, y:-999 }, _shopMM = { x:-999, y:-999 }, _statsMM = { x:-999, y:-999 }, _casinoMM = { x:-999, y:-999 }, _depositMM = { x:-999, y:-999 };   // screen pos of the teleport icons
+if (mmCanvas){
+  mmCanvas.style.cursor = 'pointer';
+  mmCanvas.addEventListener('click', (e) => {
+    if (!mpConnected) return;
+    const rect = mmCanvas.getBoundingClientRect();
+    const cx = (e.clientX - rect.left) * (mmCanvas.width / rect.width);
+    const cy = (e.clientY - rect.top)  * (mmCanvas.height / rect.height);
+    const r = mmCanvas.width * 0.075;
+    if (Math.hypot(cx - _vaultMM.x, cy - _vaultMM.y) < r) doTeleport('vault');
+    else if (Math.hypot(cx - _shopMM.x, cy - _shopMM.y) < r) doTeleport('shop');
+    else if (Math.hypot(cx - _statsMM.x, cy - _statsMM.y) < r) doTeleport('stats');
+    else if (Math.hypot(cx - _casinoMM.x, cy - _casinoMM.y) < r) doTeleport('casino');
+    else if (Math.hypot(cx - _depositMM.x, cy - _depositMM.y) < r) doTeleport('deposit');
+  });
+}
+function drawMinimap(){
+  if (!mmCtx) return;
+  const S = mmCanvas.width, c = S/2, rad = c-3, sc = (rad-2)/MM_RANGE;
+  mmCtx.clearRect(0,0,S,S);
+  mmCtx.save(); mmCtx.beginPath(); mmCtx.arc(c,c,rad,0,6.28); mmCtx.clip();
+  mmCtx.fillStyle = 'rgba(6,18,10,.82)'; mmCtx.fillRect(0,0,S,S);
+  mmCtx.strokeStyle = 'rgba(57,255,139,.14)'; mmCtx.lineWidth = 1.5; mmCtx.beginPath(); mmCtx.arc(c,c,rad*0.55,0,6.28); mmCtx.stroke();
+  mmCtx.fillStyle = 'rgba(185,185,200,.7)';
+  for (const m of buildingGroup.children){ mmCtx.fillRect(c+(m.position.x-pos.x)*sc-3, c+(m.position.z-pos.z)*sc-3, 6, 6); }
+  mmCtx.fillStyle = '#ffd23a';
+  for (const co of coins){ if (!co.visible) continue; mmCtx.beginPath(); mmCtx.arc(c+(co.position.x-pos.x)*sc, c+(co.position.z-pos.z)*sc, 2.4, 0, 6.28); mmCtx.fill(); }
+  for (const e of serverCoins.values()){ if (!e.group.visible) continue; mmCtx.beginPath(); mmCtx.arc(c+(e.x-pos.x)*sc, c+(e.z-pos.z)*sc, 2.4, 0, 6.28); mmCtx.fill(); }
+  // vault points (green squares) + loot bags (big bright-gold pips)
+  mmCtx.fillStyle = '#39ff8b';
+  for (const v of vaultPoints){ mmCtx.fillRect(c+(v.x-pos.x)*sc-3, c+(v.z-pos.z)*sc-3, 6, 6); }
+  mmCtx.fillStyle = '#ffe680';
+  for (const e of serverBags.values()){ if (!e.group.visible) continue; mmCtx.beginPath(); mmCtx.arc(c+(e.x-pos.x)*sc, c+(e.z-pos.z)*sc, 3.4, 0, 6.28); mmCtx.fill(); }
+  mmCtx.fillStyle = '#ff77c2';   // apples (health) — pink to stand apart from red monsters
+  for (const e of serverApples.values()){ if (!e.group.visible) continue; mmCtx.beginPath(); mmCtx.arc(c+(e.x-pos.x)*sc, c+(e.z-pos.z)*sc, 2.9, 0, 6.28); mmCtx.fill(); }
+  mmCtx.fillStyle = '#ff4d4d';
+  for (const m of monsters){ if (m.state === 'dead') continue; mmCtx.beginPath(); mmCtx.arc(c+(m.pos.x-pos.x)*sc, c+(m.pos.z-pos.z)*sc, 3.2, 0, 6.28); mmCtx.fill(); }
+  mmCtx.restore();
+  mmCtx.strokeStyle = 'rgba(57,255,139,.55)'; mmCtx.lineWidth = 2; mmCtx.beginPath(); mmCtx.arc(c,c,rad,0,6.28); mmCtx.stroke();
+  // Teleport icons (vault 🏦 + shop 🏪), clamped to the minimap edge (GTA-style). Click to teleport.
+  mmCtx.font = Math.round(S*0.085)+'px serif'; mmCtx.textAlign='center'; mmCtx.textBaseline='middle';
+  const _mmIcon = (wx, wz) => { let ox=(wx-pos.x)*sc, oz=(wz-pos.z)*sc; const dl=Math.hypot(ox,oz)||1, lim=rad-13; if (dl>lim){ ox=ox/dl*lim; oz=oz/dl*lim; } return { x:c+ox, y:c+oz }; };
+  if (mpConnected && vaultPoints.length){ const p = _mmIcon(vaultPoints[0].x, vaultPoints[0].z); mmCtx.fillText('🏦', p.x, p.y); _vaultMM.x = p.x; _vaultMM.y = p.y; } else { _vaultMM.x = -999; _vaultMM.y = -999; }
+  if (mpConnected && shopPoint){ const p = _mmIcon(shopPoint.x, shopPoint.z); mmCtx.fillText('🏪', p.x, p.y); _shopMM.x = p.x; _shopMM.y = p.y; } else { _shopMM.x = -999; _shopMM.y = -999; }
+  if (mpConnected && statsPoint){ const p = _mmIcon(statsPoint.x, statsPoint.z); mmCtx.fillText('📊', p.x, p.y); _statsMM.x = p.x; _statsMM.y = p.y; } else { _statsMM.x = -999; _statsMM.y = -999; }
+  if (mpConnected && casinoPoint){ const p = _mmIcon(casinoPoint.x, casinoPoint.z); mmCtx.fillText('🎰', p.x, p.y); _casinoMM.x = p.x; _casinoMM.y = p.y; } else { _casinoMM.x = -999; _casinoMM.y = -999; }
+  if (mpConnected && depositPoint){ const p = _mmIcon(depositPoint.x, depositPoint.z); mmCtx.fillText('💰', p.x, p.y); _depositMM.x = p.x; _depositMM.y = p.y; } else { _depositMM.x = -999; _depositMM.y = -999; }
+  const fx = Math.sin(faceAngle), fz = Math.cos(faceAngle), px = -fz, py = fx;
+  mmCtx.fillStyle = '#39ff8b'; mmCtx.beginPath();
+  mmCtx.moveTo(c+fx*8, c+fz*8); mmCtx.lineTo(c-fx*4+px*5, c-fz*4+py*5); mmCtx.lineTo(c-fx*4-px*5, c-fz*4-py*5);
+  mmCtx.closePath(); mmCtx.fill();
+}
+function update(dt){
+  regen(dt);
+  if (locked){ lockTimer -= dt; if (lockTimer <= 0) locked = false; }
+
+  let moving = false, running = false;
+  if (!locked && !dead && !vaultOpen() && !shopBldOpen() && !cfgOpen() && !statsOpen() && !casinoOpen() && !depositOpen()){
+    let mF = (keys.f?1:0) - (keys.b?1:0);   // W/S forward-back (camera-relative)
+    let mR = (keys.r?1:0) - (keys.l?1:0);   // A/D strafe
+    if (touchMove.mag > 0.12){ mF = touchMove.z; mR = touchMove.x; }   // analog joystick overrides keys
+    moving = !!(mF || mR);
+    running = keys.run || (touchMove.mag > 0.72);                      // push the stick far to run
+    if (moving){
+      const wx = -Math.sin(camYaw)*mF + Math.cos(camYaw)*mR;   // input -> world, relative to camera
+      const wz = -Math.cos(camYaw)*mF - Math.sin(camYaw)*mR;
+      const len = Math.hypot(wx, wz) || 1, spd = running ? RUN : WALK;
+      const stepX = (wx/len)*spd*dt, stepZ = (wz/len)*spd*dt;
+      if (!wallBlocked(pos.x, pos.z, pos.x + stepX, pos.z)) pos.x += stepX;   // slide along casino walls
+      if (!wallBlocked(pos.x, pos.z, pos.x, pos.z + stepZ)) pos.z += stepZ;
+      pos.x = Math.max(-BOUND, Math.min(BOUND, pos.x));
+      pos.z = Math.max(-BOUND, Math.min(BOUND, pos.z));
+      faceAngle = Math.atan2(wx, wz);                   // face the way we walk
+    }
+  }
+  if (aiming) faceAngle = camYaw + Math.PI;             // face where the camera looks while aiming
+
+  setStep(moving && grounded && !dead);   // player footsteps
+  syncEnemySteps();                       // nearby online-enemy footsteps (distance-based)
+
+  // jump arc
+  if (!grounded){ vy -= GRAV*dt; pos.y += vy*dt; if (pos.y <= 0){ pos.y = 0; vy = 0; grounded = true; } }
+
+  // drive the animation
+  if (spriteActive){ updateSpriteChar(dt, moving); }
+  else if (mixer){
+    if (!locked){
+      if (!grounded) playClip(CLIP.jump, false);
+      else if (moving) playClip(running ? CLIP.run : CLIP.walk, false);
+      else playClip(CLIP.idle, false);
+    }
+    mixer.update(dt);
+  }
+
+  // smoothly turn toward the movement direction
+  player.rotation.y = angleLerp(player.rotation.y, faceAngle + faceOffset, 1 - Math.pow(0.0001, dt));
+
+  // shadow under the feet, shrinks while airborne
+  shadow.position.set(pos.x, 0.02, pos.z);
+  const ss = Math.max(0.4, 1 - pos.y*0.12); shadow.scale.set(ss, ss, ss); shadow.material.opacity = 0.3*ss;
+
+  // aim / fire blend
+  aimT += ((aiming?1:0) - aimT) * Math.min(1, dt*12);
+  if (aiming && !dead){ fireTimer -= dt; if (fireTimer <= 0){ fireTimer = FIRE_INTERVAL; fireGun(); } } else fireTimer = 0;
+  if (muzzle && muzzle.visible){ muzzleTimer -= dt; if (muzzleTimer <= 0) muzzle.visible = false; }
+
+  // camera: stays behind+above; camPitch tilts the AIM up/down (so you can look at the sky)
+  const dist = CAM_DIST * (1 - 0.42*aimT), fov = 55 - 16*aimT;
+  if (Math.abs(camera.fov - fov) > 0.05){ camera.fov = fov; camera.updateProjectionMatrix(); }
+  const rx = Math.cos(camYaw)*aimT, rz = -Math.sin(camYaw)*aimT;       // over-shoulder side shift while aiming
+  const camH = camLookY + 3.4 - 1.6*aimT;
+  camTarget.set(pos.x + Math.sin(camYaw)*dist + rx, pos.y + camH, pos.z + Math.cos(camYaw)*dist + rz);
+  camera.position.lerp(camTarget, 1 - Math.pow(0.0008, dt));
+  const cpp = Math.cos(camPitch);                                       // look target = forward + pitch
+  camera.lookAt(
+    pos.x - Math.sin(camYaw)*cpp*14,
+    pos.y + camLookY + Math.sin(camPitch)*14,
+    pos.z - Math.cos(camYaw)*cpp*14
+  );
+  updateMonsters(dt);
+  updateBullets(dt);
+  updateRemotePlayers(dt);
+
+  // auto-collect coins just by walking over them, then spin the rest
+  tryCollect();
+  if (_dbgOn && dbgEl){
+    let coinN = 0; try { for (const e of serverCoins.values()) if (e.group.visible) coinN++; } catch(_){}
+    dbgEl.textContent =
+      'MP: ' + (mpConnected ? '✅ CONNECTED' : '❌ NOT connected (solo)') +
+      '\nwallet: ' + (walletAddr ? (walletAddr.slice(0,6) + '…') : 'none') +
+      '\nvault: ' + vault + '   on you: ' + carried +
+      '\ntoday: ' + (capVal && capVal.textContent ? capVal.textContent : '—') +
+      '\nserver coins near: ' + coinN +
+      '\npos: ' + pos.x.toFixed(0) + ', ' + pos.z.toFixed(0);
+  }
+  for (const c of coins){ if (c.visible) c.rotation.y += dt*3; }
+  for (const e of serverCoins.values()){ if (e.group.visible) e.group.rotation.y += dt*3; }
+  for (const e of serverBags.values()){ if (e.group.visible) e.group.rotation.y += dt*2.2; }
+  for (const e of serverApples.values()){ if (e.group.visible) e.group.rotation.y += dt*1.6; }
+  // "Press E" prompts when standing on the vault / shop (and no panel is open)
+  const anyPanel = vaultOpen() || shopBldOpen() || cfgOpen() || statsOpen() || casinoOpen() || depositOpen();
+  document.body.classList.toggle('panel-open', anyPanel);   // hide the touch controls behind open panels
+  if (bankPrompt) bankPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && nearVault()));
+  if (shopPrompt) shopPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && !nearVault() && nearShop()));
+  if (statsPrompt) statsPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && !nearVault() && !nearShop() && nearStats()));
+  if (casinoPrompt) casinoPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && !nearVault() && !nearShop() && !nearStats() && nearCasino()));
+  if (depositPrompt) depositPrompt.classList.toggle('hide', !(mpConnected && !anyPanel && !nearVault() && !nearShop() && !nearStats() && !nearCasino() && nearDeposit()));
+}
+
+let last = 0, running = false;
+const _reported = {};
+function reportOnce(tag, e){ if (_reported[tag]) return; _reported[tag] = 1; console.error(tag, e); try { window.dispatchEvent(new ErrorEvent('error', { message: tag + ': ' + ((e && e.message) || e) })); } catch (_) {} }
+function frame(now){
+  if (!running) return;
+  const dt = Math.min(0.05, (now - last)/1000 || 0); last = now;
+  // Auto-fit the drawing buffer to the window every frame — bulletproof against mobile
+  // reporting a 0/late size at init (the classic "renders black but the game runs" bug).
+  try { const w = window.innerWidth || canvas.clientWidth || 360, h = window.innerHeight || canvas.clientHeight || 640, dpr = renderer.getPixelRatio();
+    if (w && h && (Math.abs(canvas.width - Math.round(w*dpr)) > 2 || Math.abs(canvas.height - Math.round(h*dpr)) > 2)){ renderer.setSize(w, h); camera.aspect = w/h; camera.updateProjectionMatrix(); } } catch (e) {}
+  // Each step is isolated so a single (e.g. mobile-only) error can't black-screen the world.
+  try { update(dt); } catch (e) { reportOnce('update', e); }
+  try { updateFloaters(dt); } catch (e) { reportOnce('floaters', e); }
+  try { renderer.render(scene, camera); } catch (e) { reportOnce('render', e); }
+  try { drawMinimap(); } catch (e) { reportOnce('minimap', e); }
+  requestAnimationFrame(frame);
+}
+function start(){
+  if (running) return;
+  document.getElementById('load').classList.add('hide');
+  running = true; last = performance.now(); requestAnimationFrame(frame);
+}
+// fallback boot in case an asset never resolves (GLB is ~7MB)
+setTimeout(()=>{ if (!running) start(); }, 20000);
+</script>
+</body>
+</html>
