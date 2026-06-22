@@ -1138,8 +1138,8 @@ function nearVault(){ for (const v of vaultPoints){ if (lookingAt(v.x, v.z)) ret
 // ---- SHOP building (single) — tunable via the temp panel ----
 let shopPoint = null, shopTemplate = null, shopScale = 1.3, _pendingShop = null, shopMesh = null;   // baked
 let shopX = -36, shopZ = -39, shopYNudge = 0, shopRotY = 0;                                         // baked
-new GLTFLoader().load('./assets/game/shop.glb', (g) => {
-  shopTemplate = g.scene;
+new GLTFLoader().load('./assets/game/shop.glb?v=2', (g) => {
+  shopTemplate = g.scene; shopScale = fitScale(shopTemplate, 7);   // auto-fit the new model to ~7u tall (its native size differs from the old shop)
   if (_pendingShop !== null){ placeShop(_pendingShop); _pendingShop = null; }
 }, undefined, () => {});
 function applyShop(){ shopPoint = { x: shopX, z: shopZ }; placeProp(shopMesh, shopX, shopZ, shopScale, shopRotY, shopYNudge); }
