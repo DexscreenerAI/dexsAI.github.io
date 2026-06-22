@@ -260,6 +260,7 @@
             <div class="vault-back" id="depBack">← Back</div>
           </div>
           <div id="vaultStake" class="vault-page" style="display:none">
+            <div style="text-align:center;font-size:12px;color:#7fb8d8;margin-bottom:9px;background:rgba(255,210,127,.07);border:1px solid rgba(255,210,127,.2);border-radius:8px;padding:6px">🌍 Total locked by all players: <b id="stakeGlobalVal" style="color:#ffd27f">—</b> $BYEBOSS</div>
             <div id="stakeSummary" style="display:none">
               <div class="vault-hero">
                 <div class="vault-reward"><span id="stakeTotal">0</span> <small>🔒 locked · max <span id="stakeMax">10M</span></small></div>
@@ -1461,6 +1462,7 @@ function refreshStakeUI(){
   const setT = (id,v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
   setT('stakeTotal', Math.round(stakeState.total||0).toLocaleString());
   setT('stakeMax', fmtN(stakeState.max||10000000));
+  if (Number.isFinite(stakeState.globalTotal)) setT('stakeGlobalVal', Math.round(stakeState.globalTotal).toLocaleString());
   setT('stakeTotalPending', (stakeState.positions||[]).reduce((s,p)=>s+posLivePending(p),0).toLocaleString());
   const sa = document.getElementById('stakeAmt'); if (sa && stakeState.min) sa.min = stakeState.min;
   renderStakeList();
@@ -1612,6 +1614,7 @@ function onSnap(m){
   if (Number.isFinite(m.casinoNet)) statCasino = m.casinoNet;
   if (Number.isFinite(m.emitted)) statEmitted = m.emitted;            // gross "earned by players" (monotonic)
   if (Number.isFinite(m.realBurned)) statRealBurned = m.realBurned;   // REAL on-chain total burned
+  if (Number.isFinite(m.staked)){ stakeState.globalTotal = m.staked; const sg = document.getElementById('stakeGlobalVal'); if (sg && vaultOpen() && vStakeView && vStakeView.style.display !== 'none') sg.textContent = Math.round(m.staked).toLocaleString(); }
   if (statsOpen()) refreshStats();
   const seen = new Set();
   for (const pl of m.players){
