@@ -189,7 +189,7 @@
 <audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
-  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v22</div>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v23</div>
   <div class="hud">
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
@@ -716,7 +716,8 @@ function playClip(name, once){
 const CHARACTERS = [
   { name:'ByeBoss', url:'./assets/game/byeboss.glb' },
   { name:'PEPE', url:'./assets/game/char2.glb' },
-  { name:'ByeBoss 2D', type:'sprite' },
+  { name:'ByeBoss 2D', type:'sprite', iso:'./assets/game/iso/' },
+  { name:'Froggy', type:'sprite', iso:'./assets/game/iso2/' },
 ];
 // Skins: ownership is server-side (bought with vault $BYEBOSS); which one you
 // equip is local (cosmetic — other players always see you as ByeBoss anyway).
@@ -742,7 +743,7 @@ function applyChar(c){
   playClip(CLIP.idle, false);
 }
 function selectChar(i, onDone){
-  if (CHARACTERS[i].type === 'sprite'){ applyIsoChar(onDone); return; }
+  if (CHARACTERS[i].type === 'sprite'){ applyIsoChar(CHARACTERS[i].iso, onDone); return; }
   if (charCache[i]){ applyChar(charCache[i]); onDone && onDone(); return; }
   new GLTFLoader().load(CHARACTERS[i].url, (gltf) => {
     const model = gltf.scene; model.traverse(o => { o.frustumCulled = false; });
@@ -795,7 +796,7 @@ function ensureThumb(i){
       ctx.drawImage(img, 0, 0, fw, fh, 6, 6, 148, 148);
       thumbCache[i] = cv.toDataURL('image/png'); if (shopBldOpen()) renderShop();
     } catch(e){} };
-    img.src = './assets/game/iso/idle_down.png';
+    img.src = (ch.iso || './assets/game/iso/') + 'idle_down.png';
   } else {
     new GLTFLoader().load(ch.url, (g) => { try { thumbCache[i] = _glbThumb(g); if (shopBldOpen()) renderShop(); } catch(e){} }, undefined, () => {});
   }
@@ -1131,23 +1132,31 @@ addEventListener('keydown', (e) => { if (e.code === 'Enter' && depositOpen()){ e
 const ISO_STATES = { idle:{fps:7,loop:true}, walk:{fps:12,loop:true}, run:{fps:16,loop:true}, jump:{fps:16,loop:false}, shot:{fps:22,loop:true} };
 const ISO_DIRS = ['up','down','right'];
 const ISO = { y:0.96, scale:2.7 };   // tuned
-const isoTex = {}; let isoLoaded = false, isoSprite = null, spriteActive = false, sprState = 'idle', sprT = 0;
-function loadIso(onDone){
-  if (isoLoaded){ onDone && onDone(); return; }
+const isoTex = {};                          // keys: base + state + '_' + dir
+const isoLoadedSets = {};                    // base path -> true once its 15 sheets are loaded
+let isoLoaded = false, isoSprite = null, spriteActive = false, sprState = 'idle', sprT = 0;
+let localIsoBase = './assets/game/iso/';     // which sprite set the LOCAL player is using
+function loadIso(base, onDone){
+  base = base || './assets/game/iso/';
+  if (isoLoadedSets[base]){ onDone && onDone(); return; }
   const total2 = ISO_DIRS.length * Object.keys(ISO_STATES).length; let n = 0;
-  const tick = () => { if (++n >= total2){ isoLoaded = true; onDone && onDone(); } };
+  const tick = () => { if (++n >= total2){ isoLoadedSets[base] = true; isoLoaded = true; onDone && onDone(); } };
   for (const s in ISO_STATES) for (const d of ISO_DIRS){
-    const t = new THREE.TextureLoader().load('./assets/game/iso/'+s+'_'+d+'.png', tick, undefined, tick);
+    const t = new THREE.TextureLoader().load(base+s+'_'+d+'.png', tick, undefined, tick);
     t.colorSpace = THREE.SRGBColorSpace; t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearFilter;
     t.generateMipmaps = false; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1/5, 1/5);
-    isoTex[s+'_'+d] = t;
+    isoTex[base+s+'_'+d] = t;
   }
-  isoSprite = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
-    new THREE.MeshBasicMaterial({ transparent:true, alphaTest:0.3, side:THREE.DoubleSide }));
-  isoSprite.visible = false; scene.add(isoSprite);
+  if (!isoSprite){
+    isoSprite = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
+      new THREE.MeshBasicMaterial({ transparent:true, alphaTest:0.3, side:THREE.DoubleSide }));
+    isoSprite.visible = false; scene.add(isoSprite);
+  }
 }
-function applyIsoChar(onDone){
-  loadIso(() => {
+function applyIsoChar(base, onDone){
+  base = base || './assets/game/iso/';
+  loadIso(base, () => {
+    localIsoBase = base;
     if (activeModel){ player.remove(activeModel); activeModel = null; }   // hide the GLB
     if (gunModel) gunModel.visible = false;                                // iso sprites already hold a gun
     mixer = null; spriteActive = true; isoSprite.visible = true; sprState = 'idle'; sprT = 0;
@@ -1170,7 +1179,7 @@ function updateSpriteChar(dt, moving){
   if (st !== sprState){ sprState = st; sprT = 0; } else sprT += dt;
   const dir = isoDir(), flip = dir === 'left', cfg = ISO_STATES[st];
   let f = Math.floor(sprT*cfg.fps); f = cfg.loop ? f % 25 : Math.min(f, 24);
-  const tex = isoTex[st + '_' + (flip ? 'right' : dir)];
+  const tex = isoTex[localIsoBase + st + '_' + (flip ? 'right' : dir)];
   if (tex){ const col = f % 5, row = (f/5)|0; tex.offset.set(col/5, 1 - (row+1)/5); isoSprite.material.map = tex; isoSprite.material.needsUpdate = true; }
   isoSprite.scale.set(flip ? -ISO.scale : ISO.scale, ISO.scale, 1);
   isoSprite.position.set(pos.x, pos.y + ISO.y, pos.z);
@@ -1702,8 +1711,10 @@ function clearRemoteVisual(r){
 }
 function buildRemoteVisual(r, skin){
   clearRemoteVisual(r); r.skin = skin; r.curAnim = null;
-  if (skin === 2){                                   // 2D iso billboard
-    loadIso(() => {});
+  const sch = CHARACTERS[skin];
+  if (sch && sch.type === 'sprite'){                 // 2D iso billboard (any sprite set)
+    const base = sch.iso || './assets/game/iso/';
+    r.isoBase = base; loadIso(base, () => {});
     r.sprite = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ transparent:true, alphaTest:0.3, side:THREE.DoubleSide }));
     scene.add(r.sprite); r.sprTexCache = {}; r.sprState = 'idle'; r.sprT = 0; r.labelY = 3.1;
   } else {                                            // 3D GLB skin
@@ -1732,7 +1743,8 @@ function setRemoteAnim(r, moving){
   if (to){ to.reset(); to.fadeIn(0.15); to.play(); }
 }
 function updateRemoteSprite(r, dt, moving, x, y, z){
-  if (!isoLoaded || !r.sprite) return;
+  const base = r.isoBase || './assets/game/iso/';
+  if (!isoLoadedSets[base] || !r.sprite) return;
   const st = moving ? 'walk' : 'idle';
   if (st !== r.sprState){ r.sprState = st; r.sprT = 0; } else r.sprT += dt;
   const fx = Math.sin(r.ry), fz = Math.cos(r.ry);                 // remote facing -> screen direction
@@ -1740,7 +1752,7 @@ function updateRemoteSprite(r, dt, moving, x, y, z){
   const dir = Math.abs(fdot) >= Math.abs(rdot) ? (fdot > 0 ? 'up' : 'down') : (rdot > 0 ? 'right' : 'left');
   const flip = dir === 'left', cfg = ISO_STATES[st];
   let f = Math.floor(r.sprT * cfg.fps); f = cfg.loop ? f % 25 : Math.min(f, 24);
-  const key = st + '_' + (flip ? 'right' : dir);
+  const key = base + st + '_' + (flip ? 'right' : dir);
   let tex = r.sprTexCache[key];
   if (!tex && isoTex[key]){ tex = isoTex[key].clone(); tex.needsUpdate = true; r.sprTexCache[key] = tex; }   // own texture so it can't fight the local sprite
   if (tex){ const col = f % 5, row = (f/5)|0; tex.offset.set(col/5, 1 - (row+1)/5); r.sprite.material.map = tex; r.sprite.material.needsUpdate = true; }
