@@ -126,6 +126,12 @@
   .vtile{cursor:pointer;border:1px solid rgba(124,77,255,.45);background:#15122a;border-radius:18px;padding:30px 18px;text-align:center;transition:.15s}
   .vtile:hover{border-color:#39ff8b;background:#1c1838;transform:translateY(-2px)}
   .vtile-ico{font-size:42px;line-height:1}.vtile-t{font-weight:800;font-size:18px;margin-top:10px}.vtile-s{font-size:12px;opacity:.6;margin-top:5px}
+  /* Vault menu = the artwork background with the two cards (Daily Quest / Lock & Earn) as clickable hotspots */
+  .qmenu{position:relative;width:100%;aspect-ratio:640/304;border-radius:16px;overflow:hidden;
+    background:#0a0813 url('./assets/game/vault-menu-bg.png') center/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+  .qhot{position:absolute;cursor:pointer;border-radius:14px;transition:box-shadow .12s,background .12s}
+  .qhot:hover{background:rgba(57,255,139,.08);box-shadow:0 0 0 2px rgba(57,255,139,.6),0 0 20px rgba(57,255,139,.35)}
+  .qhot:active{transform:translateY(1px)}
   .vault-hero{display:flex;gap:16px;justify-content:space-around;background:#15122a;border-radius:16px;padding:20px;text-align:center}
   .vault-reward,.vault-bal{font-size:30px;font-weight:900;color:#39ff8b}.vault-bal:first-child{color:#ff9d3b}
   .vault-reward small,.vault-bal small{display:block;font-size:12px;font-weight:700;opacity:.65;color:#cfe;margin-top:3px}
@@ -189,7 +195,7 @@
 <audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
-  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v28</div>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v29</div>
   <div class="hud">
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
@@ -238,10 +244,10 @@
       <div class="vault-box">
         <div class="vault-head"><span>🏦 VAULT</span><span id="vaultBalHead" class="vault-balhead"></span><span id="vaultClose" class="vault-x">✕</span></div>
         <div class="vault-body">
-          <div id="vaultMenu" class="vault-grid">
-            <div class="vtile" id="vbDaily"><div class="vtile-ico">📅</div><div class="vtile-t">Daily Quest</div><div class="vtile-s">Claim free $BYEBOSS every day</div></div>
-            <div class="vtile" id="vbDeposit" style="display:none"><div class="vtile-ico">🏦</div><div class="vtile-t">Vault</div><div class="vtile-s">Secure your $BYEBOSS from PvP</div></div>
-            <div class="vtile" id="vbStake"><div class="vtile-ico">🔒</div><div class="vtile-t">Lock &amp; Earn</div><div class="vtile-s">Stake $BYEBOSS for daily yield</div></div>
+          <div id="vaultMenu" class="qmenu">
+            <div class="qhot" id="vbDaily" style="left:23%;top:35%;width:26%;height:38%" title="Daily Quest"></div>
+            <div class="qhot" id="vbStake" style="left:51%;top:35%;width:26%;height:38%" title="Lock &amp; Earn"></div>
+            <div id="vbDeposit" style="display:none"></div>
           </div>
           <div id="vaultDaily" class="vault-page" style="display:none">
             <div class="vault-hero">
@@ -1586,7 +1592,7 @@ const vCarriedEl = document.getElementById('vaultCarried'), vSecuredEl = documen
 const vAmt = document.getElementById('vaultAmt'), vSlider = document.getElementById('vaultSlider');
 const dailyClaimBtn = document.getElementById('dailyClaimBtn'), dailyInfo = document.getElementById('dailyInfo');
 const dailyClaimsEl = document.getElementById('dailyClaims'), vaultBalHead = document.getElementById('vaultBalHead');
-function vaultView(which){ vMenu.style.display = which==='menu'?'grid':'none'; vDailyView.style.display = which==='daily'?'flex':'none'; vDepView.style.display = which==='deposit'?'flex':'none'; if (vStakeView) vStakeView.style.display = which==='stake'?'block':'none'; if (which==='stake'){ if (mpConnected) mpSend({ t: 'stakeinfo' }); refreshStakeUI(); } }
+function vaultView(which){ vMenu.style.display = which==='menu'?'block':'none'; vDailyView.style.display = which==='daily'?'flex':'none'; vDepView.style.display = which==='deposit'?'flex':'none'; if (vStakeView) vStakeView.style.display = which==='stake'?'block':'none'; if (which==='stake'){ if (mpConnected) mpSend({ t: 'stakeinfo' }); refreshStakeUI(); } }
 // ---- Staking state + UI (independent positions) ----
 let stakeState = { positions:[], total:0, totalPending:0, serverNow:0, min:1000, max:10000000, terms:{} }, selectedStakeTerm = 0, _stakeRecvAt = 0;
 function setStakeMsg(t, ok){ const e = document.getElementById('stakeMsg'); if (!e) return; e.textContent = t || ''; e.style.color = ok===true?'#39ff8b':ok===false?'#ff8a8a':'#bfe9ff'; }
