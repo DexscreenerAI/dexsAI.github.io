@@ -193,7 +193,7 @@
 <audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
-  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v33</div>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v34</div>
   <div class="hud">
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
@@ -349,12 +349,9 @@
       #spinBtn:disabled{ cursor:default }
       /* ── Casino game chooser ── */
       .casino-games{ display:flex; gap:14px; width:100%; padding:16px; box-sizing:border-box }
-      .casino-game{ flex:1; aspect-ratio:3/4; border-radius:16px; border:2px solid rgba(255,90,208,.6); cursor:pointer;
-        background:linear-gradient(160deg,rgba(26,11,46,.82),rgba(10,6,19,.88)); backdrop-filter:blur(2px); color:#ffd7f4; font-family:inherit; font-weight:900; font-size:15px;
-        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; transition:transform .12s,border-color .12s,box-shadow .12s }
-      .casino-game .cg-ic{ font-size:44px; line-height:1 }
-      .casino-game .cg-sub{ font-size:10px; font-weight:700; color:#b58ec5; letter-spacing:.3px }
-      .casino-game:hover{ border-color:#39ff8b; transform:translateY(-2px); box-shadow:0 0 18px rgba(255,90,208,.45) }
+      .casino-game{ flex:1; aspect-ratio:1/1; border-radius:16px; border:2px solid rgba(255,90,208,.6); cursor:pointer; padding:0;
+        background:center/cover no-repeat; box-shadow:0 6px 18px rgba(0,0,0,.45); transition:transform .12s,border-color .12s,box-shadow .12s }
+      .casino-game:hover{ border-color:#39ff8b; transform:translateY(-3px); box-shadow:0 0 22px rgba(255,90,208,.6) }
       .casino-game:active{ transform:scale(.97) }
       /* casino chooser = the casino-hall artwork as background, with the game buttons over it */
       #casinoMenu .vault-box{ width:100%; border:1.5px solid #ff5ad0; box-shadow:0 0 30px rgba(255,90,208,.5);
@@ -422,8 +419,8 @@
         <div class="vault-box">
           <div class="bal-head">🎰 CASINO <span id="casinoMenuClose" class="vault-x" style="margin-left:auto">✕</span></div>
           <div class="casino-games">
-            <button id="gameSlots" class="casino-game" type="button"><span class="cg-ic">🎰</span>Slots<span class="cg-sub">match 3 · up to ×100</span></button>
-            <button id="gameBalloon" class="casino-game" type="button"><span class="cg-ic">🎈</span>Balloon<span class="cg-sub">1 $BYEBOSS · 1 shot</span></button>
+            <button id="gameSlots" class="casino-game" type="button" aria-label="Slots" style="background-image:url('./assets/game/btn-slot.png')"></button>
+            <button id="gameBalloon" class="casino-game" type="button" aria-label="Balloon" style="background-image:url('./assets/game/btn-balloon.png')"></button>
           </div>
         </div>
       </div>
