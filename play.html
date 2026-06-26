@@ -193,7 +193,7 @@
 <audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
-  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v34</div>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v35</div>
   <div class="hud">
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
@@ -391,6 +391,23 @@
       @keyframes balShock{ 0%{transform:scale(.2);opacity:.9} 70%{opacity:.4} 100%{transform:scale(3.3);opacity:0} }
       .bal-shard{ position:absolute; border-radius:2px; pointer-events:none; z-index:5; animation:balShard .78s cubic-bezier(.2,.6,.3,1) forwards }
       @keyframes balShard{ 0%{transform:translate(0,0) rotate(0) scale(1);opacity:1} 100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(.2);opacity:0} }
+      /* TNT card (3rd chooser button) + TNT Blast game */
+      .casino-game.tnt-card{ background:linear-gradient(160deg,#2a0f0a,#0a0613); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:#ffd7c4; font-family:inherit; font-weight:900; font-size:15px; padding:8px }
+      .tnt-card .cg-ic{ font-size:42px; line-height:1 } .tnt-card .cg-sub{ font-size:10px; font-weight:700; color:#d59b86; letter-spacing:.3px }
+      #tntP .vault-box{ position:relative; width:100%; background:radial-gradient(ellipse at 50% -10%, #2a1408, #0a0613 72%); border:1.5px solid #ff7a45; box-shadow:0 0 30px rgba(255,122,69,.45); overflow:hidden }
+      .tnt-field{ position:relative; display:grid; grid-template-columns:repeat(5,1fr); grid-auto-rows:1fr; gap:7px; padding:10px; height:300px; box-sizing:border-box; touch-action:manipulation }
+      .tnt-cell{ position:relative; display:flex }
+      .tnt-brick{ width:100%; height:100%; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; box-sizing:border-box;
+        background:linear-gradient(160deg,#b1361f,#7a1f12); border:2px solid #ff7a45; color:#ffd9c0; user-select:none; -webkit-tap-highlight-color:transparent;
+        box-shadow:inset 0 2px 4px rgba(255,180,140,.35), 0 3px 8px rgba(0,0,0,.45); transition:transform .1s; animation:tntDrop .28s cubic-bezier(.34,1.56,.64,1) }
+      .tnt-brick:hover{ filter:brightness(1.12) } .tnt-brick:active{ transform:scale(.94) }
+      .tnt-brick.armed{ animation:tntShake .16s linear infinite; border-color:#ffd000; box-shadow:inset 0 2px 4px rgba(255,180,140,.35), 0 0 14px #ffae00, 0 0 24px #ff5e00 }
+      .tnt-brick.boom{ animation:tntBoom .2s ease-out forwards; pointer-events:none }
+      @keyframes tntDrop{ 0%{transform:translateY(-16px) scale(.85);opacity:0} 100%{transform:none;opacity:1} }
+      @keyframes tntShake{ 0%,100%{transform:translate(0,0)} 25%{transform:translate(-2px,1px)} 75%{transform:translate(2px,-1px)} }
+      @keyframes tntBoom{ 0%{transform:scale(1);filter:brightness(1)} 40%{transform:scale(1.35);filter:brightness(2.4) drop-shadow(0 0 14px #fff)} 100%{transform:scale(.1);opacity:0} }
+      .tnt-gift{ position:absolute; font-family:inherit; font-weight:900; font-size:20px; color:#ffd755; pointer-events:none; z-index:6; text-shadow:0 0 10px #ffae00,0 1px 3px #000; animation:tntGift 1.1s ease-out forwards }
+      @keyframes tntGift{ 0%{transform:translate(-50%,-50%) scale(.4);opacity:0} 25%{transform:translate(-50%,-60%) scale(1.25);opacity:1} 75%{transform:translate(-50%,-120%) scale(1);opacity:1} 100%{transform:translate(-50%,-150%) scale(.9);opacity:0} }
     </style>
     <div id="casinoP" class="vault hidden">
       <div class="casino-wrap">
@@ -421,6 +438,7 @@
           <div class="casino-games">
             <button id="gameSlots" class="casino-game" type="button" aria-label="Slots" style="background-image:url('./assets/game/btn-slot.png')"></button>
             <button id="gameBalloon" class="casino-game" type="button" aria-label="Balloon" style="background-image:url('./assets/game/btn-balloon.png')"></button>
+            <button id="gameTnt" class="casino-game tnt-card" type="button" aria-label="TNT"><span class="cg-ic">💣</span>TNT<span class="cg-sub">1 $BYEBOSS · 1 blast</span></button>
           </div>
         </div>
       </div>
@@ -433,6 +451,17 @@
           <div id="balField" class="bal-field"></div>
           <div id="balMsg" class="bal-msg">1 $BYEBOSS per shot — tap a balloon 🎯</div>
           <div class="bal-ctrl"><button id="balAuto" type="button" class="bal-auto">🤖 AUTO FIRE</button></div>
+        </div>
+      </div>
+    </div>
+    <!-- TNT Blast (casino game #3) -->
+    <div id="tntP" class="vault hidden">
+      <div class="casino-wrap">
+        <div class="vault-box">
+          <div class="bal-head">💣 TNT BLAST <span class="bal-bal">Vault: <b id="tntVault">0</b></span><span id="tntClose" class="vault-x">✕</span></div>
+          <div id="tntField" class="tnt-field"></div>
+          <div id="tntMsg" class="bal-msg">1 $BYEBOSS per TNT — blast a brick 💥</div>
+          <div class="bal-ctrl"><button id="tntAuto" type="button" class="bal-auto">🤖 AUTO FIRE</button></div>
         </div>
       </div>
     </div>
@@ -953,19 +982,25 @@ function closeStats(){ if (statsPanel) statsPanel.classList.add('hidden'); }
 const casinoPanel = document.getElementById('casinoP');
 const casinoMenuP = document.getElementById('casinoMenu');
 const balloonPanel = document.getElementById('balloonP');
-function casinoOpen(){ return (casinoMenuP && !casinoMenuP.classList.contains('hidden')) || (casinoPanel && !casinoPanel.classList.contains('hidden')) || (balloonPanel && !balloonPanel.classList.contains('hidden')); }
+const tntPanel = document.getElementById('tntP');
+function casinoOpen(){ return [casinoMenuP, casinoPanel, balloonPanel, tntPanel].some(p => p && !p.classList.contains('hidden')); }
 function _exitToWorld(){ aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
-function showCasinoMenu(){ if (casinoPanel) casinoPanel.classList.add('hidden'); if (balloonPanel) balloonPanel.classList.add('hidden'); stopBalloon(); setAuto(false); if (casinoMenuP) casinoMenuP.classList.remove('hidden'); }
+function _hideCasinoGames(){ if (casinoPanel) casinoPanel.classList.add('hidden'); if (balloonPanel) balloonPanel.classList.add('hidden'); if (tntPanel) tntPanel.classList.add('hidden'); setAuto(false); stopBalloon(); stopTnt(); }
+function showCasinoMenu(){ _hideCasinoGames(); if (casinoMenuP) casinoMenuP.classList.remove('hidden'); }
 function openCasino(){ showCasinoMenu(); _exitToWorld(); }                                                     // entering the casino shows the game chooser
-function openSlots(){ if (casinoMenuP) casinoMenuP.classList.add('hidden'); refreshSlot(); if (casinoPanel) casinoPanel.classList.remove('hidden'); }
-function openBalloon(){ if (casinoMenuP) casinoMenuP.classList.add('hidden'); if (casinoPanel) casinoPanel.classList.add('hidden'); if (balloonPanel) balloonPanel.classList.remove('hidden'); startBalloon(); }
-function closeCasino(){ if (casinoMenuP) casinoMenuP.classList.add('hidden'); if (casinoPanel) casinoPanel.classList.add('hidden'); if (balloonPanel) balloonPanel.classList.add('hidden'); setAuto(false); stopBalloon(); }
-{ const x = document.getElementById('casinoClose');     if (x) x.onclick = showCasinoMenu; }   // slots ✕  -> back to chooser
-{ const x = document.getElementById('casinoMenuClose'); if (x) x.onclick = closeCasino; }      // menu  ✕  -> leave casino
+function openSlots(){ _hideCasinoGames(); if (casinoMenuP) casinoMenuP.classList.add('hidden'); refreshSlot(); if (casinoPanel) casinoPanel.classList.remove('hidden'); }
+function openBalloon(){ _hideCasinoGames(); if (casinoMenuP) casinoMenuP.classList.add('hidden'); if (balloonPanel) balloonPanel.classList.remove('hidden'); startBalloon(); }
+function openTnt(){ _hideCasinoGames(); if (casinoMenuP) casinoMenuP.classList.add('hidden'); if (tntPanel) tntPanel.classList.remove('hidden'); startTnt(); }
+function closeCasino(){ _hideCasinoGames(); if (casinoMenuP) casinoMenuP.classList.add('hidden'); }
+{ const x = document.getElementById('casinoClose');     if (x) x.onclick = showCasinoMenu; }   // slots ✕   -> back to chooser
+{ const x = document.getElementById('casinoMenuClose'); if (x) x.onclick = closeCasino; }      // menu  ✕   -> leave casino
 { const x = document.getElementById('balloonClose');    if (x) x.onclick = showCasinoMenu; }   // balloon ✕ -> back to chooser
+{ const x = document.getElementById('tntClose');        if (x) x.onclick = showCasinoMenu; }   // tnt ✕     -> back to chooser
 { const a = document.getElementById('gameSlots');   if (a) a.onclick = openSlots; }
 { const b = document.getElementById('gameBalloon'); if (b) b.onclick = openBalloon; }
+{ const t = document.getElementById('gameTnt');     if (t) t.onclick = openTnt; }
 { const c = document.getElementById('balAuto'); if (c) c.onclick = () => setBalAuto(!_balAuto); }
+{ const c = document.getElementById('tntAuto'); if (c) c.onclick = () => setTntAuto(!_tntAuto); }
 
 // ═══ Balloon Blaster — 1 $BYEBOSS = 1 shot. The SERVER decides each outcome (mp 'balloon');
 // the client only spawns/floats balloons and animates the prize it returns. ═══
@@ -1118,6 +1153,114 @@ function onBalloonResult(m){
   if (_balAuto){
     if (vault < 1){ setBalAuto(false); balMsg('Out of $BYEBOSS — auto-fire stopped', '#ff9d6b'); }
     else setTimeout(balAutoTick, 300);
+  }
+}
+
+// ═══ TNT Blast — casino game #3. 1 $BYEBOSS = 1 TNT. The SERVER decides each outcome (mp 'tnt');
+// the client only shows the brick wall, the blast, and the prize it returns. ═══
+const tntField = document.getElementById('tntField'), tntMsgEl = document.getElementById('tntMsg'), tntVaultEl = document.getElementById('tntVault');
+let _tntPending = false, _tntPendingEl = null, _tntLast = 0, _tntWatch = null, _tntAuto = false, _tntCells = [];
+function tntMsg(t, c){ if (tntMsgEl){ tntMsgEl.textContent = t; tntMsgEl.style.color = c || '#ffd9c0'; } }
+function tntMakeBrick(cell){
+  if (!cell) return null;
+  const b = document.createElement('div'); b.className = 'tnt-brick'; b.textContent = '💣';
+  b.addEventListener('click', () => tntShoot(b));
+  cell.appendChild(b); return b;
+}
+function startTnt(){
+  if (tntVaultEl) tntVaultEl.textContent = vault;
+  tntMsg('1 $BYEBOSS per TNT — blast a brick 💥', '#ffd9c0');
+  _tntPending = false; _tntPendingEl = null; _tntCells = [];
+  if (!tntField) return;
+  tntField.innerHTML = '';
+  for (let i = 0; i < 20; i++){
+    const cell = document.createElement('div'); cell.className = 'tnt-cell';
+    tntField.appendChild(cell); _tntCells.push(cell);
+    tntMakeBrick(cell);
+  }
+}
+function stopTnt(){ _tntPending = false; _tntPendingEl = null; clearTimeout(_tntWatch); _tntAuto = false; const _a = document.getElementById('tntAuto'); if (_a) _a.classList.remove('on'); }
+function tntShoot(b){
+  if (!mpConnected || _tntPending || !b || b.classList.contains('boom')) return;
+  const now = Date.now(); if (now - _tntLast < 280) return;
+  if (vault < 1){ tntMsg('Not enough $BYEBOSS — earn or deposit more', '#ff8a8a'); setTntAuto(false); return; }
+  _tntLast = now; _tntPending = true; _tntPendingEl = b;
+  b.classList.add('armed'); balPlayGun();
+  clearTimeout(_tntWatch);
+  _tntWatch = setTimeout(() => { _tntPending = false; if (_tntPendingEl){ _tntPendingEl.classList.remove('armed'); _tntPendingEl = null; } if (_tntAuto) setTimeout(tntAutoTick, 200); }, 2500);
+  mpSend({ t: 'tnt' });
+}
+function setTntAuto(on){
+  _tntAuto = !!on;
+  const a = document.getElementById('tntAuto'); if (a) a.classList.toggle('on', _tntAuto);
+  if (_tntAuto && !_tntPending) tntAutoTick();
+}
+function tntAutoTick(){
+  if (!_tntAuto || _tntPending) return;
+  if (!tntPanel || tntPanel.classList.contains('hidden')){ setTntAuto(false); return; }
+  if (vault < 1){ setTntAuto(false); tntMsg('Out of $BYEBOSS — auto-fire stopped', '#ff9d6b'); return; }
+  const live = []; for (const c of _tntCells){ const b = c.querySelector('.tnt-brick:not(.boom)'); if (b) live.push(b); }
+  if (live.length === 0){ setTimeout(tntAutoTick, 250); return; }
+  tntShoot(live[(Math.random()*live.length)|0]);
+}
+function tntExplode(b, prize){
+  if (!b || !tntField) return;
+  const cell = b.parentElement;
+  const r = b.getBoundingClientRect(), fr = tntField.getBoundingClientRect();
+  const cx = r.left - fr.left + r.width/2, cy = r.top - fr.top + r.height/2;
+  b.classList.remove('armed'); b.classList.add('boom');
+  const main = '#ff5e00', lite = '#ffd000';
+  const fl = document.createElement('div'); fl.className = 'bal-flash';
+  fl.style.cssText = 'left:'+cx+'px;top:'+cy+'px;width:48px;height:48px;margin:-24px 0 0 -24px;background:radial-gradient(#fff,'+lite+' 45%,'+main+' 75%,transparent)';
+  tntField.appendChild(fl); setTimeout(()=>{ try{ fl.remove(); }catch(e){} }, 260);
+  const sk = document.createElement('div'); sk.className = 'bal-shock';
+  sk.style.cssText = 'left:'+cx+'px;top:'+cy+'px;width:30px;height:30px;margin:-15px 0 0 -15px;border:3px solid '+lite+';box-shadow:0 0 14px '+main;
+  tntField.appendChild(sk); setTimeout(()=>{ try{ sk.remove(); }catch(e){} }, 520);
+  for (let i=0;i<16;i++){
+    const a=(Math.PI*2*i)/16+Math.random()*0.4, d=26+Math.random()*40, sz=4+Math.random()*6, c=[main,lite,'#fff','#ff9d3c'][i%4];
+    const s=document.createElement('div'); s.className='bal-spark';
+    s.style.cssText='left:'+cx+'px;top:'+cy+'px;width:'+sz+'px;height:'+sz+'px;margin:'+(-sz/2)+'px 0 0 '+(-sz/2)+'px;background:'+c+';box-shadow:0 0 6px '+c+';--dx:'+(Math.cos(a)*d)+'px;--dy:'+(Math.sin(a)*d)+'px';
+    tntField.appendChild(s); setTimeout(()=>{ try{ s.remove(); }catch(e){} }, 700);
+  }
+  for (let i=0;i<6;i++){
+    const a=(Math.PI*2*i)/6+Math.random()*0.6, d=30+Math.random()*46, w=5+Math.random()*4, h=6+Math.random()*6, rot=(Math.random()<0.5?-1:1)*(300+Math.random()*420);
+    const sh=document.createElement('div'); sh.className='bal-shard';
+    sh.style.cssText='left:'+cx+'px;top:'+cy+'px;width:'+w+'px;height:'+h+'px;margin:'+(-h/2)+'px 0 0 '+(-w/2)+'px;background:linear-gradient(135deg,#c0653a,#7a1f12);box-shadow:0 0 5px '+main+';--dx:'+(Math.cos(a)*d)+'px;--dy:'+(Math.sin(a)*d)+'px;--rot:'+rot+'deg';
+    tntField.appendChild(sh); setTimeout(()=>{ try{ sh.remove(); }catch(e){} }, 780);
+  }
+  if (prize > 0){
+    const g = document.createElement('div'); g.className = 'tnt-gift'; g.textContent = '💰 +' + prize;
+    g.style.cssText = 'left:'+cx+'px;top:'+cy+'px';
+    tntField.appendChild(g); setTimeout(()=>{ try{ g.remove(); }catch(e){} }, 1100);
+  } else {
+    const lab = document.createElement('div'); lab.className = 'bal-prize'; lab.textContent = '✗';
+    lab.style.cssText = 'left:'+(cx-12)+'px;top:'+(cy-12)+'px;color:#ff7a9c';
+    tntField.appendChild(lab); setTimeout(()=>{ try{ lab.remove(); }catch(e){} }, 900);
+  }
+  setTimeout(()=>{ try{ b.remove(); }catch(e){} if (cell) tntMakeBrick(cell); }, 320);   // refill the blasted cell
+}
+function onTntResult(m){
+  clearTimeout(_tntWatch);
+  _tntPending = false;
+  const b = _tntPendingEl; _tntPendingEl = null;
+  if (!m.ok){
+    if (b) b.classList.remove('armed');
+    if (m.reason === 'funds' || m.reason === 'far' || m.reason === 'pool'){
+      tntMsg(m.reason==='funds'?'Not enough $BYEBOSS':m.reason==='far'?'Walk up to the casino':'Casino paused — try later', '#ff8a8a');
+      setTntAuto(false); return;
+    }
+    if (_tntAuto) setTimeout(tntAutoTick, 300);
+    return;
+  }
+  if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
+  if (tntVaultEl) tntVaultEl.textContent = vault;
+  balPlayPop();
+  tntExplode(b, m.prize);
+  if (m.prize > 0){ tntMsg('💥 +' + m.prize + ' $BYEBOSS!', '#39ff8b'); try { playSlotWin(); } catch(e){} }
+  else { tntMsg('💨 empty brick — blast another', '#ff9d6b'); }
+  if (_tntAuto){
+    if (vault < 1){ setTntAuto(false); tntMsg('Out of $BYEBOSS — auto-fire stopped', '#ff9d6b'); }
+    else setTimeout(tntAutoTick, 320);
   }
 }
 
@@ -2138,6 +2281,7 @@ function mpConnect(){
     else if (m.t === 'vaulted'){ if (Number.isFinite(m.vault)) vault = m.vault; if (Number.isFinite(m.carried)) carried = m.carried; if (vaultOpen()) refreshVaultUI(); }
     else if (m.t === 'slot'){ onSlotResult(m); }
     else if (m.t === 'balloon'){ onBalloonResult(m); }
+    else if (m.t === 'tnt'){ onTntResult(m); }
     else if (m.t === 'shot'){ if (m.id !== mpId) spawnRemoteShot(m); }   // render another player's tracer
     else if (m.t === 'bigwin'){ onBigWin(m); }                            // someone hit a x10/x50/x100
     else if (m.t === 'topup'){                                            // on-chain deposit result
