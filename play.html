@@ -193,7 +193,7 @@
 <audio id="snd-slot-win"   src="./assets/game/sfx/slot-win.mp3" preload="auto"></audio>
 <div id="game">
   <canvas id="cv"></canvas>
-  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v30</div>
+  <div style="position:fixed;right:4px;bottom:4px;z-index:99999;font:9px monospace;color:rgba(255,255,255,.32);pointer-events:none">build v31</div>
   <div class="hud">
     <div class="brand">
       <a class="back" href="./game.html" title="Back">‹ Back</a>
@@ -347,6 +347,30 @@
       #spinBtn:hover{ box-shadow:0 0 0 2px rgba(255,255,255,.5) inset,0 0 18px rgba(255,210,80,.6) }
       #spinBtn:active{ transform:translateY(1px) }
       #spinBtn:disabled{ cursor:default }
+      /* ── Casino game chooser ── */
+      .casino-games{ display:flex; gap:14px; width:100%; padding:16px; box-sizing:border-box }
+      .casino-game{ flex:1; aspect-ratio:3/4; border-radius:16px; border:2px solid rgba(255,90,208,.6); cursor:pointer;
+        background:linear-gradient(160deg,#1a0b2e,#0a0613); color:#ffd7f4; font-family:inherit; font-weight:900; font-size:15px;
+        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; transition:transform .12s,border-color .12s,box-shadow .12s }
+      .casino-game .cg-ic{ font-size:44px; line-height:1 }
+      .casino-game .cg-sub{ font-size:10px; font-weight:700; color:#b58ec5; letter-spacing:.3px }
+      .casino-game:hover{ border-color:#39ff8b; transform:translateY(-2px); box-shadow:0 0 18px rgba(255,90,208,.45) }
+      .casino-game:active{ transform:scale(.97) }
+      /* ── Balloon Blaster ── */
+      #balloonP .vault-box{ position:relative; width:100%; background:radial-gradient(ellipse at 50% -10%, #25103f, #0a0613 72%); border:1.5px solid #ff5ad0; border-radius:16px; box-shadow:0 0 30px rgba(255,90,208,.5); overflow:hidden }
+      .bal-head{ display:flex; align-items:center; gap:8px; padding:10px 14px; font-weight:900; font-size:15px; color:#fff; background:linear-gradient(90deg,rgba(255,90,208,.28),transparent) }
+      .bal-head .bal-bal{ margin-left:auto; font-size:13px; color:#ffd755; font-weight:800 } .bal-head .bal-bal b{ color:#fff }
+      .bal-head .vault-x{ cursor:pointer; opacity:.85; font-size:16px } .bal-head .vault-x:hover{ opacity:1; color:#ff6b6b }
+      .bal-field{ position:relative; width:100%; height:300px; overflow:hidden; touch-action:manipulation }
+      .bal-balloon{ position:absolute; cursor:pointer; will-change:transform; user-select:none; -webkit-tap-highlight-color:transparent; filter:drop-shadow(0 3px 6px rgba(0,0,0,.4)) }
+      .bal-balloon.firing{ filter:brightness(1.5) drop-shadow(0 0 8px #fff) }
+      .bal-balloon.pop{ animation:balPop .18s ease-out forwards; transform-origin:center 55% }
+      @keyframes balPop{ 0%{transform:scale(1)} 38%{transform:scale(1.5);filter:brightness(2.2) drop-shadow(0 0 14px #fff)} 100%{transform:scale(.05);opacity:0} }
+      .bal-prize{ position:absolute; font-family:inherit; font-weight:900; font-size:22px; pointer-events:none; z-index:6; animation:balRise 1s ease-out forwards; text-shadow:0 0 8px currentColor,0 1px 3px #000 }
+      @keyframes balRise{ 0%{transform:translateY(0) scale(.8);opacity:1} 80%{transform:translateY(-44px) scale(1.1);opacity:1} 100%{transform:translateY(-60px) scale(.9);opacity:0} }
+      .bal-spark{ position:absolute; border-radius:50%; pointer-events:none; z-index:5; animation:balSpark .6s ease-out forwards }
+      @keyframes balSpark{ 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0} }
+      .bal-msg{ text-align:center; padding:9px 12px; font-weight:800; font-size:14px; color:#bfe9ff; min-height:20px; border-top:1px solid rgba(255,90,208,.2) }
     </style>
     <div id="casinoP" class="vault hidden">
       <div class="casino-wrap">
@@ -366,6 +390,28 @@
           <button id="betPlus" class="slot-bbtn">+</button>
           <button id="betMax" class="slot-bbtn">MAX</button>
           <button id="betAuto" class="slot-bbtn" title="Auto-spin">AUTO</button>
+        </div>
+      </div>
+    </div>
+    <!-- Casino game chooser (shown when you enter the casino) -->
+    <div id="casinoMenu" class="vault hidden">
+      <div class="casino-wrap">
+        <div class="vault-box" style="background:linear-gradient(160deg,#12031f,#0a0613);border:1.5px solid #ff5ad0;box-shadow:0 0 30px rgba(255,90,208,.5)">
+          <div class="bal-head">🎰 CASINO <span id="casinoMenuClose" class="vault-x" style="margin-left:auto">✕</span></div>
+          <div class="casino-games">
+            <button id="gameSlots" class="casino-game" type="button"><span class="cg-ic">🎰</span>Slots<span class="cg-sub">match 3 · up to ×100</span></button>
+            <button id="gameBalloon" class="casino-game" type="button"><span class="cg-ic">🎈</span>Balloon<span class="cg-sub">1 $BYEBOSS · 1 shot</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Balloon Blaster (casino game #2) -->
+    <div id="balloonP" class="vault hidden">
+      <div class="casino-wrap">
+        <div class="vault-box">
+          <div class="bal-head">🎈 BALLOON BLASTER <span class="bal-bal">Vault: <b id="balVault">0</b></span><span id="balloonClose" class="vault-x">✕</span></div>
+          <div id="balField" class="bal-field"></div>
+          <div id="balMsg" class="bal-msg">1 $BYEBOSS per shot — tap a balloon 🎯</div>
         </div>
       </div>
     </div>
@@ -884,10 +930,108 @@ function closeStats(){ if (statsPanel) statsPanel.classList.add('hidden'); }
 
 // ---- CASINO panel: slot machine (vault-funded, 80% RTP, authoritative) ----
 const casinoPanel = document.getElementById('casinoP');
-function casinoOpen(){ return casinoPanel && !casinoPanel.classList.contains('hidden'); }
-function openCasino(){ if (!casinoPanel) return; refreshSlot(); casinoPanel.classList.remove('hidden'); aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
-function closeCasino(){ if (casinoPanel) casinoPanel.classList.add('hidden'); setAuto(false); }   // stop auto-spin when leaving
-{ const x = document.getElementById('casinoClose'); if (x) x.onclick = closeCasino; }
+const casinoMenuP = document.getElementById('casinoMenu');
+const balloonPanel = document.getElementById('balloonP');
+function casinoOpen(){ return (casinoMenuP && !casinoMenuP.classList.contains('hidden')) || (casinoPanel && !casinoPanel.classList.contains('hidden')) || (balloonPanel && !balloonPanel.classList.contains('hidden')); }
+function _exitToWorld(){ aiming = false; keys.f=keys.b=keys.l=keys.r=false; try { document.exitPointerLock(); } catch(e){} }
+function showCasinoMenu(){ if (casinoPanel) casinoPanel.classList.add('hidden'); if (balloonPanel) balloonPanel.classList.add('hidden'); stopBalloon(); setAuto(false); if (casinoMenuP) casinoMenuP.classList.remove('hidden'); }
+function openCasino(){ showCasinoMenu(); _exitToWorld(); }                                                     // entering the casino shows the game chooser
+function openSlots(){ if (casinoMenuP) casinoMenuP.classList.add('hidden'); refreshSlot(); if (casinoPanel) casinoPanel.classList.remove('hidden'); }
+function openBalloon(){ if (casinoMenuP) casinoMenuP.classList.add('hidden'); if (casinoPanel) casinoPanel.classList.add('hidden'); if (balloonPanel) balloonPanel.classList.remove('hidden'); startBalloon(); }
+function closeCasino(){ if (casinoMenuP) casinoMenuP.classList.add('hidden'); if (casinoPanel) casinoPanel.classList.add('hidden'); if (balloonPanel) balloonPanel.classList.add('hidden'); setAuto(false); stopBalloon(); }
+{ const x = document.getElementById('casinoClose');     if (x) x.onclick = showCasinoMenu; }   // slots ✕  -> back to chooser
+{ const x = document.getElementById('casinoMenuClose'); if (x) x.onclick = closeCasino; }      // menu  ✕  -> leave casino
+{ const x = document.getElementById('balloonClose');    if (x) x.onclick = showCasinoMenu; }   // balloon ✕ -> back to chooser
+{ const a = document.getElementById('gameSlots');   if (a) a.onclick = openSlots; }
+{ const b = document.getElementById('gameBalloon'); if (b) b.onclick = openBalloon; }
+
+// ═══ Balloon Blaster — 1 $BYEBOSS = 1 shot. The SERVER decides each outcome (mp 'balloon');
+// the client only spawns/floats balloons and animates the prize it returns. ═══
+const balField = document.getElementById('balField'), balMsgEl = document.getElementById('balMsg'), balVaultEl = document.getElementById('balVault');
+const BAL_COLS = [['#ff4d6d','#ff8fa3'],['#7b2ff7','#c77dff'],['#0096c7','#90e0ef'],['#f9c74f','#ffe169'],['#2dc653','#80ed99'],['#ff6d00','#ffba49'],['#e040fb','#f48fb1']];
+let _balRaf = null, _balPending = false, _balPendingEl = null, _balLast = 0, _balList = [];
+function balSVG(size, ci){
+  const c = BAL_COLS[ci % BAL_COLS.length], uid = (Math.random()*1e6|0);
+  return '<svg width="'+size+'" height="'+(size*1.18)+'" viewBox="0 0 60 70" xmlns="http://www.w3.org/2000/svg"><defs>'
+    + '<radialGradient id="b'+uid+'" cx="36%" cy="30%" r="66%"><stop offset="0%" stop-color="'+c[1]+'"/><stop offset="60%" stop-color="'+c[0]+'"/><stop offset="100%" stop-color="'+c[0]+'" stop-opacity=".82"/></radialGradient></defs>'
+    + '<ellipse cx="30" cy="32" rx="26" ry="30" fill="url(#b'+uid+')"/>'
+    + '<ellipse cx="21" cy="20" rx="6" ry="8" fill="#fff" opacity=".35" transform="rotate(-15,21,20)"/>'
+    + '<path d="M30 61 l-3 5 h6 z" fill="'+c[0]+'"/>'
+    + '<line x1="30" y1="62" x2="30" y2="72" stroke="'+c[0]+'" stroke-width="1.4" opacity=".7"/></svg>';
+}
+function balSpawn(){
+  if (!balField) return;
+  const W = balField.clientWidth || 420, H = balField.clientHeight || 300, size = 38 + Math.random()*16;
+  const el = document.createElement('div'); el.className = 'bal-balloon';
+  const x = 6 + Math.random()*Math.max(10, W - size - 12), y = 8 + Math.random()*Math.max(10, H - size*1.18 - 16);
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  el.innerHTML = balSVG(size, (Math.random()*BAL_COLS.length)|0);
+  el._bx = x; el._t = Math.random()*6.28; el._amp = 6 + Math.random()*10; el._sp = 0.012 + Math.random()*0.016;
+  el._vx = (Math.random()*0.3 + 0.1) * (Math.random()<0.5?1:-1); el._w = size;
+  el.addEventListener('click', () => balShoot(el));
+  balField.appendChild(el); _balList.push(el);
+}
+function balLoop(){
+  _balRaf = requestAnimationFrame(balLoop);
+  const W = balField ? balField.clientWidth : 420;
+  for (const el of _balList){
+    el._t += el._sp; el._bx += el._vx;
+    if (el._bx < 4){ el._bx = 4; el._vx *= -1; } else if (el._bx > W - el._w - 6){ el._bx = W - el._w - 6; el._vx *= -1; }
+    el.style.left = el._bx + 'px';
+    el.style.transform = 'translateY(' + (Math.sin(el._t)*el._amp) + 'px)';
+  }
+}
+function startBalloon(){
+  if (balVaultEl) balVaultEl.textContent = vault;
+  balMsg('1 $BYEBOSS per shot — tap a balloon 🎯', '#bfe9ff');
+  if (balField) balField.innerHTML = ''; _balList = []; _balPending = false; _balPendingEl = null;
+  for (let i=0;i<8;i++) balSpawn();
+  if (_balRaf === null) balLoop();
+}
+function stopBalloon(){ if (_balRaf !== null){ cancelAnimationFrame(_balRaf); _balRaf = null; } _balPending = false; _balPendingEl = null; }
+function balMsg(t, c){ if (balMsgEl){ balMsgEl.textContent = t; balMsgEl.style.color = c || '#bfe9ff'; } }
+function balShoot(el){
+  if (!mpConnected || _balPending || !el || el.classList.contains('pop')) return;
+  const now = Date.now(); if (now - _balLast < 280) return;        // one shot at a time + client cooldown (server enforces too)
+  if (vault < 1){ balMsg('Not enough $BYEBOSS — earn or deposit more', '#ff8a8a'); return; }
+  _balLast = now; _balPending = true; _balPendingEl = el;
+  el.classList.add('firing'); try { playSlot(); } catch(e){}
+  mpSend({ t: 'balloon' });
+}
+function balPop(el, prize){
+  if (!el || !balField) return;
+  const r = el.getBoundingClientRect(), fr = balField.getBoundingClientRect();
+  const cx = r.left - fr.left + r.width/2, cy = r.top - fr.top + r.height/2;
+  el.classList.remove('firing'); el.classList.add('pop');
+  for (let i=0;i<9;i++){
+    const a = (Math.PI*2*i)/9, d = 22 + Math.random()*26, sz = 4 + Math.random()*5, col = prize>0?'#ffd755':'#ff8fa3';
+    const s = document.createElement('div'); s.className = 'bal-spark';
+    s.style.cssText = 'left:'+cx+'px;top:'+cy+'px;width:'+sz+'px;height:'+sz+'px;margin:'+(-sz/2)+'px 0 0 '+(-sz/2)+'px;background:'+col+';box-shadow:0 0 6px '+col+';--dx:'+(Math.cos(a)*d)+'px;--dy:'+(Math.sin(a)*d)+'px';
+    balField.appendChild(s); setTimeout(()=>{ try{ s.remove(); }catch(e){} }, 650);
+  }
+  const lab = document.createElement('div'); lab.className = 'bal-prize';
+  lab.textContent = prize>0 ? ('+'+prize) : '✗';
+  lab.style.cssText = 'left:'+(cx-16)+'px;top:'+(cy-12)+'px;color:'+(prize>0?'#39ff8b':'#ff7a9c');
+  balField.appendChild(lab); setTimeout(()=>{ try{ lab.remove(); }catch(e){} }, 1000);
+  const idx = _balList.indexOf(el); if (idx>=0) _balList.splice(idx,1);
+  setTimeout(()=>{ try{ el.remove(); }catch(e){} }, 190);
+}
+function onBalloonResult(m){
+  _balPending = false;
+  const el = _balPendingEl; _balPendingEl = null;
+  if (!m.ok){
+    if (el) el.classList.remove('firing');
+    const why = m.reason==='funds'?'Not enough $BYEBOSS':m.reason==='far'?'Walk up to the casino':m.reason==='pool'?'Casino paused — try later':'';
+    if (why) balMsg(why, '#ff8a8a');
+    return;
+  }
+  if (Number.isFinite(m.vault)){ vault = m.vault; _vaultSeen = m.vault; if (scoreVal) scoreVal.textContent = vault; }
+  if (balVaultEl) balVaultEl.textContent = vault;
+  balPop(el, m.prize);
+  if (m.prize > 0){ balMsg('🎉 +' + m.prize + ' $BYEBOSS!', '#39ff8b'); try { playSlotWin(); } catch(e){} }
+  else { balMsg('💨 missed — tap another', '#ff9d6b'); }
+  setTimeout(balSpawn, 220);   // keep the field full
+}
 
 const SLOT_KEYS = ['s0','s1','s2','s3','s4'];   // server sends these ids; map each to its image
 const SLOT_IMG = { s0:'./assets/game/slots/s0.jpg', s1:'./assets/game/slots/s1.jpg', s2:'./assets/game/slots/s2.jpg', s3:'./assets/game/slots/s3.jpg', s4:'./assets/game/slots/s4.jpg' };
@@ -1905,6 +2049,7 @@ function mpConnect(){
     else if (m.t === 'burn'){ if (Number.isFinite(m.totalBurned)) statBurned = m.totalBurned; statPending = 0; if (statsOpen()) refreshStats(); if (mpCountEl){ mpCountEl.textContent = `🔥 ${fmtN(m.amount)} $BYEBOSS burned!`; } }
     else if (m.t === 'vaulted'){ if (Number.isFinite(m.vault)) vault = m.vault; if (Number.isFinite(m.carried)) carried = m.carried; if (vaultOpen()) refreshVaultUI(); }
     else if (m.t === 'slot'){ onSlotResult(m); }
+    else if (m.t === 'balloon'){ onBalloonResult(m); }
     else if (m.t === 'shot'){ if (m.id !== mpId) spawnRemoteShot(m); }   // render another player's tracer
     else if (m.t === 'bigwin'){ onBigWin(m); }                            // someone hit a x10/x50/x100
     else if (m.t === 'topup'){                                            // on-chain deposit result
